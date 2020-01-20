@@ -17,7 +17,7 @@ type dexAction is
 | TokenToEthSwap of (nat * nat * nat)
 | EthToTokenPayment of (nat * nat * address)
 | TokenToEthPayment of (nat * nat * nat * address)
-| InvestLiquidity of (nat)
+| InvestLiquidity of nat
 | DivestLiquidity of (nat * nat * nat)
 
 function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -35,13 +35,47 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
  end with (operations, s)
 
+
+function ethToTokenSwap (const minTokens : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+  skip
+ end with ((nil : list(operation)), s)
+
+function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+  skip
+ end with ((nil : list(operation)), s)
+
+function ethToTokenPayment (const minTokens : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+  skip
+ end with ((nil : list(operation)), s)
+
+function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+  skip
+ end with ((nil : list(operation)), s)
+
+function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+  skip
+ end with ((nil : list(operation)), s)
+
+function divestLiquidity (const sharesBurned : nat; const minEth : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+  skip
+ end with ((nil : list(operation)), s)
+
+
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
- block { 
-    skip;
-  } with ((nil:list(operation)), s)
-  //  with case p of
-  // | Request(n) -> (requestBalance(n.0, n.1, n.2), s)
-  // | Receive(n) -> ((nil : list(operation)), receive(n))
-//  end
+ block {skip} with case p of
+  | InitializeExchange(n) -> initializeExchange(n, s)
+  | EthToTokenSwap(n) -> ethToTokenSwap(n.0, n.1, s)
+  | TokenToEthSwap(n) -> tokenToEthSwap(n.0, n.1, n.2, s)
+  | EthToTokenPayment(n) -> ethToTokenPayment(n.0, n.1, n.2, s)
+  | TokenToEthPayment(n) -> tokenToEthPayment(n.0, n.1, n.2, n.3, s)
+  | InvestLiquidity(n) -> investLiquidity(n, s)
+  | DivestLiquidity(n) -> divestLiquidity(n.0, n.1, n.2, s)
+ end
 
