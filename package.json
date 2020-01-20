@@ -1,0 +1,22 @@
+{
+  "name": "audit-log",
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "deploy": "node deploy.js",
+    "test": "node build.js && node deploy.js && node test/test.spec.js",
+    "test:latest": "node test/test.spec.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@taquito/taquito": "next",
+    "@taquito/utils": "^5.2.0-beta.0",
+    "bignumber.js": "^9.0.0",
+    "commander": "^4.0.0"
+  }
+}
