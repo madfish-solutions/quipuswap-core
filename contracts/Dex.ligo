@@ -123,8 +123,29 @@ function ethToToken (const buyer : address; const recipient : address; const eth
     s.tokenPool := newTokenPool;
     s.invariant := newEthPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(self_address, sender, tokensOut);
+    const transferParams: tokenAction = Transfer(self_address, recipient, tokensOut);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
+ end with (operations, s)
+
+function tokenToEth (const buyer : address; const recipient : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+    const fee : nat = tokensIn / s.feeRate;
+    const newTokenPool : nat = s.tokenPool + tokensIn;
+    const tempTokenPool : nat = abs(newTokenPool - fee);
+    const newEthPool : nat = s.invariant / tempTokenPool;
+    const ethOut : nat = s.ethPool / newEthPool;
+
+    if ethOut >= minEthOut then skip else failwith("Wrong minEthOut");
+    if ethOut <= s.ethPool then skip else failwith("Wrong ethPool");
+    
+    s.tokenPool := newTokenPool;
+    s.ethPool := newEthPool;
+    s.invariant := newEthPool * newTokenPool;
+    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
+    const transferParams: tokenAction = Transfer(buyer, self_address, tokensIn);
+
+    const receiver: contract(unit) = get_contract(recipient);
+    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethOut * 1tz, receiver); end;
  end with (operations, s)
 
 function main (const p : dexAction ; const s : dex_storage) :
