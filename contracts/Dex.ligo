@@ -108,6 +108,25 @@ function divestLiquidity (const sharesBurned : nat; const minEth : nat; const mi
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethDivested * 1tz, receiver); end;
  end with (operations, s)
 
+function ethToToken (const buyer : address; const recipient : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+    const fee : nat = ethIn / s.feeRate;
+    const newEthPool : nat = s.ethPool + ethIn;
+    const tempEthPool : nat = abs(newEthPool - fee);
+    const newTokenPool : nat = s.invariant / tempEthPool;
+    const tokensOut : nat = s.tokenPool / newTokenPool;
+
+    if tokensOut >= minTokensOut then skip else failwith("Wrong minTokensOut");
+    if tokensOut <= s.tokenPool then skip else failwith("Wrong tokenPool");
+    
+    s.ethPool := newEthPool;
+    s.tokenPool := newTokenPool;
+    s.invariant := newEthPool * newTokenPool;
+    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
+    const transferParams: tokenAction = Transfer(self_address, sender, tokensOut);
+    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
+ end with (operations, s)
+
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
  block {skip} with case p of
