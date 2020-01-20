@@ -62,8 +62,25 @@ function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const ti
 
 function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
-  skip
- end with ((nil : list(operation)), s)
+    if amount > 0tz then skip else failwith("Wrong amount");
+    if minShares > 0n then skip else failwith("Wrong tokenAmount");
+    const ethPerShare : nat = s.ethPool / s.totalShares;
+    if amount >= ethPerShare * 1tz then skip else failwith("Wrong ethPerShare");
+    const sharesPurchased : nat = (amount / 1tz) / ethPerShare;
+    if sharesPurchased >= minShares then skip else failwith("Wrong sharesPurchased");
+    
+    const tokensPerShare : nat = s.tokenPool / s.totalShares;
+    const tokensRequired : nat = sharesPurchased / tokensPerShare;
+    const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
+    s.shares[sender] := share + sharesPurchased;
+    s.ethPool := s.ethPool + amount / 1tz;
+    s.tokenPool := s.tokenPool + tokensRequired;
+    s.invariant := s.ethPool * s.tokenPool;
+
+    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
+    const transferParams: tokenAction = Transfer(sender, self_address, tokensRequired);
+    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
+ end with (operations, s)
 
 function divestLiquidity (const sharesBurned : nat; const minEth : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
