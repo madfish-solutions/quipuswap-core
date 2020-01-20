@@ -1,0 +1,6 @@
+node_modules/
+deployed/
+build/
+*.pp.ligo
+package-lock.json
+faucet*

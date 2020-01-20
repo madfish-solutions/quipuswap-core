@@ -22,7 +22,11 @@ type dexAction is
 
 function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
-    if s.invariant =/= 0n or s.totalShares =/= 0n or amount < 10000tz or tokenAmount < 10000n or amount > 5000000tz then failwith("Wrong params") else skip ;
+    if s.invariant =/= 0n then failwith("Wrong invariant") else skip ;
+    if s.totalShares =/= 0n then failwith("Wrong totalShares") else skip ;
+    if amount < 1tz then failwith("Wrong amount") else skip ;
+    if tokenAmount < 10n then failwith("Wrong tokenAmount") else skip ;
+    if amount > 5000000000tz then failwith("Wrong amount") else skip ;
     
     s.tokenPool := tokenAmount;
     s.ethPool := amount / 1tz;
