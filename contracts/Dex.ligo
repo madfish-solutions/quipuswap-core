@@ -54,7 +54,7 @@ function ethToToken (const buyer : address; const recipient : address; const eth
     s.tokenPool := newTokenPool;
     s.invariant := newEthPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(self_address, recipient, tokensOut);
+    const transferParams: tokenAction = Transfer(sender, recipient, tokensOut); // sender => self_address
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
  } with (operations, s)
 
@@ -73,7 +73,7 @@ function tokenToEth (const buyer : address; const recipient : address; const tok
     s.ethPool := newEthPool;
     s.invariant := newEthPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(buyer, self_address, tokensIn);
+    const transferParams: tokenAction = Transfer(buyer, sender, tokensIn); // TODO: sender => self_address
 
     const receiver: contract(unit) = get_contract(recipient);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethOut * 1tz, receiver); end;
@@ -90,20 +90,24 @@ function ethToTokenSwap (const minTokens : nat; const timeout : nat; var s: dex_
 
 function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
-   skip
- } with ((nil : list(operation)), s)
+   if tokenAmount > 0n then skip else failwith("Wrong tokenAmount");
+   if minEth > 0n then skip else failwith("Wrong minEth");
+ } with tokenToEth(sender, sender, tokenAmount, minEth, s)
 
 function ethToTokenPayment (const minTokens : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
     if amount > 0tz then skip else failwith("Wrong amount");
     if minTokens > 0n then skip else failwith("Wrong minTokens");
+   //  TODO: check recipient
  } with ethToToken(sender, recipient, amount / 1tz, minTokens, s)
 
 
 function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
-  skip
- } with ((nil : list(operation)), s)
+   if tokenAmount > 0n then skip else failwith("Wrong tokenAmount");
+   if minEth > 0n then skip else failwith("Wrong minEth");
+   //  TODO: check recipient
+ } with tokenToEth(sender, recipient, tokenAmount, minEth, s)
 
 function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
@@ -165,3 +169,4 @@ function main (const p : dexAction ; const s : dex_storage) :
   | DivestLiquidity(n) -> divestLiquidity(n.0, n.1, n.2, s)
  end
 
+// TODO: check if inited
