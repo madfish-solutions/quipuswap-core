@@ -39,11 +39,53 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
  end with (operations, s)
 
+function ethToToken (const buyer : address; const recipient : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+    const fee : nat = ethIn / s.feeRate;
+    const newEthPool : nat = s.ethPool + ethIn;
+    const tempEthPool : nat = abs(newEthPool - fee);
+    const newTokenPool : nat = s.invariant / tempEthPool;
+    const tokensOut : nat = s.tokenPool / newTokenPool;
+
+    if tokensOut >= minTokensOut then skip else failwith("Wrong minTokensOut");
+    if tokensOut <= s.tokenPool then skip else failwith("Wrong tokenPool");
+    
+    s.ethPool := newEthPool;
+    s.tokenPool := newTokenPool;
+    s.invariant := newEthPool * newTokenPool;
+    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
+    const transferParams: tokenAction = Transfer(self_address, recipient, tokensOut);
+    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
+ end with (operations, s)
+
+function tokenToEth (const buyer : address; const recipient : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ begin
+    const fee : nat = tokensIn / s.feeRate;
+    const newTokenPool : nat = s.tokenPool + tokensIn;
+    const tempTokenPool : nat = abs(newTokenPool - fee);
+    const newEthPool : nat = s.invariant / tempTokenPool;
+    const ethOut : nat = s.ethPool / newEthPool;
+
+    if ethOut >= minEthOut then skip else failwith("Wrong minEthOut");
+    if ethOut <= s.ethPool then skip else failwith("Wrong ethPool");
+    
+    s.tokenPool := newTokenPool;
+    s.ethPool := newEthPool;
+    s.invariant := newEthPool * newTokenPool;
+    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
+    const transferParams: tokenAction = Transfer(buyer, self_address, tokensIn);
+
+    const receiver: contract(unit) = get_contract(recipient);
+    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethOut * 1tz, receiver); end;
+ end with (operations, s)
+
 
 function ethToTokenSwap (const minTokens : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
-  skip
- end with ((nil : list(operation)), s)
+    if amount > 0tz then skip else failwith("Wrong amount");
+    if minTokens > 0n then skip else failwith("Wrong minTokens");
+ end with ethToToken(sender, sender, amount / 1tz, minTokens, s);
+
 
 function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
@@ -52,8 +94,12 @@ function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const timeo
 
 function ethToTokenPayment (const minTokens : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
-  skip
- end with ((nil : list(operation)), s)
+    if amount > 0tz then skip else failwith("Wrong amount");
+    if minTokens > 0n then skip else failwith("Wrong minTokens");
+ end with ethToToken(sender, recipient, amount / 1tz, minTokens, s);
+
+
+//  end with ethToToken(sender, recipient, amount / 1tz, minTokens, s);
 
 function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
@@ -106,46 +152,6 @@ function divestLiquidity (const sharesBurned : nat; const minEth : nat; const mi
 
     const receiver: contract(unit) = get_contract(sender);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethDivested * 1tz, receiver); end;
- end with (operations, s)
-
-function ethToToken (const buyer : address; const recipient : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
-    const fee : nat = ethIn / s.feeRate;
-    const newEthPool : nat = s.ethPool + ethIn;
-    const tempEthPool : nat = abs(newEthPool - fee);
-    const newTokenPool : nat = s.invariant / tempEthPool;
-    const tokensOut : nat = s.tokenPool / newTokenPool;
-
-    if tokensOut >= minTokensOut then skip else failwith("Wrong minTokensOut");
-    if tokensOut <= s.tokenPool then skip else failwith("Wrong tokenPool");
-    
-    s.ethPool := newEthPool;
-    s.tokenPool := newTokenPool;
-    s.invariant := newEthPool * newTokenPool;
-    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(self_address, recipient, tokensOut);
-    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
- end with (operations, s)
-
-function tokenToEth (const buyer : address; const recipient : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
-    const fee : nat = tokensIn / s.feeRate;
-    const newTokenPool : nat = s.tokenPool + tokensIn;
-    const tempTokenPool : nat = abs(newTokenPool - fee);
-    const newEthPool : nat = s.invariant / tempTokenPool;
-    const ethOut : nat = s.ethPool / newEthPool;
-
-    if ethOut >= minEthOut then skip else failwith("Wrong minEthOut");
-    if ethOut <= s.ethPool then skip else failwith("Wrong ethPool");
-    
-    s.tokenPool := newTokenPool;
-    s.ethPool := newEthPool;
-    s.invariant := newEthPool * newTokenPool;
-    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(buyer, self_address, tokensIn);
-
-    const receiver: contract(unit) = get_contract(recipient);
-    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethOut * 1tz, receiver); end;
  end with (operations, s)
 
 function main (const p : dexAction ; const s : dex_storage) :
