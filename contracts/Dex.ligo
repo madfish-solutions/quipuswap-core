@@ -13,10 +13,10 @@ end
 
 type dexAction is
 | InitializeExchange of nat
-| EthToTokenSwap of (nat * nat)
-| TokenToEthSwap of (nat * nat * nat)
-| EthToTokenPayment of (nat * nat * address)
-| TokenToEthPayment of (nat * nat * nat * address)
+| EthToTokenSwap of nat
+| TokenToEthSwap of (nat * nat)
+| EthToTokenPayment of (nat * address)
+| TokenToEthPayment of (nat * nat * address)
 | InvestLiquidity of nat
 | DivestLiquidity of (nat * nat * nat)
 
@@ -39,7 +39,7 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
  } with (operations, s)
 
-function ethToToken (const buyer : address; const recipient : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function ethToToken (const buyer : address; const recipient : address; const this : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     const fee : nat = ethIn / s.feeRate;
     const newEthPool : nat = s.ethPool + ethIn;
@@ -54,11 +54,11 @@ function ethToToken (const buyer : address; const recipient : address; const eth
     s.tokenPool := newTokenPool;
     s.invariant := newEthPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(sender, recipient, tokensOut); // sender => self_address
+    const transferParams: tokenAction = Transfer(this, recipient, tokensOut);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
  } with (operations, s)
 
-function tokenToEth (const buyer : address; const recipient : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function tokenToEth (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     const fee : nat = tokensIn / s.feeRate;
     const newTokenPool : nat = s.tokenPool + tokensIn;
@@ -73,41 +73,41 @@ function tokenToEth (const buyer : address; const recipient : address; const tok
     s.ethPool := newEthPool;
     s.invariant := newEthPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(buyer, sender, tokensIn); // TODO: sender => self_address
+    const transferParams: tokenAction = Transfer(buyer, this, tokensIn); 
 
     const receiver: contract(unit) = get_contract(recipient);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethOut * 1tz, receiver); end;
  } with (operations, s)
 
 
-function ethToTokenSwap (const minTokens : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function ethToTokenSwap (const minTokens : nat; const this : address; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     if amount > 0tz then skip else failwith("Wrong amount");
     if minTokens > 0n then skip else failwith("Wrong minTokens");
  }
- with ethToToken(sender, sender, amount / 1tz, minTokens, s)
+ with ethToToken(sender, sender, this, amount / 1tz, minTokens, s)
 
 
-function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const this : address; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
    if tokenAmount > 0n then skip else failwith("Wrong tokenAmount");
    if minEth > 0n then skip else failwith("Wrong minEth");
- } with tokenToEth(sender, sender, tokenAmount, minEth, s)
+ } with tokenToEth(sender, sender, this, tokenAmount, minEth, s)
 
-function ethToTokenPayment (const minTokens : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function ethToTokenPayment (const minTokens : nat;  const recipient: address; const this : address; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
     if amount > 0tz then skip else failwith("Wrong amount");
     if minTokens > 0n then skip else failwith("Wrong minTokens");
    //  TODO: check recipient
- } with ethToToken(sender, recipient, amount / 1tz, minTokens, s)
+ } with ethToToken(sender, recipient, this, amount / 1tz, minTokens, s)
 
 
-function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const this : address; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
    if tokenAmount > 0n then skip else failwith("Wrong tokenAmount");
    if minEth > 0n then skip else failwith("Wrong minEth");
    //  TODO: check recipient
- } with tokenToEth(sender, recipient, tokenAmount, minEth, s)
+ } with tokenToEth(sender, recipient, this, tokenAmount, minEth, s)
 
 function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
@@ -159,12 +159,14 @@ block {
 
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
- block {skip} with case p of
+ block {
+    const this: address = self_address; 
+ } with case p of
   | InitializeExchange(n) -> initializeExchange(n, s)
-  | EthToTokenSwap(n) -> ethToTokenSwap(n.0, n.1, s)
-  | TokenToEthSwap(n) -> tokenToEthSwap(n.0, n.1, n.2, s)
-  | EthToTokenPayment(n) -> ethToTokenPayment(n.0, n.1, n.2, s)
-  | TokenToEthPayment(n) -> tokenToEthPayment(n.0, n.1, n.2, n.3, s)
+  | EthToTokenSwap(n) -> ethToTokenSwap(n, this, s)
+  | TokenToEthSwap(n) -> tokenToEthSwap(n.0, n.1, this, s)
+  | EthToTokenPayment(n) -> ethToTokenPayment(n.0, n.1, this, s)
+  | TokenToEthPayment(n) -> tokenToEthPayment(n.0, n.1, n.2, this, s)
   | InvestLiquidity(n) -> investLiquidity(n, s)
   | DivestLiquidity(n) -> divestLiquidity(n.0, n.1, n.2, s)
  end
