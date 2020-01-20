@@ -1,34 +1,32 @@
 // This is an implementation of the FA1.2 specification in PascaLIGO
 
-type amount is nat;
-
 type account is record
-    balance : amount;
-    allowances: map(address, amount);
+    balance : nat;
+    allowances: map(address, nat);
 end
 
 type action is
-| Transfer of (address * address * amount)
-| Mint of (amount)
-| Burn of (amount)
-| Approve of (address * amount)
-| GetAllowance of (address * address * contract(amount))
-| GetBalance of (address * contract(amount))
-| GetTotalSupply of (unit * contract(amount))
+| Transfer of (address * address * nat)
+| Mint of (nat)
+| Burn of (nat)
+| Approve of (address * nat)
+| GetAllowance of (address * address * contract(nat))
+| GetBalance of (address * contract(nat))
+| GetTotalSupply of (unit * contract(nat))
 
 type contract_storage is record
   owner: address;
-  totalSupply: amount;
+  totalSupply: nat;
   ledger: big_map(address, account);
 end
 
-function isAllowed (const accountFrom : address ; const value : amount ; var s : contract_storage) : bool is 
+function isAllowed (const accountFrom : address ; const value : nat ; var s : contract_storage) : bool is 
   begin
     var allowed: bool := False;
     if sender =/= accountFrom then block {
       // Checking if the sender is allowed to spend in name of accountFrom
       const src: account = get_force(accountFrom, s.ledger);
-      const allowanceAmount: amount = get_force(sender, src.allowances);
+      const allowanceAmount: nat = get_force(sender, src.allowances);
       allowed := allowanceAmount >= value;
     };
     else allowed := True;
@@ -41,7 +39,7 @@ function isAllowed (const accountFrom : address ; const value : amount ; var s :
 // Postconditions:
 //  The balance of accountFrom is decreased by the amount
 //  The balance of destination is increased by the amount
-function transfer (const accountFrom : address ; const destination : address ; const value : amount ; var s : contract_storage) : contract_storage is
+function transfer (const accountFrom : address ; const destination : address ; const value : nat ; var s : contract_storage) : contract_storage is
  begin  
   // If accountFrom = destination transfer is not necessary
   if accountFrom = destination then skip;
@@ -69,7 +67,7 @@ function transfer (const accountFrom : address ; const destination : address ; c
     // Fetch dst account or add empty dst account to ledger
     var dst: account := record 
         balance = 0n;
-        allowances = (map end : map(address, amount));
+        allowances = (map end : map(address, nat));
     end;
     case s.ledger[destination] of
     | None -> skip
@@ -96,14 +94,14 @@ function transfer (const accountFrom : address ; const destination : address ; c
 // Postconditions:
 //  The minted tokens are added in the balance of the owner
 //  The totalSupply is increased by the amount of minted token
-function mint (const value : amount ; var s : contract_storage) : contract_storage is
+function mint (const value : nat ; var s : contract_storage) : contract_storage is
  begin
   // If the sender is not the owner fail
   if sender =/= s.owner then failwith("You must be the owner of the contract to mint tokens");
   else block {
     var ownerAccount: account := record 
         balance = 0n;
-        allowances = (map end : map(address, amount));
+        allowances = (map end : map(address, nat));
     end;
     case s.ledger[s.owner] of
     | None -> skip
@@ -123,14 +121,14 @@ function mint (const value : amount ; var s : contract_storage) : contract_stora
 // Postconditions:
 //  The burned tokens are subtracted from the balance of the owner
 //  The totalSupply is decreased by the amount of burned token 
-function burn (const value : amount ; var s : contract_storage) : contract_storage is
+function burn (const value : nat ; var s : contract_storage) : contract_storage is
  begin
   // If the sender is not the owner fail
   if sender =/= s.owner then failwith("You must be the owner of the contract to burn tokens");
   else block {
     var ownerAccount: account := record 
         balance = 0n;
-        allowances = (map end : map(address, amount));
+        allowances = (map end : map(address, nat));
     end;
     case s.ledger[s.owner] of
     | None -> skip
@@ -155,7 +153,7 @@ function burn (const value : amount ; var s : contract_storage) : contract_stora
 //  The spender account is not the sender account
 // Postconditions:
 //  The allowance of spender in the name of sender is value
-function approve (const spender : address ; const value : amount ; var s : contract_storage) : contract_storage is
+function approve (const spender : address ; const value : nat ; var s : contract_storage) : contract_storage is
  begin
   // If sender is the spender approving is not necessary
   if sender = spender then skip;
@@ -171,10 +169,10 @@ function approve (const spender : address ; const value : amount ; var s : contr
 //  None
 // Postconditions:
 //  The state is unchanged
-function getAllowance (const owner : address ; const spender : address ; const contr : contract(amount) ; var s : contract_storage) : list(operation) is
+function getAllowance (const owner : address ; const spender : address ; const contr : contract(nat) ; var s : contract_storage) : list(operation) is
  begin
   const src: account = get_force(owner, s.ledger);
-  const destAllowance: amount = get_force(spender, src.allowances);
+  const destAllowance: nat = get_force(spender, src.allowances);
  end with list [transaction(destAllowance, 0tz, contr)]
 
 // View function that forwards the balance of source to a contract
@@ -182,7 +180,7 @@ function getAllowance (const owner : address ; const spender : address ; const c
 //  None
 // Postconditions:
 //  The state is unchanged
-function getBalance (const accountFrom : address ; const contr : contract(amount) ; var s : contract_storage) : list(operation) is
+function getBalance (const accountFrom : address ; const contr : contract(nat) ; var s : contract_storage) : list(operation) is
  begin
   const src: account = get_force(accountFrom, s.ledger);
  end with list [transaction(src.balance, 0tz, contr)]
@@ -192,7 +190,7 @@ function getBalance (const accountFrom : address ; const contr : contract(amount
 //  None
 // Postconditions:
 //  The state is unchanged
-function getTotalSupply (const contr : contract(amount) ; var s : contract_storage) : list(operation) is
+function getTotalSupply (const contr : contract(nat) ; var s : contract_storage) : list(operation) is
   list [transaction(s.totalSupply, 0tz, contr)]
 
 function main (const p : action ; const s : contract_storage) :

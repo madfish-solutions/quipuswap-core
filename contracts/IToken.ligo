@@ -1,15 +1,13 @@
-type amount is nat;
-
 type account is record
-    balance : amount;
-    allowances: map(address, amount);
+    balance : nat;
+    allowances: map(address, nat);
 end
 
 type tokenAction is
-| Transfer of (address * address * amount)
-| Mint of (amount)
-| Burn of (amount)
-| Approve of (address * amount)
-| GetAllowance of (address * address * contract(amount))
-| GetBalance of (address * contract(amount))
-| GetTotalSupply of (unit * contract(amount))
+| Transfer of (address * address * nat)
+| Mint of (nat)
+| Burn of (nat)
+| Approve of (address * nat)
+| GetAllowance of (address * address * contract(nat))
+| GetBalance of (address * contract(nat))
+| GetTotalSupply of (unit * contract(nat))

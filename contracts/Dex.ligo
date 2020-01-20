@@ -21,7 +21,7 @@ type dexAction is
 | DivestLiquidity of (nat * nat * nat)
 
 function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+ block {
     if s.invariant =/= 0n then failwith("Wrong invariant") else skip ;
     if s.totalShares =/= 0n then failwith("Wrong totalShares") else skip ;
     if amount < 1tz then failwith("Wrong amount") else skip ;
@@ -37,10 +37,10 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokenAmount);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
- end with (operations, s)
+ } with (operations, s)
 
 function ethToToken (const buyer : address; const recipient : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+ block {
     const fee : nat = ethIn / s.feeRate;
     const newEthPool : nat = s.ethPool + ethIn;
     const tempEthPool : nat = abs(newEthPool - fee);
@@ -56,10 +56,10 @@ function ethToToken (const buyer : address; const recipient : address; const eth
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(self_address, recipient, tokensOut);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
- end with (operations, s)
+ } with (operations, s)
 
 function tokenToEth (const buyer : address; const recipient : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+ block {
     const fee : nat = tokensIn / s.feeRate;
     const newTokenPool : nat = s.tokenPool + tokensIn;
     const tempTokenPool : nat = abs(newTokenPool - fee);
@@ -77,37 +77,36 @@ function tokenToEth (const buyer : address; const recipient : address; const tok
 
     const receiver: contract(unit) = get_contract(recipient);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethOut * 1tz, receiver); end;
- end with (operations, s)
+ } with (operations, s)
 
 
 function ethToTokenSwap (const minTokens : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+ block {
     if amount > 0tz then skip else failwith("Wrong amount");
     if minTokens > 0n then skip else failwith("Wrong minTokens");
- end with ethToToken(sender, sender, amount / 1tz, minTokens, s);
+ }
+ with ethToToken(sender, sender, amount / 1tz, minTokens, s)
 
 
 function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const timeout : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
-  skip
- end with ((nil : list(operation)), s)
+block {
+   skip
+ } with ((nil : list(operation)), s)
 
 function ethToTokenPayment (const minTokens : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+block {
     if amount > 0tz then skip else failwith("Wrong amount");
     if minTokens > 0n then skip else failwith("Wrong minTokens");
- end with ethToToken(sender, recipient, amount / 1tz, minTokens, s);
+ } with ethToToken(sender, recipient, amount / 1tz, minTokens, s)
 
-
-//  end with ethToToken(sender, recipient, amount / 1tz, minTokens, s);
 
 function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const timeout : nat; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+block {
   skip
- end with ((nil : list(operation)), s)
+ } with ((nil : list(operation)), s)
 
 function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+block {
     if amount > 0tz then skip else failwith("Wrong amount");
     if minShares > 0n then skip else failwith("Wrong tokenAmount");
     const ethPerShare : nat = s.ethPool / s.totalShares;
@@ -126,10 +125,10 @@ function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(o
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokensRequired);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
- end with (operations, s)
+ } with (operations, s)
 
 function divestLiquidity (const sharesBurned : nat; const minEth : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- begin
+block {
     if sharesBurned > 0n then skip else failwith("Wrong sharesBurned");
     const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
     if sharesBurned > share then failwith ("Snder shares are too low") else skip;
@@ -152,7 +151,7 @@ function divestLiquidity (const sharesBurned : nat; const minEth : nat; const mi
 
     const receiver: contract(unit) = get_contract(sender);
     const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethDivested * 1tz, receiver); end;
- end with (operations, s)
+ } with (operations, s)
 
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
