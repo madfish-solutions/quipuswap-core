@@ -84,9 +84,29 @@ function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(o
 
 function divestLiquidity (const sharesBurned : nat; const minEth : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  begin
-  skip
- end with ((nil : list(operation)), s)
+    if sharesBurned > 0n then skip else failwith("Wrong sharesBurned");
+    const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
+    if sharesBurned > share then failwith ("Snder shares are too low") else skip;
+    s.shares[sender] := abs(share - sharesBurned);
 
+    const ethPerShare : nat = s.ethPool / s.totalShares;
+    const tokensPerShare : nat = s.tokenPool / s.totalShares;
+    const ethDivested : nat = ethPerShare * sharesBurned;
+    const tokensDivested : nat = tokensPerShare * sharesBurned;
+
+    if ethDivested >= minEth then skip else failwith("Wrong minEth");
+    if tokensDivested >= minTokens then skip else failwith("Wrong minTokens");
+
+    s.totalShares := abs(s.totalShares - sharesBurned);
+    s.ethPool := abs(s.ethPool - ethDivested);
+    s.tokenPool := abs(s.tokenPool - tokensDivested);
+    s.invariant := if s.totalShares = 0n then 0n; else s.ethPool * s.tokenPool;
+    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
+    const transferParams: tokenAction = Transfer(self_address, sender, tokensDivested);
+
+    const receiver: contract(unit) = get_contract(sender);
+    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethDivested * 1tz, receiver); end;
+ end with (operations, s)
 
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
