@@ -26,7 +26,7 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     if s.totalShares =/= 0n then failwith("Wrong totalShares") else skip ;
     if amount < 1mutez then failwith("Wrong amount") else skip ;
     if tokenAmount < 10n then failwith("Wrong tokenAmount") else skip ;
-    if amount > 5000000000mutez then failwith("Wrong amount") else skip ;
+    if amount > 500000000tz then failwith("Wrong amount") else skip ;
     
     s.tokenPool := tokenAmount;
     s.ethPool := amount / 1mutez;
@@ -119,7 +119,7 @@ block {
     if sharesPurchased >= minShares then skip else failwith("Wrong sharesPurchased");
     
     const tokensPerShare : nat = s.tokenPool / s.totalShares;
-    const tokensRequired : nat = sharesPurchased / tokensPerShare;
+    const tokensRequired : nat = sharesPurchased * tokensPerShare;
     const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
     s.shares[sender] := share + sharesPurchased;
     s.ethPool := s.ethPool + amount / 1mutez;
