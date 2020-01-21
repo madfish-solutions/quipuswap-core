@@ -24,19 +24,19 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
  block {
     if s.invariant =/= 0n then failwith("Wrong invariant") else skip ;
     if s.totalShares =/= 0n then failwith("Wrong totalShares") else skip ;
-    if amount < 1tz then failwith("Wrong amount") else skip ;
+    if amount < 1mutez then failwith("Wrong amount") else skip ;
     if tokenAmount < 10n then failwith("Wrong tokenAmount") else skip ;
-    if amount > 5000000000tz then failwith("Wrong amount") else skip ;
+    if amount > 5000000000mutez then failwith("Wrong amount") else skip ;
     
     s.tokenPool := tokenAmount;
-    s.ethPool := amount / 1tz;
+    s.ethPool := amount / 1mutez;
     s.invariant := s.ethPool * s.tokenPool;
     s.shares[sender] := 1000n;
     s.totalShares := 1000n;
 
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokenAmount);
-    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
  } with (operations, s)
 
 function ethToToken (const buyer : address; const recipient : address; const this : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -55,7 +55,7 @@ function ethToToken (const buyer : address; const recipient : address; const thi
     s.invariant := newEthPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(this, recipient, tokensOut);
-    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
  } with (operations, s)
 
 function tokenToEth (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -76,16 +76,16 @@ function tokenToEth (const buyer : address; const recipient : address; const thi
     const transferParams: tokenAction = Transfer(buyer, this, tokensIn); 
 
     const receiver: contract(unit) = get_contract(recipient);
-    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethOut * 1tz, receiver); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, ethOut * 1mutez, receiver); end;
  } with (operations, s)
 
 
 function ethToTokenSwap (const minTokens : nat; const this : address; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
-    if amount > 0tz then skip else failwith("Wrong amount");
+    if amount > 0mutez then skip else failwith("Wrong amount");
     if minTokens > 0n then skip else failwith("Wrong minTokens");
  }
- with ethToToken(sender, sender, this, amount / 1tz, minTokens, s)
+ with ethToToken(sender, sender, this, amount / 1mutez, minTokens, s)
 
 
 function tokenToEthSwap (const tokenAmount: nat; const minEth : nat; const this : address; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -96,10 +96,10 @@ block {
 
 function ethToTokenPayment (const minTokens : nat;  const recipient: address; const this : address; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
-    if amount > 0tz then skip else failwith("Wrong amount");
+    if amount > 0mutez then skip else failwith("Wrong amount");
     if minTokens > 0n then skip else failwith("Wrong minTokens");
    //  TODO: check recipient
- } with ethToToken(sender, recipient, this, amount / 1tz, minTokens, s)
+ } with ethToToken(sender, recipient, this, amount / 1mutez, minTokens, s)
 
 
 function tokenToEthPayment (const tokenAmount: nat; const minEth : nat; const this : address; const recipient: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -111,24 +111,24 @@ block {
 
 function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
-    if amount > 0tz then skip else failwith("Wrong amount");
+    if amount > 0mutez then skip else failwith("Wrong amount");
     if minShares > 0n then skip else failwith("Wrong tokenAmount");
     const ethPerShare : nat = s.ethPool / s.totalShares;
-    if amount >= ethPerShare * 1tz then skip else failwith("Wrong ethPerShare");
-    const sharesPurchased : nat = (amount / 1tz) / ethPerShare;
+    if amount >= ethPerShare * 1mutez then skip else failwith("Wrong ethPerShare");
+    const sharesPurchased : nat = (amount / 1mutez) / ethPerShare;
     if sharesPurchased >= minShares then skip else failwith("Wrong sharesPurchased");
     
     const tokensPerShare : nat = s.tokenPool / s.totalShares;
     const tokensRequired : nat = sharesPurchased / tokensPerShare;
     const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
     s.shares[sender] := share + sharesPurchased;
-    s.ethPool := s.ethPool + amount / 1tz;
+    s.ethPool := s.ethPool + amount / 1mutez;
     s.tokenPool := s.tokenPool + tokensRequired;
     s.invariant := s.ethPool * s.tokenPool;
 
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokensRequired);
-    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
  } with (operations, s)
 
 function divestLiquidity (const sharesBurned : nat; const minEth : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -154,7 +154,7 @@ block {
     const transferParams: tokenAction = Transfer(self_address, sender, tokensDivested);
 
     const receiver: contract(unit) = get_contract(sender);
-    const operations : list(operation) = list transaction(transferParams, 0tz, tokenContract); transaction(unit, ethDivested * 1tz, receiver); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, ethDivested * 1mutez, receiver); end;
  } with (operations, s)
 
 function main (const p : dexAction ; const s : dex_storage) :
