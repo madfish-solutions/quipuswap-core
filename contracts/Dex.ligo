@@ -171,4 +171,6 @@ function main (const p : dexAction ; const s : dex_storage) :
   | DivestLiquidity(n) -> divestLiquidity(n.0, n.1, n.2, s)
  end
 
-// TODO: check if inited
+// TODO: 
+// - check if inited
+// - replace map with big_map
