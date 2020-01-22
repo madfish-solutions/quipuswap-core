@@ -11,10 +11,10 @@ Tezos.importKey(email, password, mnemonic.join(" "), secret).then(async () => {
         code: JSON.parse(fs.readFileSync("./build/Token.json").toString()),
         storage: {
             owner: await Tezos.signer.publicKeyHash(),
-            totalSupply: "1000000",
+            totalSupply: "10000000000",
             ledger: {
                 [await Tezos.signer.publicKeyHash()]: {
-                    balance: "100",
+                    balance: "10000000",
                     allowances: {}
                 },
             },
