@@ -98,7 +98,8 @@ function tokenToTokenOut (const buyer : address; const recipient : address; cons
  } with (operations, s)
 
 function tokenToTokenIn (const recipient : address; const this : address; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
-    if sender == s.factoryAddress then skip else failwith("Wrong sender");
+ block {
+   if sender = s.factoryAddress then skip else failwith("Wrong minEthOut");
  } with ethToToken(sender, recipient, this, amount / 1mutez, minTokensOut, s)
 
 

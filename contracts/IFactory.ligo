@@ -7,6 +7,5 @@ type exchange_storage is record
 end
 
 type exchangeAction is
-| LaunchExchange of address
+| LaunchExchange of (address * address)
 | TokenToExchangeLookup of (address * address * nat)
-| ExchangeToTokenLookup of (address * contract(dexAction))
