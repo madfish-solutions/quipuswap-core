@@ -9,16 +9,16 @@ exec(`docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --mich
     fs.writeFileSync('./build/Token.json', stdout)
 })
 
-exec(`docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/contracts/Dex.ligo main`, (err, stdout, stderr) => {
+exec(`docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/contracts/Dex.ligo main`, {maxBuffer: 1024 * 500}, (err, stdout, stderr) => {
     if (err)
         throw err
 
     fs.writeFileSync('./build/Dex.json', stdout)
 })
 
-exec(`docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/contracts/Proxy.ligo main`, (err, stdout, stderr) => {
+exec(`docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/contracts/Factory.ligo main`, {maxBuffer: 1024 * 500}, (err, stdout, stderr) => {
     if (err)
         throw err
 
-    fs.writeFileSync('./build/Proxy.json', stdout)
+    fs.writeFileSync('./build/Factory.json', stdout)
 })
