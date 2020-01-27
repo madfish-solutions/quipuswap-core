@@ -1,15 +1,4 @@
-#include "IDex.ligo"
-
-type exchange_storage is record 
-   tokenList: list (address);
-   tokenToExchange: map(address, address);
-   exchangeToToken: map(address, address);
-end
-
-type exchangeAction is
-| LaunchExchange of address
-| TokenToExchangeLookup of address
-| ExchangeToTokenLookup of address
+#include "IFactory.ligo"
 
 function launchExchange (const token : address; const exchange : address; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
  block {

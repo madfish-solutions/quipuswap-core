@@ -1,5 +1,6 @@
 #include "IToken.ligo"
 #include "IDex.ligo"
+#include "IFactory.ligo"
 
 function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
@@ -69,6 +70,38 @@ function tokenToEth (const buyer : address; const recipient : address; const thi
     const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, ethOut * 1mutez, receiver); end;
  } with (operations, s)
 
+function tokenToTokenOut (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minTokensOut : nat; const tokenOutAddress: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ block {
+    if tokensIn > 0n then skip else failwith("Wrong tokensIn");
+    if minTokensOut > 0n then skip else failwith("Wrong minEthOut");
+
+    const fee : nat = tokensIn / s.feeRate;
+    const newTokenPool : nat = s.tokenPool + tokensIn;
+    const tempTokenPool : nat = abs(newTokenPool - fee);
+    const newEthPool : nat = s.invariant / tempTokenPool;
+    const ethOut : nat = s.ethPool / newEthPool;
+
+    if ethOut <= s.ethPool then skip else failwith("Wrong ethPool");
+
+    s.tokenPool := newTokenPool;
+    s.ethPool := newEthPool;
+    s.invariant := newEthPool * newTokenPool;
+
+    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
+    const transferParams: tokenAction = Transfer(buyer, this, tokensIn);
+
+    const factoryContract: contract(exchangeAction) = get_contract(s.factoryAddress);
+    const receiver: contract(dexAction) = get_contract(this);
+    const requestParams: exchangeAction = TokenToExchangeLookup(tokenOutAddress, recipient, minTokensOut);
+
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(requestParams, ethOut * 1mutez, factoryContract); end;
+ } with (operations, s)
+
+function tokenToTokenIn (const recipient : address; const this : address; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+    if sender == s.factoryAddress then skip else failwith("Wrong sender");
+ } with ethToToken(sender, recipient, this, amount / 1mutez, minTokensOut, s)
+
+
 function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
     if amount > 0mutez then skip else failwith("Wrong amount");
@@ -125,8 +158,11 @@ function main (const p : dexAction ; const s : dex_storage) :
   | InitializeExchange(n) -> initializeExchange(n, s)
   | EthToTokenSwap(n) -> ethToToken(sender, sender, this, amount / 1mutez, n, s)
   | TokenToEthSwap(n) -> tokenToEth(sender, sender, this, n.0, n.1, s)
+  | TokenToTokenSwap(n) -> tokenToTokenOut(sender, sender, this, n.0, n.1, n.2, s)
   | EthToTokenPayment(n) -> ethToToken(sender, n.1, this, amount / 1mutez, n.0, s)
   | TokenToEthPayment(n) -> tokenToEth(sender, n.2, this, n.0, n.1, s)
+  | TokenToTokenPayment(n) -> tokenToTokenOut(sender, n.2, this, n.0, n.1, n.3, s)
+  | TokenToTokenIn(n) -> tokenToTokenIn(n.1, this, n.0, s)
   | InvestLiquidity(n) -> investLiquidity(n, s)
   | DivestLiquidity(n) -> divestLiquidity(n.0, n.1, n.2, s)
  end
