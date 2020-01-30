@@ -8,7 +8,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-exec(`ligo compile-parameter ./contracts/Dex.ligo main -s pascaligo "EthToTokenSwap(${minTokens}n)"`, async (error, stdout, stderr) => {
+exec(`ligo compile-parameter ./contracts/Dex.ligo main -s pascaligo "TezToTokenSwap(${minTokens}n)"`, async (error, stdout, stderr) => {
   if (error) {
     console.error(`exec error: ${error}`);
     return;

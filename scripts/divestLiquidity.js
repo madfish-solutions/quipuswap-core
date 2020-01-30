@@ -1,7 +1,7 @@
 const { exec } = require("child_process");
 const fs = require("fs");
 let sharesBurned = 1;
-let minEth = 1;
+let minTez = 1;
 let minTokens = 1;
 const { address: dexAddress } = JSON.parse(fs.readFileSync("./deployed/Dex.json").toString());
 const { address: tokenAddress } = JSON.parse(fs.readFileSync("./deployed/Token.json").toString());
@@ -9,7 +9,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-exec(`ligo compile-parameter ./contracts/Dex.ligo main -s pascaligo "DivestLiquidity(${sharesBurned}n, ${minEth}n, ${minTokens}n)"`, async (error, stdout, stderr) => {
+exec(`ligo compile-parameter ./contracts/Dex.ligo main -s pascaligo "DivestLiquidity(${sharesBurned}n, ${minTez}n, ${minTokens}n)"`, async (error, stdout, stderr) => {
   if (error) {
     console.error(`exec error: ${error}`);
     return;

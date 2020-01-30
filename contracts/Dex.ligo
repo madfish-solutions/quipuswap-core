@@ -12,8 +12,8 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     if amount > 500000000tz then failwith("Wrong amount") else skip ;
     
     s.tokenPool := tokenAmount;
-    s.ethPool := amount / 1mutez;
-    s.invariant := s.ethPool * s.tokenPool;
+    s.tezPool := amount / 1mutez;
+    s.invariant := s.tezPool * s.tokenPool;
     s.shares[sender] := 1000n;
     s.totalShares := 1000n;
     s.init := True;
@@ -23,69 +23,69 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
  } with (operations, s)
 
-function ethToToken (const buyer : address; const recipient : address; const this : address; const ethIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function tezToToken (const buyer : address; const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
 
-    if ethIn > 0n then skip else failwith("Wrong ethIn");
+    if tezIn > 0n then skip else failwith("Wrong tezIn");
     if minTokensOut > 0n then skip else failwith("Wrong minTokensOut");
 
-    const fee : nat = ethIn / s.feeRate;
-    const newEthPool : nat = s.ethPool + ethIn;
-    const tempEthPool : nat = abs(newEthPool - fee);
-    const newTokenPool : nat = s.invariant / tempEthPool;
+    const fee : nat = tezIn / s.feeRate;
+    const newTezPool : nat = s.tezPool + tezIn;
+    const tempTezPool : nat = abs(newTezPool - fee);
+    const newTokenPool : nat = s.invariant / tempTezPool;
     const tokensOut : nat = s.tokenPool / newTokenPool;
 
     if tokensOut >= minTokensOut then skip else failwith("Wrong minTokensOut");
     if tokensOut <= s.tokenPool then skip else failwith("Wrong tokenPool");
     
-    s.ethPool := newEthPool;
+    s.tezPool := newTezPool;
     s.tokenPool := newTokenPool;
-    s.invariant := newEthPool * newTokenPool;
+    s.invariant := newTezPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(this, recipient, tokensOut);
     const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
  } with (operations, s)
 
-function tokenToEth (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minEthOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function tokenToTez (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minTezOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     if tokensIn > 0n then skip else failwith("Wrong tokensIn");
-    if minEthOut > 0n then skip else failwith("Wrong minEthOut");
+    if minTezOut > 0n then skip else failwith("Wrong minTezOut");
 
     const fee : nat = tokensIn / s.feeRate;
     const newTokenPool : nat = s.tokenPool + tokensIn;
     const tempTokenPool : nat = abs(newTokenPool - fee);
-    const newEthPool : nat = s.invariant / tempTokenPool;
-    const ethOut : nat = s.ethPool / newEthPool;
+    const newTezPool : nat = s.invariant / tempTokenPool;
+    const tezOut : nat = s.tezPool / newTezPool;
 
-    if ethOut >= minEthOut then skip else failwith("Wrong minEthOut");
-    if ethOut <= s.ethPool then skip else failwith("Wrong ethPool");
+    if tezOut >= minTezOut then skip else failwith("Wrong minTezOut");
+    if tezOut <= s.tezPool then skip else failwith("Wrong tezPool");
     
     s.tokenPool := newTokenPool;
-    s.ethPool := newEthPool;
-    s.invariant := newEthPool * newTokenPool;
+    s.tezPool := newTezPool;
+    s.invariant := newTezPool * newTokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(buyer, this, tokensIn); 
 
     const receiver: contract(unit) = get_contract(recipient);
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, ethOut * 1mutez, receiver); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, tezOut * 1mutez, receiver); end;
  } with (operations, s)
 
 function tokenToTokenOut (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minTokensOut : nat; const tokenOutAddress: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     if tokensIn > 0n then skip else failwith("Wrong tokensIn");
-    if minTokensOut > 0n then skip else failwith("Wrong minEthOut");
+    if minTokensOut > 0n then skip else failwith("Wrong minTezOut");
 
     const fee : nat = tokensIn / s.feeRate;
     const newTokenPool : nat = s.tokenPool + tokensIn;
     const tempTokenPool : nat = abs(newTokenPool - fee);
-    const newEthPool : nat = s.invariant / tempTokenPool;
-    const ethOut : nat = s.ethPool / newEthPool;
+    const newTezPool : nat = s.invariant / tempTokenPool;
+    const tezOut : nat = s.tezPool / newTezPool;
 
-    if ethOut <= s.ethPool then skip else failwith("Wrong ethPool");
+    if tezOut <= s.tezPool then skip else failwith("Wrong tezPool");
 
     s.tokenPool := newTokenPool;
-    s.ethPool := newEthPool;
-    s.invariant := newEthPool * newTokenPool;
+    s.tezPool := newTezPool;
+    s.invariant := newTezPool * newTokenPool;
 
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(buyer, this, tokensIn);
@@ -94,61 +94,61 @@ function tokenToTokenOut (const buyer : address; const recipient : address; cons
     const receiver: contract(dexAction) = get_contract(this);
     const requestParams: exchangeAction = TokenToExchangeLookup(tokenOutAddress, recipient, minTokensOut);
 
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(requestParams, ethOut * 1mutez, factoryContract); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(requestParams, tezOut * 1mutez, factoryContract); end;
  } with (operations, s)
 
 function tokenToTokenIn (const recipient : address; const this : address; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
-   if sender = s.factoryAddress then skip else failwith("Wrong minEthOut");
- } with ethToToken(sender, recipient, this, amount / 1mutez, minTokensOut, s)
+   if sender = s.factoryAddress then skip else failwith("Wrong minTezOut");
+ } with tezToToken(sender, recipient, this, amount / 1mutez, minTokensOut, s)
 
 
 function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
     if amount > 0mutez then skip else failwith("Wrong amount");
     if minShares > 0n then skip else failwith("Wrong tokenAmount");
-    const ethPerShare : nat = s.ethPool / s.totalShares;
-    if amount >= ethPerShare * 1mutez then skip else failwith("Wrong ethPerShare");
-    const sharesPurchased : nat = (amount / 1mutez) / ethPerShare;
+    const tezPerShare : nat = s.tezPool / s.totalShares;
+    if amount >= tezPerShare * 1mutez then skip else failwith("Wrong tezPerShare");
+    const sharesPurchased : nat = (amount / 1mutez) / tezPerShare;
     if sharesPurchased >= minShares then skip else failwith("Wrong sharesPurchased");
     
     const tokensPerShare : nat = s.tokenPool / s.totalShares;
     const tokensRequired : nat = sharesPurchased * tokensPerShare;
     const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
     s.shares[sender] := share + sharesPurchased;
-    s.ethPool := s.ethPool + amount / 1mutez;
+    s.tezPool := s.tezPool + amount / 1mutez;
     s.tokenPool := s.tokenPool + tokensRequired;
-    s.invariant := s.ethPool * s.tokenPool;
+    s.invariant := s.tezPool * s.tokenPool;
 
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokensRequired);
     const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
  } with (operations, s)
 
-function divestLiquidity (const sharesBurned : nat; const minEth : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function divestLiquidity (const sharesBurned : nat; const minTez : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
     if sharesBurned > 0n then skip else failwith("Wrong sharesBurned");
     const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
     if sharesBurned > share then failwith ("Snder shares are too low") else skip;
     s.shares[sender] := abs(share - sharesBurned);
 
-    const ethPerShare : nat = s.ethPool / s.totalShares;
+    const tezPerShare : nat = s.tezPool / s.totalShares;
     const tokensPerShare : nat = s.tokenPool / s.totalShares;
-    const ethDivested : nat = ethPerShare * sharesBurned;
+    const tezDivested : nat = tezPerShare * sharesBurned;
     const tokensDivested : nat = tokensPerShare * sharesBurned;
 
-    if ethDivested >= minEth then skip else failwith("Wrong minEth");
+    if tezDivested >= minTez then skip else failwith("Wrong minTez");
     if tokensDivested >= minTokens then skip else failwith("Wrong minTokens");
 
     s.totalShares := abs(s.totalShares - sharesBurned);
-    s.ethPool := abs(s.ethPool - ethDivested);
+    s.tezPool := abs(s.tezPool - tezDivested);
     s.tokenPool := abs(s.tokenPool - tokensDivested);
-    s.invariant := if s.totalShares = 0n then 0n; else s.ethPool * s.tokenPool;
+    s.invariant := if s.totalShares = 0n then 0n; else s.tezPool * s.tokenPool;
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(self_address, sender, tokensDivested);
 
     const receiver: contract(unit) = get_contract(sender);
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, ethDivested * 1mutez, receiver); end;
+    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, tezDivested * 1mutez, receiver); end;
  } with (operations, s)
 
 function main (const p : dexAction ; const s : dex_storage) :
@@ -157,11 +157,11 @@ function main (const p : dexAction ; const s : dex_storage) :
     const this: address = self_address; 
  } with case p of
   | InitializeExchange(n) -> initializeExchange(n, s)
-  | EthToTokenSwap(n) -> ethToToken(sender, sender, this, amount / 1mutez, n, s)
-  | TokenToEthSwap(n) -> tokenToEth(sender, sender, this, n.0, n.1, s)
+  | TezToTokenSwap(n) -> tezToToken(sender, sender, this, amount / 1mutez, n, s)
+  | TokenToTezSwap(n) -> tokenToTez(sender, sender, this, n.0, n.1, s)
   | TokenToTokenSwap(n) -> tokenToTokenOut(sender, sender, this, n.0, n.1, n.2, s)
-  | EthToTokenPayment(n) -> ethToToken(sender, n.1, this, amount / 1mutez, n.0, s)
-  | TokenToEthPayment(n) -> tokenToEth(sender, n.2, this, n.0, n.1, s)
+  | TezToTokenPayment(n) -> tezToToken(sender, n.1, this, amount / 1mutez, n.0, s)
+  | TokenToTezPayment(n) -> tokenToTez(sender, n.2, this, n.0, n.1, s)
   | TokenToTokenPayment(n) -> tokenToTokenOut(sender, n.2, this, n.0, n.1, n.3, s)
   | TokenToTokenIn(n) -> tokenToTokenIn(n.1, this, n.0, s)
   | InvestLiquidity(n) -> investLiquidity(n, s)

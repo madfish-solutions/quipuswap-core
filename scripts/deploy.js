@@ -38,7 +38,7 @@ Tezos.importKey(email, password, mnemonic.join(" "), secret).then(async () => {
         code: JSON.parse(fs.readFileSync("./build/Dex.json").toString()),
         storage: {
             feeRate: "500",
-            ethPool: "0",
+            tezPool: "0",
             tokenPool: "0",
             invariant: "0",
             totalShares: "0",
@@ -59,23 +59,27 @@ Tezos.importKey(email, password, mnemonic.join(" "), secret).then(async () => {
     fs.writeFileSync(`./deployed/${contract.address}.json`, JSON.stringify(detail))
     console.log('Deployed at:', contract.address)
 })
-// .then(async () => {
-//     return Tezos.contract.originate({
-//         code: JSON.parse(fs.readFileSync("./build/Proxy.json").toString()),
-//         storage: Dex,
-//         balance: 0,
-//     })
-// }).then((op) => {
-//     return op.contract()
-// }).then((contract) => {
-//     const detail = {
-//         address: contract.address,
-//         network: "https://rpcalpha.tzbeta.net"
-//     }
-//     fs.writeFileSync('./deployed/Proxy.json', JSON.stringify(detail))
-//     fs.writeFileSync(`./deployed/${contract.address}.json`, JSON.stringify(detail))
-//     console.log('Deployed at:', contract.address)
-// })
+.then(async () => {
+    return Tezos.contract.originate({
+        code: JSON.parse(fs.readFileSync("./build/Factory.json").toString()),
+        storage: {
+            tokenList: [],
+            tokenToExchange: {},
+            exchangeToToken: {}
+        },
+        balance: 0,
+    })
+}).then((op) => {
+    return op.contract()
+}).then((contract) => {
+    const detail = {
+        address: contract.address,
+        network: "https://rpcalpha.tzbeta.net"
+    }
+    fs.writeFileSync('./deployed/Factory.json', JSON.stringify(detail))
+    fs.writeFileSync(`./deployed/${contract.address}.json`, JSON.stringify(detail))
+    console.log('Deployed at:', contract.address)
+})
 .catch(err => {
     console.log(err)
 })
