@@ -119,6 +119,7 @@ block {
     s.tezPool := s.tezPool + amount / 1mutez;
     s.tokenPool := s.tokenPool + tokensRequired;
     s.invariant := s.tezPool * s.tokenPool;
+    s.totalShares := s.totalShares + sharesPurchased;
 
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokensRequired);
