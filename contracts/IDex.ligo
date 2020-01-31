@@ -7,7 +7,7 @@ type dex_storage is record
   totalShares: nat;
   tokenAddress: address;
   factoryAddress: address;
-  shares: big_map(address, nat);
+  shares: map(address, nat);
 end
 
 type dexAction is

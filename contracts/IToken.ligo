@@ -3,6 +3,12 @@ type account is record
     allowances: map(address, nat);
 end
 
+type contract_storage is record
+  owner: address;
+  totalSupply: nat;
+  ledger: map(address, account);
+end
+
 type tokenAction is
 | Transfer of (address * address * nat)
 | Mint of (nat)

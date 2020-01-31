@@ -1,24 +1,4 @@
-// This is an implementation of the FA1.2 specification in PascaLIGO
-
-type account is record
-    balance : nat;
-    allowances: map(address, nat);
-end
-
-type action is
-| Transfer of (address * address * nat)
-| Mint of (nat)
-| Burn of (nat)
-| Approve of (address * nat)
-| GetAllowance of (address * address * contract(nat))
-| GetBalance of (address * contract(nat))
-| GetTotalSupply of (unit * contract(nat))
-
-type contract_storage is record
-  owner: address;
-  totalSupply: nat;
-  ledger: big_map(address, account);
-end
+#include "IToken.ligo"
 
 function isAllowed (const accountFrom : address ; const value : nat ; var s : contract_storage) : bool is 
   begin
@@ -193,7 +173,7 @@ function getBalance (const accountFrom : address ; const contr : contract(nat) ;
 function getTotalSupply (const contr : contract(nat) ; var s : contract_storage) : list(operation) is
   list [transaction(s.totalSupply, 0tz, contr)]
 
-function main (const p : action ; const s : contract_storage) :
+function main (const p : tokenAction ; const s : contract_storage) :
   (list(operation) * contract_storage) is
  block { 
    // Reject any transaction that try to transfer token to this contract
