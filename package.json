@@ -4,8 +4,8 @@
   "scripts": {
     "build": "node build.js",
     "deploy": "node deploy.js",
-    "test": "node build.js && node deploy.js && node test/test.spec.js",
-    "test:latest": "node test/test.spec.js"
+    "test": "node scripts/build.js && node scripts/deploy.js && node tests/tests.js",
+    "test:latest": "node tests/tests.js"
   },
   "license": "ISC",
   "dependencies": {
