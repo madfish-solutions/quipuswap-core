@@ -1,5 +1,4 @@
 type dex_storage is record 
-  init: bool;
   feeRate: nat;
   tezPool: nat;
   tokenPool: nat;

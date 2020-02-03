@@ -16,7 +16,6 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
     s.invariant := s.tezPool * s.tokenPool;
     s.shares[sender] := 1000n;
     s.totalShares := 1000n;
-    s.init := True;
 
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokenAmount);
