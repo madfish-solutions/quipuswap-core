@@ -32,7 +32,7 @@ function tezToToken (const buyer : address; const recipient : address; const thi
     const newTezPool : nat = s.tezPool + tezIn;
     const tempTezPool : nat = abs(newTezPool - fee);
     const newTokenPool : nat = s.invariant / tempTezPool;
-    const tokensOut : nat = s.tokenPool / newTokenPool;
+    const tokensOut : nat = abs(s.tokenPool - newTokenPool);
 
     if tokensOut >= minTokensOut then skip else failwith("Wrong minTokensOut");
     if tokensOut <= s.tokenPool then skip else failwith("Wrong tokenPool");
@@ -54,7 +54,7 @@ function tokenToTez (const buyer : address; const recipient : address; const thi
     const newTokenPool : nat = s.tokenPool + tokensIn;
     const tempTokenPool : nat = abs(newTokenPool - fee);
     const newTezPool : nat = s.invariant / tempTokenPool;
-    const tezOut : nat = s.tezPool / newTezPool;
+    const tezOut : nat = abs(s.tezPool - newTezPool);
 
     if tezOut >= minTezOut then skip else failwith("Wrong minTezOut");
     if tezOut <= s.tezPool then skip else failwith("Wrong tezPool");
@@ -78,7 +78,7 @@ function tokenToTokenOut (const buyer : address; const recipient : address; cons
     const newTokenPool : nat = s.tokenPool + tokensIn;
     const tempTokenPool : nat = abs(newTokenPool - fee);
     const newTezPool : nat = s.invariant / tempTokenPool;
-    const tezOut : nat = s.tezPool / newTezPool;
+    const tezOut : nat = abs(s.tezPool - newTezPool);
 
     if tezOut <= s.tezPool then skip else failwith("Wrong tezPool");
 
