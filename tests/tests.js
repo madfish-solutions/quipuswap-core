@@ -92,6 +92,7 @@ const testInitializeDex = async (tokenAmount = "1000", tezAmount = "1.0") => {
 
   assert(initialStorage.feeRate == 500);
   assert(initialStorage.invariant == 0);
+  assert(initialStorage.totalShares == 0);
   assert(initialStorage.tezPool == 0);
   assert(initialStorage.tokenPool == 0);
   assert(initialStorage.tokenAddress == tokenAddress);
@@ -127,46 +128,74 @@ const testInitializeDex = async (tokenAmount = "1000", tezAmount = "1.0") => {
   assert(finalStorage.tokenAddress == tokenAddress);
   assert(finalStorage.factoryAddress == factoryAddress);
   assert(finalStorage.extendedShares[pkh] == 1000);
+  assert(finalStorage.totalShares == 1000);
   // TODO: add token check
 };
 
-const testAddLiquidity = async (tokenAmount = "5000", tezAmount = "5.0") => {
-  const { Tezos2 } = await getAccounts();
+const testInvestLiquidity = async (tezAmount = "5.0") => {
+  const { Tezos1, Tezos2 } = await getAccounts();
 
+  const pkh0 = await Tezos1.signer.publicKeyHash();
   const pkh = await Tezos2.signer.publicKeyHash();
   const initialStorage = await getDexFullStorage(dexAddress, [pkh]);
 
   assert(initialStorage.extendedShares[pkh] == undefined);
 
+  const tokenContract0 = await Tezos1.contract.at(tokenAddress);
   const tokenContract = await Tezos2.contract.at(tokenAddress);
   const dexContract = await Tezos2.contract.at(dexAddress);
 
-  const operation0 = await tokenContract.methods
-    .approve(dexAddress, tokenAmount)
+  const mutezAmount = parseFloat(tezAmount) * 1000000;
+  const minShares = parseInt(
+    (mutezAmount / initialStorage.tezPool) * initialStorage.totalShares
+  );
+  const tokenAmount = parseInt(
+    (minShares * initialStorage.tokenPool) / initialStorage.totalShares
+  );
+
+  const operation0 = await tokenContract0.methods
+    .transfer(pkh0, pkh, tokenAmount)
     .send();
   await operation0.confirmation();
 
-  // TODO: add token check
-
   assert(operation0.status === "applied", "Operation was not applied");
 
-  const operation1 = await dexContract.methods
-    .initializeExchange(tokenAmount)
-    .send({ amount: tezAmount });
+  const operation1 = await tokenContract.methods
+    .approve(dexAddress, tokenAmount)
+    .send();
   await operation1.confirmation();
+
+  // TODO: add token check
 
   assert(operation1.status === "applied", "Operation was not applied");
 
+  const operation2 = await dexContract.methods
+    .investLiquidity(minShares)
+    .send({ amount: tezAmount });
+  await operation2.confirmation();
+
+  assert(operation2.status === "applied", "Operation was not applied");
+
   const finalStorage = await getDexFullStorage(dexAddress, [pkh]);
 
-  const mutezAmount = parseFloat(tezAmount) * 1000000;
-  assert(finalStorage.feeRate == 500);
-  assert(finalStorage.invariant == mutezAmount * parseInt(tokenAmount));
-  assert(finalStorage.tezPool == mutezAmount);
-  assert(finalStorage.tokenPool == tokenAmount);
-  assert(finalStorage.tokenAddress == tokenAddress);
-  assert(finalStorage.factoryAddress == factoryAddress);
-  assert(finalStorage.extendedShares[pkh] == 1000);
+  assert(finalStorage.extendedShares[pkh] == minShares);
+  assert(
+    finalStorage.tezPool ==
+      parseInt(initialStorage.tezPool) + parseInt(mutezAmount)
+  );
+  assert(
+    finalStorage.tokenPool ==
+      parseInt(initialStorage.tokenPool) + parseInt(tokenAmount)
+  );
+  assert(
+    finalStorage.totalShares ==
+      parseInt(initialStorage.totalShares) + parseInt(minShares)
+  );
+  assert(
+    finalStorage.invariant ==
+      (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
+        (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
+  );
   // TODO: add token check
 };
 const expectThrow = async fn => {
@@ -203,7 +232,7 @@ const assertInvariant = async testFn => {
 };
 
 const test = async () => {
-  const tests = [() => testInitializeDex(), () => testAddLiquidity()];
+  const tests = [() => testInitializeDex(), () => testInvestLiquidity()];
 
   for (let test of tests) {
     await assertInvariant(test);
