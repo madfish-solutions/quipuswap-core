@@ -199,7 +199,7 @@ const testInvestLiquidity = async (tezAmount = "5.0") => {
   // TODO: add token check
 };
 
-const testTezToTokenSwap = async (tezAmount = "1") => {
+const testTezToTokenSwap = async (tezAmount = "0.01") => {
   const { Tezos1 } = await getAccounts();
 
   const pkh = await Tezos1.signer.publicKeyHash();
@@ -211,55 +211,45 @@ const testTezToTokenSwap = async (tezAmount = "1") => {
   const mutezAmount = parseFloat(tezAmount) * 1000000;
 
   const fee = parseInt(mutezAmount / initialDexStorage.feeRate);
-  const newTezPool = parseInt(initialDexStorage.tezPool + mutezAmount);
+  const newTezPool = parseInt(+initialDexStorage.tezPool + +mutezAmount);
   const tempTezPool = parseInt(newTezPool - fee);
   const newTokenPool = parseInt(initialDexStorage.invariant / tempTezPool);
-  const minTokens = parseInt(
-    parseInt(initialDexStorage.tokenPool - newTokenPool) / 10
-  );
 
-  console.log(minTokens);
-  console.log((parseFloat(tezAmount) + 0.55 + 0.000258).toString());
+  const minTokens = parseInt(
+    parseInt(initialDexStorage.tokenPool - newTokenPool)
+  );
 
   const operation0 = await dexContract.methods
     .tezToTokenSwap(minTokens.toString())
     .send({
-      amount: "1.55026"
+      amount: tezAmount
     });
   await operation0.confirmation();
 
   assert(operation0.status === "applied", "Operation was not applied");
-
   const finalStorage = await getDexFullStorage(dexAddress, [pkh]);
   const finalTokenStorage = await getTokenFullStorage(tokenAddress, [pkh]);
   const finalTezBalance = await Tezos1.tz.getBalance(pkh);
-  console.log(
-    parseInt(finalTokenStorage.accounts[pkh].balance) -
-      parseInt(initialTokenStorage.accounts[pkh].balance)
-  );
-  console.log(operation0);
+
   assert(
     finalTokenStorage.accounts[pkh].balance ==
       parseInt(initialTokenStorage.accounts[pkh].balance) + parseInt(minTokens)
   );
   assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
-  // assert(
-  //   finalStorage.tezPool ==
-  //     parseInt(initialStorage.tezPool) + parseInt(mutezAmount)
-  // );
-  // assert(
-  //   finalStorage.tokenPool ==
-  //     parseInt(initialStorage.tokenPool) + parseInt(tokenAmount)
-  // );
-  // assert(
-  //   finalStorage.totalShares ==
-  //     parseInt(initialStorage.totalShares) + parseInt(minShares)
-  // );
-  // assert(
-  //   finalStorage.invariant ==
-  //     (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
-  //       (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
-  // );
+  assert(
+    finalStorage.tezPool ==
+      parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
+  );
+  assert(
+    finalStorage.tokenPool ==
+      parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
+  );
+
+  assert(
+    finalStorage.invariant ==
+      (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
+        (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
+  );
   // TODO: add token check
 };
 
@@ -277,29 +267,13 @@ const expectThrow = async fn => {
 };
 
 const assertInvariant = async testFn => {
-  //   const { Tezos1, Tezos2, manager } = await getAccounts();
-  //   const pkh = await Tezos1.signer.publicKeyHash();
-  //   const pkh2 = await Tezos2.signer.publicKeyHash();
   await testFn();
-  //   const finalStorage = await getFullStorage(address, [
-  //     pkh,
-  //     pkh2,
-  //     manager.address
-  //   ]);
-  //   const totalSupply = Object.keys(finalStorage.accounts).reduce(
-  //     (prev, current) => prev + finalStorage.accounts[current].balance.toNumber(),
-  //     0
-  //   );
-  //   assert(
-  //     totalSupply === finalStorage.totalSupply.toNumber(),
-  //     `Expected ${totalSupply} to be ${finalStorage.totalSupply.toNumber()}`
-  //   );
 };
 
 const test = async () => {
   const tests = [
-    // () => testInitializeDex(),
-    // () => testInvestLiquidity(),
+    () => testInitializeDex(),
+    () => testInvestLiquidity(),
     () => testTezToTokenSwap()
   ];
 
