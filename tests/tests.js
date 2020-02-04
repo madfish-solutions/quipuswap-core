@@ -253,6 +253,67 @@ const testTezToTokenSwap = async (tezAmount = "0.01") => {
   // TODO: add token check
 };
 
+const testTezToTokenPayment = async (tezAmount = "0.1") => {
+  const { Tezos1, Tezos2 } = await getAccounts();
+
+  const pkh = await Tezos1.signer.publicKeyHash();
+  const pkh1 = await Tezos2.signer.publicKeyHash();
+  const initialTokenStorage = await getTokenFullStorage(tokenAddress, [
+    pkh,
+    pkh1
+  ]);
+  const initialDexStorage = await getDexFullStorage(dexAddress, [pkh, pkh1]);
+  const initialTezBalance = await Tezos1.tz.getBalance(pkh);
+  const dexContract = await Tezos1.contract.at(dexAddress);
+
+  const mutezAmount = parseFloat(tezAmount) * 1000000;
+
+  const fee = parseInt(mutezAmount / initialDexStorage.feeRate);
+  const newTezPool = parseInt(+initialDexStorage.tezPool + +mutezAmount);
+  const tempTezPool = parseInt(newTezPool - fee);
+  const newTokenPool = parseInt(initialDexStorage.invariant / tempTezPool);
+
+  const minTokens = parseInt(
+    parseInt(initialDexStorage.tokenPool - newTokenPool)
+  );
+
+  const operation0 = await dexContract.methods
+    .tezToTokenPayment(minTokens.toString(), pkh1)
+    .send({
+      amount: tezAmount
+    });
+  await operation0.confirmation();
+
+  assert(operation0.status === "applied", "Operation was not applied");
+  const finalStorage = await getDexFullStorage(dexAddress, [pkh, pkh1]);
+  const finalTokenStorage = await getTokenFullStorage(tokenAddress, [
+    pkh,
+    pkh1
+  ]);
+  const finalTezBalance = await Tezos1.tz.getBalance(pkh);
+
+  assert(
+    finalTokenStorage.accounts[pkh1].balance ==
+      parseInt(initialTokenStorage.accounts[pkh1].balance) + parseInt(minTokens)
+  );
+  assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
+  assert(
+    finalStorage.tezPool ==
+      parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
+  );
+  assert(
+    finalStorage.tokenPool ==
+      parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
+  );
+
+  assert(
+    finalStorage.invariant ==
+      (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
+        (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
+  );
+  // TODO: add token check
+};
+
 const expectThrow = async fn => {
   let throwed = false;
   try {
@@ -274,7 +335,8 @@ const test = async () => {
   const tests = [
     () => testInitializeDex(),
     () => testInvestLiquidity(),
-    () => testTezToTokenSwap()
+    () => testTezToTokenSwap(),
+    () => testTezToTokenPayment()
   ];
 
   for (let test of tests) {
