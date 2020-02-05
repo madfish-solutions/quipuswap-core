@@ -79,9 +79,12 @@ Tezos.importKey(email, password, mnemonic.join(" "), secret)
         tokenPool: "0",
         invariant: "0",
         totalShares: "0",
-        tokenAddress: Token, // FIX IT
-        factoryAddress: Factory, // FIX IT
-        shares: {}
+        tokenAddress: Token,
+        factoryAddress: Factory,
+        shares: {},
+        candidates: {},
+        votes: {},
+        delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5"
       },
       balance: 0
     });

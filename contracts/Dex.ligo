@@ -2,7 +2,7 @@
 #include "IDex.ligo"
 #include "IFactory.ligo"
 
-function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function initializeExchange (const tokenAmount : nat; const candidate : key_hash; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     if s.invariant =/= 0n then failwith("Is initiated") else skip ;
     if s.invariant =/= 0n then failwith("Wrong invariant") else skip ;
@@ -19,7 +19,13 @@ function initializeExchange (const tokenAmount : nat; var s: dex_storage ) :  (l
 
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokenAmount);
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
+    var operations : list(operation) := list transaction(transferParams, 0mutez, tokenContract); end;
+    
+    s.candidates[sender]:= candidate;
+    s.votes[candidate]:= 1000n;
+    s.delegated := candidate;
+    const delegationOp: operation = set_delegate(Some(candidate));
+    operations := cons(delegationOp, operations);
  } with (operations, s)
 
 function tezToToken (const buyer : address; const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -102,7 +108,7 @@ function tokenToTokenIn (const recipient : address; const this : address; const 
  } with tezToToken(sender, recipient, this, amount / 1mutez, minTokensOut, s)
 
 
-function investLiquidity (const minShares : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function investLiquidity (const minShares : nat; const candidate : key_hash; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
     if amount > 0mutez then skip else failwith("Wrong amount");
     if minShares > 0n then skip else failwith("Wrong tokenAmount");
@@ -120,9 +126,28 @@ block {
     s.invariant := s.tezPool * s.tokenPool;
     s.totalShares := s.totalShares + sharesPurchased;
 
+    case s.candidates[sender] of | None -> block {
+      skip
+    } | Some(c) -> {
+      const prevVotes: nat = case s.votes[c] of | None -> 0n | Some(v) -> v end;
+      s.votes[c]:= abs(prevVotes - share);
+    } end;
+
+    s.candidates[sender]:= candidate;
+    const prevVotes: nat = case s.votes[candidate] of | None -> 0n | Some(v) -> v end;
+    const newVotes: nat = prevVotes + share + sharesPurchased;
+    s.votes[candidate]:= newVotes;
+
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(sender, self_address, tokensRequired);
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
+    var operations : list(operation) := list transaction(transferParams, 0mutez, tokenContract); end;
+    
+    const mainCandidateVotes: nat = case s.votes[s.delegated] of | None -> 0n | Some(v) -> v end;
+    if mainCandidateVotes > newVotes then skip else block {
+       s.delegated := candidate;
+       const delegationOp: operation = set_delegate(Some(candidate));
+       operations := cons(delegationOp, operations);
+    };
  } with (operations, s)
 
 function divestLiquidity (const sharesBurned : nat; const minTez : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
@@ -144,6 +169,13 @@ block {
     s.tezPool := abs(s.tezPool - tezDivested);
     s.tokenPool := abs(s.tokenPool - tokensDivested);
     s.invariant := if s.totalShares = 0n then 0n; else s.tezPool * s.tokenPool;
+    case s.candidates[sender] of | None -> block {
+      skip
+    } | Some(c) -> {
+      const prevVotes: nat = case s.votes[c] of | None -> 0n | Some(v) -> v end;
+      s.votes[c]:= abs(prevVotes - sharesBurned);
+    } end;
+
     const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
     const transferParams: tokenAction = Transfer(self_address, sender, tokensDivested);
 
@@ -156,7 +188,7 @@ function main (const p : dexAction ; const s : dex_storage) :
  block {
     const this: address = self_address; 
  } with case p of
-  | InitializeExchange(n) -> initializeExchange(n, s)
+  | InitializeExchange(n) -> initializeExchange(n.0, n.1, s)
   | TezToTokenSwap(n) -> tezToToken(sender, sender, this, amount / 1mutez, n, s)
   | TokenToTezSwap(n) -> tokenToTez(sender, sender, this, n.0, n.1, s)
   | TokenToTokenSwap(n) -> tokenToTokenOut(sender, sender, this, n.0, n.1, n.2, s)
@@ -164,9 +196,10 @@ function main (const p : dexAction ; const s : dex_storage) :
   | TokenToTezPayment(n) -> tokenToTez(sender, n.2, this, n.0, n.1, s)
   | TokenToTokenPayment(n) -> tokenToTokenOut(sender, n.2, this, n.0, n.1, n.3, s)
   | TokenToTokenIn(n) -> tokenToTokenIn(n.1, this, n.0, s)
-  | InvestLiquidity(n) -> investLiquidity(n, s)
+  | InvestLiquidity(n) -> investLiquidity(n.0, n.1, s)
   | DivestLiquidity(n) -> divestLiquidity(n.0, n.1, n.2, s)
  end
 
 // TODO: 
 // - replace map with big_map
+// - add method to change candidate
