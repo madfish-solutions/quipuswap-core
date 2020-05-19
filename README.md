@@ -1,29 +1,28 @@
-This project is intended to provided easy and efficient way to exchange tokens,
-Tez to Tokens and versa visa. Using smart contracts users can add own tokens
+This project is intended to provide an easy and efficient way to exchange tokens,
+Tez to Tokens and vice versa. Using smart contracts users can add own tokens
 to exchange, invest liquidity and make profit in fully decentralized way.
 
 Current implementation supports FA1.2 tokens.
 
 # How to try it out
 
-THe `scripts` dirrectory contains scripts for manual testing basic functionality of the contracts.
+The `scripts` directory contains scripts for manual testing of the basic contract functionality.
 
-It uses tezos client and `babylon.sh` so docker should be run and all necessary tezos containers should
-be present.
+It uses tezos client and `babylon.sh`, so you should have docker running with all necessary tezos containers.
 
-Some scripts also have dependencies so use before running:
+Scripts require dependencies to be installed before running:
 
 ```
 npm i
 ```
 
-Scripts can be running:
+You can run a script using the following command:
 
 ```
 node scripts/<<SCRIPT_NAME>>.js
 ```
 
-We are intended to replace this "wild" testing approach by auto taquito tests soon.
+We are intended to replace this "wild" testing approach by tests automatic using Taquito soon.
 
 ## Scripts description
 
