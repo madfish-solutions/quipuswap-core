@@ -2,8 +2,8 @@
 
 type exchange_storage is record 
    tokenList: list (address);
-   tokenToExchange: map(address, address);
-   exchangeToToken: map(address, address);
+   tokenToExchange: big_map(address, address);
+   exchangeToToken: big_map(address, address);
 end
 
 type exchangeAction is

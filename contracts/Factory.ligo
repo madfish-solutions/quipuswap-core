@@ -10,11 +10,7 @@ function launchExchange (const token : address; const exchange : address; var s:
  } with ( (nil : list(operation)), s)
 
 function tokenToExchangeLookup (const tokenOutAddress : address; const recipient: address; const minTokensOut: nat; const s: exchange_storage ) :  (list(operation) * exchange_storage) is
- block {
-    const exchange: contract(dexAction) = get_contract(get_force(tokenOutAddress, s.tokenToExchange));
-    const transferParams: dexAction = TokenToTokenIn(minTokensOut, recipient);
-    const operations : list(operation) = list transaction(transferParams, amount, exchange); end;
- } with (operations, s)
+ (list transaction(TezToTokenPayment(minTokensOut, recipient), Tezos.amount, (get_contract(get_force(tokenOutAddress, s.tokenToExchange)): contract(dexAction))); end, s)
 
 function main (const p : exchangeAction ; const s : exchange_storage) :
   (list(operation) * exchange_storage) is

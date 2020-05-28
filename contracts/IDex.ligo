@@ -6,9 +6,9 @@ type dex_storage is record
   totalShares: nat;
   tokenAddress: address;
   factoryAddress: address;
-  shares: map(address, nat);
-  candidates: map(address, key_hash);
-  votes: map(key_hash, nat);
+  shares: big_map(address, nat);
+  candidates: big_map(address, key_hash);
+  votes: big_map(key_hash, nat);
   delegated: key_hash;
 end
 
@@ -17,7 +17,6 @@ type dexAction is
 | TezToTokenSwap of nat
 | TokenToTezSwap of (nat * nat)
 | TokenToTokenSwap of (nat * nat * address)
-| TokenToTokenIn of (nat * address)
 | TezToTokenPayment of (nat * address)
 | TokenToTezPayment of (nat * nat * address)
 | TokenToTokenPayment of (nat * nat * address * address)

@@ -6,7 +6,7 @@ end
 type contract_storage is record
   owner: address;
   totalSupply: nat;
-  ledger: map(address, account);
+  ledger: big_map(address, account);
 end
 
 type tokenAction is

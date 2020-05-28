@@ -1,10 +1,8 @@
 #include "IToken.ligo"
-#include "IDex.ligo"
 #include "IFactory.ligo"
 
 function initializeExchange (const tokenAmount : nat; const candidate : key_hash; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
-    if s.invariant =/= 0n then failwith("Is initiated") else skip ;
     if s.invariant =/= 0n then failwith("Wrong invariant") else skip ;
     if s.totalShares =/= 0n then failwith("Wrong totalShares") else skip ;
     if amount < 1mutez then failwith("Wrong amount") else skip ;
@@ -12,101 +10,57 @@ function initializeExchange (const tokenAmount : nat; const candidate : key_hash
     if amount > 500000000tz then failwith("Wrong amount") else skip ;
     
     s.tokenPool := tokenAmount;
-    s.tezPool := amount / 1mutez;
+    s.tezPool := Tezos.amount / 1mutez;
     s.invariant := s.tezPool * s.tokenPool;
     s.shares[sender] := 1000n;
     s.totalShares := 1000n;
 
-    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(sender, self_address, tokenAmount);
-    var operations : list(operation) := list transaction(transferParams, 0mutez, tokenContract); end;
-    
     s.candidates[sender]:= candidate;
     s.votes[candidate]:= 1000n;
     s.delegated := candidate;
-    const delegationOp: operation = set_delegate(Some(candidate));
-    operations := cons(delegationOp, operations);
- } with (operations, s)
+ } with (list transaction(Transfer(sender, self_address, tokenAmount), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); set_delegate(Some(candidate)) ; end, s)
 
-function tezToToken (const buyer : address; const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function tezToToken (const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
-
     if tezIn > 0n then skip else failwith("Wrong tezIn");
     if minTokensOut > 0n then skip else failwith("Wrong minTokensOut");
 
-    const fee : nat = tezIn / s.feeRate;
-    const newTezPool : nat = s.tezPool + tezIn;
-    const tempTezPool : nat = abs(newTezPool - fee);
-    const newTokenPool : nat = s.invariant / tempTezPool;
+    s.tezPool := s.tezPool + tezIn;
+    const newTokenPool : nat = s.invariant / abs(s.tezPool - tezIn / s.feeRate);
     const tokensOut : nat = abs(s.tokenPool - newTokenPool);
 
     if tokensOut >= minTokensOut then skip else failwith("Wrong minTokensOut");
-    if tokensOut <= s.tokenPool then skip else failwith("Wrong tokenPool");
     
-    s.tezPool := newTezPool;
     s.tokenPool := newTokenPool;
-    s.invariant := newTezPool * newTokenPool;
-    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(this, recipient, tokensOut);
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); end;
- } with (operations, s)
+    s.invariant := s.tezPool * newTokenPool;
+ } with (list transaction(Transfer(this, recipient, tokensOut), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); end, s)
 
-function tokenToTez (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minTezOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function tokenToTez (const buyer : address; const recepient : address; const this : address; const tokensIn : nat; const minTezOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     if tokensIn > 0n then skip else failwith("Wrong tokensIn");
     if minTezOut > 0n then skip else failwith("Wrong minTezOut");
 
-    const fee : nat = tokensIn / s.feeRate;
-    const newTokenPool : nat = s.tokenPool + tokensIn;
-    const tempTokenPool : nat = abs(newTokenPool - fee);
-    const newTezPool : nat = s.invariant / tempTokenPool;
+    s.tokenPool := s.tokenPool + tokensIn;
+    const newTezPool : nat = s.invariant / abs(s.tokenPool - tokensIn / s.feeRate);
     const tezOut : nat = abs(s.tezPool - newTezPool);
 
     if tezOut >= minTezOut then skip else failwith("Wrong minTezOut");
-    if tezOut <= s.tezPool then skip else failwith("Wrong tezPool");
-    
-    s.tokenPool := newTokenPool;
-    s.tezPool := newTezPool;
-    s.invariant := newTezPool * newTokenPool;
-    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(buyer, this, tokensIn); 
 
-    const receiver: contract(unit) = get_contract(recipient);
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(unit, tezOut * 1mutez, receiver); end;
- } with (operations, s)
+    s.tezPool := newTezPool;
+    s.invariant := newTezPool * s.tokenPool;
+ } with (list transaction(Transfer(buyer, this, tokensIn), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(unit, minTezOut * 1mutez, (get_contract(recepient) : contract(unit))); end, s)
 
 function tokenToTokenOut (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minTokensOut : nat; const tokenOutAddress: address; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
     if tokensIn > 0n then skip else failwith("Wrong tokensIn");
     if minTokensOut > 0n then skip else failwith("Wrong minTezOut");
 
-    const fee : nat = tokensIn / s.feeRate;
-    const newTokenPool : nat = s.tokenPool + tokensIn;
-    const tempTokenPool : nat = abs(newTokenPool - fee);
-    const newTezPool : nat = s.invariant / tempTokenPool;
+    s.tokenPool := s.tokenPool + tokensIn;
+    const newTezPool : nat = s.invariant / abs(s.tokenPool - tokensIn / s.feeRate);
     const tezOut : nat = abs(s.tezPool - newTezPool);
-
-    if tezOut <= s.tezPool then skip else failwith("Wrong tezPool");
-
-    s.tokenPool := newTokenPool;
     s.tezPool := newTezPool;
-    s.invariant := newTezPool * newTokenPool;
-
-    const tokenContract: contract(tokenAction) = get_contract(s.tokenAddress);
-    const transferParams: tokenAction = Transfer(buyer, this, tokensIn);
-
-    const factoryContract: contract(exchangeAction) = get_contract(s.factoryAddress);
-    const receiver: contract(dexAction) = get_contract(this);
-    const requestParams: exchangeAction = TokenToExchangeLookup(tokenOutAddress, recipient, minTokensOut);
-
-    const operations : list(operation) = list transaction(transferParams, 0mutez, tokenContract); transaction(requestParams, tezOut * 1mutez, factoryContract); end;
- } with (operations, s)
-
-function tokenToTokenIn (const recipient : address; const this : address; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
- block {
-   if sender = s.factoryAddress then skip else failwith("Wrong minTezOut");
- } with tezToToken(sender, recipient, this, amount / 1mutez, minTokensOut, s)
-
+    s.invariant := newTezPool * s.tokenPool;
+ } with (list transaction(Transfer(buyer, this, tokensIn), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(TokenToExchangeLookup(tokenOutAddress, recipient, minTokensOut), tezOut * 1mutez, (get_contract(s.factoryAddress): contract(exchangeAction))); end, s)
 
 function investLiquidity (const minShares : nat; const candidate : key_hash; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
@@ -189,17 +143,13 @@ function main (const p : dexAction ; const s : dex_storage) :
     const this: address = self_address; 
  } with case p of
   | InitializeExchange(n) -> initializeExchange(n.0, n.1, s)
-  | TezToTokenSwap(n) -> tezToToken(sender, sender, this, amount / 1mutez, n, s)
+  | TezToTokenSwap(n) -> tezToToken(sender, this, amount / 1mutez, n, s)
   | TokenToTezSwap(n) -> tokenToTez(sender, sender, this, n.0, n.1, s)
   | TokenToTokenSwap(n) -> tokenToTokenOut(sender, sender, this, n.0, n.1, n.2, s)
-  | TezToTokenPayment(n) -> tezToToken(sender, n.1, this, amount / 1mutez, n.0, s)
+  | TezToTokenPayment(n) -> tezToToken(n.1, this, amount / 1mutez, n.0, s)
   | TokenToTezPayment(n) -> tokenToTez(sender, n.2, this, n.0, n.1, s)
   | TokenToTokenPayment(n) -> tokenToTokenOut(sender, n.2, this, n.0, n.1, n.3, s)
-  | TokenToTokenIn(n) -> tokenToTokenIn(n.1, this, n.0, s)
   | InvestLiquidity(n) -> investLiquidity(n.0, n.1, s)
   | DivestLiquidity(n) -> divestLiquidity(n.0, n.1, n.2, s)
  end
 
-// TODO: 
-// - replace map with big_map
-// - add method to change candidate
