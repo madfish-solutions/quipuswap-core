@@ -7,10 +7,10 @@
     "test": "node scripts/build.js && node scripts/deploy.js && node tests/tests.js",
     "test:latest": "node tests/tests.js"
   },
-  "license": "ISC",
   "dependencies": {
-    "@taquito/taquito": "^6.0.0-beta.0",
-    "bignumber.js": "^9.0.0",
-    "commander": "^4.0.0"
+    "@taquito/taquito": "^6.3.0-wallet.3",
+    "commander": "^5.1.0",
+    "dotenv": "^8.2.0",
+    "bignumber.js": "^9.0.0"
   }
 }

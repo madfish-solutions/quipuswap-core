@@ -3,13 +3,13 @@ const fs = require("fs");
 const assert = require("assert");
 const BigNumber = require("bignumber.js");
 const { address: tokenAddress } = JSON.parse(
-  fs.readFileSync("./deployed/Token.json").toString()
+  fs.readFileSync(process.argv[2] || "./deployed/Token.json").toString()
 );
 const { address: dexAddress } = JSON.parse(
-  fs.readFileSync("./deployed/Dex.json").toString()
+  fs.readFileSync(process.argv[3] || "./deployed/Dex.json").toString()
 );
 const { address: factoryAddress, network } = JSON.parse(
-  fs.readFileSync("./deployed/Factory.json").toString()
+  fs.readFileSync(process.argv[4] || "./deployed/Factory.json").toString()
 );
 
 const getTokenFullStorage = async (address, keys) => {
@@ -25,7 +25,8 @@ const getTokenFullStorage = async (address, keys) => {
     };
 
     try {
-      entry = storage.ledger[current]; // await storage.ledger.get(current);
+      let result = await storage.ledger.get(current);
+      entry = result;
     } catch (ex) {
       console.error(ex);
       // Do nothing
@@ -52,7 +53,7 @@ const getDexFullStorage = async (address, keys) => {
     let entry = new BigNumber(0);
 
     try {
-      entry = storage.shares[current]; //await storage.shares.get(current);
+      entry = await storage.shares.get(current);
     } catch (ex) {
       console.error(ex);
     }
@@ -102,7 +103,7 @@ const testInitializeDex = async (
   assert(initialStorage.tokenPool == 0);
   assert(initialStorage.tokenAddress == tokenAddress);
   assert(initialStorage.factoryAddress == factoryAddress);
-  assert(initialStorage.extendedShares[pkh] == undefined);
+  assert(initialStorage.extendedShares[pkh] == 0);
 
   const tokenContract = await Tezos1.contract.at(tokenAddress);
   const dexContract = await Tezos1.contract.at(dexAddress);
@@ -149,7 +150,7 @@ const testInvestLiquidity = async (
   const pkh = await Tezos2.signer.publicKeyHash();
   const initialStorage = await getDexFullStorage(dexAddress, [pkh]);
 
-  assert(initialStorage.extendedShares[pkh] == undefined);
+  assert(initialStorage.extendedShares[pkh] == 0);
 
   const tokenContract0 = await Tezos1.contract.at(tokenAddress);
   const tokenContract = await Tezos2.contract.at(tokenAddress);
@@ -191,20 +192,20 @@ const testInvestLiquidity = async (
   assert(finalStorage.extendedShares[pkh] == minShares);
   assert(
     finalStorage.tezPool ==
-      parseInt(initialStorage.tezPool) + parseInt(mutezAmount)
+    parseInt(initialStorage.tezPool) + parseInt(mutezAmount)
   );
   assert(
     finalStorage.tokenPool ==
-      parseInt(initialStorage.tokenPool) + parseInt(tokenAmount)
+    parseInt(initialStorage.tokenPool) + parseInt(tokenAmount)
   );
   assert(
     finalStorage.totalShares ==
-      parseInt(initialStorage.totalShares) + parseInt(minShares)
+    parseInt(initialStorage.totalShares) + parseInt(minShares)
   );
   assert(
     finalStorage.invariant ==
-      (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
-        (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
+    (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
+    (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
   );
   assert(finalStorage.votes[candidate] == minShares);
   assert(finalStorage.candidates[pkh] == candidate);
@@ -246,22 +247,22 @@ const testTezToTokenSwap = async (tezAmount = "0.01") => {
 
   assert(
     finalTokenStorage.accounts[pkh].balance ==
-      parseInt(initialTokenStorage.accounts[pkh].balance) + parseInt(minTokens)
+    parseInt(initialTokenStorage.accounts[pkh].balance) + parseInt(minTokens)
   );
   assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
   assert(
     finalStorage.tezPool ==
-      parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
+    parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
   );
   assert(
     finalStorage.tokenPool ==
-      parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
+    parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
   );
 
   assert(
     finalStorage.invariant ==
-      (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
-        (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
+    (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
+    (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
   );
   // TODO: add token check
 };
@@ -307,23 +308,23 @@ const testTokenToTezSwap = async (tokensIn = "1000") => {
 
   assert(
     finalTokenStorage.accounts[pkh].balance ==
-      parseInt(initialTokenStorage.accounts[pkh].balance) - parseInt(tokensIn)
+    parseInt(initialTokenStorage.accounts[pkh].balance) - parseInt(tokensIn)
   );
   assert(finalTezBalance >= parseInt(initialTezBalance));
   assert(finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut));
   assert(
     finalStorage.tezPool ==
-      parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
+    parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
   );
   assert(
     finalStorage.tokenPool ==
-      parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
+    parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
   );
 
   assert(
     finalStorage.invariant ==
-      (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
-        (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
+    (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
+    (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
   );
   // TODO: add token check
 };
@@ -371,22 +372,22 @@ const testTezToTokenPayment = async (tezAmount = "0.1") => {
 
   assert(
     finalTokenStorage.accounts[pkh1].balance ==
-      parseInt(initialTokenStorage.accounts[pkh1].balance) + parseInt(minTokens)
+    parseInt(initialTokenStorage.accounts[pkh1].balance) + parseInt(minTokens)
   );
   assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
   assert(
     finalStorage.tezPool ==
-      parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
+    parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
   );
   assert(
     finalStorage.tokenPool ==
-      parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
+    parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
   );
 
   assert(
     finalStorage.invariant ==
-      (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
-        (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
+    (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
+    (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
   );
   // TODO: add token check
 };
@@ -439,22 +440,22 @@ const testTokenToTezPayment = async (tokensIn = "2000") => {
 
   assert(
     finalTokenStorage.accounts[pkh].balance ==
-      parseInt(initialTokenStorage.accounts[pkh].balance) - parseInt(tokensIn)
+    parseInt(initialTokenStorage.accounts[pkh].balance) - parseInt(tokensIn)
   );
   assert(finalTezBalance == parseInt(initialTezBalance) + parseInt(minTezOut));
   assert(
     finalStorage.tezPool ==
-      parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
+    parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
   );
   assert(
     finalStorage.tokenPool ==
-      parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
+    parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
   );
 
   assert(
     finalStorage.invariant ==
-      (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
-        (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
+    (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
+    (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
   );
   // TODO: add token check
 };
@@ -496,7 +497,7 @@ const testDivestLiquidity = async (
 
   assert(
     finalStorage.extendedShares[pkh] ==
-      initialStorage.extendedShares[pkh] - sharesBurned
+    initialStorage.extendedShares[pkh] - sharesBurned
   );
   assert(finalStorage.tezPool == parseInt(initialStorage.tezPool) - minTez);
   assert(
@@ -504,16 +505,16 @@ const testDivestLiquidity = async (
   );
   assert(
     finalStorage.totalShares ==
-      parseInt(initialStorage.totalShares) - sharesBurned
+    parseInt(initialStorage.totalShares) - sharesBurned
   );
   assert(
     finalStorage.invariant ==
-      (parseInt(initialStorage.tezPool) - minTez) *
-        (parseInt(initialStorage.tokenPool) - minTokens)
+    (parseInt(initialStorage.tezPool) - minTez) *
+    (parseInt(initialStorage.tokenPool) - minTokens)
   );
   assert(
     finalStorage.votes[candidate] ==
-      initialStorage.votes[candidate] - sharesBurned
+    initialStorage.votes[candidate] - sharesBurned
   );
 };
 
