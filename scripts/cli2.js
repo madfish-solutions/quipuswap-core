@@ -26,9 +26,10 @@ const setup = async (keyPath, provider) => {
     return await Tezos.setProvider({ rpc: provider, signer: await new InMemorySigner.fromSecretKey(secretKey) });
 };
 
-let deployContract = async (Tezos, contractName, balance, inputDir, storageDir, outputDir) => {
+let deployContract = async (Tezos, contractName, balance, inputDir, storageDir, outputDir, outputName, storageName) => {
+    storageName = storageName || contractName;
     let operation = await Tezos.contract.originate({
-        code: JSON.parse(fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()),
+        code: JSON.parse(fs.readFileSync(`./${inputDir}/${storageName}.json`).toString()),
         storage: require(`../${storageDir}/${contractName}.js`),
         balance: balance
     });
@@ -36,8 +37,8 @@ let deployContract = async (Tezos, contractName, balance, inputDir, storageDir, 
     const detail = {
         address: contract.address
     };
-
-    fs.writeFileSync(`./${outputDir}/${contractName}.json`, JSON.stringify(detail));
+    outputName = outputName || contractName;
+    fs.writeFileSync(`./${outputDir}/${outputName}.json`, JSON.stringify(detail));
     fs.writeFileSync(
         `./${outputDir}/${contract.address}.json`,
         JSON.stringify(detail)
@@ -71,7 +72,7 @@ program
 
 
 program
-    .command('deploy <contract>')
+    .command('deploy <contract> [output_name] [storage_name]')
     .description('build contracts')
     .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
     .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
@@ -79,10 +80,10 @@ program
     .option("-k, --key_path <file>", "Where private key is located", "key")
     .option("-p, --provider <provider>", "Node to connect", "https://api.tez.ie/rpc/carthagenet")
     .option("-b, --balance <balance>", "Where private key is located", "0")
-    .action(async function (contract, options) {
+    .action(async function (contract, output_name, storage_name, options) {
         exec("mkdir -p " + options.output_dir);
         await setup(options.key_path, options.provider);
-        deployContract(Tezos, contract, parseFloat(options.balance), options.input_dir, options.storage_dir, options.output_dir);
+        deployContract(Tezos, contract, parseFloat(options.balance), options.input_dir, options.storage_dir, options.output_dir, output_name, storage_name);
     });
 
 
