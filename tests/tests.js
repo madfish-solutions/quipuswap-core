@@ -2,6 +2,8 @@ const { TezosToolkit } = require("@taquito/taquito");
 const fs = require("fs");
 const assert = require("assert");
 const BigNumber = require("bignumber.js");
+const { InMemorySigner } = require("@taquito/signer");
+
 const { address: tokenAddress } = JSON.parse(
   fs.readFileSync(process.argv[2] || "./deploy/Token.json").toString()
 );
@@ -50,7 +52,7 @@ const getTokenFullStorage = async (address, keys) => {
   };
 };
 
-const getDexFullStorage = async (address, keys) => {
+const getDexFullStorage = async (address, keys, voteKeys = []) => {
   const { Tezos1 } = await getAccounts();
   const contract = await Tezos1.contract.at(address);
   const storage = await contract.storage();
@@ -73,25 +75,43 @@ const getDexFullStorage = async (address, keys) => {
       [current]: entry
     };
   }, Promise.resolve({}));
+  const votes = await voteKeys.reduce(async (prev, current) => {
+    const value = await prev;
+
+    let entry = new BigNumber(0);
+
+    try {
+      entry = await storage.shares.get(current);
+    } catch (ex) {
+      console.error(ex);
+    }
+    if (!entry) {
+      entry = new BigNumber(0);
+    }
+
+    return {
+      ...value,
+      [current]: entry
+    };
+  }, Promise.resolve({}));
   return {
     ...storage,
-    extendedShares
+    extendedShares,
+    votes
   };
 };
 
 const createTezosFromFaucet = async path => {
-  const { email, password, mnemonic, secret } = JSON.parse(
-    fs.readFileSync(path).toString()
-  );
+  const secretKey = fs.readFileSync(path).toString();
+
   const Tezos = new TezosToolkit();
-  Tezos.setProvider({ rpc: network, confirmationPollingTimeoutSecond: 300 });
-  await Tezos.importKey(email, password, mnemonic.join(" "), secret);
+  Tezos.setProvider({ rpc: network, signer: await new InMemorySigner.fromSecretKey(secretKey), confirmationPollingTimeoutSecond: 300 });
   return Tezos;
 };
 
 const getAccounts = async () => {
-  const Tezos1 = await createTezosFromFaucet("./faucet.json");
-  const Tezos2 = await createTezosFromFaucet("./faucet2.json");
+  const Tezos1 = await createTezosFromFaucet("key");
+  const Tezos2 = await createTezosFromFaucet("key2");
   return { Tezos1, Tezos2 };
 };
 
@@ -105,7 +125,6 @@ const testInitializeDex = async (
 
   const pkh = await Tezos1.signer.publicKeyHash();
   const initialStorage = await getDexFullStorage(dexAddress, [pkh]);
-  console.log(initialStorage.extendedShares[pkh])
 
   assert(initialStorage.feeRate == 500);
   assert(initialStorage.invariant == 0);
@@ -147,6 +166,20 @@ const testInitializeDex = async (
   assert(finalStorage.extendedShares[pkh] == 1000);
   assert(finalStorage.totalShares == 1000);
   assert(finalStorage.delegated == candidate);
+};
+
+const testLaunchDex = async (
+) => {
+  console.log("LaunchDex Test");
+  const { Tezos1 } = await getAccounts();
+  const factoryContract = await Tezos1.contract.at(factoryAddress);
+
+  const operation0 = await factoryContract.methods
+    .launchExchange(tokenAddress, dexAddress)
+    .send();
+  await operation0.confirmation();
+
+  assert(operation0.status === "applied", "Operation was not applied");
 };
 
 const testInvestLiquidity = async (
@@ -198,7 +231,7 @@ const testInvestLiquidity = async (
 
   assert(operation2.status === "applied", "Operation was not applied");
 
-  const finalStorage = await getDexFullStorage(dexAddress, [pkh]);
+  const finalStorage = await getDexFullStorage(dexAddress, [pkh], [candidate]);
 
   assert(finalStorage.extendedShares[pkh] == minShares);
   assert(
@@ -218,8 +251,6 @@ const testInvestLiquidity = async (
     (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
     (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
   );
-  assert(finalStorage.votes[candidate] == minShares);
-  assert(finalStorage.candidates[pkh] == candidate);
 };
 
 const testTezToTokenSwap = async (tezAmount = "0.01") => {
@@ -480,7 +511,7 @@ const testDivestLiquidity = async (
   const { Tezos2 } = await getAccounts();
 
   const pkh = await Tezos2.signer.publicKeyHash();
-  const initialStorage = await getDexFullStorage(dexAddress, [pkh]);
+  const initialStorage = await getDexFullStorage(dexAddress, [pkh], [candidate]);
 
   const dexContract = await Tezos2.contract.at(dexAddress);
 
@@ -504,7 +535,7 @@ const testDivestLiquidity = async (
 
   assert(operation0.status === "applied", "Operation was not applied");
 
-  const finalStorage = await getDexFullStorage(dexAddress, [pkh]);
+  const finalStorage = await getDexFullStorage(dexAddress, [pkh], [candidate]);
 
   assert(
     finalStorage.extendedShares[pkh] ==
@@ -522,10 +553,6 @@ const testDivestLiquidity = async (
     finalStorage.invariant ==
     (parseInt(initialStorage.tezPool) - minTez) *
     (parseInt(initialStorage.tokenPool) - minTokens)
-  );
-  assert(
-    finalStorage.votes[candidate] ==
-    initialStorage.votes[candidate] - sharesBurned
   );
 };
 
@@ -549,6 +576,7 @@ const assertInvariant = async testFn => {
 const test = async () => {
   const tests = [
     () => testInitializeDex(),
+    () => testLaunchDex(),
     () => testInvestLiquidity(),
     () => testTezToTokenSwap(),
     () => testTezToTokenPayment(),

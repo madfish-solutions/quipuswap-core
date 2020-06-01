@@ -13,6 +13,6 @@ node scripts/cli2.js deploy Dex Dex2 Dex2
 echo "test"
 node tests/tests.js
 echo "test2"
-node tests/tests.js "./deployed/Token2.json" "./deployed/Dex2.json"
+node tests/tests.js "./deploy/Token2.json" "./deploy/Dex2.json"
 # echo "exchange"
 # node scripts/tokenToToken.js
