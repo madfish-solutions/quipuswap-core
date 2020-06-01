@@ -29,8 +29,8 @@ const setup = async (keyPath, provider) => {
 let deployContract = async (Tezos, contractName, balance, inputDir, storageDir, outputDir, outputName, storageName) => {
     storageName = storageName || contractName;
     let operation = await Tezos.contract.originate({
-        code: JSON.parse(fs.readFileSync(`./${inputDir}/${storageName}.json`).toString()),
-        storage: require(`../${storageDir}/${contractName}.js`),
+        code: JSON.parse(fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()),
+        storage: require(`../${storageDir}/${storageName}.js`),
         balance: balance
     });
     let contract = await operation.contract();

@@ -3,15 +3,15 @@ const fs = require("fs");
 const assert = require("assert");
 const BigNumber = require("bignumber.js");
 const { address: tokenAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deployed/Token.json").toString()
+  fs.readFileSync(process.argv[2] || "./deploy/Token.json").toString()
 );
 const { address: dexAddress } = JSON.parse(
-  fs.readFileSync(process.argv[3] || "./deployed/Dex.json").toString()
+  fs.readFileSync(process.argv[3] || "./deploy/Dex.json").toString()
 );
-const { address: factoryAddress, network } = JSON.parse(
-  fs.readFileSync(process.argv[4] || "./deployed/Factory.json").toString()
+const { address: factoryAddress } = JSON.parse(
+  fs.readFileSync(process.argv[4] || "./deploy/Factory.json").toString()
 );
-
+const network = process.argv[5] || "https://api.tez.ie/rpc/carthagenet";
 const getTokenFullStorage = async (address, keys) => {
   const { Tezos1 } = await getAccounts();
   const contract = await Tezos1.contract.at(address);
@@ -31,6 +31,13 @@ const getTokenFullStorage = async (address, keys) => {
       console.error(ex);
       // Do nothing
     }
+    if (!entry) {
+      entry = {
+        balance: new BigNumber(0),
+        allowances: {}
+      };
+    }
+
 
     return {
       ...value,
@@ -56,6 +63,9 @@ const getDexFullStorage = async (address, keys) => {
       entry = await storage.shares.get(current);
     } catch (ex) {
       console.error(ex);
+    }
+    if (!entry) {
+      entry = new BigNumber(0);
     }
 
     return {
@@ -95,6 +105,7 @@ const testInitializeDex = async (
 
   const pkh = await Tezos1.signer.publicKeyHash();
   const initialStorage = await getDexFullStorage(dexAddress, [pkh]);
+  console.log(initialStorage.extendedShares[pkh])
 
   assert(initialStorage.feeRate == 500);
   assert(initialStorage.invariant == 0);
