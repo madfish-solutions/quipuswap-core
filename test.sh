@@ -14,5 +14,5 @@ echo "test"
 node tests/tests.js
 echo "test2"
 node tests/tests.js "./deploy/Token2.json" "./deploy/Dex2.json"
-# echo "exchange"
-# node scripts/tokenToToken.js
+echo "exchange"
+node scripts/tokenToToken.js

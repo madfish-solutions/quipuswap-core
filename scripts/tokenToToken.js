@@ -8,7 +8,10 @@ const { address: dexAddress } = JSON.parse(
 const { address: tokenAddress } = JSON.parse(
   fs.readFileSync("./deployed/Token.json").toString()
 );
-const tokenToAddress = "";
+const { address: tokenToAddress } = JSON.parse(
+  fs.readFileSync("./deployed/Token2.json").toString()
+);
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -16,17 +19,18 @@ function sleep(ms) {
 exec(
   `ligo compile-parameter ./contracts/Token.ligo main -s pascaligo "Approve((\\\"${dexAddress}\\\" : address), ${tokenAmount}n)"`,
   async (error, stdout, stderr) => {
+
     if (error) {
       console.error(`exec error: ${error}`);
       return;
     }
 
     exec(
-      `./babylonnet.sh client -A rpcalpha.tzbeta.net -P 443 -S  transfer 0 from alice to "${tokenAddress}" --arg "${stdout
+      `./carthagenet.sh client -A rpcalpha.tzbeta.net -P 443 -S  transfer 0 from alice to "${tokenAddress}" --arg "${stdout
         .trim()
         .replace(/\"/g, '\\"')}" --burn-cap 0.5`,
       async (error, stdout, stderr) => {
-        console.log(stdout);
+
         sleep(50000).then(() => {
           exec(
             `ligo compile-parameter ./contracts/Dex.ligo main -s pascaligo "TokenToTokenSwap(${tokenAmount}n, ${minTez}n, (\\\"${tokenToAddress}\\\" : address))"`,
@@ -36,9 +40,9 @@ exec(
                 return;
               }
               exec(
-                `./babylonnet.sh client -A rpcalpha.tzbeta.net -P 443 -S  transfer 4 from alice to "${dexAddress}" --arg "${stdout
+                `./carthagenet.sh client -A rpcalpha.tzbeta.net -P 443 -S  transfer 4 from alice to "${dexAddress}" --arg "${stdout
                   .trim()
-                  .replace(/\"/g, '\\"')}" --burn-cap 0.5`,
+                  .replace(/\"/g, '\\"')}" --burn-cap 5 --gas-limit 1040000`,
                 (error, stdout, stderr) => {
                   console.log(stdout);
                   sleep(50000).then(() => {

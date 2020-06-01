@@ -10,7 +10,7 @@ const setup = async () => {
     fs.readFileSync("./faucet.json").toString()
   );
 
-  Tezos.setProvider({ rpc: "https://api.tez.ie/rpc/babylonnet" });
+  Tezos.setProvider({ rpc: "https://api.tez.ie/rpc/carthagenet" });
 
   await Tezos.importKey(email, password, mnemonic.join(" "), secret);
   return Tezos;
@@ -55,11 +55,10 @@ program
 
       const encodedExpr = encodeExpr(packed);
 
-      console.log(storage.ledger);
       const bigMapValue = prettyPrint(await storage.ledger.get(keyToEncode));
-      // const rawBigMapValue = prettyPrint(await Tezos.rpc.getBigMapExpr(bigMapID, encodedExpr));
-      // console.log(`Storage:\n${bigMapValue}`)
-      // console.log(`Raw Storage:\n${rawBigMapValue}`)
+      const rawBigMapValue = prettyPrint(await Tezos.rpc.getBigMapExpr(bigMapID, encodedExpr));
+      console.log(`Storage:\n${bigMapValue}`)
+      console.log(`Raw Storage:\n${rawBigMapValue}`)
     } catch (ex) {
       console.error(ex);
     }
