@@ -105,7 +105,7 @@ const createTezosFromFaucet = async path => {
   const secretKey = fs.readFileSync(path).toString();
 
   const Tezos = new TezosToolkit();
-  Tezos.setProvider({ rpc: network, signer: await new InMemorySigner.fromSecretKey(secretKey), confirmationPollingTimeoutSecond: 300 });
+  Tezos.setProvider({ rpc: network, signer: await new InMemorySigner.fromSecretKey(secretKey), config: { confirmationPollingTimeoutSecond: 1000 } });
   return Tezos;
 };
 

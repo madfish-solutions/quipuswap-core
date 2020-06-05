@@ -19,5 +19,6 @@ module.exports = {
     shares: MichelsonMap.fromLiteral({}),
     candidates: MichelsonMap.fromLiteral({}),
     votes: MichelsonMap.fromLiteral({}),
+    veto: MichelsonMap.fromLiteral({}),
     delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5"
 }
