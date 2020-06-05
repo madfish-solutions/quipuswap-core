@@ -102,9 +102,9 @@ block {
 const initialize_exchange : big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> initializeExchange];
 const tez_to_token : big_map(nat, (address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> tezToToken];
 const token_to_tez : big_map(nat, (address * address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> tokenToTez];
-const token_to_token_out : big_map(nat, (address * address * address * nat * nat * address * dex_storage) -> (list(operation) * dex_storage)) = big_map[];
-const invest_liquidity : big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[];
-const divest_liquidity : big_map(nat, (address * nat * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[];
+const token_to_token_out : big_map(nat, (address * address * address * nat * nat * address * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> tokenToTokenOut];
+const invest_liquidity : big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> investLiquidity];
+const divest_liquidity : big_map(nat, (address * nat * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> divestLiquidity];
 
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
