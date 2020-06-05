@@ -16,32 +16,8 @@ Scripts require dependencies to be installed before running:
 npm i
 ```
 
-You can run a script using the following command:
+Run tests:
 
 ```
-node scripts/<<SCRIPT_NAME>>.js
+node tests/tests.js
 ```
-
-We are intended to replace this "wild" testing approach by tests automatic using Taquito soon.
-
-## Scripts description
-
-`build.js`: is used to build contracts; the result is saved to `build` directory.
-
-`deploy.js`: is used to deploy contracts; the result `.json` files with addresses and networks are saved to `deployed` directory.
-
-`getStorages.js`: is used to show deployed `Dex` and `Token` storages.
-
-`initiateDex.js`: is used to send first tokens and tezoses to set initial liquidity.
-
-`investLiquidity.js`: is used to send tokens and tezoses to get shares of Dex and effect liquidity.
-
-`divestLiquidity.js`: is used to withdraw tokens and tezoses, burn shares of Dex and effect liquidity.
-
-`launchExchange.js`: is used to add Dex-Token pair to Factory to enable Token-to-Token exchange.
-
-`tezToToken.js`: is used for tezos to token exchange.
-
-`tokenToTez.js`: is used for token to tezos exchange.
-
-`tokenToToken.js`: is used for token to token exchange.
