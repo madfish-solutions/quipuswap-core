@@ -3,13 +3,13 @@ const fs = require("fs");
 let minTez = 1;
 let tokenAmount = 100;
 const { address: dexAddress } = JSON.parse(
-  fs.readFileSync("./deployed/Dex.json").toString()
+  fs.readFileSync("./deploy/Dex.json").toString()
 );
 const { address: tokenAddress } = JSON.parse(
-  fs.readFileSync("./deployed/Token.json").toString()
+  fs.readFileSync("./deploy/Token.json").toString()
 );
 const { address: tokenToAddress } = JSON.parse(
-  fs.readFileSync("./deployed/Token2.json").toString()
+  fs.readFileSync("./deploy/Token2.json").toString()
 );
 
 function sleep(ms) {
