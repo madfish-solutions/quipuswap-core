@@ -58,7 +58,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
 
     var operations: option(operation) := None;
     if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
-       s.next_delegated := s.delegated;
+       s.nextDelegated := s.delegated;
        s.delegated := candidate;
        operations := Some(set_delegate(Some(candidate)));
     };
@@ -83,7 +83,7 @@ function veto (const voter : address; var s: dex_storage ) :  (list(operation) *
    | True -> skip
    end;
    var newShare: nat := 0n;
-   case s.veto_voters[voter] of None -> skip
+   case s.vetoVoters[voter] of None -> skip
    | Some(prev) -> {
       if share > prev then skip else failwith ("No new shares were erned");
       newShare := abs(share - prev);
@@ -94,11 +94,11 @@ function veto (const voter : address; var s: dex_storage ) :  (list(operation) *
    if s.veto > s.totalShares then {
       s.veto := 0n;
       s.vetos[s.delegated] := True;
-      s.delegated := s.next_delegated;
-      s.veto_voters := (big_map end : big_map(address, nat));
-      operations := set_delegate(Some(s.next_delegated)) # operations; 
+      s.delegated := s.nextDelegated;
+      s.vetoVoters := (big_map end : big_map(address, nat));
+      operations := set_delegate(Some(s.nextDelegated)) # operations; 
    } else skip;
-   s.veto_voters[voter] := share;
+   s.vetoVoters[voter] := share;
 } with (operations, s)
 
 function tezToToken (const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is

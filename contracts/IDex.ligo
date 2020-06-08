@@ -14,11 +14,11 @@ type dex_storage is record
   shares: big_map(address, nat);
   voters: big_map(address, vote_info);
   vetos: big_map(key_hash, bool);
-  veto_voters: big_map(address, nat);
+  vetoVoters: big_map(address, nat);
   votes: big_map(key_hash, nat);
   veto: nat;
   delegated: key_hash;
-  next_delegated: key_hash;
+  nextDelegated: key_hash;
 end
 
 type dexAction is

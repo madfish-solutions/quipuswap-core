@@ -28,7 +28,7 @@ class Dex {
     return new Dex(Tezos, await Tezos.contract.at(dexAddress))
   }
 
-  async getFullStorage(maps = { shares: [], voters: [], vetos: [], veto_voters: [], votes: [] }) {
+  async getFullStorage(maps = { shares: [], voters: [], vetos: [], vetoVoters: [], votes: [] }) {
     const storage = await this.contract.storage();
     var result = {
       ...storage
@@ -86,7 +86,7 @@ class Dex {
   }
 
   async initializeExchange(tokenAmount, tezAmount) {
-    await approve(tokenAmount);
+    await this.approve(tokenAmount);
     const operation = await this.contract.methods
       .initializeExchange(tokenAmount)
       .send({ amount: tezAmount });
@@ -95,7 +95,7 @@ class Dex {
   }
 
   async investLiquidity(tokenAmount, tezAmount, minShares) {
-    await approve(tokenAmount);
+    await this.approve(tokenAmount);
     const operation = await this.contract.methods
       .investLiquidity(minShares)
       .send({ amount: tezAmount });
@@ -104,7 +104,7 @@ class Dex {
   }
 
   async divestLiquidity(tokenAmount, tezAmount, sharesBurned) {
-    await approve(tokenAmount);
+    await this.approve(tokenAmount);
     const operation = await this.contract.methods
       .divestLiquidity(sharesBurned, tezAmount, tokenAmount)
       .send({ amount: tezAmount });
@@ -129,7 +129,7 @@ class Dex {
   }
 
   async tokenToTezSwap(tokenAmount, minTezOut) {
-    await approve(tokenAmount);
+    await this.approve(tokenAmount);
     const operation = await this.contract.methods
       .tokenToTezSwap(tokenAmount, minTezOut)
       .send();
@@ -138,7 +138,7 @@ class Dex {
   }
 
   async tokenToTezPayment(tokenAmount, minTezOut, receiver) {
-    await approve(tokenAmount);
+    await this.approve(tokenAmount);
     const operation = await this.contract.methods
       .tokenToTezPayment(tokenAmount, minTezOut, receiver)
       .send();
@@ -147,7 +147,7 @@ class Dex {
   }
 
   async tokenToTokenSwap(tokenAmount, minTokensOut, tokenAddress) {
-    await approve(tokenAmount);
+    await this.approve(tokenAmount);
     const operation = await this.contract.methods
       .tokenToTokenSwap(tokenAmount, minTokensOut, tokenAddress)
       .send();
@@ -156,7 +156,7 @@ class Dex {
   }
 
   async tokenToTokenPayment(tokenAmount, minTokensOut, tokenAddress, receiver) {
-    await approve(tokenAmount);
+    await this.approve(tokenAmount);
     const operation = await this.contract.methods
       .tokenToTokenPayment(tokenAmount, minTokensOut, tokenAddress, receiver)
       .send();
@@ -188,6 +188,36 @@ describe('Dex', function () {
 
   describe('initializeExchange()', function () {
     it('should initialize exchange', async function () {
+      this.timeout(1000000);
+      let Tezos = await setup();
+      let dex = await Dex.init(Tezos);
+      const tokenAmount = "1000";
+      const tezAmount = "1.0";
+      const pkh = await Tezos.signer.publicKeyHash();
+      let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+      assert(initialStorage.feeRate == 500);
+      assert(initialStorage.invariant == 0);
+      assert(initialStorage.totalShares == 0);
+      assert(initialStorage.tezPool == 0);
+      assert(initialStorage.tokenPool == 0);
+      assert(initialStorage.tokenAddress == tokenAddress);
+      assert(initialStorage.factoryAddress == factoryAddress);
+      assert(initialStorage.sharesExtended[pkh] == undefined);
+
+      let operation = await dex.initializeExchange(tokenAmount, tezAmount)
+      assert(operation.status === "applied", "Operation was not applied");
+      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+      const mutezAmount = parseFloat(tezAmount) * 1000000;
+      assert(finalStorage.feeRate == 500);
+      assert(finalStorage.invariant == mutezAmount * parseInt(tokenAmount));
+      assert(finalStorage.tezPool == mutezAmount);
+      assert(finalStorage.tokenPool == tokenAmount);
+      assert(finalStorage.tokenAddress == tokenAddress);
+      assert(finalStorage.factoryAddress == factoryAddress);
+      assert(finalStorage.extendedShares[pkh] == 1000);
+      assert(finalStorage.totalShares == 1000);
     });
   });
 });
