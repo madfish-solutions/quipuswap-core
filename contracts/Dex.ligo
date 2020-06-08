@@ -38,12 +38,18 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
     | True -> skip
     end;
 
-    const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = candidate; end;
+    case s.vetos[candidate] of None -> skip
+    | Some(c) -> failwith ("Candidate was banned by veto")
+    end;
+
+    const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(candidate); veto = False; end;
     case s.voters[voter] of None -> skip
       | Some(v) -> {
-        s.votes[v.candidate]:= abs(get_force(v.candidate, s.votes) - prevShare);
-        v.candidate := candidate;
-        voterInfo := v;
+         case v.candidate of None -> skip | Some(c) -> {
+           s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
+           v.candidate := Some(candidate);
+           voterInfo := v;
+         } end;
       }
       end;    
     s.voters[voter]:= voterInfo;
@@ -52,6 +58,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
 
     var operations: option(operation) := None;
     if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
+       s.next_delegated := s.delegated;
        s.delegated := candidate;
        operations := Some(set_delegate(Some(candidate)));
     };
@@ -67,6 +74,30 @@ function vote (const voter : address; const candidate : key_hash; var s: dex_sto
        operations := list o end;
     } end;
  } with (operations, res.1)
+
+function veto (const voter : address; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ block {
+   const share : nat = get_force (sender, s.shares);
+   case isAllowedVoter(voter, s) of 
+   | False -> failwith ("Sender not allowed to spend token from source")
+   | True -> skip
+   end;
+   s.veto := s.veto + share;
+   var operations : list(operation) := (nil: list(operation)); 
+   if s.veto > s.totalShares then {
+      s.veto := 0n;
+      s.vetos[s.delegated] := True;
+      s.delegated := s.next_delegated;
+      operations := set_delegate(Some(s.next_delegated)) # operations; 
+   } else skip;
+    const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = (None: option(key_hash)); veto = True; end;
+    case s.voters[voter] of None -> skip
+      | Some(v) -> {
+         voterInfo := v;
+      }
+      end;    
+    s.voters[voter] := voterInfo;
+} with (operations, s)
 
 function tezToToken (const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
@@ -132,11 +163,14 @@ block {
    case s.voters[Tezos.sender] of None -> 
      skip
      | Some(v) -> {
-      const redelegateRes : (option(operation) * dex_storage) = redelegate (Tezos.sender, v.candidate, share, share + sharesPurchased, s);
-      s := redelegateRes.1;
-      case redelegateRes.0 of None -> skip 
-      | Some(o) -> {
-         operations := o # operations;
+      case v.candidate of None -> skip 
+      | Some(candidate) -> {
+         const redelegateRes : (option(operation) * dex_storage) = redelegate (Tezos.sender, candidate, share, share + sharesPurchased, s);
+         s := redelegateRes.1;
+         case redelegateRes.0 of None -> skip 
+         | Some(o) -> {
+            operations := o # operations;
+         } end;
       } end;
    } end;
  } with (operations, s)
@@ -164,9 +198,11 @@ block {
    case s.voters[Tezos.sender] of None -> block {
      skip
    } | Some(v) -> {
-     const prevVotes: nat = get_force(v.candidate, s.votes);
-     s.votes[v.candidate]:= abs(prevVotes - sharesBurned);
-     if prevVotes = sharesBurned then remove Tezos.sender from map s.voters; else skip;
+      case v.candidate of None -> skip | Some(candidate) -> {
+        const prevVotes: nat = get_force(candidate, s.votes);
+        s.votes[candidate]:= abs(prevVotes - sharesBurned);
+        if prevVotes = sharesBurned then remove Tezos.sender from map s.voters; else skip;
+      } end;
    } end;
 
  } with (list transaction(Transfer(this, sender, tokensDivested), 0mutez, (get_contract(s.tokenAddress) : contract(tokenAction))); transaction(unit, tezDivested * 1mutez, (get_contract(sender) : contract(unit))); end, s)
@@ -178,7 +214,8 @@ const token_to_token_out : big_map(nat, (address * address * address * nat * nat
 const invest_liquidity : big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> investLiquidity];
 const divest_liquidity : big_map(nat, (address * nat * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> divestLiquidity];
 const set_votes_delegation : big_map(nat, (address * bool * dex_storage) -> (dex_storage)) = big_map[0n -> setVotesDelegation];
-const vote : big_map(nat, (address * key_hash * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> vote];
+const vote_map : big_map(nat, (address * key_hash * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> vote];
+const veto_map : big_map(nat, (address * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> veto];
 
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
@@ -195,5 +232,6 @@ function main (const p : dexAction ; const s : dex_storage) :
   | InvestLiquidity(n) -> case invest_liquidity[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(this, n, s) end
   | DivestLiquidity(n) -> case divest_liquidity[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(this, n.0, n.1, n.2, s) end 
   | SetVotesDelegation(n) -> case set_votes_delegation[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> ((nil: list(operation)), f(n.0, n.1, s)) end
-  | Vote(n) -> case vote[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(n.0, n.1, s) end 
+  | Vote(n) -> case vote_map[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(n.0, n.1, s) end 
+  | Veto(n) -> case veto_map[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(n, s) end 
  end
