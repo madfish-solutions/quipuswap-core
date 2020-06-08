@@ -31,9 +31,8 @@ function setVotesDelegation (const voter : address ; const allowance : bool ; va
   }
  end with s
 
-function vote (const voter : address; const candidate : key_hash; var s: dex_storage ) :  (list(operation) * dex_storage) is
+function redelegate (const voter : address; const candidate : key_hash; const prevShare : nat; const share : nat; var s: dex_storage ) :  (option(operation) * dex_storage) is
  block {
-    const share : nat = get_force (sender, s.shares);
     case isAllowedVoter(voter, s) of 
     | False -> failwith ("Sender not allowed to spend token from source")
     | True -> skip
@@ -42,7 +41,7 @@ function vote (const voter : address; const candidate : key_hash; var s: dex_sto
     const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = candidate; end;
     case s.voters[voter] of None -> skip
       | Some(v) -> {
-        s.votes[v.candidate]:= abs(get_force(v.candidate, s.votes) - share);
+        s.votes[v.candidate]:= abs(get_force(v.candidate, s.votes) - prevShare);
         v.candidate := candidate;
         voterInfo := v;
       }
@@ -51,12 +50,23 @@ function vote (const voter : address; const candidate : key_hash; var s: dex_sto
     const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share;
     s.votes[candidate]:= newVotes;
 
-    var operations: list(operation) := (nil : list(operation));
+    var operations: option(operation) := None;
     if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
        s.delegated := candidate;
-       operations := list set_delegate(Some(candidate)) end;
+       operations := Some(set_delegate(Some(candidate)));
     };
  } with (operations, s)
+
+function vote (const voter : address; const candidate : key_hash; var s: dex_storage ) :  (list(operation) * dex_storage) is
+ block {
+    const share : nat = get_force (sender, s.shares);
+    const res : (option(operation) * dex_storage) = redelegate(voter, candidate, share, share, s);
+    var operations: list(operation) := (nil: list(operation));
+    case res.0 of None -> skip 
+    | Some(o) -> {
+       operations := list o end;
+    } end;
+ } with (operations, res.1)
 
 function tezToToken (const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
@@ -112,12 +122,24 @@ block {
     const tokensPerShare : nat = s.tokenPool / s.totalShares;
     const tokensRequired : nat = sharesPurchased * tokensPerShare;
     const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
-    s.shares[sender] := share + sharesPurchased;
+    s.shares[Tezos.sender] := share + sharesPurchased;
     s.tezPool := s.tezPool + amount / 1mutez;
     s.tokenPool := s.tokenPool + tokensRequired;
     s.invariant := s.tezPool * s.tokenPool;
     s.totalShares := s.totalShares + sharesPurchased;
- } with (list transaction(Transfer(sender, this, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) ; end, s)
+
+   var operations: list(operation) := list transaction(Transfer(sender, this, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) ; end; 
+   case s.voters[Tezos.sender] of None -> 
+     skip
+     | Some(v) -> {
+      const redelegateRes : (option(operation) * dex_storage) = redelegate (Tezos.sender, v.candidate, share, share + sharesPurchased, s);
+      s := redelegateRes.1;
+      case redelegateRes.0 of None -> skip 
+      | Some(o) -> {
+         operations := o # operations;
+      } end;
+   } end;
+ } with (operations, s)
 
 function divestLiquidity (const this : address; const sharesBurned : nat; const minTez : nat; const minTokens : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
 block {
@@ -138,6 +160,15 @@ block {
     s.tezPool := abs(s.tezPool - tezDivested);
     s.tokenPool := abs(s.tokenPool - tokensDivested);
     s.invariant := if s.totalShares = 0n then 0n; else s.tezPool * s.tokenPool;
+
+   case s.voters[Tezos.sender] of None -> block {
+     skip
+   } | Some(v) -> {
+     const prevVotes: nat = get_force(v.candidate, s.votes);
+     s.votes[v.candidate]:= abs(prevVotes - sharesBurned);
+     if prevVotes = sharesBurned then remove Tezos.sender from map s.voters; else skip;
+   } end;
+
  } with (list transaction(Transfer(this, sender, tokensDivested), 0mutez, (get_contract(s.tokenAddress) : contract(tokenAction))); transaction(unit, tezDivested * 1mutez, (get_contract(sender) : contract(unit))); end, s)
 
 const initialize_exchange : big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> initializeExchange];
