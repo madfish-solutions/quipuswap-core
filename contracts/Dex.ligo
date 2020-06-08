@@ -22,14 +22,14 @@ function isAllowedVoter (const voter : address ; var s : dex_storage) : bool is
   } with Tezos.sender =/= voter or get_force(Tezos.sender, src.allowances);
 
 function setVotesDelegation (const voter : address ; const allowance : bool ; var s : dex_storage) : dex_storage is
- begin
-  if Tezos.sender = voter then skip;
-  else block {
-    const src: vote_info = get_force(Tezos.sender, s.voters);
-    src.allowances[voter] := allowance;
-    s.voters[Tezos.sender] := src;
-  }
- end with s
+  block {
+   if Tezos.sender = voter then skip;
+   else block {
+      const src: vote_info = get_force(Tezos.sender, s.voters);
+      src.allowances[voter] := allowance;
+      s.voters[Tezos.sender] := src;
+   }
+ } with s
 
 function redelegate (const voter : address; const candidate : key_hash; const prevShare : nat; const share : nat; var s: dex_storage ) :  (option(operation) * dex_storage) is
  block {
@@ -209,31 +209,21 @@ block {
 
  } with (list transaction(Transfer(this, sender, tokensDivested), 0mutez, (get_contract(s.tokenAddress) : contract(tokenAction))); transaction(unit, tezDivested * 1mutez, (get_contract(sender) : contract(unit))); end, s)
 
-const initialize_exchange : big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> initializeExchange];
-const tez_to_token : big_map(nat, (address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> tezToToken];
-const token_to_tez : big_map(nat, (address * address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> tokenToTez];
-const token_to_token_out : big_map(nat, (address * address * address * nat * nat * address * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> tokenToTokenOut];
-const invest_liquidity : big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> investLiquidity];
-const divest_liquidity : big_map(nat, (address * nat * nat * nat * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> divestLiquidity];
-const set_votes_delegation : big_map(nat, (address * bool * dex_storage) -> (dex_storage)) = big_map[0n -> setVotesDelegation];
-const vote_map : big_map(nat, (address * key_hash * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> vote];
-const veto_map : big_map(nat, (address * dex_storage) -> (list(operation) * dex_storage)) = big_map[0n -> veto];
-
 function main (const p : dexAction ; const s : dex_storage) :
   (list(operation) * dex_storage) is
  block {
     const this: address = self_address; 
  } with case p of
-  | InitializeExchange(n) -> case initialize_exchange[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(this, n, s) end
-  | TezToTokenSwap(n) -> case tez_to_token[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(sender, this, amount / 1mutez, n, s) end
-  | TokenToTezSwap(n) -> case token_to_tez[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(sender, sender, this, n.0, n.1, s) end
-  | TokenToTokenSwap(n) -> case token_to_token_out[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(sender, sender, this, n.0, n.1, n.2, s) end
-  | TezToTokenPayment(n) -> case tez_to_token[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(n.1, this, amount / 1mutez, n.0, s) end
-  | TokenToTezPayment(n) -> case token_to_tez[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(sender, n.2, this, n.0, n.1, s) end
-  | TokenToTokenPayment(n) -> case token_to_token_out[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(sender, n.2, this, n.0, n.1, n.3, s) end
-  | InvestLiquidity(n) -> case invest_liquidity[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(this, n, s) end
-  | DivestLiquidity(n) -> case divest_liquidity[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(this, n.0, n.1, n.2, s) end 
-  | SetVotesDelegation(n) -> case set_votes_delegation[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> ((nil: list(operation)), f(n.0, n.1, s)) end
-  | Vote(n) -> case vote_map[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(n.0, n.1, s) end 
-  | Veto(n) -> case veto_map[0n] of None -> (failwith("Error"):(list(operation) * dex_storage)) | Some(f) -> f(n, s) end 
+  | InitializeExchange(n) -> initializeExchange(this, n, s) 
+  | TezToTokenSwap(n) -> tezToToken(sender, this, amount / 1mutez, n, s) 
+  | TokenToTezSwap(n) -> tokenToTez(sender, sender, this, n.0, n.1, s) 
+  | TokenToTokenSwap(n) -> tokenToTokenOut(sender, sender, this, n.0, n.1, n.2, s)
+  | TezToTokenPayment(n) -> tezToToken(n.1, this, amount / 1mutez, n.0, s)
+  | TokenToTezPayment(n) -> tokenToTez(sender, n.2, this, n.0, n.1, s)
+  | TokenToTokenPayment(n) -> tokenToTokenOut(sender, n.2, this, n.0, n.1, n.3, s)
+  | InvestLiquidity(n) -> investLiquidity(this, n, s)
+  | DivestLiquidity(n) -> divestLiquidity(this, n.0, n.1, n.2, s) 
+  | SetVotesDelegation(n) -> ((nil: list(operation)), setVotesDelegation(n.0, n.1, s))
+  | Vote(n) -> vote(n.0, n.1, s)
+  | Veto(n) -> veto(n, s) 
  end
