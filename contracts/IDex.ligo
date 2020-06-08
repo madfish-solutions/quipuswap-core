@@ -1,6 +1,6 @@
 type vote_info is record
-  approves: map(address, bool);
-  vote: nat;
+  allowances: map(address, bool);
+  candidate: key_hash;
 end
 
 type dex_storage is record 
@@ -12,8 +12,8 @@ type dex_storage is record
   tokenAddress: address;
   factoryAddress: address;
   shares: big_map(address, nat);
-  candidates: big_map(address, key_hash);
-  votes: big_map(key_hash, vote_info);
+  voters: big_map(address, vote_info);
+  votes: big_map(key_hash, nat);
   veto: big_map(key_hash, nat);
   delegated: key_hash;
 end
@@ -28,8 +28,8 @@ type dexAction is
 | TokenToTokenPayment of (nat * nat * address * address)
 | InvestLiquidity of (nat)
 | DivestLiquidity of (nat * nat * nat)
-// | SetVotesDelegation of (address * bool)
-// | Vote of (address * key_hash)
+| SetVotesDelegation of (address * bool)
+| Vote of (address * key_hash)
 // | Veto of (address)
 
 
