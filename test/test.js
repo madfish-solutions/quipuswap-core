@@ -186,7 +186,7 @@ describe('Dex', function () {
     await operation.confirmation();
   });
 
-  describe('initializeExchange()', function () {
+  describe('InitializeExchange()', function () {
     it('should initialize exchange', async function () {
       this.timeout(1000000);
       let Tezos = await setup();
@@ -216,9 +216,66 @@ describe('Dex', function () {
       assert(finalStorage.tokenPool == tokenAmount);
       assert(finalStorage.tokenAddress == tokenAddress);
       assert(finalStorage.factoryAddress == factoryAddress);
-      assert(finalStorage.extendedShares[pkh] == 1000);
+      assert(finalStorage.sharesExtended[pkh] == 1000);
       assert(finalStorage.totalShares == 1000);
     });
   });
+
+  describe('InvestLiquidity()', function () {
+    it('should invest liquidity', async function () {
+      this.timeout(1000000);
+      let Tezos = await setup("../key1");
+      let dex = await Dex.init(Tezos);
+      let tezAmount = "5.0";
+      const pkh = await Tezos.signer.publicKeyHash();
+      let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+      const mutezAmount = parseFloat(tezAmount) * 1000000;
+      const minShares = parseInt(
+        (mutezAmount / initialStorage.tezPool) * initialStorage.totalShares
+      );
+      const tokenAmount = parseInt(
+        (minShares * initialStorage.tokenPool) / initialStorage.totalShares
+      );
+
+      let operation = await dex.investLiquidity(tokenAmount, tezAmount, minShares)
+      assert(operation.status === "applied", "Operation was not applied");
+      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+      assert(finalStorage.sharesExtended[pkh] == minShares);
+      assert(
+        finalStorage.tezPool ==
+        parseInt(initialStorage.tezPool) + parseInt(mutezAmount)
+      );
+      assert(
+        finalStorage.tokenPool ==
+        parseInt(initialStorage.tokenPool) + parseInt(tokenAmount)
+      );
+      assert(
+        finalStorage.totalShares ==
+        parseInt(initialStorage.totalShares) + parseInt(minShares)
+      );
+      assert(
+        finalStorage.invariant ==
+        (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
+        (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
+      );
+
+    });
+  });
 });
+
+
+// | TezToTokenSwap of nat
+// | TokenToTezSwap of (nat * nat)
+// | TokenToTokenSwap of (nat * nat * address)
+// | TezToTokenPayment of (nat * address)
+// | TokenToTezPayment of (nat * nat * address)
+// | TokenToTokenPayment of (nat * nat * address * address)
+// | InvestLiquidity of (nat)
+// | DivestLiquidity of (nat * nat * nat)
+// | SetVotesDelegation of (address * bool)
+// | Vote of (address * key_hash)
+// | Veto of (address)
+
 
