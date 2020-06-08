@@ -42,7 +42,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
     | Some(c) -> failwith ("Candidate was banned by veto")
     end;
 
-    const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(candidate); veto = False; end;
+    const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(candidate); end;
     case s.voters[voter] of None -> skip
       | Some(v) -> {
          case v.candidate of None -> skip | Some(c) -> {
@@ -82,21 +82,23 @@ function veto (const voter : address; var s: dex_storage ) :  (list(operation) *
    | False -> failwith ("Sender not allowed to spend token from source")
    | True -> skip
    end;
-   s.veto := s.veto + share;
+   var newShare: nat := 0n;
+   case s.veto_voters[voter] of None -> skip
+   | Some(prev) -> {
+      if share > prev then skip else failwith ("No new shares were erned");
+      newShare := abs(share - prev);
+   } 
+   end;
+   s.veto := s.veto + newShare;
    var operations : list(operation) := (nil: list(operation)); 
    if s.veto > s.totalShares then {
       s.veto := 0n;
       s.vetos[s.delegated] := True;
       s.delegated := s.next_delegated;
+      s.veto_voters := (big_map end : big_map(address, nat));
       operations := set_delegate(Some(s.next_delegated)) # operations; 
    } else skip;
-    const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = (None: option(key_hash)); veto = True; end;
-    case s.voters[voter] of None -> skip
-      | Some(v) -> {
-         voterInfo := v;
-      }
-      end;    
-    s.voters[voter] := voterInfo;
+   s.veto_voters[voter] := share;
 } with (operations, s)
 
 function tezToToken (const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is

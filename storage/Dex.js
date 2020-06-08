@@ -17,8 +17,11 @@ module.exports = {
     tokenAddress: tokenAddress,
     factoryAddress: factoryAddress,
     shares: MichelsonMap.fromLiteral({}),
-    candidates: MichelsonMap.fromLiteral({}),
+    voters: MichelsonMap.fromLiteral({}),
+    vetos: MichelsonMap.fromLiteral({}),
+    veto_voters: MichelsonMap.fromLiteral({}),
     votes: MichelsonMap.fromLiteral({}),
-    veto: MichelsonMap.fromLiteral({}),
-    delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5"
+    veto: "0",
+    delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
+    next_delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5"
 }
