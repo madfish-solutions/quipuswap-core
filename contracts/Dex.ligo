@@ -209,21 +209,122 @@ block {
 
  } with (list transaction(Transfer(this, sender, tokensDivested), 0mutez, (get_contract(s.tokenAddress) : contract(tokenAction))); transaction(unit, tezDivested * 1mutez, (get_contract(sender) : contract(unit))); end, s)
 
-function main (const p : dexAction ; const s : dex_storage) :
-  (list(operation) * dex_storage) is
+function initializeExchangeMiddle (const this : address; const tokenAmount : nat; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * nat * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.initializeExchange);
+    const res : (list(operation) * dex_storage) = f(this, tokenAmount, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+function tezToTokenMiddle (const recipient : address; const this : address; const tezIn : nat; const minTokensOut : nat; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.tezToToken);
+    const res : (list(operation) * dex_storage) = f(recipient, this, tezIn, minTokensOut, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+function tokenToTezMiddle (const buyer : address; const recepient : address; const this : address; const tokensIn : nat; const minTezOut : nat; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.tokenToTez);
+    const res : (list(operation) * dex_storage) = f(buyer, recepient, this, tokensIn, minTezOut, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+
+function tokenToTokenOutMiddle (const buyer : address; const recipient : address; const this : address; const tokensIn : nat; const minTokensOut : nat; const tokenOutAddress: address; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * address * address * nat * nat * address * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.tokenToTokenOut);
+    const res : (list(operation) * dex_storage) = f(buyer, recipient, this, tokensIn, minTokensOut, tokenOutAddress, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+
+function investLiquidityMiddle (const this : address; const minShares : nat; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * nat * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.investLiquidity);
+    const res : (list(operation) * dex_storage) = f(this, minShares, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+function divestLiquidityMiddle (const this : address; const sharesBurned : nat; const minTez : nat; const minTokens : nat; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * nat * nat * nat * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.divestLiquidity);
+    const res : (list(operation) * dex_storage) = f(this, sharesBurned, minTez, minTokens, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+
+function setVotesDelegationMiddle (const voter : address ; const allowance : bool ; var s : full_dex_storage) : full_dex_storage is
+ block {
+    const f: (address * bool * dex_storage) -> (dex_storage) = get_force(0n, s.setVotesDelegation);
+    s.storage := f(voter, allowance, s.storage);
+ } with (s)
+
+function voteMiddle (const voter : address; const candidate : key_hash; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * key_hash * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.vote);
+    const res : (list(operation) * dex_storage) = f(voter, candidate, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+
+function vetoMiddle (const voter : address; var s: full_dex_storage ) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (address * dex_storage) -> (list(operation) * dex_storage) = get_force(0n, s.veto);
+    const res : (list(operation) * dex_storage) = f(voter, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+
+function main (const p : dexAction ; const s : full_dex_storage) :
+  (list(operation) * full_dex_storage) is
  block {
     const this: address = self_address; 
  } with case p of
-  | InitializeExchange(n) -> initializeExchange(this, n, s) 
-  | TezToTokenSwap(n) -> tezToToken(sender, this, amount / 1mutez, n, s) 
-  | TokenToTezSwap(n) -> tokenToTez(sender, sender, this, n.0, n.1, s) 
-  | TokenToTokenSwap(n) -> tokenToTokenOut(sender, sender, this, n.0, n.1, n.2, s)
-  | TezToTokenPayment(n) -> tezToToken(n.1, this, amount / 1mutez, n.0, s)
-  | TokenToTezPayment(n) -> tokenToTez(sender, n.2, this, n.0, n.1, s)
-  | TokenToTokenPayment(n) -> tokenToTokenOut(sender, n.2, this, n.0, n.1, n.3, s)
-  | InvestLiquidity(n) -> investLiquidity(this, n, s)
-  | DivestLiquidity(n) -> divestLiquidity(this, n.0, n.1, n.2, s) 
-  | SetVotesDelegation(n) -> ((nil: list(operation)), setVotesDelegation(n.0, n.1, s))
-  | Vote(n) -> vote(n.0, n.1, s)
-  | Veto(n) -> veto(n, s) 
+  | InitializeExchange(n) -> initializeExchangeMiddle(this, n, s) 
+//   | TezToTokenSwap(n) -> tezToTokenMiddle(Tezos.sender, this, amount / 1mutez, n, s) 
+//   | TokenToTezSwap(n) -> tokenToTezMiddle(Tezos.sender, Tezos.sender, this, n.0, n.1, s) 
+//   | TokenToTokenSwap(n) -> tokenToTokenOutMiddle(Tezos.sender, Tezos.sender, this, n.0, n.1, n.2, s)
+  | TezToTokenPayment(n) -> tezToTokenMiddle(n.1, this, amount / 1mutez, n.0, s)
+  | TokenToTezPayment(n) -> tokenToTezMiddle(Tezos.sender, n.2, this, n.0, n.1, s)
+  | TokenToTokenPayment(n) -> tokenToTokenOutMiddle(Tezos.sender, n.2, this, n.0, n.1, n.3, s)
+  | InvestLiquidity(n) -> investLiquidityMiddle(this, n, s)
+  | DivestLiquidity(n) -> divestLiquidityMiddle(this, n.0, n.1, n.2, s) 
+  | SetVotesDelegation(n) -> ((nil: list(operation)), setVotesDelegationMiddle(n.0, n.1, s))
+  | Vote(n) -> voteMiddle(n.0, n.1, s)
+  | Veto(n) -> vetoMiddle(n, s) 
  end
+
+// const initial_storage : full_dex_storage = 
+// record
+//    storage = record
+//       feeRate = 500n;
+//       tezPool = 0n;
+//       tokenPool = 0n;
+//       invariant = 0n;
+//       totalShares = 0n;
+//       tokenAddress = ("KT1AXdTEv1ZFpeokMZCGVLaEWV2QHfXMAfc2" : address);
+//       factoryAddress = ("KT1TmyWYmkUTYvYsXJjW3WyTDkV7ckRex5Mx" : address);
+//       shares = (big_map end : big_map(address, nat));
+//       voters = (big_map end : big_map(address, vote_info));
+//       vetos = (big_map end : big_map(key_hash, bool));
+//       vetoVoters = (big_map end : big_map(address, nat));
+//       votes = (big_map end : big_map(key_hash, nat));
+//       veto = 0n;
+//       delegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);
+//       nextDelegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);
+//    end;
+//    initializeExchange = big_map[0n -> initializeExchange];
+//    tezToToken = big_map[0n -> tezToToken];
+//    tokenToTez = big_map[0n -> tokenToTez];
+//    tokenToTokenOut = big_map[0n -> tokenToTokenOut];
+//    investLiquidity = big_map[0n -> investLiquidity];
+//    divestLiquidity = big_map[0n -> divestLiquidity];
+//    setVotesDelegation = big_map[0n -> setVotesDelegation];
+//    vote = big_map[0n -> vote];
+//    veto = big_map[0n -> veto];
+// end;
+
+// record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("KT1AXdTEv1ZFpeokMZCGVLaEWV2QHfXMAfc2" : address);      factoryAddress = ("KT1TmyWYmkUTYvYsXJjW3WyTDkV7ckRex5Mx" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, bool));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);      nextDelegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);   end;   initializeExchange = big_map[0n -> initializeExchange];   tezToToken = big_map[0n -> tezToToken];   tokenToTez = big_map[0n -> tokenToTez];   tokenToTokenOut = big_map[0n -> tokenToTokenOut];   investLiquidity = big_map[0n -> investLiquidity];   divestLiquidity = big_map[0n -> divestLiquidity];   setVotesDelegation = big_map[0n -> setVotesDelegation];   vote = big_map[0n -> vote];   veto = big_map[0n -> veto];end;
+
+// ligo compile-storage contracts/Dex.ligo main 'record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("KT1AXdTEv1ZFpeokMZCGVLaEWV2QHfXMAfc2" : address);      factoryAddress = ("KT1TmyWYmkUTYvYsXJjW3WyTDkV7ckRex5Mx" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, bool));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);      nextDelegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);   end;   initializeExchange = big_map[0n -> initializeExchange];   tezToToken = big_map[0n -> tezToToken];   tokenToTez = big_map[0n -> tokenToTez];   tokenToTokenOut = big_map[0n -> tokenToTokenOut];   investLiquidity = big_map[0n -> investLiquidity];   divestLiquidity = big_map[0n -> divestLiquidity];   setVotesDelegation = big_map[0n -> setVotesDelegation];   vote = big_map[0n -> vote];   veto = big_map[0n -> veto];end'  --michelson-format=json > storage/Dex.json
