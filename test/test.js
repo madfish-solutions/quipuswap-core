@@ -492,13 +492,52 @@ describe('Dex', function () {
       );
     });
   });
+
+  describe('DivestLiquidity()', function () {
+    it('should divest liquidity', async function () {
+      this.timeout(1000000);
+      let Tezos = await setup("../key1");
+      let dex = await Dex.init(Tezos);
+      let sharesBurned = 10;
+      const pkh = await Tezos.signer.publicKeyHash();
+      let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+      const tezPerShare = parseInt(
+        initialStorage.tezPool / initialStorage.totalShares
+      );
+      const tokensPerShare = parseInt(
+        initialStorage.tokenPool / initialStorage.totalShares
+      );
+      const minTez = tezPerShare * sharesBurned;
+      const minTokens = tokensPerShare * sharesBurned;
+      let operation = await dex.divestLiquidity(minTokens, minTez, sharesBurned)
+      assert(operation.status === "applied", "Operation was not applied");
+      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+      assert(
+        finalStorage.sharesExtended[pkh] ==
+        initialStorage.sharesExtended[pkh] - sharesBurned
+      );
+      assert(finalStorage.tezPool == parseInt(initialStorage.tezPool) - minTez);
+      assert(
+        finalStorage.tokenPool == parseInt(initialStorage.tokenPool) - minTokens
+      );
+      assert(
+        finalStorage.totalShares ==
+        parseInt(initialStorage.totalShares) - sharesBurned
+      );
+      assert(
+        finalStorage.invariant ==
+        (parseInt(initialStorage.tezPool) - minTez) *
+        (parseInt(initialStorage.tokenPool) - minTokens)
+      );
+    });
+  });
 });
 
 
 // | TokenToTokenSwap of (nat * nat * address)
-// | TokenToTezPayment of (nat * nat * address)
 // | TokenToTokenPayment of (nat * nat * address * address)
-// | DivestLiquidity of (nat * nat * nat)
 // | SetVotesDelegation of (address * bool)
 // | Vote of (address * key_hash)
 // | Veto of (address)
