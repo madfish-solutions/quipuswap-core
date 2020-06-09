@@ -26,13 +26,22 @@ const setup = async (keyPath, provider) => {
     return await Tezos.setProvider({ rpc: provider, signer: await new InMemorySigner.fromSecretKey(secretKey) });
 };
 
-let deployContract = async (contractName, balance, inputDir, storageDir, outputDir, outputName, storageName) => {
+let deployContract = async (contractName, balance, inputDir, storageDir, outputDir, outputName, storageName, withInit) => {
     storageName = storageName || contractName;
-    let operation = await Tezos.contract.originate({
-        code: JSON.parse(fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()),
-        storage: require(`../${storageDir}/${storageName}.js`),
-        balance: balance
-    });
+    let operation;
+    if (withInit) {
+        operation = await Tezos.contract.originate({
+            code: JSON.parse(fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()),
+            init: JSON.parse(fs.readFileSync(`./${storageDir}/${storageName}.json`).toString()),
+            balance: balance
+        });
+    } else {
+        operation = await Tezos.contract.originate({
+            code: JSON.parse(fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()),
+            storage: require(`../${storageDir}/${storageName}.js`),
+            balance: balance
+        });
+    }
     let contract = await operation.contract();
     const detail = {
         address: contract.address
@@ -125,10 +134,15 @@ program
     .option("-k, --key_path <file>", "Where private key is located", "key")
     .option("-p, --provider <provider>", "Node to connect", "https://api.tez.ie/rpc/carthagenet")
     .option("-b, --balance <balance>", "Where private key is located", "0")
+    .option("-n, --init", "Wether to use init option")
     .action(async function (contract, output_name, storage_name, options) {
         exec("mkdir -p " + options.output_dir);
         await setup(options.key_path, options.provider);
-        await deployContract(contract, parseFloat(options.balance), options.input_dir, options.storage_dir, options.output_dir, output_name, storage_name);
+        try {
+            await deployContract(contract, parseFloat(options.balance), options.input_dir, options.storage_dir, options.output_dir, output_name, storage_name, options.init);
+        } catch (e) {
+            console.log(e);
+        }
     });
 
 
