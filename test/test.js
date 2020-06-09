@@ -340,6 +340,54 @@ describe('Dex', function () {
       );
     });
   });
+
+  describe('TokenToTezSwap()', function () {
+    it('should exchange tez to token', async function () {
+      this.timeout(1000000);
+      let Tezos = await setup();
+      let dex = await Dex.init(Tezos);
+      let tokensIn = "1000";
+      const pkh = await Tezos.signer.publicKeyHash();
+
+      const initialTezBalance = await Tezos.tz.getBalance(pkh);
+      const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+      const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
+
+      const fee = parseInt(tokensIn / initialDexStorage.feeRate);
+      const newTokenPool = parseInt(+initialDexStorage.tokenPool + +tokensIn);
+      const tempTokenPool = parseInt(newTokenPool - fee);
+      const newTezPool = parseInt(initialDexStorage.invariant / tempTokenPool);
+
+      const minTezOut = parseInt(parseInt(initialDexStorage.tezPool - newTezPool));
+      let operation = await dex.tokenToTezSwap(tokensIn, minTezOut)
+      assert(operation.status === "applied", "Operation was not applied");
+      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+      const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
+      const finalTezBalance = await Tezos.tz.getBalance(pkh);
+
+      assert(
+        finalTokenStorage.ledgerExtended[pkh].balance ==
+        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) - parseInt(tokensIn)
+      );
+      assert(finalTezBalance >= parseInt(initialTezBalance));
+      assert(finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut));
+      assert(
+        finalStorage.tezPool ==
+        parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
+      );
+      assert(
+        finalStorage.tokenPool ==
+        parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
+      );
+
+      assert(
+        finalStorage.invariant ==
+        (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
+        (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
+      );
+    });
+  });
 });
 
 
