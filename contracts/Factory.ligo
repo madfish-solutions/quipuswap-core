@@ -1,4 +1,5 @@
 #include "IFactory.ligo"
+#include "IDex.ligo"
 
 function launchExchange (const token : address; const exchange : address; var s: exchange_storage ) :  (exchange_storage) is
  block {
