@@ -1,5 +1,6 @@
 #include "IToken.ligo"
 #include "IFactory.ligo"
+#include "IDex.ligo"
 
 function initializeExchange (const this : address; const tokenAmount : nat; var s: dex_storage ) :  (list(operation) * dex_storage) is
  block {
@@ -253,7 +254,6 @@ function divestLiquidityMiddle (const this : address; const sharesBurned : nat; 
     s.storage := res.1;
  } with (res.0, s)
 
-
 function setVotesDelegationMiddle (const voter : address ; const allowance : bool ; var s : full_dex_storage) : full_dex_storage is
  block {
     const f: (address * bool * dex_storage) -> (dex_storage) = get_force(0n, s.setVotesDelegation);
@@ -275,7 +275,6 @@ function vetoMiddle (const voter : address; var s: full_dex_storage ) :  (list(o
     s.storage := res.1;
  } with (res.0, s)
 
-
 function main (const p : dexAction ; const s : full_dex_storage) :
   (list(operation) * full_dex_storage) is
  block {
@@ -293,6 +292,7 @@ function main (const p : dexAction ; const s : full_dex_storage) :
   | SetVotesDelegation(n) -> ((nil: list(operation)), setVotesDelegationMiddle(n.0, n.1, s))
   | Vote(n) -> voteMiddle(n.0, n.1, s)
   | Veto(n) -> vetoMiddle(n, s) 
+  | Default(n) -> ((nil: list(operation)), s) 
  end
 
 // const initial_storage : full_dex_storage = 
@@ -325,6 +325,10 @@ function main (const p : dexAction ; const s : full_dex_storage) :
 //    veto = big_map[0n -> veto];
 // end;
 
+// with methods in maps
 // record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("KT1AXdTEv1ZFpeokMZCGVLaEWV2QHfXMAfc2" : address);      factoryAddress = ("KT1TmyWYmkUTYvYsXJjW3WyTDkV7ckRex5Mx" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, bool));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);      nextDelegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);   end;   initializeExchange = big_map[0n -> initializeExchange];   tezToToken = big_map[0n -> tezToToken];   tokenToTez = big_map[0n -> tokenToTez];   tokenToTokenOut = big_map[0n -> tokenToTokenOut];   investLiquidity = big_map[0n -> investLiquidity];   divestLiquidity = big_map[0n -> divestLiquidity];   setVotesDelegation = big_map[0n -> setVotesDelegation];   vote = big_map[0n -> vote];   veto = big_map[0n -> veto];end;
 
-// ligo compile-storage contracts/Dex.ligo main 'record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("KT1AXdTEv1ZFpeokMZCGVLaEWV2QHfXMAfc2" : address);      factoryAddress = ("KT1TmyWYmkUTYvYsXJjW3WyTDkV7ckRex5Mx" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, bool));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);      nextDelegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);   end;   initializeExchange = big_map[0n -> initializeExchange];   tezToToken = big_map[0n -> tezToToken];   tokenToTez = big_map[0n -> tokenToTez];   tokenToTokenOut = big_map[0n -> tokenToTokenOut];   investLiquidity = big_map[0n -> investLiquidity];   divestLiquidity = big_map[0n -> divestLiquidity];   setVotesDelegation = big_map[0n -> setVotesDelegation];   vote = big_map[0n -> vote];   veto = big_map[0n -> veto];end'  --michelson-format=json > storage/Dex.json
+// ligo compile-storage contracts/BrokenStore.ligo main 'record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("KT1AXdTEv1ZFpeokMZCGVLaEWV2QHfXMAfc2" : address);      factoryAddress = ("KT1TmyWYmkUTYvYsXJjW3WyTDkV7ckRex5Mx" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, bool));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);      nextDelegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);   end;   initializeExchange = big_map[0n -> initializeExchange];   tezToToken = big_map[0n -> tezToToken];   tokenToTez = big_map[0n -> tokenToTez];   tokenToTokenOut = big_map[0n -> tokenToTokenOut];   investLiquidity = big_map[0n -> investLiquidity];   divestLiquidity = big_map[0n -> divestLiquidity];   setVotesDelegation = big_map[0n -> setVotesDelegation];   vote = big_map[0n -> vote];   veto = big_map[0n -> veto];end'  --michelson-format=json > storage/BrokenStore.json
+
+// without methods
+// ligo compile-storage contracts/Dex.ligo main 'record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("KT1AXdTEv1ZFpeokMZCGVLaEWV2QHfXMAfc2" : address);      factoryAddress = ("KT1TmyWYmkUTYvYsXJjW3WyTDkV7ckRex5Mx" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, bool));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);      nextDelegated = ("tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" : key_hash);   end;   initializeExchange = (big_map end: big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)));   tezToToken = (big_map end: big_map(nat, (address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage)));   tokenToTez = (big_map end: big_map(nat, (address * address * address * nat * nat * dex_storage) -> (list(operation) * dex_storage)));   tokenToTokenOut = (big_map end: big_map(nat, (address * address * address * nat * nat * address * dex_storage) -> (list(operation) * dex_storage)));   investLiquidity = (big_map end: big_map(nat, (address * nat * dex_storage) -> (list(operation) * dex_storage)));   divestLiquidity = (big_map end: big_map(nat, (address * nat * nat * nat * dex_storage) -> (list(operation) * dex_storage)));   setVotesDelegation = (big_map end: big_map(nat, (address * bool * dex_storage) -> (dex_storage)));   vote = (big_map end: big_map(nat, (address * key_hash * dex_storage) -> (list(operation) * dex_storage)));   veto = (big_map end: big_map(nat, (address * dex_storage) -> (list(operation) * dex_storage)));end'  --michelson-format=json > storage/Dex.json

@@ -47,5 +47,4 @@ type dexAction is
 | SetVotesDelegation of (address * bool)
 | Vote of (address * key_hash)
 | Veto of (address)
-
-
+| Default of (unit)
