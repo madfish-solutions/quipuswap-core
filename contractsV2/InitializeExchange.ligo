@@ -21,5 +21,5 @@ function main (const p : gatewayAction ; const s : gateway_storage) :
   (list(operation) * gateway_storage) is case p of
   | ReceiveDexStorage(n) -> (initializeExchange(s.main, s.tmp.0, n), s) 
   | Use(n) -> (list transaction(GetStorage(unit), Tezos.amount, (get_contract(s.main): contract(dexAction))); end, (record tmp = n; main = s.main; end: gateway_storage) ) 
-//   | SetMain(n) -> ((nil:list(operation)), (record tmp = s.tmp; main = n; end: gateway_storage) ) 
+  | SetMain(n) -> ((nil:list(operation)), (record tmp = s.tmp; main = n; end: gateway_storage) ) 
  end
