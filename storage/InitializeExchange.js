@@ -1,4 +1,5 @@
 module.exports = {
-    main: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
+    main: "tz1burnburnburnburnburnburnburjAYjjX",
+    sender: "tz1burnburnburnburnburnburnburjAYjjX",
     tmp: "0"
 }
