@@ -1,12 +1,26 @@
-#include "IDex.ligo"
-
-type gateway_storage is 
-record
-  main: address;
-  tmp: (nat * nat * nat * address * address * bool * key_hash);
+type vote_info is record
+  allowances: map(address, bool);
+  candidate: option(key_hash);
 end
 
-type gatewayAction is
-| ReceiveDexStorage of (dex_storage)
-| Use of (nat * nat * nat * address * address * bool * key_hash)
-| SetMain of (address)
+type dex_storage is record 
+  feeRate: nat;
+  tezPool: nat;
+  tokenPool: nat;
+  invariant: nat;
+  totalShares: nat;
+  tokenAddress: address;
+  factoryAddress: address;
+  shares: big_map(address, nat);
+  voters: big_map(address, vote_info);
+  vetos: big_map(key_hash, bool);
+  vetoVoters: big_map(address, nat);
+  votes: big_map(key_hash, nat);
+  veto: nat;
+  delegated: key_hash;
+  nextDelegated: key_hash;
+  allowed: big_map(address, bool);
+end
+
+type x is GetStorage of unit
+type y is UpdateStorage of dex_storage
