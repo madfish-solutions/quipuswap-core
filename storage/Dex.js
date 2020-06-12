@@ -7,8 +7,12 @@ const { address: tokenAddress } = JSON.parse(
 const { address: factoryAddress } = JSON.parse(
     fs.readFileSync("./deploy/Factory.json").toString()
 );
-const { address: InitializeExchangeAddress } = JSON.parse(
+const { address: initializeExchangeAddress } = JSON.parse(
     fs.readFileSync("./deploy/InitializeExchange.json").toString()
+);
+
+const { address: investLiquidityAddress } = JSON.parse(
+    fs.readFileSync("./deploy/InvestLiquidity.json").toString()
 );
 
 module.exports = {
@@ -27,5 +31,5 @@ module.exports = {
     veto: "0",
     delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
     nextDelegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
-    allowed: MichelsonMap.fromLiteral({ [InitializeExchangeAddress]: true })
+    allowed: MichelsonMap.fromLiteral({ [initializeExchangeAddress]: true, [investLiquidityAddress]: true })
 }
