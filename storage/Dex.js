@@ -17,6 +17,9 @@ const { address: investLiquidityAddress } = JSON.parse(
 const { address: tezToTokenSwapAddress } = JSON.parse(
     fs.readFileSync("./deploy/TezToTokenSwap.json").toString()
 );
+const { address: tezToTokenPaymentAddress } = JSON.parse(
+    fs.readFileSync("./deploy/TezToTokenPayment.json").toString()
+);
 
 module.exports = {
     feeRate: "500",
@@ -34,5 +37,10 @@ module.exports = {
     veto: "0",
     delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
     nextDelegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
-    allowed: MichelsonMap.fromLiteral({ [tezToTokenSwapAddress]: true, [initializeExchangeAddress]: true, [investLiquidityAddress]: true })
+    allowed: MichelsonMap.fromLiteral({
+        [tezToTokenSwapAddress]: true,
+        [tezToTokenPaymentAddress]: true,
+        [initializeExchangeAddress]: true,
+        [investLiquidityAddress]: true
+    })
 }
