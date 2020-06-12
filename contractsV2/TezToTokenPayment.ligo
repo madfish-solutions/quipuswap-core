@@ -27,7 +27,7 @@ function tezToToken (const gs : gateway_storage; var s: dex_storage) :  list(ope
     
     s.tokenPool := newTokenPool;
     s.invariant := s.tezPool * newTokenPool;
- } with (list transaction(RequestTransfer(gs.tmp.1, tokensOut), 
+ } with (list transaction(RequestTransfer(gs.tmp.1, tokensOut, False), 
    0tz,
    case (Tezos.get_entrypoint_opt("%requestTransfer", gs.main) : option(contract(z))) of Some(contr) -> contr
       | None -> (failwith("02"):contract(z))

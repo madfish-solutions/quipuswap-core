@@ -2,6 +2,7 @@ echo "build"
 node scripts/cli2.js build -i contractsV2 InitializeExchange
 node scripts/cli2.js build -i contractsV2 InvestLiquidity
 node scripts/cli2.js build -i contractsV2 TezToTokenSwap
+node scripts/cli2.js build -i contractsV2 TokenToTezSwap
 node scripts/cli2.js build -i contractsV2 TezToTokenPayment
 node scripts/cli2.js build -i contractsV2 Dex
 
@@ -13,6 +14,8 @@ sleep 5
 node scripts/cli2.js deploy TezToTokenSwap
 sleep 5
 node scripts/cli2.js deploy TezToTokenPayment
+sleep 5
+node scripts/cli2.js deploy TokenToTezSwap
 sleep 5
 node scripts/cli2.js deploy Dex
 sleep 5
