@@ -16,6 +16,6 @@ function main (const p : dexAction ; const s : dex_storage) :
    )
   end, s) 
   | UpdateStorage(n) -> ((nil: list(operation)), n) 
-  | RequestTransfer(n) -> (list transaction(Transfer(Tezos.self_address, n.0, n.1), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); end, s) 
+  | RequestTransfer(n) -> (list if n.2 then transaction(unit, n.1 * 1mutez, (get_contract(n.0) : contract(unit))) else transaction(Transfer(Tezos.self_address, n.0, n.1), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); end, s) 
 //   | Default(n) -> ((nil: list(operation)), s) 
  end

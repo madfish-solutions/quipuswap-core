@@ -20,6 +20,9 @@ const { address: tezToTokenSwapAddress } = JSON.parse(
 const { address: tezToTokenPaymentAddress } = JSON.parse(
     fs.readFileSync("./deploy/TezToTokenPayment.json").toString()
 );
+const { address: tokenToTezSwapAddress } = JSON.parse(
+    fs.readFileSync("./deploy/TokenToTezSwap.json").toString()
+);
 
 module.exports = {
     feeRate: "500",
@@ -41,6 +44,7 @@ module.exports = {
         [tezToTokenSwapAddress]: true,
         [tezToTokenPaymentAddress]: true,
         [initializeExchangeAddress]: true,
+        [tokenToTezSwapAddress]: true,
         [investLiquidityAddress]: true
     })
 }

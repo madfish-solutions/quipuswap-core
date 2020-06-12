@@ -24,6 +24,6 @@ end
 
 type dexAction is
 | UpdateStorage of (dex_storage)
-| RequestTransfer of (address * nat)
+| RequestTransfer of (address * nat * bool)
 | GetStorage
 // | Default

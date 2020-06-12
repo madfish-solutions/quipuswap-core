@@ -24,4 +24,4 @@ end
 
 type x is GetStorage of unit
 type y is UpdateStorage of dex_storage
-type z is RequestTransfer of (address * nat)
+type z is RequestTransfer of (address * nat * bool)
