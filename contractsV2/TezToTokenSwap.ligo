@@ -34,7 +34,7 @@ function tezToToken (const gs : gateway_storage; var s: dex_storage) :  list(ope
       end 
    );
    transaction(UpdateStorage(s), 
-   0tz,
+   Tezos.amount,
    case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
       | None -> (failwith("01"):contract(y))
       end 

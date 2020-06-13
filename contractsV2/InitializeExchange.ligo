@@ -17,9 +17,9 @@ function initializeExchange (const gs : gateway_storage; var s: dex_storage ) : 
  block {
     if s.invariant =/= 0n then failwith("01") else skip ;
     if s.totalShares =/= 0n then failwith("02") else skip ;
-    if amount < 1mutez then failwith("03") else skip ;
+    if Tezos.amount < 1mutez then failwith("03") else skip ;
     if gs.tmp < 10n then failwith("04") else skip ;
-    if amount > 500000000tz then failwith("05") else skip ;
+    if Tezos.amount > 500000000tz then failwith("05") else skip ;
     
     s.tokenPool := gs.tmp;
     s.tezPool := Tezos.amount / 1mutez;
@@ -30,7 +30,7 @@ function initializeExchange (const gs : gateway_storage; var s: dex_storage ) : 
       0mutez, 
       (get_contract(s.tokenAddress): contract(tokenAction))); 
       transaction(UpdateStorage(s), 
-      0tz,
+      Tezos.amount,
       case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
          | None -> (failwith("01"):contract(y))
          end 

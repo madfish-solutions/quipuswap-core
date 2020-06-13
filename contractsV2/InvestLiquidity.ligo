@@ -32,7 +32,7 @@ block {
 
    var operations: list(operation) := list transaction(Transfer(gs.sender, gs.main, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) ;
       transaction(UpdateStorage(s), 
-      0tz,
+      Tezos.amount,
       case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
          | None -> (failwith("01"):contract(y))
          end 

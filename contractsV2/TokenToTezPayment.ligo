@@ -4,13 +4,13 @@
 type gateway_storage is 
 record
   main: address;
-  tmp: (nat * nat);
+  tmp: (nat * nat * address);
   sender: address;
 end
 
 type gatewayAction is
 | ReceiveDexStorage of (dex_storage)
-| Use of (nat * nat)
+| Use of (nat * nat * address)
 | SetMain of (address)
 
 function tokenToTez (const gs : gateway_storage; var s: dex_storage) :  list(operation) is
@@ -27,7 +27,7 @@ function tokenToTez (const gs : gateway_storage; var s: dex_storage) :  list(ope
     s.tezPool := newTezPool;
     s.invariant := newTezPool * s.tokenPool;
  } with (list transaction(Transfer(gs.sender, Tezos.self_address, gs.tmp.0), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); 
-   transaction(RequestTransfer(gs.sender, gs.tmp.1, True), 
+   transaction(RequestTransfer(gs.tmp.2, gs.tmp.1, True), 
    0tz,
    case (Tezos.get_entrypoint_opt("%requestTransfer", gs.main) : option(contract(z))) of Some(contr) -> contr
       | None -> (failwith("02"):contract(z))
@@ -45,7 +45,7 @@ function main (const p : gatewayAction ; const s : gateway_storage) :
   (list(operation) * gateway_storage) is case p of
   | ReceiveDexStorage(n) -> (tokenToTez(s, n), s) 
   | Use(n) -> (list transaction(GetStorage(unit), 
-         0tz, 
+         Tezos.amount, 
          case (Tezos.get_entrypoint_opt("%getStorage", s.main) : option(contract(x))) of Some(contr) -> contr
          | None -> (failwith("00"):contract(x))
          end 
