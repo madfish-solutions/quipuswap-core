@@ -14,6 +14,9 @@ const { address: initializeExchangeAddress } = JSON.parse(
 const { address: investLiquidityAddress } = JSON.parse(
     fs.readFileSync("./deploy/InvestLiquidity.json").toString()
 );
+const { address: divestLiquidityAddress } = JSON.parse(
+    fs.readFileSync("./deploy/DivestLiquidity.json").toString()
+);
 const { address: tezToTokenSwapAddress } = JSON.parse(
     fs.readFileSync("./deploy/TezToTokenSwap.json").toString()
 );
@@ -49,6 +52,7 @@ module.exports = {
         [initializeExchangeAddress]: true,
         [tokenToTezSwapAddress]: true,
         [tokenToTezPaymentAddress]: true,
+        [divestLiquidityAddress]: true,
         [investLiquidityAddress]: true
     })
 }

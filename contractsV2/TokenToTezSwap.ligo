@@ -26,7 +26,7 @@ function tokenToTez (const gs : gateway_storage; var s: dex_storage) :  list(ope
 
     s.tezPool := newTezPool;
     s.invariant := newTezPool * s.tokenPool;
- } with (list transaction(Transfer(gs.sender, Tezos.self_address, gs.tmp.0), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); 
+ } with (list transaction(Transfer(gs.sender, gs.main, gs.tmp.0), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); 
    transaction(RequestTransfer(gs.sender, gs.tmp.1, True), 
    0tz,
    case (Tezos.get_entrypoint_opt("%requestTransfer", gs.main) : option(contract(z))) of Some(contr) -> contr
