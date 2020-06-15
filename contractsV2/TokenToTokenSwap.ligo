@@ -4,13 +4,13 @@
 type gateway_storage is 
 record
   main: address;
-  tmp: (nat * nat * address * address);
+  tmp: (nat * nat * address);
   sender: address;
 end
 
 type gatewayAction is
 | ReceiveDexStorage of (dex_storage)
-| Use of (nat * nat * address * address)
+| Use of (nat * nat * address)
 | SetMain of (address)
 
 function tokenToTokenOut (const gs : gateway_storage; var s: dex_storage) :  list(operation) is
