@@ -23,28 +23,36 @@ node scripts/cli2.js deploy TokenToTezSwap
 sleep 5
 node scripts/cli2.js deploy TokenToTezPayment
 sleep 5
+node scripts/cli2.js deploy TokenToTokenSwap
+sleep 5
+node scripts/cli2.js deploy Factory
+sleep 5
+node scripts/cli2.js deploy Token
+sleep 5
 node scripts/cli2.js deploy Dex
+sleep 5
+
+echo "deploy"
+node scripts/cli2.js deploy InitializeExchange InitializeExchange2
+sleep 5
+node scripts/cli2.js deploy InvestLiquidity InvestLiquidity2
+sleep 5
+node scripts/cli2.js deploy DivestLiquidity DivestLiquidity2
+sleep 5
+node scripts/cli2.js deploy TezToTokenSwap TezToTokenSwap2
+sleep 5
+node scripts/cli2.js deploy TezToTokenPayment TezToTokenPayment2
+sleep 5
+node scripts/cli2.js deploy TokenToTezSwap TokenToTezSwap2
+sleep 5
+node scripts/cli2.js deploy TokenToTezPayment TokenToTezPayment2
+sleep 5
+node scripts/cli2.js deploy TokenToTokenSwap TokenToTokenSwap2
+sleep 5
+node scripts/cli2.js deploy Token Token2
+sleep 5
+node scripts/cli2.js deploy Dex Dex2 Dex2
 sleep 5
 
 echo "test"
 ./node_modules/mocha/bin/mocha
-# echo "build"
-# echo "deploy factory"
-# node scripts/cli2.js deploy Factory
-# sleep 5
-# echo "deploy first pair"
-# node scripts/cli2.js deploy Token
-# sleep 5
-# node scripts/cli2.js deploy Dex
-# sleep 5
-# echo "deploy second pair"
-# node scripts/cli2.js deploy Token Token2
-# sleep 5
-# node scripts/cli2.js deploy Dex Dex2 Dex2
-# sleep 5
-# echo "test"
-# node tests/tests.js
-# echo "test2"
-# node tests/tests.js "./deploy/Token2.json" "./deploy/Dex2.json"
-# echo "exchange"
-# node scripts/tokenToToken.js
