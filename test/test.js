@@ -368,6 +368,11 @@ class Test {
       tezToTokenPaymentAddress,
       tokenToTezPaymentAddress);
     await dex.prepare();
+
+    let factoryContract = await tezos.contract.at(factoryAddress);
+    operation = await factoryContract.methods.launchExchange(tokenAddress, dexAddress).send();
+    await operation.confirmation();
+    assert(operation.status === "applied", "Operation was not applied");
   }
   static async initializeExchange(dexAddress,
     initializeExchangeAddress,
