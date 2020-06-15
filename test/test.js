@@ -11,41 +11,44 @@ const { address: tokenAddress } = JSON.parse(
 );
 
 const { address: initializeExchangeAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/InitializeExchange.json").toString()
+  fs.readFileSync(process.argv[3] || "./deploy/InitializeExchange.json").toString()
 );
-
 
 const { address: investLiquidityAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/InvestLiquidity.json").toString()
+  fs.readFileSync(process.argv[4] || "./deploy/InvestLiquidity.json").toString()
 );
 const { address: divestLiquidityAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/DivestLiquidity.json").toString()
+  fs.readFileSync(process.argv[5] || "./deploy/DivestLiquidity.json").toString()
 );
 
 const { address: tezToTokenSwapAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/TezToTokenSwap.json").toString()
+  fs.readFileSync(process.argv[6] || "./deploy/TezToTokenSwap.json").toString()
 );
 
 const { address: tokenToTezSwapAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/TokenToTezSwap.json").toString()
+  fs.readFileSync(process.argv[7] || "./deploy/TokenToTezSwap.json").toString()
+);
+
+const { address: tokenToTokenSwapAddress } = JSON.parse(
+  fs.readFileSync(process.argv[8] || "./deploy/TokenToTokenSwap.json").toString()
 );
 
 const { address: tokenToTezPaymentAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/TokenToTezPayment.json").toString()
+  fs.readFileSync(process.argv[9] || "./deploy/TokenToTezPayment.json").toString()
 );
 
 const { address: tezToTokenPaymentAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/TezToTokenPayment.json").toString()
+  fs.readFileSync(process.argv[10] || "./deploy/TezToTokenPayment.json").toString()
 );
 
 const { address: dexAddress } = JSON.parse(
-  fs.readFileSync(process.argv[3] || "./deploy/Dex.json").toString()
+  fs.readFileSync(process.argv[11] || "./deploy/Dex.json").toString()
 );
 
 const { address: factoryAddress } = JSON.parse(
-  fs.readFileSync(process.argv[4] || "./deploy/Factory.json").toString()
+  fs.readFileSync(process.argv[12] || "./deploy/Factory.json").toString()
 );
-const provider = process.argv[5] || "https://api.tez.ie/rpc/carthagenet";
+const provider = process.argv[13] || "http://0.0.0.0:8732";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -74,7 +77,7 @@ const getContractFullStorage = async (Tezos, address, maps = {}) => {
 
 class Dex {
 
-  constructor(Tezos, contract, initializeExchange, investLiquidity, divestLiquidity, tezToTokenSwap, tokenToTezSwap, tezToTokenPayment, tokenToTezPayment) {
+  constructor(Tezos, contract, initializeExchange, investLiquidity, divestLiquidity, tezToTokenSwap, tokenToTezSwap, tokenToTokenSwap, tezToTokenPayment, tokenToTezPayment) {
     this.tezos = Tezos;
     this.contract = contract;
     this.initializeExchangeContract = initializeExchange;
@@ -83,6 +86,7 @@ class Dex {
     this.tezToTokenSwapContract = tezToTokenSwap;
     this.tezToTokenPaymentContract = tezToTokenPayment;
     this.tokenToTezSwapContract = tokenToTezSwap;
+    this.tokenToTokenSwapContract = tokenToTokenSwap;
     this.tokenToTezPaymentContract = tokenToTezPayment;
   }
 
@@ -93,6 +97,7 @@ class Dex {
       await Tezos.contract.at(divestLiquidityAddress),
       await Tezos.contract.at(tezToTokenSwapAddress),
       await Tezos.contract.at(tokenToTezSwapAddress),
+      await Tezos.contract.at(tokenToTokenSwapAddress),
       await Tezos.contract.at(tezToTokenPaymentAddress),
       await Tezos.contract.at(tokenToTezPaymentAddress)
     );
@@ -120,6 +125,11 @@ class Dex {
     await operation.confirmation();
 
     operation = await this.tokenToTezSwapContract.methods
+      .setMain(dexAddress)
+      .send();
+    await operation.confirmation();
+
+    operation = await this.tokenToTokenSwapContract.methods
       .setMain(dexAddress)
       .send();
     await operation.confirmation();
@@ -213,7 +223,7 @@ class Dex {
   async divestLiquidity(tokenAmount, tezAmount, sharesBurned) {
     const operation = await this.divestLiquidityContract.methods
       .use(sharesBurned, tezAmount, tokenAmount)
-      .send({ amount: tezAmount });
+      .send();
     await operation.confirmation();
     return operation;
   }
@@ -430,7 +440,7 @@ describe('Dex', function () {
       this.timeout(1000000);
       let Tezos = await setup();
       let dex = await Dex.init(Tezos);
-      let tokensIn = "100";
+      let tokensIn = "1000";
       const pkh = await Tezos.signer.publicKeyHash();
 
       const initialTezBalance = await Tezos.tz.getBalance(pkh);
@@ -585,7 +595,7 @@ describe('Dex', function () {
       this.timeout(1000000);
       let Tezos = await setup("../key1");
       let dex = await Dex.init(Tezos);
-      let sharesBurned = 10;
+      let sharesBurned = 1;
       const pkh = await Tezos.signer.publicKeyHash();
       let initialStorage = await dex.getFullStorage({ shares: [pkh] });
 
@@ -597,7 +607,7 @@ describe('Dex', function () {
       );
       const minTez = tezPerShare * sharesBurned;
       const minTokens = tokensPerShare * sharesBurned;
-      let operation = await dex.divestLiquidity(minTokens, minTez, sharesBurned)
+      let operation = await dex.divestLiquidity(minTokens, minTez, sharesBurned);
       assert(operation.status === "applied", "Operation was not applied");
       let finalStorage = await dex.getFullStorage({ shares: [pkh] });
 

@@ -1,5 +1,6 @@
 #include "IDex.ligo"
 #include "IToken.ligo"
+#include "IFactory.ligo"
 
 type x is ReceiveDexStorage of dex_storage
 
@@ -17,14 +18,14 @@ function main (const p : dexAction ; const s : dex_storage) :
   end, s) 
   | UpdateStorage(n) -> ((nil: list(operation)), n) 
   | RequestTransfer(n) -> (list if n.2 then transaction(unit, n.1 * 1mutez, (get_contract(n.0) : contract(unit))) else transaction(Transfer(Tezos.self_address, n.0, n.1), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); end, s) 
+  | Lookup(n) -> (list transaction(TokenToExchangeLookup(n.0, n.1, n.2), n.3 * 1mutez, (get_contract(s.factoryAddress): contract(exchangeAction))); end, s) 
+
 //   | Default(n) -> ((nil: list(operation)), s) 
  end
 
-// | TokenToTezSwap of (nat * nat)
 // | TokenToTokenSwap of (nat * nat * address)
-// | TokenToTezPayment of (nat * nat * address)
 // | TokenToTokenPayment of (nat * nat * address * address)
-// | DivestLiquidity of (nat * nat * nat)
+
 // | SetVotesDelegation of (address * bool)
 // | Vote of (address * key_hash)
 // | Veto of (address)
