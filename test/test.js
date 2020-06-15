@@ -6,49 +6,88 @@ const { InMemorySigner } = require("@taquito/signer");
 const path = require('path');
 const { MichelsonMap } = require('@taquito/michelson-encoder');
 
-const { address: tokenAddress } = JSON.parse(
-  fs.readFileSync(process.argv[2] || "./deploy/Token.json").toString()
+const { address: tokenAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/Token.json").toString()
 );
 
-const { address: initializeExchangeAddress } = JSON.parse(
-  fs.readFileSync(process.argv[3] || "./deploy/InitializeExchange.json").toString()
+const { address: initializeExchangeAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/InitializeExchange.json").toString()
 );
 
-const { address: investLiquidityAddress } = JSON.parse(
-  fs.readFileSync(process.argv[4] || "./deploy/InvestLiquidity.json").toString()
+const { address: investLiquidityAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/InvestLiquidity.json").toString()
 );
-const { address: divestLiquidityAddress } = JSON.parse(
-  fs.readFileSync(process.argv[5] || "./deploy/DivestLiquidity.json").toString()
-);
-
-const { address: tezToTokenSwapAddress } = JSON.parse(
-  fs.readFileSync(process.argv[6] || "./deploy/TezToTokenSwap.json").toString()
+const { address: divestLiquidityAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/DivestLiquidity.json").toString()
 );
 
-const { address: tokenToTezSwapAddress } = JSON.parse(
-  fs.readFileSync(process.argv[7] || "./deploy/TokenToTezSwap.json").toString()
+const { address: tezToTokenSwapAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/TezToTokenSwap.json").toString()
 );
 
-const { address: tokenToTokenSwapAddress } = JSON.parse(
-  fs.readFileSync(process.argv[8] || "./deploy/TokenToTokenSwap.json").toString()
+const { address: tokenToTezSwapAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/TokenToTezSwap.json").toString()
 );
 
-const { address: tokenToTezPaymentAddress } = JSON.parse(
-  fs.readFileSync(process.argv[9] || "./deploy/TokenToTezPayment.json").toString()
+const { address: tokenToTokenSwapAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/TokenToTokenSwap.json").toString()
 );
 
-const { address: tezToTokenPaymentAddress } = JSON.parse(
-  fs.readFileSync(process.argv[10] || "./deploy/TezToTokenPayment.json").toString()
+const { address: tokenToTezPaymentAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/TokenToTezPayment.json").toString()
 );
 
-const { address: dexAddress } = JSON.parse(
-  fs.readFileSync(process.argv[11] || "./deploy/Dex.json").toString()
+const { address: tezToTokenPaymentAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/TezToTokenPayment.json").toString()
+);
+
+const { address: dexAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/Dex.json").toString()
 );
 
 const { address: factoryAddress } = JSON.parse(
-  fs.readFileSync(process.argv[12] || "./deploy/Factory.json").toString()
+  fs.readFileSync("./deploy/Factory.json").toString()
 );
-const provider = process.argv[13] || "http://0.0.0.0:8732";
+const { address: tokenAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/Token2.json").toString()
+);
+
+const { address: initializeExchangeAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/InitializeExchange2.json").toString()
+);
+
+const { address: investLiquidityAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/InvestLiquidity2.json").toString()
+);
+const { address: divestLiquidityAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/DivestLiquidity2.json").toString()
+);
+
+const { address: tezToTokenSwapAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/TezToTokenSwap2.json").toString()
+);
+
+const { address: tokenToTezSwapAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/TokenToTezSwap2.json").toString()
+);
+
+const { address: tokenToTokenSwapAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/TokenToTokenSwap2.json").toString()
+);
+
+const { address: tokenToTezPaymentAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/TokenToTezPayment2.json").toString()
+);
+
+const { address: tezToTokenPaymentAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/TezToTokenPayment2.json").toString()
+);
+
+const { address: dexAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/Dex2.json").toString()
+);
+
+const provider = "http://0.0.0.0:8732";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -90,7 +129,16 @@ class Dex {
     this.tokenToTezPaymentContract = tokenToTezPayment;
   }
 
-  static async init(Tezos) {
+  static async init(Tezos,
+    dexAddress,
+    initializeExchangeAddress,
+    investLiquidityAddress,
+    divestLiquidityAddress,
+    tezToTokenSwapAddress,
+    tokenToTezSwapAddress,
+    tokenToTokenSwapAddress,
+    tezToTokenPaymentAddress,
+    tokenToTezPaymentAddress) {
     return new Dex(Tezos, await Tezos.contract.at(dexAddress),
       await Tezos.contract.at(initializeExchangeAddress),
       await Tezos.contract.at(investLiquidityAddress),
@@ -105,42 +153,42 @@ class Dex {
 
   async prepare() {
     let operation = await this.initializeExchangeContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
 
     operation = await this.investLiquidityContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
 
     operation = await this.divestLiquidityContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
 
     operation = await this.tezToTokenSwapContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
 
     operation = await this.tokenToTezSwapContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
 
     operation = await this.tokenToTokenSwapContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
 
     operation = await this.tokenToTezPaymentContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
 
     operation = await this.tezToTokenPaymentContract.methods
-      .setMain(dexAddress)
+      .setMain(this.contract.address)
       .send();
     await operation.confirmation();
   }
@@ -290,9 +338,17 @@ const setup = async (keyPath = "../key") => {
   return tezos;
 };
 
-describe('Dex', function () {
-  before(async function () {
-    this.timeout(1000000);
+class Test {
+  static async before(dexAddress,
+    initializeExchangeAddress,
+    investLiquidityAddress,
+    divestLiquidityAddress,
+    tezToTokenSwapAddress,
+    tokenToTezSwapAddress,
+    tokenToTokenSwapAddress,
+    tezToTokenPaymentAddress,
+    tokenToTezPaymentAddress,
+    tokenAddress) {
     let tezos = await setup();
     let tezos1 = await setup("../key1");
     let token = await tezos.contract.at(tokenAddress);
@@ -301,335 +357,417 @@ describe('Dex', function () {
       .send();
     await operation.confirmation();
 
-    let dex = await Dex.init(await setup());
+    let dex = await Dex.init(tezos,
+      dexAddress,
+      initializeExchangeAddress,
+      investLiquidityAddress,
+      divestLiquidityAddress,
+      tezToTokenSwapAddress,
+      tokenToTezSwapAddress,
+      tokenToTokenSwapAddress,
+      tezToTokenPaymentAddress,
+      tokenToTezPaymentAddress);
     await dex.prepare();
+  }
+  static async initializeExchange(dexAddress,
+    initializeExchangeAddress,
+    investLiquidityAddress,
+    divestLiquidityAddress,
+    tezToTokenSwapAddress,
+    tokenToTezSwapAddress,
+    tokenToTokenSwapAddress,
+    tezToTokenPaymentAddress,
+    tokenToTezPaymentAddress,
+    tokenAddress) {
+    let Tezos = await setup();
+    let dex = await Dex.init(Tezos,
+      dexAddress,
+      initializeExchangeAddress,
+      investLiquidityAddress,
+      divestLiquidityAddress,
+      tezToTokenSwapAddress,
+      tokenToTezSwapAddress,
+      tokenToTokenSwapAddress,
+      tezToTokenPaymentAddress,
+      tokenToTezPaymentAddress);
+    const tokenAmount = "1000";
+    const tezAmount = "1.0";
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    assert(initialStorage.feeRate == 500);
+    assert(initialStorage.invariant == 0);
+    assert(initialStorage.totalShares == 0);
+    assert(initialStorage.tezPool == 0);
+    assert(initialStorage.tokenPool == 0);
+    assert(initialStorage.tokenAddress == tokenAddress);
+    assert(initialStorage.factoryAddress == factoryAddress);
+    assert(initialStorage.sharesExtended[pkh] == undefined);
+
+    let operation = await dex.initializeExchange(tokenAmount, tezAmount);
+    assert(operation.status === "applied", "Operation was not applied");
+
+    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    assert(finalStorage.feeRate == 500);
+    assert(finalStorage.invariant == mutezAmount * parseInt(tokenAmount));
+    assert(finalStorage.tezPool == mutezAmount);
+    assert(finalStorage.tokenPool == tokenAmount);
+    assert(finalStorage.tokenAddress == tokenAddress);
+    assert(finalStorage.factoryAddress == factoryAddress);
+    assert(finalStorage.sharesExtended[pkh] == 1000);
+    assert(finalStorage.totalShares == 1000);
+  }
+}
+
+describe('Dex', function () {
+  before(async function () {
+    this.timeout(1000000);
+
+    await Test.before(
+      dexAddress1,
+      initializeExchangeAddress1,
+      investLiquidityAddress1,
+      divestLiquidityAddress1,
+      tezToTokenSwapAddress1,
+      tokenToTezSwapAddress1,
+      tokenToTokenSwapAddress1,
+      tezToTokenPaymentAddress1,
+      tokenToTezPaymentAddress1,
+      tokenAddress1);
+    await Test.before(
+      dexAddress2,
+      initializeExchangeAddress2,
+      investLiquidityAddress2,
+      divestLiquidityAddress2,
+      tezToTokenSwapAddress2,
+      tokenToTezSwapAddress2,
+      tokenToTokenSwapAddress2,
+      tezToTokenPaymentAddress2,
+      tokenToTezPaymentAddress2,
+      tokenAddress2);
   });
 
   describe('InitializeExchange()', function () {
-    it('should initialize exchange', async function () {
+    it('should initialize exchange 1', async function () {
       this.timeout(1000000);
-      let Tezos = await setup();
-      let dex = await Dex.init(Tezos);
-      const tokenAmount = "1000";
-      const tezAmount = "1.0";
-      const pkh = await Tezos.signer.publicKeyHash();
-      let initialStorage = await dex.getFullStorage({ shares: [pkh] });
-      assert(initialStorage.feeRate == 500);
-      assert(initialStorage.invariant == 0);
-      assert(initialStorage.totalShares == 0);
-      assert(initialStorage.tezPool == 0);
-      assert(initialStorage.tokenPool == 0);
-      assert(initialStorage.tokenAddress == tokenAddress);
-      assert(initialStorage.factoryAddress == factoryAddress);
-      assert(initialStorage.sharesExtended[pkh] == undefined);
+      await Test.initializeExchange(dexAddress1,
+        initializeExchangeAddress1,
+        investLiquidityAddress1,
+        divestLiquidityAddress1,
+        tezToTokenSwapAddress1,
+        tokenToTezSwapAddress1,
+        tokenToTokenSwapAddress1,
+        tezToTokenPaymentAddress1,
+        tokenToTezPaymentAddress1,
+        tokenAddress1);
+    });
 
-      let operation = await dex.initializeExchange(tokenAmount, tezAmount);
-      assert(operation.status === "applied", "Operation was not applied");
-
-      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
-
-      const mutezAmount = parseFloat(tezAmount) * 1000000;
-      assert(finalStorage.feeRate == 500);
-      assert(finalStorage.invariant == mutezAmount * parseInt(tokenAmount));
-      assert(finalStorage.tezPool == mutezAmount);
-      assert(finalStorage.tokenPool == tokenAmount);
-      assert(finalStorage.tokenAddress == tokenAddress);
-      assert(finalStorage.factoryAddress == factoryAddress);
-      assert(finalStorage.sharesExtended[pkh] == 1000);
-      assert(finalStorage.totalShares == 1000);
+    it('should initialize exchange 2', async function () {
+      this.timeout(1000000);
+      await Test.initializeExchange(dexAddress2,
+        initializeExchangeAddress2,
+        investLiquidityAddress2,
+        divestLiquidityAddress2,
+        tezToTokenSwapAddress2,
+        tokenToTezSwapAddress2,
+        tokenToTokenSwapAddress2,
+        tezToTokenPaymentAddress2,
+        tokenToTezPaymentAddress2,
+        tokenAddress2);
     });
   });
 
-  describe('InvestLiquidity()', function () {
-    it('should invest liquidity', async function () {
-      this.timeout(1000000);
-      let Tezos = await setup("../key1");
-      let dex = await Dex.init(Tezos);
-      let tezAmount = "5.0";
-      const pkh = await Tezos.signer.publicKeyHash();
-      let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+  // describe('InvestLiquidity()', function () {
+  //   it('should invest liquidity', async function () {
+  //     this.timeout(1000000);
+  //     let Tezos = await setup("../key1");
+  //     let dex = await Dex.init(Tezos);
+  //     let tezAmount = "5.0";
+  //     const pkh = await Tezos.signer.publicKeyHash();
+  //     let initialStorage = await dex.getFullStorage({ shares: [pkh] });
 
-      const mutezAmount = parseFloat(tezAmount) * 1000000;
-      const minShares = parseInt(
-        (mutezAmount / initialStorage.tezPool) * initialStorage.totalShares
-      );
-      const tokenAmount = parseInt(
-        (minShares * initialStorage.tokenPool) / initialStorage.totalShares
-      );
+  //     const mutezAmount = parseFloat(tezAmount) * 1000000;
+  //     const minShares = parseInt(
+  //       (mutezAmount / initialStorage.tezPool) * initialStorage.totalShares
+  //     );
+  //     const tokenAmount = parseInt(
+  //       (minShares * initialStorage.tokenPool) / initialStorage.totalShares
+  //     );
 
-      let operation = await dex.investLiquidity(tokenAmount, tezAmount, minShares)
-      assert(operation.status === "applied", "Operation was not applied");
-      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+  //     let operation = await dex.investLiquidity(tokenAmount, tezAmount, minShares)
+  //     assert(operation.status === "applied", "Operation was not applied");
+  //     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
 
-      assert(finalStorage.sharesExtended[pkh] == minShares);
-      assert(
-        finalStorage.tezPool ==
-        parseInt(initialStorage.tezPool) + parseInt(mutezAmount)
-      );
-      assert(
-        finalStorage.tokenPool ==
-        parseInt(initialStorage.tokenPool) + parseInt(tokenAmount)
-      );
-      assert(
-        finalStorage.totalShares ==
-        parseInt(initialStorage.totalShares) + parseInt(minShares)
-      );
-      assert(
-        finalStorage.invariant ==
-        (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
-        (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
-      );
+  //     assert(finalStorage.sharesExtended[pkh] == minShares);
+  //     assert(
+  //       finalStorage.tezPool ==
+  //       parseInt(initialStorage.tezPool) + parseInt(mutezAmount)
+  //     );
+  //     assert(
+  //       finalStorage.tokenPool ==
+  //       parseInt(initialStorage.tokenPool) + parseInt(tokenAmount)
+  //     );
+  //     assert(
+  //       finalStorage.totalShares ==
+  //       parseInt(initialStorage.totalShares) + parseInt(minShares)
+  //     );
+  //     assert(
+  //       finalStorage.invariant ==
+  //       (parseInt(initialStorage.tezPool) + parseInt(mutezAmount)) *
+  //       (parseInt(initialStorage.tokenPool) + parseInt(tokenAmount))
+  //     );
 
-    });
-  });
+  //   });
+  // });
 
-  describe('TezToTokenSwap()', function () {
-    it('should exchange tez to token', async function () {
-      this.timeout(1000000);
-      let Tezos = await setup();
-      let dex = await Dex.init(Tezos);
-      let tezAmount = "0.01";
-      const pkh = await Tezos.signer.publicKeyHash();
-      const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
-      const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
-      const initialTezBalance = await Tezos.tz.getBalance(pkh);
+  // describe('TezToTokenSwap()', function () {
+  //   it('should exchange tez to token', async function () {
+  //     this.timeout(1000000);
+  //     let Tezos = await setup();
+  //     let dex = await Dex.init(Tezos);
+  //     let tezAmount = "0.01";
+  //     const pkh = await Tezos.signer.publicKeyHash();
+  //     const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+  //     const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
+  //     const initialTezBalance = await Tezos.tz.getBalance(pkh);
 
-      const mutezAmount = parseFloat(tezAmount) * 1000000;
+  //     const mutezAmount = parseFloat(tezAmount) * 1000000;
 
-      const fee = parseInt(mutezAmount / initialDexStorage.feeRate);
-      const newTezPool = parseInt(+initialDexStorage.tezPool + +mutezAmount);
-      const tempTezPool = parseInt(newTezPool - fee);
-      const newTokenPool = parseInt(initialDexStorage.invariant / tempTezPool);
+  //     const fee = parseInt(mutezAmount / initialDexStorage.feeRate);
+  //     const newTezPool = parseInt(+initialDexStorage.tezPool + +mutezAmount);
+  //     const tempTezPool = parseInt(newTezPool - fee);
+  //     const newTokenPool = parseInt(initialDexStorage.invariant / tempTezPool);
 
-      const minTokens = parseInt(
-        parseInt(initialDexStorage.tokenPool - newTokenPool)
-      );
-
-
-      let operation = await dex.tezToTokenSwap(minTokens, tezAmount)
-      assert(operation.status === "applied", "Operation was not applied");
-      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
-
-      const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
-      const finalTezBalance = await Tezos.tz.getBalance(pkh);
-
-      assert(
-        finalTokenStorage.ledgerExtended[pkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) + parseInt(minTokens)
-      );
-      assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
-      assert(
-        finalStorage.tezPool ==
-        parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
-      );
-      assert(
-        finalStorage.tokenPool ==
-        parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
-      );
-
-      assert(
-        finalStorage.invariant ==
-        (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
-        (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
-      );
-    });
-  });
-
-  describe('TokenToTezSwap()', function () {
-    it('should exchange tez to token', async function () {
-      this.timeout(1000000);
-      let Tezos = await setup();
-      let dex = await Dex.init(Tezos);
-      let tokensIn = "1000";
-      const pkh = await Tezos.signer.publicKeyHash();
-
-      const initialTezBalance = await Tezos.tz.getBalance(pkh);
-      const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
-      const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
-
-      const fee = parseInt(tokensIn / initialDexStorage.feeRate);
-      const newTokenPool = parseInt(+initialDexStorage.tokenPool + +tokensIn);
-      const tempTokenPool = parseInt(newTokenPool - fee);
-      const newTezPool = parseInt(initialDexStorage.invariant / tempTokenPool);
-
-      const minTezOut = parseInt(parseInt(initialDexStorage.tezPool - newTezPool));
-      try {
-        let operation = await dex.tokenToTezSwap(tokensIn, minTezOut)
-        assert(operation.status === "applied", "Operation was not applied");
-
-      } catch (e) { console.log(e) }
-      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
-
-      const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
-      const finalTezBalance = await Tezos.tz.getBalance(pkh);
-
-      assert(
-        finalTokenStorage.ledgerExtended[pkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) - parseInt(tokensIn)
-      );
-      assert(finalTezBalance >= parseInt(initialTezBalance));
-      assert(finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut));
-      assert(
-        finalStorage.tezPool ==
-        parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
-      );
-      assert(
-        finalStorage.tokenPool ==
-        parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
-      );
-
-      assert(
-        finalStorage.invariant ==
-        (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
-        (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
-      );
-    });
-  });
-
-  describe('TezToTokenPayment()', function () {
-    it('should exchange tez to token and send to requested address', async function () {
-      this.timeout(1000000);
-      let Tezos = await setup();
-      let Tezos1 = await setup("../key1");
-      let dex = await Dex.init(Tezos);
-      let tezAmount = "0.1";
-      const pkh = await Tezos.signer.publicKeyHash();
-      const pkh1 = await Tezos1.signer.publicKeyHash();
-      const initialDexStorage = await dex.getFullStorage({ shares: [pkh, pkh1] });
-      const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh, pkh1] });
-      const initialTezBalance = await Tezos.tz.getBalance(pkh);
-
-      const mutezAmount = parseFloat(tezAmount) * 1000000;
-
-      const fee = parseInt(mutezAmount / initialDexStorage.feeRate);
-      const newTezPool = parseInt(+initialDexStorage.tezPool + +mutezAmount);
-      const tempTezPool = parseInt(newTezPool - fee);
-      const newTokenPool = parseInt(initialDexStorage.invariant / tempTezPool);
-
-      const minTokens = parseInt(
-        parseInt(initialDexStorage.tokenPool - newTokenPool)
-      );
+  //     const minTokens = parseInt(
+  //       parseInt(initialDexStorage.tokenPool - newTokenPool)
+  //     );
 
 
-      let operation = await dex.tezToTokenPayment(minTokens, tezAmount, pkh1)
-      assert(operation.status === "applied", "Operation was not applied");
-      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+  //     let operation = await dex.tezToTokenSwap(minTokens, tezAmount)
+  //     assert(operation.status === "applied", "Operation was not applied");
+  //     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
 
-      const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh1] });
-      const finalTezBalance = await Tezos.tz.getBalance(pkh);
+  //     const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
+  //     const finalTezBalance = await Tezos.tz.getBalance(pkh);
 
-      assert(
-        finalTokenStorage.ledgerExtended[pkh1].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh1].balance) + parseInt(minTokens)
-      );
-      assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
-      assert(
-        finalStorage.tezPool ==
-        parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
-      );
-      assert(
-        finalStorage.tokenPool ==
-        parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
-      );
+  //     assert(
+  //       finalTokenStorage.ledgerExtended[pkh].balance ==
+  //       parseInt(initialTokenStorage.ledgerExtended[pkh].balance) + parseInt(minTokens)
+  //     );
+  //     assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
+  //     assert(
+  //       finalStorage.tezPool ==
+  //       parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
+  //     );
+  //     assert(
+  //       finalStorage.tokenPool ==
+  //       parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
+  //     );
 
-      assert(
-        finalStorage.invariant ==
-        (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
-        (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
-      );
-    });
-  });
+  //     assert(
+  //       finalStorage.invariant ==
+  //       (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
+  //       (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
+  //     );
+  //   });
+  // });
 
-  describe('TokenToTezPayment()', function () {
-    it('should exchange tez to token', async function () {
-      this.timeout(1000000);
-      let Tezos = await setup();
-      let Tezos1 = await setup("../key1");
-      let dex = await Dex.init(Tezos);
-      let tokensIn = "1000";
-      const pkh = await Tezos.signer.publicKeyHash();
-      const pkh1 = await Tezos1.signer.publicKeyHash();
+  // describe('TokenToTezSwap()', function () {
+  //   it('should exchange tez to token', async function () {
+  //     this.timeout(1000000);
+  //     let Tezos = await setup();
+  //     let dex = await Dex.init(Tezos);
+  //     let tokensIn = "1000";
+  //     const pkh = await Tezos.signer.publicKeyHash();
 
-      const initialTezBalance = await Tezos.tz.getBalance(pkh1);
-      const initialDexStorage = await dex.getFullStorage({ shares: [pkh, pkh1] });
-      const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh, pkh1] });
+  //     const initialTezBalance = await Tezos.tz.getBalance(pkh);
+  //     const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+  //     const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
 
-      const fee = parseInt(tokensIn / initialDexStorage.feeRate);
-      const newTokenPool = parseInt(+initialDexStorage.tokenPool + +tokensIn);
-      const tempTokenPool = parseInt(newTokenPool - fee);
-      const newTezPool = parseInt(initialDexStorage.invariant / tempTokenPool);
+  //     const fee = parseInt(tokensIn / initialDexStorage.feeRate);
+  //     const newTokenPool = parseInt(+initialDexStorage.tokenPool + +tokensIn);
+  //     const tempTokenPool = parseInt(newTokenPool - fee);
+  //     const newTezPool = parseInt(initialDexStorage.invariant / tempTokenPool);
 
-      const minTezOut = parseInt(parseInt(initialDexStorage.tezPool - newTezPool));
-      let operation = await dex.tokenToTezPayment(tokensIn, minTezOut, pkh1)
-      assert(operation.status === "applied", "Operation was not applied");
-      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+  //     const minTezOut = parseInt(parseInt(initialDexStorage.tezPool - newTezPool));
+  //     try {
+  //       let operation = await dex.tokenToTezSwap(tokensIn, minTezOut)
+  //       assert(operation.status === "applied", "Operation was not applied");
 
-      const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh, pkh1] });
-      const finalTezBalance = await Tezos.tz.getBalance(pkh1);
+  //     } catch (e) { console.log(e) }
+  //     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
 
-      assert(
-        finalTokenStorage.ledgerExtended[pkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) - parseInt(tokensIn)
-      );
-      assert(finalTezBalance >= parseInt(initialTezBalance));
-      assert(finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut));
-      assert(
-        finalStorage.tezPool ==
-        parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
-      );
-      assert(
-        finalStorage.tokenPool ==
-        parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
-      );
+  //     const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh] });
+  //     const finalTezBalance = await Tezos.tz.getBalance(pkh);
 
-      assert(
-        finalStorage.invariant ==
-        (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
-        (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
-      );
-    });
-  });
+  //     assert(
+  //       finalTokenStorage.ledgerExtended[pkh].balance ==
+  //       parseInt(initialTokenStorage.ledgerExtended[pkh].balance) - parseInt(tokensIn)
+  //     );
+  //     assert(finalTezBalance >= parseInt(initialTezBalance));
+  //     assert(finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut));
+  //     assert(
+  //       finalStorage.tezPool ==
+  //       parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
+  //     );
+  //     assert(
+  //       finalStorage.tokenPool ==
+  //       parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
+  //     );
 
-  describe('DivestLiquidity()', function () {
-    it('should divest liquidity', async function () {
-      this.timeout(1000000);
-      let Tezos = await setup("../key1");
-      let dex = await Dex.init(Tezos);
-      let sharesBurned = 1;
-      const pkh = await Tezos.signer.publicKeyHash();
-      let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+  //     assert(
+  //       finalStorage.invariant ==
+  //       (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
+  //       (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
+  //     );
+  //   });
+  // });
 
-      const tezPerShare = parseInt(
-        initialStorage.tezPool / initialStorage.totalShares
-      );
-      const tokensPerShare = parseInt(
-        initialStorage.tokenPool / initialStorage.totalShares
-      );
-      const minTez = tezPerShare * sharesBurned;
-      const minTokens = tokensPerShare * sharesBurned;
-      let operation = await dex.divestLiquidity(minTokens, minTez, sharesBurned);
-      assert(operation.status === "applied", "Operation was not applied");
-      let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+  // describe('TezToTokenPayment()', function () {
+  //   it('should exchange tez to token and send to requested address', async function () {
+  //     this.timeout(1000000);
+  //     let Tezos = await setup();
+  //     let Tezos1 = await setup("../key1");
+  //     let dex = await Dex.init(Tezos);
+  //     let tezAmount = "0.1";
+  //     const pkh = await Tezos.signer.publicKeyHash();
+  //     const pkh1 = await Tezos1.signer.publicKeyHash();
+  //     const initialDexStorage = await dex.getFullStorage({ shares: [pkh, pkh1] });
+  //     const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh, pkh1] });
+  //     const initialTezBalance = await Tezos.tz.getBalance(pkh);
 
-      assert(
-        finalStorage.sharesExtended[pkh] ==
-        initialStorage.sharesExtended[pkh] - sharesBurned
-      );
-      assert(finalStorage.tezPool == parseInt(initialStorage.tezPool) - minTez);
-      assert(
-        finalStorage.tokenPool == parseInt(initialStorage.tokenPool) - minTokens
-      );
-      assert(
-        finalStorage.totalShares ==
-        parseInt(initialStorage.totalShares) - sharesBurned
-      );
-      assert(
-        finalStorage.invariant ==
-        (parseInt(initialStorage.tezPool) - minTez) *
-        (parseInt(initialStorage.tokenPool) - minTokens)
-      );
-    });
-  });
+  //     const mutezAmount = parseFloat(tezAmount) * 1000000;
+
+  //     const fee = parseInt(mutezAmount / initialDexStorage.feeRate);
+  //     const newTezPool = parseInt(+initialDexStorage.tezPool + +mutezAmount);
+  //     const tempTezPool = parseInt(newTezPool - fee);
+  //     const newTokenPool = parseInt(initialDexStorage.invariant / tempTezPool);
+
+  //     const minTokens = parseInt(
+  //       parseInt(initialDexStorage.tokenPool - newTokenPool)
+  //     );
+
+
+  //     let operation = await dex.tezToTokenPayment(minTokens, tezAmount, pkh1)
+  //     assert(operation.status === "applied", "Operation was not applied");
+  //     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+  //     const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh1] });
+  //     const finalTezBalance = await Tezos.tz.getBalance(pkh);
+
+  //     assert(
+  //       finalTokenStorage.ledgerExtended[pkh1].balance ==
+  //       parseInt(initialTokenStorage.ledgerExtended[pkh1].balance) + parseInt(minTokens)
+  //     );
+  //     assert(finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount));
+  //     assert(
+  //       finalStorage.tezPool ==
+  //       parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)
+  //     );
+  //     assert(
+  //       finalStorage.tokenPool ==
+  //       parseInt(initialDexStorage.tokenPool) - parseInt(minTokens)
+  //     );
+
+  //     assert(
+  //       finalStorage.invariant ==
+  //       (parseInt(initialDexStorage.tezPool) + parseInt(mutezAmount)) *
+  //       (parseInt(initialDexStorage.tokenPool) - parseInt(minTokens))
+  //     );
+  //   });
+  // });
+
+  // describe('TokenToTezPayment()', function () {
+  //   it('should exchange tez to token', async function () {
+  //     this.timeout(1000000);
+  //     let Tezos = await setup();
+  //     let Tezos1 = await setup("../key1");
+  //     let dex = await Dex.init(Tezos);
+  //     let tokensIn = "1000";
+  //     const pkh = await Tezos.signer.publicKeyHash();
+  //     const pkh1 = await Tezos1.signer.publicKeyHash();
+
+  //     const initialTezBalance = await Tezos.tz.getBalance(pkh1);
+  //     const initialDexStorage = await dex.getFullStorage({ shares: [pkh, pkh1] });
+  //     const initialTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh, pkh1] });
+
+  //     const fee = parseInt(tokensIn / initialDexStorage.feeRate);
+  //     const newTokenPool = parseInt(+initialDexStorage.tokenPool + +tokensIn);
+  //     const tempTokenPool = parseInt(newTokenPool - fee);
+  //     const newTezPool = parseInt(initialDexStorage.invariant / tempTokenPool);
+
+  //     const minTezOut = parseInt(parseInt(initialDexStorage.tezPool - newTezPool));
+  //     let operation = await dex.tokenToTezPayment(tokensIn, minTezOut, pkh1)
+  //     assert(operation.status === "applied", "Operation was not applied");
+  //     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+  //     const finalTokenStorage = await getContractFullStorage(Tezos, tokenAddress, { ledger: [pkh, pkh1] });
+  //     const finalTezBalance = await Tezos.tz.getBalance(pkh1);
+
+  //     assert(
+  //       finalTokenStorage.ledgerExtended[pkh].balance ==
+  //       parseInt(initialTokenStorage.ledgerExtended[pkh].balance) - parseInt(tokensIn)
+  //     );
+  //     assert(finalTezBalance >= parseInt(initialTezBalance));
+  //     assert(finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut));
+  //     assert(
+  //       finalStorage.tezPool ==
+  //       parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)
+  //     );
+  //     assert(
+  //       finalStorage.tokenPool ==
+  //       parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn)
+  //     );
+
+  //     assert(
+  //       finalStorage.invariant ==
+  //       (parseInt(initialDexStorage.tezPool) - parseInt(minTezOut)) *
+  //       (parseInt(initialDexStorage.tokenPool) + parseInt(tokensIn))
+  //     );
+  //   });
+  // });
+
+  // describe('DivestLiquidity()', function () {
+  //   it('should divest liquidity', async function () {
+  //     this.timeout(1000000);
+  //     let Tezos = await setup("../key1");
+  //     let dex = await Dex.init(Tezos);
+  //     let sharesBurned = 1;
+  //     const pkh = await Tezos.signer.publicKeyHash();
+  //     let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+  //     const tezPerShare = parseInt(
+  //       initialStorage.tezPool / initialStorage.totalShares
+  //     );
+  //     const tokensPerShare = parseInt(
+  //       initialStorage.tokenPool / initialStorage.totalShares
+  //     );
+  //     const minTez = tezPerShare * sharesBurned;
+  //     const minTokens = tokensPerShare * sharesBurned;
+  //     let operation = await dex.divestLiquidity(minTokens, minTez, sharesBurned);
+  //     assert(operation.status === "applied", "Operation was not applied");
+  //     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+  //     assert(
+  //       finalStorage.sharesExtended[pkh] ==
+  //       initialStorage.sharesExtended[pkh] - sharesBurned
+  //     );
+  //     assert(finalStorage.tezPool == parseInt(initialStorage.tezPool) - minTez);
+  //     assert(
+  //       finalStorage.tokenPool == parseInt(initialStorage.tokenPool) - minTokens
+  //     );
+  //     assert(
+  //       finalStorage.totalShares ==
+  //       parseInt(initialStorage.totalShares) - sharesBurned
+  //     );
+  //     assert(
+  //       finalStorage.invariant ==
+  //       (parseInt(initialStorage.tezPool) - minTez) *
+  //       (parseInt(initialStorage.tokenPool) - minTokens)
+  //     );
+  //   });
+  // });
 });
 
 
