@@ -87,7 +87,7 @@ const { address: dexAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Dex2.json").toString()
 );
 
-const provider = "http://0.0.0.0:8732";
+const provider = "https://api.tez.ie/rpc/carthagenet";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -312,9 +312,11 @@ class Dex {
 
   async tokenToTokenSwap(tokenAmount, minTokensOut, tokenAddress) {
     await this.approve(tokenAmount, this.tokenToTokenSwapContract.address);
+
     const operation = await this.tokenToTokenSwapContract.methods
       .use(tokenAmount, minTokensOut, tokenAddress)
       .send();
+
     await operation.confirmation();
     return operation;
   }
@@ -370,7 +372,7 @@ class Test {
     await dex.prepare();
 
     let factoryContract = await tezos.contract.at(factoryAddress);
-    operation = await factoryContract.methods.launchExchange(tokenAddress, dexAddress).send();
+    operation = await factoryContract.methods.launchExchange(tokenAddress, tezToTokenPaymentAddress).send();
     await operation.confirmation();
     assert(operation.status === "applied", "Operation was not applied");
   }
