@@ -30,21 +30,14 @@ block {
     s.invariant := s.tezPool * s.tokenPool;
     s.totalShares := s.totalShares + sharesPurchased;
 
-   var operations: list(operation) := list transaction(Transfer(gs.sender, gs.main, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) ;
-      transaction(UpdateStorage(s), 
-      Tezos.amount,
-      case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
-         | None -> (failwith("01"):contract(y))
-         end 
-      );
-    end; 
+   var operations: list(operation) := list transaction(Transfer(gs.sender, gs.main, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); end; 
    case s.voters[gs.sender] of None -> 
      skip
      | Some(v) -> {
       case v.candidate of None -> skip 
       | Some(candidate) -> {
-         if s.vetos contains candidate then skip
-         else failwith ("05");
+         if s.vetos contains candidate then failwith ("05")
+         else skip;
 
          const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(candidate); end;
          case s.voters[gs.sender] of None -> skip
@@ -62,10 +55,21 @@ block {
          if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
             s.nextDelegated := s.delegated;
             s.delegated := candidate;
-            operations :=  set_delegate(Some(candidate)) # operations;
+            operations := transaction(RequestOperation(Some(candidate)), 
+               0tz,
+               case (Tezos.get_entrypoint_opt("%requestOperation", gs.main) : option(contract(m))) of Some(contr) -> contr
+                  | None -> (failwith("01"):contract(m))
+                  end 
+               ) # operations;
          };
       } end;
    } end;
+   operations := transaction(UpdateStorage(s), 
+      Tezos.amount,
+      case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(y))
+         end 
+      ) # operations;
  } with (operations)
 
 

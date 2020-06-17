@@ -20,8 +20,8 @@ function vote (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
     if Tezos.sender =/= gs.tmp.0 or get_force(Tezos.sender, src.allowances) 
     then skip else failwith ("04");
 
-    if s.vetos contains gs.tmp.1 then skip
-    else failwith ("05");
+    if s.vetos contains gs.tmp.1 then failwith ("05")
+    else skip;
 
     const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(gs.tmp.1); end;
     case s.voters[gs.tmp.0] of None -> skip
@@ -37,19 +37,24 @@ function vote (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
     const newVotes: nat = (case s.votes[gs.tmp.1] of  None -> 0n | Some(v) -> v end) + share;
     s.votes[gs.tmp.1]:= newVotes;
 
-    var operations: list(operation) := list
+    var operations: list(operation) := (nil: list(operation));
+    if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
+       s.nextDelegated := s.delegated;
+       s.delegated := gs.tmp.1;
+       operations := transaction(RequestOperation(Some(gs.tmp.1)), 
+       0tz,
+       case (Tezos.get_entrypoint_opt("%requestOperation", gs.main) : option(contract(m))) of Some(contr) -> contr
+          | None -> (failwith("01"):contract(m))
+          end 
+       ) # operations;
+    };
+    operations :=
       transaction(UpdateStorage(s), 
       0tz,
       case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
          | None -> (failwith("01"):contract(y))
          end 
-      );
-    end;
-    if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
-       s.nextDelegated := s.delegated;
-       s.delegated := gs.tmp.1;
-       operations := set_delegate(Some(gs.tmp.1)) # operations;
-    };
+      ) # operations;
  } with (operations)
 
 function main (const p : gatewayAction ; const s : gateway_storage) :

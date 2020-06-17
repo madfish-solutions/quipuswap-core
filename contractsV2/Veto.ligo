@@ -33,8 +33,20 @@ function veto (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
       s.vetos := Set.add(s.delegated, s.vetos);
       s.delegated := s.nextDelegated;
       s.vetoVoters := (big_map end : big_map(address, nat));
-      operations := set_delegate(Some(s.nextDelegated)) # operations; 
+      operations := transaction(RequestOperation(Some(s.nextDelegated)), 
+       0tz,
+       case (Tezos.get_entrypoint_opt("%requestOperation", gs.main) : option(contract(m))) of Some(contr) -> contr
+          | None -> (failwith("01"):contract(m))
+          end 
+       ) # operations;
    } else skip;
+   operations :=
+      transaction(UpdateStorage(s), 
+      0tz,
+      case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(y))
+         end 
+      ) # operations; 
    s.vetoVoters[gs.tmp] := share;
 } with operations
 
