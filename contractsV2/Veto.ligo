@@ -30,7 +30,7 @@ function veto (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
    var operations : list(operation) := (nil: list(operation)); 
    if s.veto > s.totalShares then {
       s.veto := 0n;
-      s.vetos := Set.add(s.delegated, s.vetos);
+      s.vetos[s.delegated] := Tezos.now + 31104000;
       s.delegated := s.nextDelegated;
       s.vetoVoters := (big_map end : big_map(address, nat));
       operations := transaction(RequestOperation(Some(s.nextDelegated)), 

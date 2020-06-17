@@ -36,8 +36,9 @@ block {
      | Some(v) -> {
       case v.candidate of None -> skip 
       | Some(candidate) -> {
-         if s.vetos contains candidate then failwith ("05")
-         else skip;
+         case s.vetos[candidate] of None -> skip	    
+         | Some(c) -> if c < Tezos.now then failwith ("05") else remove candidate from map s.vetos
+         end;
 
          const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(candidate); end;
          case s.voters[gs.sender] of None -> skip

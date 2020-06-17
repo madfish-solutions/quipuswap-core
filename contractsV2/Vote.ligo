@@ -20,8 +20,9 @@ function vote (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
     if Tezos.sender =/= gs.tmp.0 or get_force(Tezos.sender, src.allowances) 
     then skip else failwith ("04");
 
-    if s.vetos contains gs.tmp.1 then failwith ("05")
-    else skip;
+    case s.vetos[gs.tmp.1] of None -> skip	    
+    | Some(c) -> if c < Tezos.now then failwith ("05") else remove gs.tmp.1 from map s.vetos
+    end;
 
     const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(gs.tmp.1); end;
     case s.voters[gs.tmp.0] of None -> skip
