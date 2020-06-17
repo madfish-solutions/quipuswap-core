@@ -116,7 +116,7 @@ const getContractFullStorage = async (Tezos, address, maps = {}) => {
 
 class Dex {
 
-  constructor(Tezos, contract, initializeExchange, investLiquidity, divestLiquidity, tezToTokenSwap, tokenToTezSwap, tokenToTokenSwap, tezToTokenPayment, tokenToTezPayment) {
+  constructor(Tezos, contract, initializeExchange, investLiquidity, divestLiquidity, tezToTokenSwap, tokenToTezSwap, tokenToTokenSwap, tezToTokenPayment, tokenToTezPayment, vote, veto, setVotesDelegation) {
     this.tezos = Tezos;
     this.contract = contract;
     this.initializeExchangeContract = initializeExchange;
@@ -127,6 +127,9 @@ class Dex {
     this.tokenToTezSwapContract = tokenToTezSwap;
     this.tokenToTokenSwapContract = tokenToTokenSwap;
     this.tokenToTezPaymentContract = tokenToTezPayment;
+    this.voteContract = vote;
+    this.vetoContract = veto;
+    this.setVotesDelegationContract = setVotesDelegation;
   }
 
   static async init(Tezos,
@@ -138,7 +141,10 @@ class Dex {
     tokenToTezSwapAddress,
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
-    tokenToTezPaymentAddress) {
+    tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress) {
     return new Dex(Tezos, await Tezos.contract.at(dexAddress),
       await Tezos.contract.at(initializeExchangeAddress),
       await Tezos.contract.at(investLiquidityAddress),
@@ -147,7 +153,10 @@ class Dex {
       await Tezos.contract.at(tokenToTezSwapAddress),
       await Tezos.contract.at(tokenToTokenSwapAddress),
       await Tezos.contract.at(tezToTokenPaymentAddress),
-      await Tezos.contract.at(tokenToTezPaymentAddress)
+      await Tezos.contract.at(tokenToTezPaymentAddress),
+      await Tezos.contract.at(voteAddress),
+      await Tezos.contract.at(vetoAddress),
+      await Tezos.contract.at(setVotesDelegationAddress)
     );
   }
 
@@ -188,6 +197,21 @@ class Dex {
     await operation.confirmation();
 
     operation = await this.tezToTokenPaymentContract.methods
+      .setMain(this.contract.address)
+      .send();
+    await operation.confirmation();
+
+    operation = await this.voteContract.methods
+      .setMain(this.contract.address)
+      .send();
+    await operation.confirmation();
+
+    operation = await this.vetoContract.methods
+      .setMain(this.contract.address)
+      .send();
+    await operation.confirmation();
+
+    operation = await this.setVotesDelegationContract.methods
       .setMain(this.contract.address)
       .send();
     await operation.confirmation();
@@ -243,8 +267,8 @@ class Dex {
   }
 
   async setVotesDelegation(voter, allowance) {
-    const operation = await this.contract.methods
-      .setVotesDelegation(voter, allowance)
+    const operation = await this.setVotesDelegationContract.methods
+      .use(voter, allowance)
       .send();
     await operation.confirmation();
     return operation;
@@ -871,6 +895,62 @@ class Test {
       (parseInt(initialStorage.tokenPool) - minTokens)
     );
   }
+
+  static async setVotesDelegation(dexAddress,
+    initializeExchangeAddress,
+    investLiquidityAddress,
+    divestLiquidityAddress,
+    tezToTokenSwapAddress,
+    tokenToTezSwapAddress,
+    tokenToTokenSwapAddress,
+    tezToTokenPaymentAddress,
+    tokenToTezPaymentAddress,
+    tokenAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos,
+      dexAddress,
+      initializeExchangeAddress,
+      investLiquidityAddress,
+      divestLiquidityAddress,
+      tezToTokenSwapAddress,
+      tokenToTezSwapAddress,
+      tokenToTokenSwapAddress,
+      tezToTokenPaymentAddress,
+      tokenToTezPaymentAddress);
+    let sharesBurned = 1;
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const tezPerShare = parseInt(
+      initialStorage.tezPool / initialStorage.totalShares
+    );
+    const tokensPerShare = parseInt(
+      initialStorage.tokenPool / initialStorage.totalShares
+    );
+    const minTez = tezPerShare * sharesBurned;
+    const minTokens = tokensPerShare * sharesBurned;
+    let operation = await dex.setVotesDelegation(minTokens, minTez, sharesBurned);
+    assert(operation.status === "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    assert(
+      finalStorage.sharesExtended[pkh] ==
+      initialStorage.sharesExtended[pkh] - sharesBurned
+    );
+    assert(finalStorage.tezPool == parseInt(initialStorage.tezPool) - minTez);
+    assert(
+      finalStorage.tokenPool == parseInt(initialStorage.tokenPool) - minTokens
+    );
+    assert(
+      finalStorage.totalShares ==
+      parseInt(initialStorage.totalShares) - sharesBurned
+    );
+    assert(
+      finalStorage.invariant ==
+      (parseInt(initialStorage.tezPool) - minTez) *
+      (parseInt(initialStorage.tokenPool) - minTokens)
+    );
+  }
 }
 
 describe('Dex', function () {
@@ -888,17 +968,17 @@ describe('Dex', function () {
       tezToTokenPaymentAddress1,
       tokenToTezPaymentAddress1,
       tokenAddress1);
-    await Test.before(
-      dexAddress2,
-      initializeExchangeAddress2,
-      investLiquidityAddress2,
-      divestLiquidityAddress2,
-      tezToTokenSwapAddress2,
-      tokenToTezSwapAddress2,
-      tokenToTokenSwapAddress2,
-      tezToTokenPaymentAddress2,
-      tokenToTezPaymentAddress2,
-      tokenAddress2);
+    // await Test.before(
+    //   dexAddress2,
+    //   initializeExchangeAddress2,
+    //   investLiquidityAddress2,
+    //   divestLiquidityAddress2,
+    //   tezToTokenSwapAddress2,
+    //   tokenToTezSwapAddress2,
+    //   tokenToTokenSwapAddress2,
+    //   tezToTokenPaymentAddress2,
+    //   tokenToTezPaymentAddress2,
+    //   tokenAddress2);
   });
 
   describe('InitializeExchange()', function () {
@@ -916,7 +996,7 @@ describe('Dex', function () {
         tokenAddress1);
     });
 
-    it('should initialize exchange 2', async function () {
+    it.skip('should initialize exchange 2', async function () {
       this.timeout(1000000);
       await Test.initializeExchange(dexAddress2,
         initializeExchangeAddress2,
@@ -946,7 +1026,7 @@ describe('Dex', function () {
         tokenAddress1);
     });
 
-    it('should invest liquidity 2', async function () {
+    it.skip('should invest liquidity 2', async function () {
       this.timeout(1000000);
       await Test.investLiquidity(dexAddress2,
         initializeExchangeAddress2,
@@ -976,7 +1056,7 @@ describe('Dex', function () {
         tokenAddress1);
     });
 
-    it('should exchange tez to token 2', async function () {
+    it.skip('should exchange tez to token 2', async function () {
       this.timeout(1000000);
       await Test.tezToTokenSwap(dexAddress2,
         initializeExchangeAddress2,
@@ -1005,7 +1085,7 @@ describe('Dex', function () {
         tokenToTezPaymentAddress1,
         tokenAddress1);
     });
-    it('should exchange tez to token 2', async function () {
+    it.skip('should exchange tez to token 2', async function () {
       this.timeout(1000000);
       await Test.tokenToTezSwap(dexAddress2,
         initializeExchangeAddress2,
@@ -1034,7 +1114,7 @@ describe('Dex', function () {
         tokenToTezPaymentAddress1,
         tokenAddress1);
     });
-    it('should exchange tez to token and send to requested address 2', async function () {
+    it.skip('should exchange tez to token and send to requested address 2', async function () {
       this.timeout(1000000);
       await Test.tezToTokenPayment(dexAddress2,
         initializeExchangeAddress2,
@@ -1063,7 +1143,7 @@ describe('Dex', function () {
         tokenToTezPaymentAddress1,
         tokenAddress1);
     });
-    it('should exchange tez to token 2', async function () {
+    it.skip('should exchange tez to token 2', async function () {
       this.timeout(1000000);
       await Test.tokenToTezPayment(dexAddress2,
         initializeExchangeAddress2,
@@ -1125,7 +1205,7 @@ describe('Dex', function () {
         tokenAddress1);
     });
 
-    it('should divest liquidity 2', async function () {
+    it.skip('should divest liquidity 2', async function () {
       this.timeout(1000000);
       await Test.divestLiquidity(dexAddress2,
         initializeExchangeAddress2,
@@ -1139,13 +1219,42 @@ describe('Dex', function () {
         tokenAddress2);
     });
   });
+
+  describe('SetVotesDelegation()', function () {
+    it('should divest liquidity 1', async function () {
+      this.timeout(1000000);
+      await Test.setVotesDelegation(dexAddress1,
+        initializeExchangeAddress1,
+        investLiquidityAddress1,
+        divestLiquidityAddress1,
+        tezToTokenSwapAddress1,
+        tokenToTezSwapAddress1,
+        tokenToTokenSwapAddress1,
+        tezToTokenPaymentAddress1,
+        tokenToTezPaymentAddress1);
+    });
+
+    it.skip('should divest liquidity 2', async function () {
+      this.timeout(1000000);
+      await Test.setVotesDelegation(dexAddress2,
+        initializeExchangeAddress2,
+        investLiquidityAddress2,
+        divestLiquidityAddress2,
+        tezToTokenSwapAddress2,
+        tokenToTezSwapAddress2,
+        tokenToTokenSwapAddress2,
+        tezToTokenPaymentAddress2,
+        tokenToTezPaymentAddress2);
+    });
+  });
 });
 
 
-// | TokenToTokenSwap of (nat * nat * address)
 // | TokenToTokenPayment of (nat * nat * address * address)
 // | SetVotesDelegation of (address * bool)
 // | Vote of (address * key_hash)
 // | Veto of (address)
-
+// | Update veto to be limitted by time
+// | Receive reward
+// | Distribute reward 
 
