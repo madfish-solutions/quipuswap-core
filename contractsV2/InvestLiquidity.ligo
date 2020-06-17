@@ -43,9 +43,8 @@ block {
      | Some(v) -> {
       case v.candidate of None -> skip 
       | Some(candidate) -> {
-         case s.vetos[candidate] of None -> skip
-         | Some(c) -> failwith ("05")
-         end;
+         if s.vetos contains candidate then skip
+         else failwith ("05");
 
          const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(candidate); end;
          case s.voters[gs.sender] of None -> skip

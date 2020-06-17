@@ -3,9 +3,13 @@ node scripts/cli2.js build -i contractsV2 InitializeExchange
 node scripts/cli2.js build -i contractsV2 InvestLiquidity
 node scripts/cli2.js build -i contractsV2 DivestLiquidity
 node scripts/cli2.js build -i contractsV2 TezToTokenSwap
+node scripts/cli2.js build -i contractsV2 TokenToTokenSwap
 node scripts/cli2.js build -i contractsV2 TokenToTezSwap
 node scripts/cli2.js build -i contractsV2 TezToTokenPayment
 node scripts/cli2.js build -i contractsV2 TokenToTezPayment
+node scripts/cli2.js build -i contractsV2 SetVotesDelegation
+node scripts/cli2.js build -i contractsV2 Vote
+node scripts/cli2.js build -i contractsV2 Veto
 node scripts/cli2.js build -i contractsV2 Dex
 
 echo "deploy"
@@ -24,6 +28,12 @@ sleep 5
 node scripts/cli2.js deploy TokenToTezPayment
 sleep 5
 node scripts/cli2.js deploy TokenToTokenSwap
+sleep 5
+node scripts/cli2.js deploy SetVotesDelegation
+sleep 5
+node scripts/cli2.js deploy Veto
+sleep 5
+node scripts/cli2.js deploy Vote
 sleep 5
 node scripts/cli2.js deploy Factory
 sleep 5
@@ -48,6 +58,12 @@ sleep 5
 node scripts/cli2.js deploy TokenToTezPayment TokenToTezPayment2
 sleep 5
 node scripts/cli2.js deploy TokenToTokenSwap TokenToTokenSwap2
+sleep 5
+node scripts/cli2.js deploy SetVotesDelegation SetVotesDelegation2
+sleep 5
+node scripts/cli2.js deploy Veto Veto2
+sleep 5
+node scripts/cli2.js deploy Vote Vote2
 sleep 5
 node scripts/cli2.js deploy Token Token2
 sleep 5

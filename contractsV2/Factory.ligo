@@ -4,9 +4,9 @@ type x is Use of (nat * address)
 
 function launchExchange (const token : address; const exchange : address; var s: exchange_storage ) : exchange_storage is
  block {
-    case s.tokenToExchange[token] of | None -> skip | Some(t) -> failwith("Exchange launched") end;
+    if s.tokenList contains token then skip else failwith("Exchange launched");
     case s.exchangeToToken[exchange] of | None -> skip | Some(t) -> failwith("Exchange launched") end;
-    s.tokenList := cons(token, s.tokenList);
+    s.tokenList := Set.add (token, s.tokenList);
     s.tokenToExchange[token] := exchange;
     s.exchangeToToken[exchange] := token;
  } with  s

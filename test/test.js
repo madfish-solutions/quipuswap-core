@@ -87,7 +87,7 @@ const { address: dexAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Dex2.json").toString()
 );
 
-const provider = "https://api.tez.ie/rpc/carthagenet";
+const provider = "http://0.0.0.0:8732";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -1079,7 +1079,7 @@ describe('Dex', function () {
   });
 
   describe('TokenToTokenSwap()', function () {
-    it('should exchange token to token 1', async function () {
+    it.skip('should exchange token to token 1', async function () {
       this.timeout(1000000);
       await Test.tokenToTokenSwap(dexAddress1,
         initializeExchangeAddress1,
@@ -1094,7 +1094,7 @@ describe('Dex', function () {
         tokenAddress2);
     });
 
-    it('should exchange token to token 2', async function () {
+    it.skip('should exchange token to token 2', async function () {
       this.timeout(1000000);
       await Test.tokenToTokenSwap(dexAddress2,
         initializeExchangeAddress2,

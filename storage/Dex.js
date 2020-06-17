@@ -32,6 +32,15 @@ const { address: tokenToTezPaymentAddress } = JSON.parse(
 const { address: tokenToTokenSwapAddress } = JSON.parse(
     fs.readFileSync("./deploy/TokenToTokenSwap.json").toString()
 );
+const { address: voteAddress } = JSON.parse(
+    fs.readFileSync("./deploy/Vote.json").toString()
+);
+const { address: vetoAddress } = JSON.parse(
+    fs.readFileSync("./deploy/Veto.json").toString()
+);
+const { address: setVotesDelegationAddress } = JSON.parse(
+    fs.readFileSync("./deploy/SetVotesDelegation.json").toString()
+);
 
 module.exports = {
     feeRate: "500",
@@ -43,7 +52,7 @@ module.exports = {
     factoryAddress: factoryAddress,
     shares: MichelsonMap.fromLiteral({}),
     voters: MichelsonMap.fromLiteral({}),
-    vetos: MichelsonMap.fromLiteral({}),
+    vetos: [],
     vetoVoters: MichelsonMap.fromLiteral({}),
     votes: MichelsonMap.fromLiteral({}),
     veto: "0",
@@ -57,6 +66,9 @@ module.exports = {
         [tokenToTezPaymentAddress]: true,
         [divestLiquidityAddress]: true,
         [tokenToTokenSwapAddress]: true,
-        [investLiquidityAddress]: true
+        [investLiquidityAddress]: true,
+        [voteAddress]: true,
+        [vetoAddress]: true,
+        [setVotesDelegationAddress]: true
     })
 }

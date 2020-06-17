@@ -1,5 +1,5 @@
 type exchange_storage is record 
-   tokenList: list (address);
+   tokenList: set (address);
    tokenToExchange: big_map(address, address);
    exchangeToToken: big_map(address, address);
 end

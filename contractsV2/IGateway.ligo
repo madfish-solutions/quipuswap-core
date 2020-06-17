@@ -13,7 +13,7 @@ type dex_storage is record
   factoryAddress: address;
   shares: big_map(address, nat);
   voters: big_map(address, vote_info);
-  vetos: big_map(key_hash, bool);
+  vetos: set(key_hash);
   vetoVoters: big_map(address, nat);
   votes: big_map(key_hash, nat);
   veto: nat;
