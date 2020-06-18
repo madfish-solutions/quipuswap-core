@@ -52,7 +52,7 @@ module.exports = {
     factoryAddress: factoryAddress,
     shares: MichelsonMap.fromLiteral({}),
     voters: MichelsonMap.fromLiteral({}),
-    vetos: [],
+    vetos: MichelsonMap.fromLiteral({}),
     vetoVoters: MichelsonMap.fromLiteral({}),
     votes: MichelsonMap.fromLiteral({}),
     veto: "0",

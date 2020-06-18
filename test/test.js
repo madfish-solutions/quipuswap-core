@@ -45,6 +45,18 @@ const { address: dexAddress1 } = JSON.parse(
   fs.readFileSync("./deploy/Dex.json").toString()
 );
 
+const { address: voteAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/Vote.json").toString()
+);
+
+const { address: vetoAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/Veto.json").toString()
+);
+
+const { address: setVotesDelegationAddress1 } = JSON.parse(
+  fs.readFileSync("./deploy/SetVotesDelegation.json").toString()
+);
+
 const { address: factoryAddress } = JSON.parse(
   fs.readFileSync("./deploy/Factory.json").toString()
 );
@@ -85,6 +97,18 @@ const { address: tezToTokenPaymentAddress2 } = JSON.parse(
 
 const { address: dexAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Dex2.json").toString()
+);
+
+const { address: voteAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/Vote2.json").toString()
+);
+
+const { address: vetoAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/Veto2.json").toString()
+);
+
+const { address: setVotesDelegationAddress2 } = JSON.parse(
+  fs.readFileSync("./deploy/SetVotesDelegation2.json").toString()
 );
 
 const provider = "http://0.0.0.0:8732";
@@ -251,16 +275,16 @@ class Dex {
   }
 
   async veto(voter) {
-    const operation = await this.contract.methods
-      .veto(voter)
+    const operation = await this.vetoContract.methods
+      .use(voter)
       .send();
     await operation.confirmation();
     return operation;
   }
 
   async vote(voter, delegate) {
-    const operation = await this.contract.methods
-      .vote(voter, delegate)
+    const operation = await this.voteContract.methods
+      .use(voter, delegate)
       .send();
     await operation.confirmation();
     return operation;
@@ -374,6 +398,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let tezos = await setup();
     let tezos1 = await setup("../key1");
@@ -392,7 +419,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     await dex.prepare();
 
     let factoryContract = await tezos.contract.at(factoryAddress);
@@ -409,6 +439,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let Tezos = await setup();
     let dex = await Dex.init(Tezos,
@@ -420,7 +453,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     const tokenAmount = "1000";
     const tezAmount = "1.0";
     const pkh = await Tezos.signer.publicKeyHash();
@@ -459,6 +495,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let Tezos = await setup("../key1");
     let dex = await Dex.init(Tezos,
@@ -470,7 +509,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     let tezAmount = "5.0";
     const pkh = await Tezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [pkh] });
@@ -516,6 +558,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let Tezos = await setup();
     let dex = await Dex.init(Tezos,
@@ -527,7 +572,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     let tokensIn = "1000";
     const pkh = await Tezos.signer.publicKeyHash();
 
@@ -582,6 +630,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress,
     tokenAddressTo) {
     let Tezos = await setup();
@@ -594,7 +645,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     let tokensIn = "1000";
     const pkh = await Tezos.signer.publicKeyHash();
 
@@ -649,6 +703,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let Tezos = await setup();
     let dex = await Dex.init(Tezos,
@@ -660,7 +717,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     let tezAmount = "0.01";
     const pkh = await Tezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
@@ -716,6 +776,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
@@ -728,7 +791,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     let tezAmount = "0.1";
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -784,6 +850,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
@@ -796,7 +865,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     let tokensIn = "1000";
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -849,6 +921,9 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
     let Tezos = await setup("../key1");
     let dex = await Dex.init(Tezos,
@@ -860,7 +935,10 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     let sharesBurned = 1;
     const pkh = await Tezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [pkh] });
@@ -905,8 +983,12 @@ class Test {
     tokenToTokenSwapAddress,
     tezToTokenPaymentAddress,
     tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
     tokenAddress) {
-    let Tezos = await setup("../key1");
+    let Tezos = await setup();
+    let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos,
       dexAddress,
       initializeExchangeAddress,
@@ -916,70 +998,61 @@ class Test {
       tokenToTezSwapAddress,
       tokenToTokenSwapAddress,
       tezToTokenPaymentAddress,
-      tokenToTezPaymentAddress);
-    let sharesBurned = 1;
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
     const pkh = await Tezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ voters: [pkh] });
 
-    const tezPerShare = parseInt(
-      initialStorage.tezPool / initialStorage.totalShares
+    assert(
+      !initialStorage.voters[pkh][pkh1]
     );
-    const tokensPerShare = parseInt(
-      initialStorage.tokenPool / initialStorage.totalShares
-    );
-    const minTez = tezPerShare * sharesBurned;
-    const minTokens = tokensPerShare * sharesBurned;
-    let operation = await dex.setVotesDelegation(minTokens, minTez, sharesBurned);
+
+    let operation = await dex.setVotesDelegation(pkh1, true);
     assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    let finalStorage = await dex.getFullStorage({ voters: [pkh] });
 
     assert(
-      finalStorage.sharesExtended[pkh] ==
-      initialStorage.sharesExtended[pkh] - sharesBurned
-    );
-    assert(finalStorage.tezPool == parseInt(initialStorage.tezPool) - minTez);
-    assert(
-      finalStorage.tokenPool == parseInt(initialStorage.tokenPool) - minTokens
-    );
-    assert(
-      finalStorage.totalShares ==
-      parseInt(initialStorage.totalShares) - sharesBurned
-    );
-    assert(
-      finalStorage.invariant ==
-      (parseInt(initialStorage.tezPool) - minTez) *
-      (parseInt(initialStorage.tokenPool) - minTokens)
+      finalStorage.voters[pkh][pkh1]
     );
   }
 }
 
 describe('Dex', function () {
-  before(async function () {
-    this.timeout(1000000);
+  // before(async function () {
+  //   this.timeout(1000000);
 
-    await Test.before(
-      dexAddress1,
-      initializeExchangeAddress1,
-      investLiquidityAddress1,
-      divestLiquidityAddress1,
-      tezToTokenSwapAddress1,
-      tokenToTezSwapAddress1,
-      tokenToTokenSwapAddress1,
-      tezToTokenPaymentAddress1,
-      tokenToTezPaymentAddress1,
-      tokenAddress1);
-    // await Test.before(
-    //   dexAddress2,
-    //   initializeExchangeAddress2,
-    //   investLiquidityAddress2,
-    //   divestLiquidityAddress2,
-    //   tezToTokenSwapAddress2,
-    //   tokenToTezSwapAddress2,
-    //   tokenToTokenSwapAddress2,
-    //   tezToTokenPaymentAddress2,
-    //   tokenToTezPaymentAddress2,
-    //   tokenAddress2);
-  });
+  //   await Test.before(
+  //     dexAddress1,
+  //     initializeExchangeAddress1,
+  //     investLiquidityAddress1,
+  //     divestLiquidityAddress1,
+  //     tezToTokenSwapAddress1,
+  //     tokenToTezSwapAddress1,
+  //     tokenToTokenSwapAddress1,
+  //     tezToTokenPaymentAddress1,
+  //     tokenToTezPaymentAddress1,
+  //     voteAddress1,
+  //     vetoAddress1,
+  //     setVotesDelegationAddress1,
+  //     tokenAddress1);
+  //   // await Test.before(
+  //   //   dexAddress2,
+  //   //   initializeExchangeAddress2,
+  //   //   investLiquidityAddress2,
+  //   //   divestLiquidityAddress2,
+  //   //   tezToTokenSwapAddress2,
+  //   //   tokenToTezSwapAddress2,
+  //   //   tokenToTokenSwapAddress2,
+  //   //   tezToTokenPaymentAddress2,
+  //   //   tokenToTezPaymentAddress2,
+  //   //   voteAddress2,
+  //   //   vetoAddress2,
+  //   //   setVotesDelegationAddress2,
+  //   //   tokenAddress2);
+  // });
 
   describe('InitializeExchange()', function () {
     it('should initialize exchange 1', async function () {
@@ -993,6 +1066,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1);
     });
 
@@ -1007,6 +1083,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2);
     });
   });
@@ -1023,6 +1102,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1);
     });
 
@@ -1037,6 +1119,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2);
     });
   });
@@ -1053,6 +1138,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1);
     });
 
@@ -1067,6 +1155,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2);
     });
   });
@@ -1083,6 +1174,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1);
     });
     it.skip('should exchange tez to token 2', async function () {
@@ -1096,6 +1190,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2);
     });
   });
@@ -1112,6 +1209,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1);
     });
     it.skip('should exchange tez to token and send to requested address 2', async function () {
@@ -1125,6 +1225,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2);
     });
   });
@@ -1141,6 +1244,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1);
     });
     it.skip('should exchange tez to token 2', async function () {
@@ -1154,6 +1260,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2);
     });
   });
@@ -1170,6 +1279,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1,
         tokenAddress2);
     });
@@ -1185,6 +1297,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2,
         tokenAddress1);
     });
@@ -1202,6 +1317,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
         tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1,
         tokenAddress1);
     });
 
@@ -1216,6 +1334,9 @@ describe('Dex', function () {
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
         tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2,
         tokenAddress2);
     });
   });
@@ -1231,7 +1352,10 @@ describe('Dex', function () {
         tokenToTezSwapAddress1,
         tokenToTokenSwapAddress1,
         tezToTokenPaymentAddress1,
-        tokenToTezPaymentAddress1);
+        tokenToTezPaymentAddress1,
+        voteAddress1,
+        vetoAddress1,
+        setVotesDelegationAddress1);
     });
 
     it.skip('should divest liquidity 2', async function () {
@@ -1244,7 +1368,10 @@ describe('Dex', function () {
         tokenToTezSwapAddress2,
         tokenToTokenSwapAddress2,
         tezToTokenPaymentAddress2,
-        tokenToTezPaymentAddress2);
+        tokenToTezPaymentAddress2,
+        voteAddress2,
+        vetoAddress2,
+        setVotesDelegationAddress2);
     });
   });
 });
@@ -1254,7 +1381,5 @@ describe('Dex', function () {
 // | SetVotesDelegation of (address * bool)
 // | Vote of (address * key_hash)
 // | Veto of (address)
-// | Update veto to be limitted by time
-// | Receive reward
 // | Distribute reward 
 
