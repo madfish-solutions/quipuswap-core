@@ -302,8 +302,6 @@ class Dex {
   }
 
   async setVotesDelegation(voter, allowance) {
-    await this.printArgs(await this.setVotesDelegationContract.methods
-      .use(voter, allowance), await this.tezos.signer.publicKeyHash(), 0);
     const operation = await this.setVotesDelegationContract.methods
       .use(voter, allowance)
       .send();
@@ -1020,7 +1018,54 @@ class Test {
     let initialStorage = await dex.getFullStorage({ voters: [pkh] });
 
     assert(
-      !initialStorage.votersExtended[pkh].allowances.get(pkh1)
+      !initialStorage.votersExtended[pkh]
+    );
+
+    let operation = await dex.setVotesDelegation(pkh1, true);
+    assert(operation.status === "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ voters: [pkh] });
+    assert(
+      finalStorage.votersExtended[pkh].allowances.get(pkh1)
+    );
+  }
+
+  static async vote(dexAddress,
+    initializeExchangeAddress,
+    investLiquidityAddress,
+    divestLiquidityAddress,
+    tezToTokenSwapAddress,
+    tokenToTezSwapAddress,
+    tokenToTokenSwapAddress,
+    tezToTokenPaymentAddress,
+    tokenToTezPaymentAddress,
+    voteAddress,
+    vetoAddress,
+    setVotesDelegationAddress,
+    tokenAddress) {
+    let Tezos = await setup();
+    let Tezos1 = await setup("../key1");
+    let dex = await Dex.init(Tezos,
+      dexAddress,
+      initializeExchangeAddress,
+      investLiquidityAddress,
+      divestLiquidityAddress,
+      tezToTokenSwapAddress,
+      tokenToTezSwapAddress,
+      tokenToTokenSwapAddress,
+      tezToTokenPaymentAddress,
+      tokenToTezPaymentAddress,
+      voteAddress,
+      vetoAddress,
+      setVotesDelegationAddress);
+    const pkh = await Tezos.signer.publicKeyHash();
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ voters: [pkh] });
+
+    assert(
+      initialStorage.votersExtended[pkh1].allowances.get(pkh)
+    );
+    assert(
+      QinitialStorage.votersExtended[pkh1].candidate
     );
 
     let operation = await dex.setVotesDelegation(pkh1, true);
@@ -1386,6 +1431,40 @@ describe('Dex', function () {
         setVotesDelegationAddress2);
     });
   });
+
+  // describe('Vote()', function () {
+  //   it('should vote 1', async function () {
+  //     this.timeout(1000000);
+  //     await Test.vote(dexAddress1,
+  //       initializeExchangeAddress1,
+  //       investLiquidityAddress1,
+  //       divestLiquidityAddress1,
+  //       tezToTokenSwapAddress1,
+  //       tokenToTezSwapAddress1,
+  //       tokenToTokenSwapAddress1,
+  //       tezToTokenPaymentAddress1,
+  //       tokenToTezPaymentAddress1,
+  //       voteAddress1,
+  //       vetoAddress1,
+  //       setVotesDelegationAddress1);
+  //   });
+
+  //   it.skip('should vote 2', async function () {
+  //     this.timeout(1000000);
+  //     await Test.vote(dexAddress2,
+  //       initializeExchangeAddress2,
+  //       investLiquidityAddress2,
+  //       divestLiquidityAddress2,
+  //       tezToTokenSwapAddress2,
+  //       tokenToTezSwapAddress2,
+  //       tokenToTokenSwapAddress2,
+  //       tezToTokenPaymentAddress2,
+  //       tokenToTezPaymentAddress2,
+  //       voteAddress2,
+  //       vetoAddress2,
+  //       setVotesDelegationAddress2);
+  //   });
+  // });
 });
 
 
@@ -1395,3 +1474,4 @@ describe('Dex', function () {
 // | Veto of (address)
 // | Distribute reward 
 
+// | ReceiveDexStorage by unauthorized main!!!!

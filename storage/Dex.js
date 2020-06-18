@@ -41,6 +41,9 @@ const { address: vetoAddress } = JSON.parse(
 const { address: setVotesDelegationAddress } = JSON.parse(
     fs.readFileSync("./deploy/SetVotesDelegation.json").toString()
 );
+const { address: receiveRewardAddress } = JSON.parse(
+    fs.readFileSync("./deploy/ReceiveReward.json").toString()
+);
 
 module.exports = {
     feeRate: "500",
@@ -56,6 +59,13 @@ module.exports = {
     vetoVoters: MichelsonMap.fromLiteral({}),
     votes: MichelsonMap.fromLiteral({}),
     veto: "0",
+    total_votes: "0",
+    reward: "0",
+    next_circle: "0",
+    current_circle: "0",
+    circles: MichelsonMap.fromLiteral({}),
+    current_delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
+    receive_reward: receiveRewardAddress,
     delegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
     nextDelegated: "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5",
     allowed: MichelsonMap.fromLiteral({
@@ -69,6 +79,7 @@ module.exports = {
         [investLiquidityAddress]: true,
         [voteAddress]: true,
         [vetoAddress]: true,
+        [receiveRewardAddress]: true,
         [setVotesDelegationAddress]: true
     })
 }

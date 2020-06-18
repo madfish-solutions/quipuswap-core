@@ -22,6 +22,8 @@ type dex_storage is record
   next_circle: timestamp;
   current_circle: nat;
   circles: map(nat, tez);
+  current_delegated : key_hash;
+  receive_reward : address;
   delegated: key_hash;
   nextDelegated: key_hash;
   allowed: big_map(address, bool);
