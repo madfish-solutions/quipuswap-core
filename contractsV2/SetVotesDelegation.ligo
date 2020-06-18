@@ -15,11 +15,13 @@ type gatewayAction is
 
 function setVotesDelegation (const gs : gateway_storage; var s: dex_storage)  :  list(operation) is
   block {
-   if Tezos.sender = gs.tmp.0 then skip;
+   if gs.sender = gs.tmp.0 then skip;
    else block {
-      const src: vote_info = get_force(Tezos.sender, s.voters);
+      const src: vote_info = case s.voters[gs.sender] of None -> record allowances = (map[]: map(address, bool) ); candidate = (None:option(key_hash)) end 
+      | Some(v) -> v 
+      end ;
       src.allowances[gs.tmp.0] := gs.tmp.1;
-      s.voters[Tezos.sender] := src;
+      s.voters[gs.sender] := src;
    }
  } with list[
       transaction(UpdateStorage(s), 

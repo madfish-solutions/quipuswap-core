@@ -17,7 +17,7 @@ function vote (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
  block {
     const share : nat = get_force (sender, s.shares);
     const src: vote_info = get_force(gs.tmp.0, s.voters);
-    if Tezos.sender =/= gs.tmp.0 or get_force(Tezos.sender, src.allowances) 
+    if gs.sender =/= gs.tmp.0 or get_force(gs.sender, src.allowances) 
     then skip else failwith ("04");
 
     case s.vetos[gs.tmp.1] of None -> skip	    

@@ -17,7 +17,7 @@ function veto (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
  block {
    const share : nat = get_force (sender, s.shares);
     const src: vote_info = get_force(gs.tmp, s.voters);
-    if Tezos.sender =/= gs.tmp or get_force(Tezos.sender, src.allowances) 
+    if gs.sender =/= gs.tmp or get_force(gs.sender, src.allowances) 
     then skip else failwith ("04");
    var newShare: nat := 0n;
    case s.vetoVoters[gs.tmp] of None -> skip
