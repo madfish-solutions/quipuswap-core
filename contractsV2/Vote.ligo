@@ -38,24 +38,17 @@ function vote (const gs : gateway_storage; var s: dex_storage)  :  list(operatio
     const newVotes: nat = (case s.votes[gs.tmp.1] of  None -> 0n | Some(v) -> v end) + share;
     s.votes[gs.tmp.1]:= newVotes;
 
-    var operations: list(operation) := (nil: list(operation));
     if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
        s.nextDelegated := s.delegated;
        s.delegated := gs.tmp.1;
-       operations := transaction(RequestOperation(Some(gs.tmp.1)), 
-       0tz,
-       case (Tezos.get_entrypoint_opt("%requestOperation", gs.main) : option(contract(m))) of Some(contr) -> contr
-          | None -> (failwith("01"):contract(m))
-          end 
-       ) # operations;
     };
-    operations :=
-      transaction(UpdateStorage(s), 
+    const operations : list(operation) =
+      list transaction(UpdateStorage(s), 
       0tz,
       case (Tezos.get_entrypoint_opt("%updateStorage", gs.main) : option(contract(y))) of Some(contr) -> contr
          | None -> (failwith("01"):contract(y))
          end 
-      ) # operations;
+      ) end;
  } with (operations)
 
 function main (const p : gatewayAction ; const s : gateway_storage) :

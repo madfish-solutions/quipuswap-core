@@ -56,12 +56,6 @@ block {
          if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
             s.nextDelegated := s.delegated;
             s.delegated := candidate;
-            operations := transaction(RequestOperation(Some(candidate)), 
-               0tz,
-               case (Tezos.get_entrypoint_opt("%requestOperation", gs.main) : option(contract(m))) of Some(contr) -> contr
-                  | None -> (failwith("01"):contract(m))
-                  end 
-               ) # operations;
          };
       } end;
    } end;
