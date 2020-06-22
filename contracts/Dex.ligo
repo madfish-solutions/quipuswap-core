@@ -337,23 +337,19 @@ function middle (const p : dexAction ; const this: address; const idx: nat; cons
     s.storage := res.1;
  } with (res.0, s)
 
-function main (const p : dexAction ; const s : full_dex_storage) :
+function setSettings (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_dex_storage) : full_dex_storage is
+ block {
+    case s.lambdas[idx] of Some(n) -> failwith("Function exist") | None -> skip end;
+    s.lambdas[idx] := f;
+ } with s
+
+function main (const p : fullAction ; const s : full_dex_storage) :
   (list(operation) * full_dex_storage) is
  block {
     const this: address = self_address; 
  } with case p of
-  | InitializeExchange(n) -> middle(p, this, 0n, s) 
-//   | TezToTokenSwap(n) -> tezToTokenMiddle(Tezos.sender, this, amount / 1mutez, n, s) 
-//   | TokenToTezSwap(n) -> tokenToTezMiddle(Tezos.sender, Tezos.sender, this, n.0, n.1, s) 
-//   | TokenToTokenSwap(n) -> tokenToTokenOutMiddle(Tezos.sender, Tezos.sender, this, n.0, n.1, n.2, s)
-  | TezToTokenPayment(n) -> middle(p, this, 1n, s)
-  | TokenToTezPayment(n) -> middle(p, this, 2n, s)
-  | TokenToTokenPayment(n) -> middle(p, this, 3n, s)
-  | InvestLiquidity(n) -> middle(p, this, 4n, s)
-  | DivestLiquidity(n) -> middle(p, this, 5n, s)
-  | SetVotesDelegation(n) -> middle(p, this, 6n, s)
-  | Vote(n) -> middle(p, this, 7n, s)
-  | Veto(n) -> middle(p, this, 8n, s)
+  | Use(n) -> middle(n.1, this, n.0, s) 
+  | SetSettings(n) -> ((nil:list(operation)), setSettings(n.0, n.1, s))
  end
 
 
