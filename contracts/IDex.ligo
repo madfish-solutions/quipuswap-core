@@ -13,7 +13,7 @@ type dex_storage is record
   factoryAddress: address;
   shares: big_map(address, nat);
   voters: big_map(address, vote_info);
-  vetos: set(key_hash);
+  vetos: big_map(key_hash, bool);
   vetoVoters: big_map(address, nat);
   votes: big_map(key_hash, nat);
   veto: nat;
@@ -23,9 +23,9 @@ end
 
 type dexAction is
 | InitializeExchange of (nat)
-| TezToTokenSwap of nat
-| TokenToTezSwap of (nat * nat)
-| TokenToTokenSwap of (nat * nat * address)
+// | TezToTokenSwap of nat
+// | TokenToTezSwap of (nat * nat)
+// | TokenToTokenSwap of (nat * nat * address)
 | TezToTokenPayment of (nat * address)
 | TokenToTezPayment of (nat * nat * address)
 | TokenToTokenPayment of (nat * nat * address * address)
@@ -34,4 +34,8 @@ type dexAction is
 | SetVotesDelegation of (address * bool)
 | Vote of (address * key_hash)
 | Veto of (address)
-// | Default of (unit)
+
+type full_dex_storage is record
+  storage: dex_storage;
+  lambdas: big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage));
+end
