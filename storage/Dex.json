@@ -12,7 +12,7 @@
                             [ { "string":
                                   "tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5" },
                               { "string":
-                                  "KT1UTEF3sVJF9Sj2QCQMRyFE9SKwx31Dh3o3" } ] },
+                                  "KT1AyYZw61LMJbGjKGyZkPTipEUmw4hPaCiP" } ] },
                         { "prim": "Pair",
                           "args": [ { "int": "500" }, { "int": "0" } ] } ] },
                   { "prim": "Pair",
@@ -26,7 +26,7 @@
                           "args":
                             [ { "int": "0" },
                               { "string":
-                                  "KT1VMw3vP57udf7RGhCscRqU2WdZUqwvVuw3" } ] } ] } ] },
+                                  "KT1DzQgRvnVE4XJaq7yszD8bFCgtPYS25iUF" } ] } ] } ] },
             { "prim": "Pair",
               "args":
                 [ { "prim": "Pair",

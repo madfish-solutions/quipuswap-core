@@ -88,13 +88,14 @@ let tokenToTokenSwap = async (tokensIn, minTokensOut, dexName, tokenFromName, to
     }
 }
 
-let setSettings = async (num, functionName, dexName, inputDir, outputDir) => {
+let setSettings = async (num, functionName, dexName, contractName, inputDir, outputDir) => {
     dexName = dexName || "Dex";
+    contractName = contractName || "Dex";
     const { address: dexAddress } = JSON.parse(
         fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
     );
     exec(
-        `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${dexName}.ligo main 'SetSettings(${num}n, ${functionName})'`,
+        `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetSettings(${num}n, ${functionName})'`,
         { maxBuffer: 1024 * 500 },
         async (err, stdout, stderr) => {
             if (err) {
@@ -150,15 +151,15 @@ program
     });
 
 program
-    .command('set_settings <num> <function_name> [dex]')
+    .command('set_settings <num> <function_name> [dex] [contract]')
     .description('build contracts')
     .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
     .option("-i, --input_dir <dir>", "Where built contracts are located", "contracts")
     .option("-k, --key_path <file>", "Where private key is located", "key")
     .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
-    .action(async function (num, functionName, dex, options) {
+    .action(async function (num, functionName, dex, contract, options) {
         await setup(options.key_path, options.provider);
-        await setSettings(num, functionName, dex, options.input_dir, options.output_dir);
+        await setSettings(num, functionName, dex, contract, options.input_dir, options.output_dir);
     });
 
 program
