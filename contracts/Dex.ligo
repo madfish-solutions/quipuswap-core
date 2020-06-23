@@ -48,7 +48,9 @@ function setVotesDelegation (const p : dexAction ; const s : dex_storage; const 
    | SetVotesDelegation(n) -> {
       if Tezos.sender = n.0 then skip;
       else block {
-         const src: vote_info = get_force(Tezos.sender, s.voters);
+         const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (map[]: map(address, bool) ); candidate = (None:option(key_hash)) end 
+            | Some(v) -> v 
+            end ;
          src.allowances[n.0] := n.1;
          s.voters[Tezos.sender] := src;
       }
