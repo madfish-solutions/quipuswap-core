@@ -86,6 +86,31 @@ let tokenToTokenSwap = async (tokensIn, minTokensOut, dexName, tokenFromName, to
     } catch (e) {
         console.log(e);
     }
+}
+
+let setSettings = async (num, functionName, dexName, inputDir, outputDir) => {
+    dexName = dexName || "Dex";
+    const { address: dexAddress } = JSON.parse(
+        fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
+    );
+    exec(
+        `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${dexName}.ligo main 'SetSettings(${num}n, ${functionName})'`,
+        { maxBuffer: 1024 * 500 },
+        async (err, stdout, stderr) => {
+            if (err) {
+                console.log(`Error during ${contractName} built`);
+                console.log(stderr);
+            } else {
+                try {
+                    const operation = await Tezos.contract.transfer({ to: dexAddress, amount: 0, parameter: { entrypoint: "default", value: JSON.parse(stdout) } })
+                    await operation.confirmation();
+                    console.log(operation);
+                } catch (E) { console.log(E) }
+
+
+            }
+        }
+    );
 
 }
 
@@ -119,10 +144,22 @@ program
     .description('build contracts')
     .option("-i, --input_dir <dir>", "Where built contracts are located", "deploy")
     .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
+    .option("-p, --provider <provider>", "Node to connect", "https://testnet-tezos.giganode.io")
     .action(async function (tokens_in, min_tokens_out, dex, token_from, token_to, options) {
         await setup(options.key_path, options.provider);
         await tokenToTokenSwap(tokens_in, min_tokens_out, dex, token_from, token_to, options.input_dir);
+    });
+
+program
+    .command('set_settings <num> <function_name> [dex]')
+    .description('build contracts')
+    .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
+    .option("-i, --input_dir <dir>", "Where built contracts are located", "contracts")
+    .option("-k, --key_path <file>", "Where private key is located", "key")
+    .option("-p, --provider <provider>", "Node to connect", "https://testnet-tezos.giganode.io")
+    .action(async function (num, functionName, dex, options) {
+        await setup(options.key_path, options.provider);
+        await setSettings(num, functionName, dex, options.input_dir, options.output_dir);
     });
 
 program
@@ -132,7 +169,7 @@ program
     .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
     .option("-s, --storage_dir <dir>", "Where built contracts are located", "storage")
     .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
+    .option("-p, --provider <provider>", "Node to connect", "https://testnet-tezos.giganode.io")
     .option("-b, --balance <balance>", "Where private key is located", "0")
     .option("-n, --init", "Wether to use init option")
     .action(async function (contract, output_name, storage_name, options) {
