@@ -339,6 +339,7 @@ function middle (const p : dexAction ; const this: address; const idx: nat; cons
 
 function setSettings (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_dex_storage) : full_dex_storage is
  block {
+    if idx > 8n then failwith("Only 9 functions are accepted") else skip;
     case s.lambdas[idx] of Some(n) -> failwith("Function exist") | None -> skip end;
     s.lambdas[idx] := f;
  } with s
