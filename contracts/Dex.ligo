@@ -343,6 +343,13 @@ function middle (const p : dexAction ; const this: address; const idx: nat; cons
     s.storage := res.1;
  } with (res.0, s)
 
+function useDefault (const s : full_dex_storage) :  (list(operation) * full_dex_storage) is
+ block {
+    const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) = get_force(9n, s.lambdas);
+    const res : (list(operation) * dex_storage) = f(InitializeExchange(0n), s.storage, Tezos.sender);
+    s.storage := res.1;
+ } with (res.0, s)
+
 function setSettings (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_dex_storage) : full_dex_storage is
  block {
     if idx > 8n then failwith("Only 9 functions are accepted") else skip;
@@ -355,6 +362,7 @@ function main (const p : fullAction ; const s : full_dex_storage) :
  block {
     const this: address = self_address; 
  } with case p of
+  | Default -> useDefault(s) 
   | Use(n) -> middle(n.1, this, n.0, s) 
   | SetSettings(n) -> ((nil:list(operation)), setSettings(n.0, n.1, s))
  end

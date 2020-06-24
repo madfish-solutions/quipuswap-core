@@ -103,7 +103,7 @@ let setSettings = async (num, functionName, dexName, contractName, inputDir, out
                 console.log(stderr);
             } else {
                 try {
-                    const operation = await Tezos.contract.transfer({ to: dexAddress, amount: 0, parameter: { entrypoint: "default", value: JSON.parse(stdout) } })
+                    const operation = await Tezos.contract.transfer({ to: dexAddress, amount: 0, parameter: { entrypoint: "setSettings", value: JSON.parse(stdout).args[0].args[0] } })
                     await operation.confirmation();
                 } catch (E) { console.log(E) }
 

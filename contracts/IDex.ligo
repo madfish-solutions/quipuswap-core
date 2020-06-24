@@ -41,6 +41,7 @@ type dexAction is
 type fullAction is
 | Use of (nat * dexAction)
 | SetSettings of (nat * ((dexAction * dex_storage * address) -> (list(operation) * dex_storage)))
+| Default of unit
 
 type full_dex_storage is record
   storage: dex_storage;
