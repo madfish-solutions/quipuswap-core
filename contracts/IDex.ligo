@@ -1,5 +1,5 @@
 type vote_info is record
-  allowances: map(address, bool);
+  allowances: set(address);
   candidate: option(key_hash);
 end
 
@@ -13,12 +13,18 @@ type dex_storage is record
   factoryAddress: address;
   shares: big_map(address, nat);
   voters: big_map(address, vote_info);
-  vetos: big_map(key_hash, bool);
+  vetos: big_map(key_hash, timestamp);
   vetoVoters: big_map(address, nat);
   votes: big_map(key_hash, nat);
   veto: nat;
   delegated: key_hash;
   nextDelegated: key_hash;
+  currentDelegated : key_hash;
+  totalVotes: nat;
+  currentCircle: nat;
+  nextCircle: timestamp;
+  reward: tez;
+  circles: big_map(nat, tez);
 end
 
 type dexAction is

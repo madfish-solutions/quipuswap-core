@@ -106,7 +106,7 @@ class Dex {
 
   async vote(voter, delegate) {
     const operation = await this.contract.methods
-      .vote(7, "vote", voter, delegate)
+      .use(7, "vote", voter, delegate)
       .send();
     await operation.confirmation();
     return operation;
@@ -628,7 +628,7 @@ class Test {
     assert(operation.status === "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ voters: [pkh] });
     assert(
-      finalStorage.votersExtended[pkh].allowances.get(pkh1)
+      finalStorage.votersExtended[pkh].allowances.includes(pkh1)
     );
   }
 
@@ -639,22 +639,27 @@ class Test {
     let dex = await Dex.init(Tezos,
       dexAddress,
     );
+    let delegate = await Tezos.signer.publicKeyHash();
+
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ voters: [pkh1] });
 
     assert(
-      initialStorage.votersExtended[pkh1].allowances.get(pkh)
+      initialStorage.votersExtended[pkh1].allowances.includes(pkh)
     );
     assert(
       !initialStorage.votersExtended[pkh1].candidate
     );
 
-    let operation = await dex.setVotesDelegation(pkh1, true);
+    let operation = await dex.vote(pkh1, delegate);
     assert(operation.status === "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ voters: [pkh1] });
     assert(
-      finalStorage.votersExtended[pkh1].candidate
+      finalStorage.votersExtended[pkh1].candidate == delegate
+    );
+    assert(
+      finalStorage.storage.delegated == delegate
     );
   }
 }

@@ -34,7 +34,7 @@ function initializeExchange (const p : dexAction ; const s : dex_storage; const 
 function isAllowedVoter (const voter : address ; var s : dex_storage) : bool is 
   block {
     const src: vote_info = get_force(voter, s.voters);
-  } with Tezos.sender =/= voter or get_force(Tezos.sender, src.allowances);
+  } with Tezos.sender =/= voter or src.allowances contains Tezos.sender;
 
 function setVotesDelegation (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
  block {
@@ -48,10 +48,10 @@ function setVotesDelegation (const p : dexAction ; const s : dex_storage; const 
    | SetVotesDelegation(n) -> {
       if Tezos.sender = n.0 then skip;
       else block {
-         const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (map[]: map(address, bool) ); candidate = (None:option(key_hash)) end 
+         const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
             | Some(v) -> v 
             end ;
-         src.allowances[n.0] := n.1;
+         src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances);
          s.voters[Tezos.sender] := src;
       }
    }
@@ -68,13 +68,15 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
     end;
 
     case s.vetos[candidate] of None -> skip
-    | Some(c) -> failwith ("Candidate was banned by veto")
+      | Some(c) -> if c < Tezos.now then failwith ("Candidate was banned by veto") else remove candidate from map s.vetos
     end;
 
-    const voterInfo : vote_info = record allowances = (map end : map(address, bool)); candidate = Some(candidate); end;
+    const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
     case s.voters[voter] of None -> skip
       | Some(v) -> {
          case v.candidate of None -> skip | Some(c) -> {
+           if s.totalVotes < prevShare then failwith ("Wrong shares") else skip;
+           s.totalVotes := abs(s.totalVotes - prevShare);
            s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
            v.candidate := Some(candidate);
            voterInfo := v;
@@ -82,6 +84,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
       }
       end;    
     s.voters[voter]:= voterInfo;
+    s.totalVotes := s.totalVotes + share;
     const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share;
     s.votes[candidate]:= newVotes;
 
@@ -89,7 +92,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
     if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
        s.nextDelegated := s.delegated;
        s.delegated := candidate;
-       operations := Some(set_delegate(Some(candidate)));
+      //  operations := Some(set_delegate(Some(candidate)));
     };
  } with (operations, s)
 
@@ -110,7 +113,8 @@ function vote (const p : dexAction ; const s : dex_storage; const this: address)
       case res.0 of None -> skip 
       | Some(o) -> {
          operations := list o end;
-      } end;   
+      } end;
+      s := res.1; 
    }
    | Veto(n) -> failwith("00")
    end
@@ -142,12 +146,12 @@ function veto (const p : dexAction ; const s : dex_storage; const this: address)
       } 
       end;
       s.veto := s.veto + newShare;
-      if s.veto > s.totalShares then {
+      if s.veto > s.totalVotes / 2n then {
          s.veto := 0n;
-         s.vetos[s.delegated] := True;
+         s.vetos[s.delegated] := Tezos.now + 31104000;
          s.delegated := s.nextDelegated;
          s.vetoVoters := (big_map end : big_map(address, nat));
-         operations := set_delegate(Some(s.nextDelegated)) # operations; 
+         // operations := set_delegate(Some(s.nextDelegated)) # operations; 
       } else skip;
       s.vetoVoters[voter] := share;
    }
