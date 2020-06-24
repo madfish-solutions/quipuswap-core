@@ -31,6 +31,7 @@ node scripts/cli2.js set_settings 5 divestLiquidity
 node scripts/cli2.js set_settings 6 setVotesDelegation
 node scripts/cli2.js set_settings 7 vote
 node scripts/cli2.js set_settings 8 veto
+node scripts/cli2.js set_settings 9 receiveReward
 echo "set settings2"
 node scripts/cli2.js set_settings 0 initializeExchange Dex2
 node scripts/cli2.js set_settings 1 tezToToken Dex2
@@ -41,6 +42,7 @@ node scripts/cli2.js set_settings 5 divestLiquidity Dex2
 node scripts/cli2.js set_settings 6 setVotesDelegation Dex2
 node scripts/cli2.js set_settings 7 vote Dex2
 node scripts/cli2.js set_settings 8 veto Dex2
+node scripts/cli2.js set_settings 9 receiveReward Dex2
 echo "test"
 ./node_modules/mocha/bin/mocha
 

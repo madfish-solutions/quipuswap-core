@@ -25,7 +25,7 @@ const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
 
-const provider = "http://0.0.0.0:8732";
+const provider = "https://api.tez.ie/rpc/carthagenet";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -100,6 +100,12 @@ class Dex {
     const operation = await this.contract.methods
       .veto(8, "veto", voter)
       .send();
+    await operation.confirmation();
+    return operation;
+  }
+
+  async sendReward(amount) {
+    const operation = await this.tezos.contract.transfer({ to: this.contract.address, amount });
     await operation.confirmation();
     return operation;
   }
@@ -632,14 +638,14 @@ class Test {
     );
   }
 
-  static async vote(dexAddress,
-    tokenAddress) {
+  static async vote(dexAddress, tokenAddress) {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos,
       dexAddress,
     );
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -660,6 +666,32 @@ class Test {
     );
     assert(
       finalStorage.storage.delegated == delegate
+    );
+  }
+  static async default(dexAddress, tokenAddress) {
+    let Tezos = await setup();
+    let Tezos1 = await setup("../key1");
+    let dex = await Dex.init(Tezos,
+      dexAddress,
+    );
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
+    let reward = 1;
+
+    const pkh = await Tezos.signer.publicKeyHash();
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ voters: [pkh1] });
+
+    assert(
+      initialStorage.storage.delegated == delegate
+    );
+
+    let operation = await dex.sendReward(reward);
+    assert(operation.status === "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ voters: [pkh1] });
+    console.log(finalStorage.storage)
+    assert(
+      initialStorage.storage.currentDelegated == delegate
     );
   }
 }
@@ -808,6 +840,18 @@ describe('Dex', function () {
     it('should vote 2', async function () {
       this.timeout(1000000);
       await Test.vote(dexAddress2);
+    });
+  });
+
+  describe('Default()', function () {
+    it('should receive reward 1', async function () {
+      this.timeout(1000000);
+      await Test.default(dexAddress1);
+    });
+
+    it('should receive reward 2', async function () {
+      this.timeout(1000000);
+      await Test.default(dexAddress2);
     });
   });
 });

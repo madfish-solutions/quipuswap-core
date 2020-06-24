@@ -1,6 +1,7 @@
 #include "IFactory.ligo"
 #include "IDex.ligo"
 
+type x is Use1 of (nat * dexAction) 
 function launchExchange (const token : address; const exchange : address; var s: exchange_storage ) :  (exchange_storage) is
  block {
     if s.tokenList contains token then failwith("Exchange launched") else skip;
@@ -11,7 +12,13 @@ function launchExchange (const token : address; const exchange : address; var s:
  } with (s)
 
 function tokenToExchangeLookup (const tokenOutAddress : address; const recipient: address; const minTokensOut: nat; const s : exchange_storage) :  list(operation) is
- list transaction(Use(1n, TezToTokenPayment(minTokensOut, recipient)), Tezos.amount, (get_contract(get_force(tokenOutAddress, s.tokenToExchange)): contract(fullAction))); end
+ list transaction(Use1(1n, TezToTokenPayment(minTokensOut, recipient)), 
+   Tezos.amount, 
+   case (Tezos.get_entrypoint_opt("%use", get_force(tokenOutAddress, s.tokenToExchange)) : option(contract(x))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(x))
+         end
+   )
+ end 
 
 function main (const p : exchangeAction ; const s : exchange_storage) :
   (list(operation) * exchange_storage) is

@@ -343,16 +343,37 @@ function middle (const p : dexAction ; const this: address; const idx: nat; cons
     s.storage := res.1;
  } with (res.0, s)
 
+function receiveReward (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage)is
+block {
+    s.reward := s.reward + Tezos.amount;
+    var operations : list(operation) := (nil: list(operation)); 
+    if s.nextCircle < Tezos.now then block {
+      s.circles[s.currentCircle] := s.reward;
+      s.reward := 0tez;
+      s.currentCircle := s.currentCircle +1n;
+      s.nextCircle := Tezos.now + 1474560;
+      // destribute logic
+      //
+      if s.delegated = s.currentDelegated then skip else {
+        operations := set_delegate(Some(s.delegated)) # operations;
+        s.currentDelegated := s.delegated;
+      }
+    } else skip ;
+ } with (operations, s)
+
+
 function useDefault (const s : full_dex_storage) :  (list(operation) * full_dex_storage) is
  block {
     const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) = get_force(9n, s.lambdas);
-    const res : (list(operation) * dex_storage) = f(InitializeExchange(0n), s.storage, Tezos.sender);
+    const res : (list(operation) * dex_storage) = f(InitializeExchange(0n), s.storage, Tezos.self_address);
     s.storage := res.1;
  } with (res.0, s)
 
+
+
 function setSettings (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_dex_storage) : full_dex_storage is
  block {
-    if idx > 8n then failwith("Only 9 functions are accepted") else skip;
+    if idx > 9n then failwith("Only 10 functions are accepted") else skip;
     case s.lambdas[idx] of Some(n) -> failwith("Function exist") | None -> skip end;
     s.lambdas[idx] := f;
  } with s
