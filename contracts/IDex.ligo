@@ -5,6 +5,12 @@ type vote_info is record
   lastCircleUpdate: timestamp;
 end
 
+type user_circle_info is record
+  loyalty: nat;
+  lastCircle: nat;
+  lastCircleUpdate: timestamp;
+end
+
 type circle_info is record
   reward: tez;
   counter: nat;
@@ -33,7 +39,7 @@ type dex_storage is record
   totalVotes: nat;
   currentCircle: circle_info;
   circles: big_map(nat, circle_info);
-  circleLoyalty: big_map(address, timestamp);
+  circleLoyalty: big_map(address, user_circle_info);
 end
 
 type dexAction is

@@ -263,7 +263,8 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        s.currentCircle.totalLoyalty := abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
        s.currentCircle.lastUpdate := Tezos.now;
 
-       // update user loyalty 
+       // update user loyalty
+      //  s.circles.circleLoyalty :=
        
        const tokensPerShare : nat = s.tokenPool / s.totalShares;
        const tokensRequired : nat = sharesPurchased * tokensPerShare;
