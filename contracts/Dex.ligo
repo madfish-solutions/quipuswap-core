@@ -48,7 +48,7 @@ function setVotesDelegation (const p : dexAction ; const s : dex_storage; const 
    | SetVotesDelegation(n) -> {
       if Tezos.sender = n.0 then skip;
       else block {
-         const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
+         const src: vote_info = case s.voters[Tezos.sender] of None -> record lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
             | Some(v) -> v 
             end ;
          src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances);
@@ -66,7 +66,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
       | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
     end;
 
-    const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
+    const voterInfo : vote_info = record lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; allowances = (set [] : set(address)); candidate = Some(candidate); end;
     case s.voters[voter] of None -> skip
       | Some(v) -> {
          case v.candidate of None -> skip | Some(c) -> {
@@ -260,6 +260,11 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        const sharesPurchased : nat = (amount / 1mutez) / tezPerShare;
        if sharesPurchased >= minShares then skip else failwith("Dex/high-min-shares");
 
+       s.currentCircle.totalLoyalty := abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
+       s.currentCircle.lastUpdate := Tezos.now;
+
+       // update user loyalty 
+       
        const tokensPerShare : nat = s.tokenPool / s.totalShares;
        const tokensRequired : nat = sharesPurchased * tokensPerShare;
        const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
@@ -340,13 +345,17 @@ function middle (const p : dexAction ; const this: address; const idx: nat; cons
 
 function receiveReward (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage)is
 block {
-    s.reward := s.reward + Tezos.amount;
+    s.currentCircle.reward := s.currentCircle.reward + Tezos.amount;
     var operations : list(operation) := (nil: list(operation)); 
-    if s.nextCircle < Tezos.now then block {
-      s.circles[s.currentCircle] := s.reward;
-      s.reward := 0tez;
-      s.currentCircle := s.currentCircle +1n;
-      s.nextCircle := Tezos.now + 1474560;
+    if s.currentCircle.nextCircle < Tezos.now then block {
+      s.currentCircle.nextCircle := Tezos.now;
+      s.circles[s.currentCircle.counter] := s.currentCircle;
+      s.currentCircle.reward := 0tez;
+      s.currentCircle.counter := s.currentCircle.counter + 1n;
+      s.currentCircle.totalLoyalty := 0n;
+      s.currentCircle.start := Tezos.now;
+      s.currentCircle.lastUpdate := Tezos.now;
+      s.currentCircle.nextCircle := Tezos.now + 1474560;
       // destribute logic
       //
       if case s.delegated of None -> False
@@ -360,6 +369,8 @@ block {
          s.currentDelegated := s.delegated;
       } else skip;
     } else skip ;
+      //  s.currentCircle.totalLoyalty := (Tezos.now - s.currentCircle.lastUpdate) 
+      //  s.currentCircle.lastUpdate := Tezos.now;
  } with (operations, s)
 
 

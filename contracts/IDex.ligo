@@ -1,6 +1,17 @@
 type vote_info is record
   allowances: set(address);
   candidate: option(key_hash);
+  lastCircle: nat;
+  lastCircleUpdate: timestamp;
+end
+
+type circle_info is record
+  reward: tez;
+  counter: nat;
+  start: timestamp;
+  lastUpdate: timestamp;
+  totalLoyalty: nat;
+  nextCircle: timestamp;
 end
 
 type dex_storage is record 
@@ -20,10 +31,9 @@ type dex_storage is record
   delegated: option(key_hash);
   currentDelegated : option(key_hash);
   totalVotes: nat;
-  currentCircle: nat;
-  nextCircle: timestamp;
-  reward: tez;
-  circles: big_map(nat, tez);
+  currentCircle: circle_info;
+  circles: big_map(nat, circle_info);
+  circleLoyalty: big_map(address, timestamp);
 end
 
 type dexAction is
