@@ -263,12 +263,31 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        s.currentCircle.totalLoyalty := abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
        s.currentCircle.lastUpdate := Tezos.now;
 
-       // update user loyalty
-      //  s.circles.circleLoyalty :=
-       
        const tokensPerShare : nat = s.tokenPool / s.totalShares;
        const tokensRequired : nat = sharesPurchased * tokensPerShare;
        const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
+
+       // update user loyalty
+       var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0tez; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
+       | Some(c) -> c
+       end;
+       if userCircle.lastCircle =/= s.currentCircle.counter then {
+          var circle : circle_info := get_force(userCircle.lastCircle, s.circles);
+          userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(userCircle.lastCircleUpdate - circle.start)) / circle.totalLoyalty;
+          userCircle.loyalty := 0n;
+       } else skip;
+       if int(userCircle.lastCircle) < s.currentCircle.counter - 1n then {
+         var circle : circle_info := get_force(abs(s.currentCircle.counter - 1n), s.circles);
+         userCircle.lastCircleUpdate := circle.start;
+         userCircle.lastCircle := circle.counter + 1n;
+         for i := int(userCircle.lastCircle + 1n) to s.currentCircle.counter - 1n block {
+             circle := get_force(abs(i), s.circles);
+             userCircle.reward := userCircle.reward + circle.reward * share * abs(circle.lastUpdate - circle.start) / circle.totalLoyalty;
+         };
+       } else skip;
+       userCircle.loyalty := share * abs(userCircle.lastCircleUpdate - s.currentCircle.start);
+       userCircle.lastCircleUpdate := Tezos.now;
+
        s.shares[Tezos.sender] := share + sharesPurchased;
        s.tezPool := s.tezPool + amount / 1mutez;
        s.tokenPool := s.tokenPool + tokensRequired;

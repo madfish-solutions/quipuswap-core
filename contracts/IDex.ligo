@@ -6,6 +6,7 @@ type vote_info is record
 end
 
 type user_circle_info is record
+  reward: tez;
   loyalty: nat;
   lastCircle: nat;
   lastCircleUpdate: timestamp;
