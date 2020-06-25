@@ -17,9 +17,8 @@ type dex_storage is record
   vetoVoters: big_map(address, nat);
   votes: big_map(key_hash, nat);
   veto: nat;
-  delegated: key_hash;
-  nextDelegated: key_hash;
-  currentDelegated : key_hash;
+  delegated: option(key_hash);
+  currentDelegated : option(key_hash);
   totalVotes: nat;
   currentCircle: nat;
   nextCircle: timestamp;
