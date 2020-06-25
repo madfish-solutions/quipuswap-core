@@ -7,11 +7,11 @@ function initializeExchange (const p : dexAction ; const s : dex_storage; const 
    var operations: list(operation) := list[];
    case p of
    | InitializeExchange(tokenAmount) -> {
-      if s.invariant =/= 0n then failwith("Wrong invariant") else skip ;
-      if s.totalShares =/= 0n then failwith("Wrong totalShares") else skip ;
-      if amount < 1mutez then failwith("Wrong amount") else skip ;
-      if tokenAmount < 10n then failwith("Wrong tokenAmount") else skip ;
-      if amount > 500000000tz then failwith("Wrong amount") else skip ;
+      if s.invariant =/= 0n then failwith("Dex/non-zero-invariant") else skip ;
+      if s.totalShares =/= 0n then failwith("Dex/non-zero-total-shares") else skip ;
+      if amount < 1mutez then failwith("Dex/low-tez") else skip ;
+      if tokenAmount < 10n then failwith("Dex/low-token") else skip ;
+      if amount > 500000000tz then failwith("Dex/high-tez") else skip ;
       
       s.tokenPool := tokenAmount;
       s.tezPool := Tezos.amount / 1mutez;
@@ -60,22 +60,17 @@ function setVotesDelegation (const p : dexAction ; const s : dex_storage; const 
    end
  } with ((nil:list(operation)),s)
 
-function redelegate (const voter : address; const candidate : key_hash; const prevShare : nat; const share : nat; var s: dex_storage ) :  (option(operation) * dex_storage) is
+function redelegate (const voter : address; const candidate : key_hash; const prevShare : nat; const share : nat; var s: dex_storage ) :  (dex_storage) is
  block {
-    case isAllowedVoter(voter, s) of 
-    | False -> failwith ("Sender not allowed to spend token from source")
-    | True -> skip
-    end;
-
     case s.vetos[candidate] of None -> skip
-      | Some(c) -> if c < Tezos.now then failwith ("Candidate was banned by veto") else remove candidate from map s.vetos
+      | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
     end;
 
     const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
     case s.voters[voter] of None -> skip
       | Some(v) -> {
          case v.candidate of None -> skip | Some(c) -> {
-           if s.totalVotes < prevShare then failwith ("Wrong shares") else skip;
+           if s.totalVotes < prevShare then failwith ("Dex/invalid-shares") else skip;
            s.totalVotes := abs(s.totalVotes - prevShare);
            s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
            v.candidate := Some(candidate);
@@ -83,22 +78,24 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
          } end;
       }
       end;    
+    case Tezos.sender =/= voter or voterInfo.allowances contains Tezos.sender of 
+    | False -> failwith ("Dex/vote-not-permitted")
+    | True -> skip
+    end;
+
     s.voters[voter]:= voterInfo;
     s.totalVotes := s.totalVotes + share;
     const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share;
     s.votes[candidate]:= newVotes;
 
-    var operations: option(operation) := None;
     if (case s.votes[s.delegated] of None -> 0n | Some(v) -> v end) > newVotes then skip else {
        s.nextDelegated := s.delegated;
        s.delegated := candidate;
-      //  operations := Some(set_delegate(Some(candidate)));
     };
- } with (operations, s)
+ } with (s)
 
 function vote (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
  block {
-   var operations: list(operation) := list[];
    case p of
    | InitializeExchange(tokenAmount) -> failwith("00")
    | TezToTokenPayment(n) -> failwith("00")
@@ -109,20 +106,14 @@ function vote (const p : dexAction ; const s : dex_storage; const this: address)
    | SetVotesDelegation(n) -> failwith("00")
    | Vote(n) -> {
       const share : nat = get_force (Tezos.sender, s.shares);
-      const res : (option(operation) * dex_storage) = redelegate(n.0, n.1, share, share, s);
-      case res.0 of None -> skip 
-      | Some(o) -> {
-         operations := list o end;
-      } end;
-      s := res.1; 
+      s := redelegate(n.0, n.1, share, share, s);
    }
    | Veto(n) -> failwith("00")
    end
- } with (operations, s)
+ } with ((nil:list(operation)), s)
 
 function veto (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
  block {
-   var operations: list(operation) := list[];
    case p of
    | InitializeExchange(tokenAmount) -> failwith("00")
    | TezToTokenPayment(n) -> failwith("00")
@@ -133,30 +124,34 @@ function veto (const p : dexAction ; const s : dex_storage; const this: address)
    | SetVotesDelegation(n) -> failwith("00")
    | Vote(n) -> failwith("00")
    | Veto(voter) -> {
-      const share : nat = get_force (Tezos.sender, s.shares);
-      case isAllowedVoter(voter, s) of 
-      | False -> failwith ("Sender not allowed to spend token from source")
+      const src: vote_info = get_force(voter, s.voters);
+      case Tezos.sender =/= voter or src.allowances contains Tezos.sender of 
+      | False -> failwith ("Dex/vote-not-permitted")
       | True -> skip
       end;
+
+      const share : nat = get_force (voter, s.shares);
       var newShare: nat := 0n;
       case s.vetoVoters[voter] of None -> skip
       | Some(prev) -> {
-         if share > prev then skip else failwith ("No new shares were erned");
+         if share > prev then skip else failwith ("Dex/old-shares");
          newShare := abs(share - prev);
       } 
       end;
       s.veto := s.veto + newShare;
       if s.veto > s.totalVotes / 2n then {
          s.veto := 0n;
-         s.vetos[s.delegated] := Tezos.now + 31104000;
+         s.vetos[s.currentDelegated] := Tezos.now + 31104000;
+         
+         // redelegate
+
          s.delegated := s.nextDelegated;
          s.vetoVoters := (big_map end : big_map(address, nat));
-         // operations := set_delegate(Some(s.nextDelegated)) # operations; 
       } else skip;
       s.vetoVoters[voter] := share;
    }
    end
- } with (operations, s)
+ } with ((nil : list(operation)), s)
 
 
 function tezToToken (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
@@ -165,19 +160,18 @@ function tezToToken (const p : dexAction ; const s : dex_storage; const this: ad
    case p of
    | InitializeExchange(tokenAmount) -> failwith("00")
    | TezToTokenPayment(n) -> {
-       if Tezos.amount / 1mutez > 0n then skip else failwith("Wrong tezIn");
-       if n.0 > 0n then skip else failwith("Wrong minTokensOut");
+       if Tezos.amount / 1mutez > 0n then skip else failwith("Dex/low-tez-in");
+       if n.0 > 0n then skip else failwith("Dex/low-min-tokens-out");
  
        s.tezPool := s.tezPool + Tezos.amount / 1mutez;
        const newTokenPool : nat = s.invariant / abs(s.tezPool - Tezos.amount / 1mutez / s.feeRate);
        const tokensOut : nat = abs(s.tokenPool - newTokenPool);
  
-       if tokensOut >= n.0 then skip else failwith("Wrong minTokensOut");
+       if tokensOut >= n.0 then skip else failwith("Dex/high-min-tokens-out");
        
        s.tokenPool := newTokenPool;
        s.invariant := s.tezPool * newTokenPool;
        operations :=  transaction(Transfer(this, n.1, tokensOut), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations;
-
    }
    | TokenToTezPayment(n) -> failwith("00")
    | TokenToTokenPayment(n) -> failwith("00")
@@ -196,14 +190,14 @@ function tokenToTez (const p : dexAction ; const s : dex_storage; const this: ad
    | InitializeExchange(tokenAmount) -> failwith("00")
    | TezToTokenPayment(n) -> failwith("00")
    | TokenToTezPayment(n) -> {
-      if n.0 > 0n then skip else failwith("Wrong tokensIn");
-      if n.1 > 0n then skip else failwith("Wrong minTezOut");
+      if n.0 > 0n then skip else failwith("Dex/low-tokens-in");
+      if n.1 > 0n then skip else failwith("Dex/low-min-tez-out");
   
       s.tokenPool := s.tokenPool + n.0;
       const newTezPool : nat = s.invariant / abs(s.tokenPool - n.0 / s.feeRate);
       const tezOut : nat = abs(s.tezPool - newTezPool);
   
-      if tezOut >= n.1 then skip else failwith("Wrong minTezOut");
+      if tezOut >= n.1 then skip else failwith("Dex/high-min-tez-out");
   
       s.tezPool := newTezPool;
       s.invariant := newTezPool * s.tokenPool;
@@ -226,8 +220,8 @@ function tokenToTokenOut (const p : dexAction ; const s : dex_storage; const thi
    | TezToTokenPayment(n) -> failwith("00")
    | TokenToTezPayment(n) -> failwith("00")
    | TokenToTokenPayment(n) -> {
-      if n.0 > 0n then skip else failwith("Wrong tokensIn");
-      if n.1 > 0n then skip else failwith("Wrong minTezOut");
+      if n.0 > 0n then skip else failwith("Dex/low-tokens-in");
+      if n.1 > 0n then skip else failwith("Dex/low-min-tokens-out");
   
       s.tokenPool := s.tokenPool + n.0;
       const newTezPool : nat = s.invariant / abs(s.tokenPool - n.0 / s.feeRate);
@@ -253,12 +247,12 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
    | TokenToTezPayment(n) -> failwith("00")
    | TokenToTokenPayment(n) -> failwith("00")
    | InvestLiquidity(minShares) -> {
-       if amount > 0mutez then skip else failwith("Wrong amount");
-       if minShares > 0n then skip else failwith("Wrong tokenAmount");
+       if amount > 0mutez then skip else failwith("Dex/low-tez");
+       if minShares > 0n then skip else failwith("Dex/low-min-shares");
        const tezPerShare : nat = s.tezPool / s.totalShares;
-       if amount >= tezPerShare * 1mutez then skip else failwith("Wrong tezPerShare");
+       if amount >= tezPerShare * 1mutez then skip else failwith("Dex/high-tez");
        const sharesPurchased : nat = (amount / 1mutez) / tezPerShare;
-       if sharesPurchased >= minShares then skip else failwith("Wrong sharesPurchased");
+       if sharesPurchased >= minShares then skip else failwith("Dex/high-min-shares");
 
        const tokensPerShare : nat = s.tokenPool / s.totalShares;
        const tokensRequired : nat = sharesPurchased * tokensPerShare;
@@ -275,12 +269,7 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
          | Some(v) -> {
           case v.candidate of None -> skip 
           | Some(candidate) -> {
-             const redelegateRes : (option(operation) * dex_storage) = redelegate (Tezos.sender, candidate, share, share + sharesPurchased, s);
-             s := redelegateRes.1;
-             case redelegateRes.0 of None -> skip 
-             | Some(o) -> {
-                operations := o # operations;
-             } end;
+             s := redelegate (Tezos.sender, candidate, share, share + sharesPurchased, s);
           } end;
        } end;
    }
@@ -301,9 +290,9 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
    | TokenToTokenPayment(n) -> failwith("00")
    | InvestLiquidity(minShares) -> failwith("00")
    | DivestLiquidity(n) -> {
-       if n.0 > 0n then skip else failwith("Wrong sharesBurned");
+       if n.0 > 0n then skip else failwith("Dex/low-shares-burned");
        const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
-       if n.0 > share then failwith ("Snder shares are too low") else skip;
+       if n.0 > share then failwith ("Dex/low-shares") else skip;
        s.shares[Tezos.sender] := abs(share - n.0);
 
        const tezPerShare : nat = s.tezPool / s.totalShares;
@@ -311,8 +300,8 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
        const tezDivested : nat = tezPerShare * n.0;
        const tokensDivested : nat = tokensPerShare * n.0;
 
-       if tezDivested >= n.1 then skip else failwith("Wrong minTez");
-       if tokensDivested >= n.2 then skip else failwith("Wrong minTokens");
+       if tezDivested >= n.1 then skip else failwith("Dex/high-tez-out");
+       if tokensDivested >= n.2 then skip else failwith("Dex/high-tokens-out");
 
        s.totalShares := abs(s.totalShares - n.0);
        s.tezPool := abs(s.tezPool - tezDivested);
