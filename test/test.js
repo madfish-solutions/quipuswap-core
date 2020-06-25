@@ -148,7 +148,7 @@ class Dex {
     await this.approve(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use(5, "divestLiquidity", sharesBurned, tezAmount, tokenAmount)
-      .send({ amount: tezAmount });
+      .send();
     await operation.confirmation();
     return operation;
   }
@@ -581,7 +581,7 @@ class Test {
     let dex = await Dex.init(Tezos,
       dexAddress,
     );
-    let sharesBurned = 1;
+    let sharesBurned = 10;
     const pkh = await Tezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [pkh] });
 
@@ -689,9 +689,8 @@ class Test {
     let operation = await dex.sendReward(reward);
     assert(operation.status === "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ voters: [pkh1] });
-    console.log(finalStorage.storage)
     assert(
-      initialStorage.storage.currentDelegated == delegate
+      finalStorage.storage.currentDelegated == delegate
     );
   }
 }

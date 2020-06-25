@@ -292,7 +292,7 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
    | DivestLiquidity(n) -> {
        if n.0 > 0n then skip else failwith("Dex/low-shares-burned");
        const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
-       if n.0 > share then failwith ("Dex/low-shares") else skip;
+       if n.0 > share then failwith ("Dex/high-shares-burned") else skip;
        s.shares[Tezos.sender] := abs(share - n.0);
 
        const tezPerShare : nat = s.tezPool / s.totalShares;
