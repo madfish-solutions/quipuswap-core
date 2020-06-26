@@ -78,10 +78,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
          } end;
       }
       end;    
-    case Tezos.sender =/= voter or voterInfo.allowances contains Tezos.sender of 
-    | False -> failwith ("Dex/vote-not-permitted")
-    | True -> skip
-    end;
+    if Tezos.sender =/= voter or voterInfo.allowances contains Tezos.sender then skip else failwith ("Dex/vote-not-permitted");
 
     s.voters[voter]:= voterInfo;
     s.totalVotes := s.totalVotes + share;
@@ -109,7 +106,36 @@ function vote (const p : dexAction ; const s : dex_storage; const this: address)
    | SetVotesDelegation(n) -> failwith("00")
    | Vote(n) -> {
       const share : nat = get_force (Tezos.sender, s.shares);
-      s := redelegate(n.0, n.1, share, share, s);
+      // s := redelegate(n.0, n.1, share, share, s);
+      case s.vetos[n.1] of None -> skip
+        | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
+      end;
+
+      const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(n.1); end;
+      case s.voters[n.0] of None -> skip
+        | Some(v) -> {
+           case v.candidate of None -> skip | Some(c) -> {
+             if s.totalVotes < share then failwith ("Dex/invalid-shares") else skip;
+             s.totalVotes := abs(s.totalVotes - share);
+             s.votes[c]:= abs(get_force(c, s.votes) - share);
+             v.candidate := Some(n.1);
+             voterInfo := v;
+           } end;
+        }
+        end;    
+      if Tezos.sender =/= n.0 or voterInfo.allowances contains Tezos.sender then skip else failwith ("Dex/vote-not-permitted");
+      s.voters[n.0]:= voterInfo;
+      s.totalVotes := s.totalVotes + share;
+      const newVotes: nat = (case s.votes[n.1] of  None -> 0n | Some(v) -> v end) + share;
+      s.votes[n.1]:= newVotes;
+      if case s.delegated of None -> True 
+        | Some(delegated) ->
+           if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then True else False
+        end
+      then
+      {
+         s.delegated := Some(n.1);
+      } else skip;
    }
    | Veto(n) -> failwith("00")
    end
@@ -129,10 +155,7 @@ function veto (const p : dexAction ; const s : dex_storage; const this: address)
    | Vote(n) -> failwith("00")
    | Veto(voter) -> {
       const src: vote_info = get_force(voter, s.voters);
-      case Tezos.sender =/= voter or src.allowances contains Tezos.sender of 
-      | False -> failwith ("Dex/vote-not-permitted")
-      | True -> skip
-      end;
+      if Tezos.sender =/= voter or src.allowances contains Tezos.sender then skip else failwith ("Dex/vote-not-permitted");
 
       const share : nat = get_force (voter, s.shares);
       var newShare: nat := 0n;
@@ -299,8 +322,34 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
          | Some(v) -> { 
           case v.candidate of None -> skip 
           | Some(candidate) -> {
-             skip
-            //  s := redelegate (Tezos.sender, candidate, share, share + sharesPurchased, s);
+            case s.vetos[candidate] of None -> skip
+              | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
+            end;
+
+            const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
+            case s.voters[Tezos.sender] of None -> skip
+              | Some(v) -> {
+                 case v.candidate of None -> skip | Some(c) -> {
+                   if s.totalVotes < share then failwith ("Dex/invalid-shares") else skip;
+                   s.totalVotes := abs(s.totalVotes - share);
+                   s.votes[c]:= abs(get_force(c, s.votes) - share);
+                   v.candidate := Some(candidate);
+                   voterInfo := v;
+                 } end;
+              }
+              end;    
+            s.voters[Tezos.sender]:= voterInfo;
+            s.totalVotes := s.totalVotes + share + sharesPurchased;
+            const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share + sharesPurchased;
+            s.votes[candidate]:= newVotes;
+            if case s.delegated of None -> True 
+              | Some(delegated) ->
+                 if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then True else False
+              end
+            then
+            {
+               s.delegated := Some(candidate);
+            } else skip;
           } end;
        } end;
    }

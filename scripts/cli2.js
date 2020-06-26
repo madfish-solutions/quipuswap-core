@@ -100,7 +100,6 @@ let setSettings = async (num, functionName, dexName, contractName, inputDir, out
         async (err, stdout, stderr) => {
             if (err) {
                 console.log(`Error during ${contractName} built`);
-                console.log(stderr);
             } else {
                 try {
                     const operation = await Tezos.contract.transfer({ to: dexAddress, amount: 0, parameter: { entrypoint: "setSettings", value: JSON.parse(stdout).args[0].args[0] } })
@@ -144,7 +143,7 @@ program
     .description('build contracts')
     .option("-i, --input_dir <dir>", "Where built contracts are located", "deploy")
     .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "https://api.tez.ie/rpc/carthagenet")
+    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
     .action(async function (tokens_in, min_tokens_out, dex, token_from, token_to, options) {
         await setup(options.key_path, options.provider);
         await tokenToTokenSwap(tokens_in, min_tokens_out, dex, token_from, token_to, options.input_dir);
@@ -156,7 +155,7 @@ program
     .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
     .option("-i, --input_dir <dir>", "Where built contracts are located", "contracts")
     .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "https://api.tez.ie/rpc/carthagenet")
+    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
     .action(async function (num, functionName, dex, contract, options) {
         await setup(options.key_path, options.provider);
         await setSettings(num, functionName, dex, contract, options.input_dir, options.output_dir);
@@ -169,7 +168,7 @@ program
     .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
     .option("-s, --storage_dir <dir>", "Where built contracts are located", "storage")
     .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "https://api.tez.ie/rpc/carthagenet")
+    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
     .option("-b, --balance <balance>", "Where private key is located", "0")
     .option("-n, --init", "Wether to use init option")
     .action(async function (contract, output_name, storage_name, options) {
