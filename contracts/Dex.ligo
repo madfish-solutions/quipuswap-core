@@ -48,7 +48,7 @@ function setVotesDelegation (const p : dexAction ; const s : dex_storage; const 
    | SetVotesDelegation(n) -> {
       if Tezos.sender = n.0 then skip;
       else block {
-         const src: vote_info = case s.voters[Tezos.sender] of None -> record lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
+         const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
             | Some(v) -> v 
             end ;
          src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances);
@@ -66,7 +66,7 @@ function redelegate (const voter : address; const candidate : key_hash; const pr
       | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
     end;
 
-    const voterInfo : vote_info = record lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; allowances = (set [] : set(address)); candidate = Some(candidate); end;
+    const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
     case s.voters[voter] of None -> skip
       | Some(v) -> {
          case v.candidate of None -> skip | Some(c) -> {
@@ -273,17 +273,15 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        end;
        if userCircle.lastCircle =/= s.currentCircle.counter then {
           var circle : circle_info := get_force(userCircle.lastCircle, s.circles);
-          userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(userCircle.lastCircleUpdate - circle.start)) / circle.totalLoyalty;
+          userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(circle.nextCircle - userCircle.lastCircleUpdate)) / circle.totalLoyalty;
           userCircle.loyalty := 0n;
+          userCircle.lastCircleUpdate := circle.start;
        } else skip;
-       if int(userCircle.lastCircle) < s.currentCircle.counter - 1n then {
-         var circle : circle_info := get_force(abs(s.currentCircle.counter - 1n), s.circles);
-         userCircle.lastCircleUpdate := circle.start;
-         userCircle.lastCircle := circle.counter + 1n;
-         for i := int(userCircle.lastCircle + 1n) to s.currentCircle.counter - 1n block {
-             circle := get_force(abs(i), s.circles);
-             userCircle.reward := userCircle.reward + circle.reward * share * abs(circle.lastUpdate - circle.start) / circle.totalLoyalty;
-         };
+
+       if s.currentCircle.counter =/= userCircle.lastCircle + 1n then {
+          const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
+          const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
+          userCircle.reward := userCircle.reward + share * (lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
        } else skip;
        userCircle.loyalty := share * abs(userCircle.lastCircleUpdate - s.currentCircle.start);
        userCircle.lastCircleUpdate := Tezos.now;
@@ -369,12 +367,12 @@ block {
     var operations : list(operation) := (nil: list(operation)); 
     if s.currentCircle.nextCircle < Tezos.now then block {
       s.currentCircle.nextCircle := Tezos.now;
+      s.currentCircle.circleCoefficient := abs(Tezos.now - s.currentCircle.start) * s.currentCircle.reward / s.currentCircle.totalLoyalty + s.currentCircle.circleCoefficient;
       s.circles[s.currentCircle.counter] := s.currentCircle;
       s.currentCircle.reward := 0tez;
       s.currentCircle.counter := s.currentCircle.counter + 1n;
       s.currentCircle.totalLoyalty := 0n;
       s.currentCircle.start := Tezos.now;
-      s.currentCircle.lastUpdate := Tezos.now;
       s.currentCircle.nextCircle := Tezos.now + 1474560;
       // destribute logic
       //
@@ -389,8 +387,8 @@ block {
          s.currentDelegated := s.delegated;
       } else skip;
     } else skip ;
-      //  s.currentCircle.totalLoyalty := (Tezos.now - s.currentCircle.lastUpdate) 
-      //  s.currentCircle.lastUpdate := Tezos.now;
+    s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
+    s.currentCircle.lastUpdate := Tezos.now;
  } with (operations, s)
 
 
@@ -469,12 +467,19 @@ function main (const p : fullAction ; const s : full_dex_storage) :
 //       delegated = (None: option(key_hash));
 //       currentDelegated = (None: option(key_hash));
 //       totalVotes = 0n;
-//       currentCircle = 0n;
-//       nextCircle = Tezos.now;
-//       reward = 0tz;
-//       circles = (big_map end : big_map(nat, tez));
+//       currentCircle = record
+//          reward = 0tez;
+//          counter = 0n;
+//          start = Tezos.now;
+//          lastUpdate = Tezos.now;
+//          totalLoyalty = 0n;
+//          nextCircle = Tezos.now;
+//        end;
+//       circles = (big_map end : big_map(nat, circle_info));
+//       circleLoyalty = (big_map end : big_map(address, user_circle_info));
 //    end;
 //    lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));
 // end' --michelson-format=json > ./storage/Dex.json
 
 // ligo compile-storage contracts/Dex.ligo main 'record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("'$token'" : address);      factoryAddress = ("'$factory'" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, timestamp));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = (None: option(key_hash));      currentDelegated = (None: option(key_hash));      totalVotes = 0n;      currentCircle = 0n;      nextCircle = timestamp;      reward = 0tz;      circles = (big_map end : big_map(nat, tez));   end; lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));end' --michelson-format=json > ./storage/Dex.json
+// ligo compile-storage contracts/Dex.ligo main 'record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = ("'$token'" : address);      factoryAddress = ("'$factory'" : address);      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, timestamp));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = (None: option(key_hash));      currentDelegated = (None: option(key_hash));      totalVotes = 0n;      currentCircle = record         reward = 0tez;         counter = 0n;         start = Tezos.now;         lastUpdate = Tezos.now;         totalLoyalty = 0n;         nextCircle = Tezos.now;       end;      circles = (big_map end : big_map(nat, tez));      circleLoyalty = (big_map end : big_map(address, user_circle_info));   end;   lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));end' --michelson-format=json > ./storage/Dex.json

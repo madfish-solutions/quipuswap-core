@@ -1,8 +1,6 @@
 type vote_info is record
   allowances: set(address);
   candidate: option(key_hash);
-  lastCircle: nat;
-  lastCircleUpdate: timestamp;
 end
 
 type user_circle_info is record
@@ -19,6 +17,7 @@ type circle_info is record
   lastUpdate: timestamp;
   totalLoyalty: nat;
   nextCircle: timestamp;
+  circleCoefficient: tez;
 end
 
 type dex_storage is record 
