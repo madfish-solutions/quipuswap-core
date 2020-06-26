@@ -278,13 +278,14 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
           userCircle.lastCircleUpdate := circle.start;
        } else skip;
 
-       if s.currentCircle.counter =/= userCircle.lastCircle + 1n then {
+       if s.currentCircle.counter - userCircle.lastCircle > 1 then {
           const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
           const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
           userCircle.reward := userCircle.reward + share * (lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
        } else skip;
        userCircle.loyalty := share * abs(userCircle.lastCircleUpdate - s.currentCircle.start);
        userCircle.lastCircleUpdate := Tezos.now;
+       s.circleLoyalty[Tezos.sender] := userCircle;
 
        s.shares[Tezos.sender] := share + sharesPurchased;
        s.tezPool := s.tezPool + amount / 1mutez;
@@ -295,10 +296,11 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        operations := transaction(Transfer(sender, this, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations; 
        case s.voters[Tezos.sender] of None -> 
          skip
-         | Some(v) -> {
+         | Some(v) -> { 
           case v.candidate of None -> skip 
           | Some(candidate) -> {
-             s := redelegate (Tezos.sender, candidate, share, share + sharesPurchased, s);
+             skip
+            //  s := redelegate (Tezos.sender, candidate, share, share + sharesPurchased, s);
           } end;
        } end;
    }

@@ -25,7 +25,7 @@ const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
 
-const provider = "http://0.0.0.0:8732";
+const provider = "https://api.tez.ie/rpc/carthagenet";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);

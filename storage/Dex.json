@@ -41,7 +41,7 @@
                                 "args":
                                   [ { "prim": "None" },
                                     { "string":
-                                        "KT1J4yFgdQSLgs9jEPBE94RaDyXt7KMZHoct" } ] },
+                                        "KT1QurHPW3gwLq6remrJKgTo2PnUQprBsU5T" } ] },
                               { "prim": "Pair",
                                 "args": [ { "int": "500" }, { "int": "0" } ] } ] } ] },
                   { "prim": "Pair",
@@ -53,7 +53,7 @@
                               { "prim": "Pair",
                                 "args":
                                   [ { "string":
-                                        "KT1EbFDMKWNmQmWFboUsGdTeNEfRUnottjos" },
+                                        "KT1LWXZXzfm3vJnKJNDhrLb1CiLSQfk8t4M2" },
                                     { "int": "0" } ] } ] },
                         { "prim": "Pair",
                           "args":
