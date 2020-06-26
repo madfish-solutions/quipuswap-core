@@ -106,7 +106,6 @@ function vote (const p : dexAction ; const s : dex_storage; const this: address)
    | SetVotesDelegation(n) -> failwith("00")
    | Vote(n) -> {
       const share : nat = get_force (Tezos.sender, s.shares);
-      // s := redelegate(n.0, n.1, share, share, s);
       case s.vetos[n.1] of None -> skip
         | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
       end;
@@ -130,7 +129,7 @@ function vote (const p : dexAction ; const s : dex_storage; const this: address)
       s.votes[n.1]:= newVotes;
       if case s.delegated of None -> True 
         | Some(delegated) ->
-           if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then True else False
+           if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then False else True
         end
       then
       {

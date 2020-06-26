@@ -644,8 +644,8 @@ class Test {
     let dex = await Dex.init(Tezos,
       dexAddress,
     );
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -671,14 +671,15 @@ class Test {
       finalStorage.storage.delegated == delegate
     );
   }
+
   static async default(dexAddress, tokenAddress) {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos,
       dexAddress,
     );
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
     let reward = 1;
 
     const pkh = await Tezos.signer.publicKeyHash();
