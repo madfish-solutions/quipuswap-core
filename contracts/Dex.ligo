@@ -535,7 +535,8 @@ block {
       s.currentCircle.counter := s.currentCircle.counter + 1n;
       s.currentCircle.totalLoyalty := 0n;
       s.currentCircle.start := Tezos.now;
-      s.currentCircle.nextCircle := Tezos.now + 1474560;
+      // s.currentCircle.nextCircle := Tezos.now + 1474560;
+      s.currentCircle.nextCircle := Tezos.now + 3;
       // destribute logic
       //
       if case s.delegated of None -> False

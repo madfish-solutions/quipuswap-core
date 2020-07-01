@@ -52,6 +52,10 @@ const getContractFullStorage = async (Tezos, address, maps = {}) => {
   return result;
 };
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 class Dex {
   constructor(Tezos, contract) {
     this.tezos = Tezos;
@@ -116,6 +120,14 @@ class Dex {
   async vote(voter, delegate) {
     const operation = await this.contract.methods
       .use(7, "vote", voter, delegate)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
+
+  async withdrawProfit(amount, receiver) {
+    const operation = await this.contract.methods
+      .use(10, "withdrawProfit", amount, receiver)
       .send();
     await operation.confirmation();
     return operation;
@@ -745,8 +757,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -767,8 +779,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
     let reward = 1;
 
     const pkh = await Tezos.signer.publicKeyHash();
@@ -782,12 +794,38 @@ class Test {
     let finalStorage = await dex.getFullStorage({ voters: [pkh1] });
     assert(finalStorage.storage.currentDelegated == delegate);
   }
+
+  static async withdrawProfit(dexAddress, tokenAddress) {
+    let Tezos = await setup();
+    let Tezos1 = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
+    let reward = 100;
+    let amount = 1;
+
+    const pkh = await Tezos.signer.publicKeyHash();
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ voters: [pkh1] });
+
+    assert(initialStorage.storage.delegated == delegate);
+    await sleep(3000);
+
+    let operation = await dex.sendReward(reward);
+    assert(operation.status === "applied", "Operation was not applied");
+
+    operation = await dex.withdrawProfit(amount, pkh1);
+    assert(operation.status === "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ voters: [pkh1] });
+    // assert(finalStorage.storage.currentDelegated == delegate);
+  }
+
   static async veto(dexAddress, tokenAddress) {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -946,6 +984,18 @@ describe("Dex", function () {
     it("should set veto 2", async function () {
       this.timeout(1000000);
       await Test.veto(dexAddress2);
+    });
+  });
+
+  describe("WithdrawProfit()", function () {
+    it("should withdraw baker's profit 1", async function () {
+      this.timeout(1000000);
+      await Test.withdrawProfit(dexAddress1);
+    });
+
+    it("should withdraw baker's profit 2", async function () {
+      this.timeout(1000000);
+      await Test.withdrawProfit(dexAddress2);
     });
   });
 });
