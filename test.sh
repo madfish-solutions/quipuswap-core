@@ -1,6 +1,6 @@
 echo "build"
 node scripts/cli2.js build Factory
-# node scripts/cli2.js build Token
+node scripts/cli2.js build Token
 node scripts/cli2.js build Dex
 
 echo "deploy"

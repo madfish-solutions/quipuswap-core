@@ -3,35 +3,23 @@
 function isAllowed (const accountFrom : address ; const value : nat ; var s : contract_storage) : bool is 
   begin
     var allowed: bool := False;
-    if sender =/= accountFrom then block {
-      // Checking if the sender is allowed to spend in name of accountFrom
-      const src: account = get_force(accountFrom, s.ledger);
-      const allowanceAmount: nat = get_force(sender, src.allowances);
+    if Tezos.sender =/= accountFrom then block {
+      const src: account = Big_map.find(accountFrom, s.ledger);
+      const allowanceAmount: nat = Big_map.find(Tezos.sender, src.allowances);
       allowed := allowanceAmount >= value;
     };
     else allowed := True;
   end with allowed
 
-// Transfer a specific amount of tokens from accountFrom address to a destination address
-// Preconditions:
-//  The sender address is the account owner or is allowed to spend x in the name of accountFrom
-//  The accountFrom account has a balance higher than the amount
-// Postconditions:
-//  The balance of accountFrom is decreased by the amount
-//  The balance of destination is increased by the amount
 function transfer (const accountFrom : address ; const destination : address ; const value : nat ; var s : contract_storage) : contract_storage is
  begin  
-  // If accountFrom = destination transfer is not necessary
   if accountFrom = destination then skip;
   else block {
-    // Is sender allowed to spend value in the name of accountFrom
-    case isAllowed(accountFrom, value, s) of 
-    | False -> failwith ("Sender not allowed to spend token from source")
-    | True -> skip
-    end;
+    // Is Tezos.sender allowed to spend value in the name of accountFrom
+    if isAllowed(accountFrom, value, s) then skip else failwith ("Tezos.sender not allowed to spend token from source");
 
     // Fetch src account
-    const src: account = get_force(accountFrom, s.ledger);
+    const src: account = Big_map.find(accountFrom, s.ledger);
 
     // Check that the accountFrom can spend that much
     if value > src.balance 
@@ -58,9 +46,9 @@ function transfer (const accountFrom : address ; const destination : address ; c
     dst.balance := dst.balance + value;
 
     // Decrease the allowance amount if necessary
-    case src.allowances[sender] of
+    case src.allowances[Tezos.sender] of
     | None -> skip
-    | Some(dstAllowance) -> src.allowances[sender] := abs(dstAllowance - value)  // ensure non negative
+    | Some(dstAllowance) -> src.allowances[Tezos.sender] := abs(dstAllowance - value)  // ensure non negative
     end;
 
     s.ledger[accountFrom] := src;
@@ -68,16 +56,9 @@ function transfer (const accountFrom : address ; const destination : address ; c
   }
  end with s
 
-// Mint tokens into the owner balance
-// Preconditions:
-//  The sender is the owner of the contract
-// Postconditions:
-//  The minted tokens are added in the balance of the owner
-//  The totalSupply is increased by the amount of minted token
 function mint (const value : nat ; var s : contract_storage) : contract_storage is
  begin
-  // If the sender is not the owner fail
-  if sender =/= s.owner then failwith("You must be the owner of the contract to mint tokens");
+  if Tezos.sender =/= s.owner then failwith("You must be the owner of the contract to mint tokens");
   else block {
     var ownerAccount: account := record 
         balance = 0n;
@@ -95,16 +76,9 @@ function mint (const value : nat ; var s : contract_storage) : contract_storage 
   }
  end with s
 
-// Burn tokens from the owner balance
-// Preconditions:
-//  The owner have the required balance to burn
-// Postconditions:
-//  The burned tokens are subtracted from the balance of the owner
-//  The totalSupply is decreased by the amount of burned token 
 function burn (const value : nat ; var s : contract_storage) : contract_storage is
  begin
-  // If the sender is not the owner fail
-  if sender =/= s.owner then failwith("You must be the owner of the contract to burn tokens");
+  if Tezos.sender =/= s.owner then failwith("You must be the owner of the contract to burn tokens");
   else block {
     var ownerAccount: account := record 
         balance = 0n;
@@ -128,55 +102,35 @@ function burn (const value : nat ; var s : contract_storage) : contract_storage 
   }
  end with s
 
-// Approve an amount to be spent by another address in the name of the sender
-// Preconditions:
-//  The spender account is not the sender account
-// Postconditions:
-//  The allowance of spender in the name of sender is value
 function approve (const spender : address ; const value : nat ; var s : contract_storage) : contract_storage is
  begin
-  // If sender is the spender approving is not necessary
-  if sender = spender then skip;
+  // If Tezos.sender is the spender approving is not necessary
+  if Tezos.sender = spender then skip;
   else block {
-    const src: account = get_force(sender, s.ledger);
+    const src: account = Big_map.find(Tezos.sender, s.ledger);
     src.allowances[spender] := value;
-    s.ledger[sender] := src; // Not sure if this last step is necessary
+    s.ledger[Tezos.sender] := src; // Not sure if this last step is necessary
   }
  end with s
 
-// View function that forwards the allowance amount of spender in the name of owner to a contract
-// Preconditions:
-//  None
-// Postconditions:
-//  The state is unchanged
 function getAllowance (const owner : address ; const spender : address ; const contr : contract(nat) ; var s : contract_storage) : list(operation) is
  begin
-  const src: account = get_force(owner, s.ledger);
-  const destAllowance: nat = get_force(spender, src.allowances);
- end with list [transaction(destAllowance, 0tz, contr)]
+  const src: account = Big_map.find(owner, s.ledger);
+  const destAllowance: nat = Big_map.find(spender, src.allowances);
+ end with list [Tezos.transaction(destAllowance, 0tz, contr)]
 
-// View function that forwards the balance of source to a contract
-// Preconditions:
-//  None
-// Postconditions:
-//  The state is unchanged
 function getBalance (const accountFrom : address ; const contr : contract(nat) ; var s : contract_storage) : list(operation) is
  begin
-  const src: account = get_force(accountFrom, s.ledger);
- end with list [transaction(src.balance, 0tz, contr)]
+  const src: account = Big_map.find(accountFrom, s.ledger);
+ end with list [Tezos.transaction(src.balance, 0tz, contr)]
 
-// View function that forwards the totalSupply to a contract
-// Preconditions:
-//  None
-// Postconditions:
-//  The state is unchanged
 function getTotalSupply (const contr : contract(nat) ; var s : contract_storage) : list(operation) is
-  list [transaction(s.totalSupply, 0tz, contr)]
+  list [Tezos.transaction(s.totalSupply, 0tz, contr)]
 
 function main (const p : tokenAction ; const s : contract_storage) :
   (list(operation) * contract_storage) is
  block { 
-   // Reject any transaction that try to transfer token to this contract
+   // Reject any Tezos.transaction that try to transfer token to this contract
    if amount =/= 0tz then failwith ("This contract do not accept token");
    else skip;
   } with case p of
