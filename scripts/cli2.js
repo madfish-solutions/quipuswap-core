@@ -110,7 +110,22 @@ let setSettings = async (num, functionName, dexName, contractName, inputDir, out
             }
         }
     );
+}
 
+let compileStorage = (contractName, inputDir, outputDir, params, outputName) => {
+    exec(
+        `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-storage --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main '${params}'`,
+        { maxBuffer: 1024 * 500 },
+        (err, stdout, stderr) => {
+            if (err) {
+                console.log(`Error during ${contractName} built`);
+                console.log(stderr);
+                console.log(err);
+            } else {
+                fs.writeFileSync(`./${outputDir}/${outputName}.json`, stdout);
+            }
+        }
+    );
 }
 
 program
@@ -135,6 +150,17 @@ program
         } else {
             buildContract(contractName, options.input_dir, options.output_dir);
         }
+    });
+
+program
+    .command('compile_storage <contract> <params> [output_name]')
+    .description('build contracts')
+    .option("-o, --output_dir <dir>", "Where store builds", "storage")
+    .option("-i, --input_dir <dir>", "Where files are located", "contracts")
+    .action(function (contract, params, output_name, options) {
+        exec("mkdir -p " + options.output_dir);
+        output_name = output_name || contract;
+        compileStorage(contract, options.input_dir, options.output_dir, params, output_name);
     });
 
 
