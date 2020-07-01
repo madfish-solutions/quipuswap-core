@@ -1,7 +1,7 @@
-#include "IToken.ligo"
 #include "IFactory.ligo"
 #include "IDex.ligo"
 
+type x is Transfer of (address * address * nat)
 function initializeExchange (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
  block {
    var operations: list(operation) := list[];
@@ -16,9 +16,15 @@ function initializeExchange (const p : dexAction ; const s : dex_storage; const 
       s.tokenPool := tokenAmount;
       s.tezPool := Tezos.amount / 1mutez;
       s.invariant := s.tezPool * s.tokenPool;
-      s.shares[sender] := 1000n;
+      s.shares[Tezos.sender] := 1000n;
       s.totalShares := 1000n;
-      operations := transaction(Transfer(sender, this, tokenAmount), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations;
+      operations := transaction(
+         Transfer(Tezos.sender, this, tokenAmount), 
+         0mutez, 
+         case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(x))
+         end
+         ) # operations;
    }
    | TezToTokenPayment(n) -> failwith("00")
    | TokenToTezPayment(n) -> failwith("00")
@@ -199,7 +205,13 @@ function tezToToken (const p : dexAction ; const s : dex_storage; const this: ad
        
        s.tokenPool := newTokenPool;
        s.invariant := s.tezPool * newTokenPool;
-       operations :=  transaction(Transfer(this, n.1, tokensOut), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations;
+       operations :=  transaction(
+         Transfer(this, n.1, tokensOut), 
+         0mutez, 
+         case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(x))
+         end
+         ) # operations;
    }
    | TokenToTezPayment(n) -> failwith("00")
    | TokenToTokenPayment(n) -> failwith("00")
@@ -229,7 +241,13 @@ function tokenToTez (const p : dexAction ; const s : dex_storage; const this: ad
   
       s.tezPool := newTezPool;
       s.invariant := newTezPool * s.tokenPool;
-      operations:= list transaction(Transfer(Tezos.sender, this, n.0), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(unit, n.1 * 1mutez, (get_contract(n.2) : contract(unit))); end;
+      operations:= list transaction(
+         Transfer(Tezos.sender, this, n.0), 
+         0mutez, 
+         case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(x))
+         end); 
+         transaction(unit, n.1 * 1mutez, (get_contract(n.2) : contract(unit))); end;
    }
    | TokenToTokenPayment(n) -> failwith("00")
    | InvestLiquidity(n) -> failwith("00")
@@ -256,7 +274,12 @@ function tokenToTokenOut (const p : dexAction ; const s : dex_storage; const thi
       const tezOut : nat = abs(s.tezPool - newTezPool);
       s.tezPool := newTezPool;
       s.invariant := newTezPool * s.tokenPool;
-      operations := list transaction(Transfer(Tezos.sender, this, n.0), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(TokenToExchangeLookup(n.2, n.3, n.1), tezOut * 1mutez, (get_contract(s.factoryAddress): contract(exchangeAction))); end;
+      operations := list transaction(Transfer(Tezos.sender, this, n.0), 
+      0mutez,          
+      case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
+      | None -> (failwith("01"):contract(x))
+      end); 
+      transaction(TokenToExchangeLookup(n.2, n.3, n.1), tezOut * 1mutez, (get_contract(s.factoryAddress): contract(exchangeAction))); end;
    }
    | InvestLiquidity(minShares) -> failwith("00")
    | DivestLiquidity(n) -> failwith("00")
@@ -287,7 +310,7 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
 
        const tokensPerShare : nat = s.tokenPool / s.totalShares;
        const tokensRequired : nat = sharesPurchased * tokensPerShare;
-       const share : nat = case s.shares[sender] of | None -> 0n | Some(share) -> share end;
+       const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
 
        // update user loyalty
        var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0tez; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
@@ -315,7 +338,12 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        s.invariant := s.tezPool * s.tokenPool;
        s.totalShares := s.totalShares + sharesPurchased;
 
-       operations := transaction(Transfer(sender, this, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations; 
+       operations := transaction(Transfer(Tezos.sender, this, tokensRequired), 
+       0mutez, 
+       case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(x))
+         end
+         ) # operations;
        case s.voters[Tezos.sender] of None -> 
          skip
          | Some(v) -> { 
@@ -396,7 +424,13 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
             if prevVotes = n.0 then remove Tezos.sender from map s.voters; else skip;
           } end;
        } end;
-       operations := list transaction(Transfer(this, sender, tokensDivested), 0mutez, (get_contract(s.tokenAddress) : contract(tokenAction))); transaction(unit, tezDivested * 1mutez, (get_contract(sender) : contract(unit))); end;
+       operations := list transaction(Transfer(this, Tezos.sender, tokensDivested), 
+       0mutez,          
+       case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(x))
+         end
+         ); 
+       transaction(unit, tezDivested * 1mutez, (get_contract(Tezos.sender) : contract(unit))); end;
    }
    | SetVotesDelegation(n) -> failwith("00")
    | Vote(n) -> failwith("00")
