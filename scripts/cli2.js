@@ -1,211 +1,315 @@
-const { program } = require('commander');
+const { program } = require("commander");
 const { exec } = require("child_process");
 const fs = require("fs");
 const { Tezos } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 
 let buildContract = (contractName, inputDir, outputDir) => {
-    exec(
-        `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main`,
-        { maxBuffer: 1024 * 500 },
-        (err, stdout, stderr) => {
-            if (err) {
-                console.log(`Error during ${contractName} built`);
-                console.log(stderr);
-            } else {
-                console.log(`${contractName} built`);
-                fs.writeFileSync(`./${outputDir}/${contractName}.json`, stdout);
-            }
-        }
-    );
-}
-
-const setup = async (keyPath, provider) => {
-    const secretKey = fs.readFileSync(keyPath).toString();
-
-    return await Tezos.setProvider({ rpc: provider, signer: await new InMemorySigner.fromSecretKey(secretKey) });
+  exec(
+    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main`,
+    { maxBuffer: 1024 * 500 },
+    (err, stdout, stderr) => {
+      if (err) {
+        console.log(`Error during ${contractName} built`);
+        console.log(stderr);
+        console.log(err);
+      } else {
+        console.log(`${contractName} built`);
+        fs.writeFileSync(`./${outputDir}/${contractName}.json`, stdout);
+      }
+    }
+  );
 };
 
-let deployContract = async (contractName, balance, inputDir, storageDir, outputDir, outputName, storageName, withInit) => {
-    storageName = storageName || contractName;
-    let operation;
-    if (withInit) {
-        operation = await Tezos.contract.originate({
-            code: JSON.parse(fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()),
-            init: JSON.parse(fs.readFileSync(`./${storageDir}/${storageName}.json`).toString()),
-            balance: balance
-        });
-    } else {
-        operation = await Tezos.contract.originate({
-            code: JSON.parse(fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()),
-            storage: require(`../${storageDir}/${storageName}.js`),
-            balance: balance
-        });
-    }
-    let contract = await operation.contract();
-    const detail = {
-        address: contract.address
-    };
-    outputName = outputName || contractName;
-    fs.writeFileSync(`./${outputDir}/${outputName}.json`, JSON.stringify(detail));
-    fs.writeFileSync(
-        `./${outputDir}/${contract.address}.json`,
-        JSON.stringify(detail)
-    );
-    console.log(`${contractName} deployed at: ${contract.address}`);
-}
+const setup = async (keyPath, provider) => {
+  const secretKey = fs.readFileSync(keyPath).toString();
 
-let tokenToTokenSwap = async (tokensIn, minTokensOut, dexName, tokenFromName, tokenToName, inputDir) => {
-    dexName = dexName || "Dex";
-    tokenFromName = tokenFromName || "Token";
-    tokenToName = tokenToName || "Token2";
-    const { address: tokenFromAddress } = JSON.parse(
-        fs.readFileSync(`./${inputDir}/${tokenFromName}.json`).toString()
-    );
-    const { address: tokenToAddress } = JSON.parse(
-        fs.readFileSync(`./${inputDir}/${tokenToName}.json`).toString()
-    );
-    const { address: dexAddress } = JSON.parse(
-        fs.readFileSync(`./${inputDir}/${dexName}.json`).toString()
-    );
+  return await Tezos.setProvider({
+    rpc: provider,
+    signer: await new InMemorySigner.fromSecretKey(secretKey),
+  });
+};
 
-    const tokenFromContract = await Tezos.contract.at(tokenFromAddress);
-    const dexContract = await Tezos.contract.at(dexAddress);
-
-    const operation0 = await tokenFromContract.methods
-        .approve(dexAddress, tokensIn)
-        .send();
-    await operation0.confirmation();
-
-    try {
-        const operation1 = await dexContract.methods
-            .tokenToTokenSwap(tokensIn, minTokensOut.toString(), tokenToAddress)
-            .send();
-        await operation1.confirmation();
-        console.log(operation1);
-    } catch (e) {
-        console.log(e);
-    }
-}
-
-let setSettings = async (num, functionName, dexName, contractName, inputDir, outputDir) => {
-    dexName = dexName || "Dex";
-    contractName = contractName || "Dex";
-    const { address: dexAddress } = JSON.parse(
-        fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
-    );
-    exec(
-        `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetSettings(${num}n, ${functionName})'`,
-        { maxBuffer: 1024 * 500 },
-        async (err, stdout, stderr) => {
-            if (err) {
-                console.log(`Error during ${contractName} built`);
-            } else {
-                try {
-                    const operation = await Tezos.contract.transfer({ to: dexAddress, amount: 0, parameter: { entrypoint: "setSettings", value: JSON.parse(stdout).args[0].args[0] } })
-                    await operation.confirmation();
-                } catch (E) { console.log(E) }
-
-
-            }
-        }
-    );
-}
-
-let compileStorage = (contractName, inputDir, outputDir, params, outputName) => {
-    exec(
-        `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-storage --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main '${params}'`,
-        { maxBuffer: 1024 * 500 },
-        (err, stdout, stderr) => {
-            if (err) {
-                console.log(`Error during ${contractName} built`);
-                console.log(stderr);
-                console.log(err);
-            } else {
-                fs.writeFileSync(`./${outputDir}/${outputName}.json`, stdout);
-            }
-        }
-    );
-}
-
-program
-    .version('0.1.0')
-
-program
-    .command('build [contract]')
-    .description('build contracts')
-    .option("-o, --output_dir <dir>", "Where store builds", "build")
-    .option("-i, --input_dir <dir>", "Where files are located", "contracts")
-    .action(function (contract, options) {
-        let contractName = contract || "*";
-        exec("mkdir -p " + options.output_dir);
-        if (contractName === "*") {
-            fs.readdirSync(options.input_dir).forEach(file => {
-                let fileParts = file.split('.');
-                if (fileParts.length === 2 && fileParts.pop() === "ligo") {
-                    buildContract(fileParts[0], options.input_dir, options.output_dir);
-                }
-            });
-
-        } else {
-            buildContract(contractName, options.input_dir, options.output_dir);
-        }
+let deployContract = async (
+  contractName,
+  balance,
+  inputDir,
+  storageDir,
+  outputDir,
+  outputName,
+  storageName,
+  withInit
+) => {
+  storageName = storageName || contractName;
+  let operation;
+  if (withInit) {
+    operation = await Tezos.contract.originate({
+      code: JSON.parse(
+        fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()
+      ),
+      init: JSON.parse(
+        fs.readFileSync(`./${storageDir}/${storageName}.json`).toString()
+      ),
+      balance: balance,
     });
-
-program
-    .command('compile_storage <contract> <params> [output_name]')
-    .description('build contracts')
-    .option("-o, --output_dir <dir>", "Where store builds", "storage")
-    .option("-i, --input_dir <dir>", "Where files are located", "contracts")
-    .action(function (contract, params, output_name, options) {
-        exec("mkdir -p " + options.output_dir);
-        output_name = output_name || contract;
-        compileStorage(contract, options.input_dir, options.output_dir, params, output_name);
+  } else {
+    operation = await Tezos.contract.originate({
+      code: JSON.parse(
+        fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()
+      ),
+      storage: require(`../${storageDir}/${storageName}.js`),
+      balance: balance,
     });
+  }
+  let contract = await operation.contract();
+  const detail = {
+    address: contract.address,
+  };
+  outputName = outputName || contractName;
+  fs.writeFileSync(`./${outputDir}/${outputName}.json`, JSON.stringify(detail));
+  fs.writeFileSync(
+    `./${outputDir}/${contract.address}.json`,
+    JSON.stringify(detail)
+  );
+  console.log(`${contractName} deployed at: ${contract.address}`);
+};
 
+let tokenToTokenSwap = async (
+  tokensIn,
+  minTokensOut,
+  dexName,
+  tokenFromName,
+  tokenToName,
+  inputDir
+) => {
+  dexName = dexName || "Dex";
+  tokenFromName = tokenFromName || "Token";
+  tokenToName = tokenToName || "Token2";
+  const { address: tokenFromAddress } = JSON.parse(
+    fs.readFileSync(`./${inputDir}/${tokenFromName}.json`).toString()
+  );
+  const { address: tokenToAddress } = JSON.parse(
+    fs.readFileSync(`./${inputDir}/${tokenToName}.json`).toString()
+  );
+  const { address: dexAddress } = JSON.parse(
+    fs.readFileSync(`./${inputDir}/${dexName}.json`).toString()
+  );
 
-program
-    .command('token_to_token <tokens_in> <min_tokens_out> [dex] [token_from] [token_to]')
-    .description('build contracts')
-    .option("-i, --input_dir <dir>", "Where built contracts are located", "deploy")
-    .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
-    .action(async function (tokens_in, min_tokens_out, dex, token_from, token_to, options) {
-        await setup(options.key_path, options.provider);
-        await tokenToTokenSwap(tokens_in, min_tokens_out, dex, token_from, token_to, options.input_dir);
-    });
+  const tokenFromContract = await Tezos.contract.at(tokenFromAddress);
+  const dexContract = await Tezos.contract.at(dexAddress);
 
-program
-    .command('set_settings <num> <function_name> [dex] [contract]')
-    .description('build contracts')
-    .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
-    .option("-i, --input_dir <dir>", "Where built contracts are located", "contracts")
-    .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
-    .action(async function (num, functionName, dex, contract, options) {
-        await setup(options.key_path, options.provider);
-        await setSettings(num, functionName, dex, contract, options.input_dir, options.output_dir);
-    });
+  const operation0 = await tokenFromContract.methods
+    .approve(dexAddress, tokensIn)
+    .send();
+  await operation0.confirmation();
 
-program
-    .command('deploy <contract> [output_name] [storage_name]')
-    .description('build contracts')
-    .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
-    .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
-    .option("-s, --storage_dir <dir>", "Where built contracts are located", "storage")
-    .option("-k, --key_path <file>", "Where private key is located", "key")
-    .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
-    .option("-b, --balance <balance>", "Where private key is located", "0")
-    .option("-n, --init", "Wether to use init option")
-    .action(async function (contract, output_name, storage_name, options) {
-        exec("mkdir -p " + options.output_dir);
-        await setup(options.key_path, options.provider);
+  try {
+    const operation1 = await dexContract.methods
+      .tokenToTokenSwap(tokensIn, minTokensOut.toString(), tokenToAddress)
+      .send();
+    await operation1.confirmation();
+    console.log(operation1);
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+let setSettings = async (
+  num,
+  functionName,
+  dexName,
+  contractName,
+  inputDir,
+  outputDir
+) => {
+  dexName = dexName || "Dex";
+  contractName = contractName || "Dex";
+  const { address: dexAddress } = JSON.parse(
+    fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
+  );
+  exec(
+    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetSettings(${num}n, ${functionName})'`,
+    { maxBuffer: 1024 * 500 },
+    async (err, stdout, stderr) => {
+      if (err) {
+        console.log(`Error during ${contractName} built`);
+      } else {
         try {
-            await deployContract(contract, parseFloat(options.balance), options.input_dir, options.storage_dir, options.output_dir, output_name, storage_name, options.init);
-        } catch (e) {
-            console.log(e);
+          const operation = await Tezos.contract.transfer({
+            to: dexAddress,
+            amount: 0,
+            parameter: {
+              entrypoint: "setSettings",
+              value: JSON.parse(stdout).args[0].args[0],
+            },
+          });
+          await operation.confirmation();
+        } catch (E) {
+          console.log(E);
         }
-    });
+      }
+    }
+  );
+};
 
+let compileStorage = (
+  contractName,
+  inputDir,
+  outputDir,
+  params,
+  outputName
+) => {
+  exec(
+    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-storage --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main '${params}'`,
+    { maxBuffer: 1024 * 500 },
+    (err, stdout, stderr) => {
+      if (err) {
+        console.log(`Error during ${contractName} built`);
+        console.log(stderr);
+        console.log(err);
+      } else {
+        fs.writeFileSync(`./${outputDir}/${outputName}.json`, stdout);
+      }
+    }
+  );
+};
+
+program.version("0.1.0");
+
+program
+  .command("build [contract]")
+  .description("build contracts")
+  .option("-o, --output_dir <dir>", "Where store builds", "build")
+  .option("-i, --input_dir <dir>", "Where files are located", "contracts")
+  .action(function (contract, options) {
+    let contractName = contract || "*";
+    exec("mkdir -p " + options.output_dir);
+    if (contractName === "*") {
+      fs.readdirSync(options.input_dir).forEach((file) => {
+        let fileParts = file.split(".");
+        if (fileParts.length === 2 && fileParts.pop() === "ligo") {
+          buildContract(fileParts[0], options.input_dir, options.output_dir);
+        }
+      });
+    } else {
+      buildContract(contractName, options.input_dir, options.output_dir);
+    }
+  });
+
+program
+  .command("compile_storage <contract> <params> [output_name]")
+  .description("build contracts")
+  .option("-o, --output_dir <dir>", "Where store builds", "storage")
+  .option("-i, --input_dir <dir>", "Where files are located", "contracts")
+  .action(function (contract, params, output_name, options) {
+    exec("mkdir -p " + options.output_dir);
+    output_name = output_name || contract;
+    compileStorage(
+      contract,
+      options.input_dir,
+      options.output_dir,
+      params,
+      output_name
+    );
+  });
+
+program
+  .command(
+    "token_to_token <tokens_in> <min_tokens_out> [dex] [token_from] [token_to]"
+  )
+  .description("build contracts")
+  .option(
+    "-i, --input_dir <dir>",
+    "Where built contracts are located",
+    "deploy"
+  )
+  .option("-k, --key_path <file>", "Where private key is located", "key")
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "https://api.tez.ie/rpc/carthagenet"
+  )
+  .action(async function (
+    tokens_in,
+    min_tokens_out,
+    dex,
+    token_from,
+    token_to,
+    options
+  ) {
+    await setup(options.key_path, options.provider);
+    await tokenToTokenSwap(
+      tokens_in,
+      min_tokens_out,
+      dex,
+      token_from,
+      token_to,
+      options.input_dir
+    );
+  });
+
+program
+  .command("set_settings <num> <function_name> [dex] [contract]")
+  .description("build contracts")
+  .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
+  .option(
+    "-i, --input_dir <dir>",
+    "Where built contracts are located",
+    "contracts"
+  )
+  .option("-k, --key_path <file>", "Where private key is located", "key")
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "https://api.tez.ie/rpc/carthagenet"
+  )
+  .action(async function (num, functionName, dex, contract, options) {
+    await setup(options.key_path, options.provider);
+    await setSettings(
+      num,
+      functionName,
+      dex,
+      contract,
+      options.input_dir,
+      options.output_dir
+    );
+  });
+
+program
+  .command("deploy <contract> [output_name] [storage_name]")
+  .description("build contracts")
+  .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
+  .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
+  .option(
+    "-s, --storage_dir <dir>",
+    "Where built contracts are located",
+    "storage"
+  )
+  .option("-k, --key_path <file>", "Where private key is located", "key")
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "https://api.tez.ie/rpc/carthagenet"
+  )
+  .option("-b, --balance <balance>", "Where private key is located", "0")
+  .option("-n, --init", "Wether to use init option")
+  .action(async function (contract, output_name, storage_name, options) {
+    exec("mkdir -p " + options.output_dir);
+    await setup(options.key_path, options.provider);
+    try {
+      await deployContract(
+        contract,
+        parseFloat(options.balance),
+        options.input_dir,
+        options.storage_dir,
+        options.output_dir,
+        output_name,
+        storage_name,
+        options.init
+      );
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
 program.parse(process.argv);

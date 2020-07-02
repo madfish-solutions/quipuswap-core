@@ -25,7 +25,7 @@ const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
 
-const provider = "http://0.0.0.0:8732";
+const provider = "https://api.tez.ie/rpc/carthagenet";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -798,26 +798,37 @@ class Test {
   static async withdrawProfit(dexAddress, tokenAddress) {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
-    let dex = await Dex.init(Tezos, dexAddress);
+    let dex = await Dex.init(Tezos1, dexAddress);
     // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
-    let reward = 100;
-    let amount = 1;
+    let reward = 10;
+    let amount = 1000;
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ voters: [pkh1] });
+    let initialStorage = await dex.getFullStorage({
+      circleLoyalty: [pkh1],
+      shares: [pkh1],
+    });
 
-    assert(initialStorage.storage.delegated == delegate);
     await sleep(3000);
 
     let operation = await dex.sendReward(reward);
     assert(operation.status === "applied", "Operation was not applied");
+    // console.log(JSON.stringify(initialStorage.storage.currentCircle));
+    // console.log(JSON.stringify(initialStorage.circleLoyaltyExtended[pkh1]));
+    // console.log(JSON.stringify(initialStorage.sharesExtended[pkh1]));
 
     operation = await dex.withdrawProfit(amount, pkh1);
     assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ voters: [pkh1] });
-    // assert(finalStorage.storage.currentDelegated == delegate);
+    let finalStorage = await dex.getFullStorage({ circleLoyalty: [pkh1] });
+    // console.log(JSON.stringify(finalStorage.storage.currentCircle));
+    // console.log(JSON.stringify(finalStorage.circleLoyaltyExtended[pkh1]));
+
+    operation = await dex.sendReward(reward);
+    assert(operation.status === "applied", "Operation was not applied");
+    finalStorage = await dex.getFullStorage({ circleLoyalty: [pkh1] });
+    // console.log(JSON.stringify(finalStorage.storage.currentCircle));
+    // console.log(JSON.stringify(finalStorage.circleLoyaltyExtended[pkh1]));
   }
 
   static async veto(dexAddress, tokenAddress) {
