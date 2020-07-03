@@ -22,7 +22,7 @@ function initializeExchange (const p : dexAction ; const s : dex_storage; const 
 
        // update user loyalty
        s.currentCircle.lastUpdate := Tezos.now;
-       s.circleLoyalty[Tezos.sender] := record reward = 0tez; loyalty = 0n; lastCircle = 0n; lastCircleUpdate = Tezos.now; end;
+       s.circleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCircle = 0n; lastCircleUpdate = Tezos.now; end;
 
       // operations := transaction(
       //    Transfer(Tezos.sender, this, tokenAmount), 
@@ -332,7 +332,7 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
 
        // update user loyalty
-       var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0tez; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
+       var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
        | Some(c) -> c
        end;
        if userCircle.lastCircle =/= s.currentCircle.counter then {
@@ -345,7 +345,7 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        if s.currentCircle.counter - userCircle.lastCircle > 1 then {
           const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
           const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
-          userCircle.reward := userCircle.reward + share * (lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
+          userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
        } else skip;
        userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
        userCircle.lastCircleUpdate := Tezos.now;
@@ -448,7 +448,7 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
        if s.currentCircle.counter - userCircle.lastCircle > 1 then {
           const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
           const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
-          userCircle.reward := userCircle.reward + share * (lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
+          userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
        } else skip;
        userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
        userCircle.lastCircleUpdate := Tezos.now;
@@ -511,13 +511,13 @@ function withdrawProfit (const p : dexAction ; const s : dex_storage; const this
       if s.currentCircle.counter - userCircle.lastCircle > 1 then {
          const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
          const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
-         userCircle.reward := userCircle.reward + share * (lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
+         userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
       } else skip;
       userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
       userCircle.lastCircleUpdate := Tezos.now;
       userCircle.lastCircle := s.currentCircle.counter;
-      if userCircle.reward / 1mutez < n.0 then failwith("Dex/low-profit") else skip;
-      userCircle.reward := userCircle.reward - n.0  * 1mutez;
+      if userCircle.reward < n.0 then failwith("Dex/low-profit") else skip;
+      userCircle.reward := abs(userCircle.reward - n.0);
       s.circleLoyalty[Tezos.sender] := userCircle;
       operations := transaction(unit, n.0 * 1mutez, (get_contract(n.1) : contract(unit))) # operations;
    }
@@ -533,13 +533,13 @@ function middle (const p : dexAction ; const this: address; const idx: nat; cons
 
 function receiveReward (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage)is
 block {
-    s.currentCircle.reward := s.currentCircle.reward + Tezos.amount;
+    s.currentCircle.reward := s.currentCircle.reward + Tezos.amount / 1mutez;
     var operations : list(operation) := (nil: list(operation)); 
     if s.currentCircle.nextCircle < Tezos.now then block {
       s.currentCircle.nextCircle := Tezos.now;
       s.currentCircle.circleCoefficient := abs(Tezos.now - s.currentCircle.start) * s.currentCircle.reward / s.currentCircle.totalLoyalty + s.currentCircle.circleCoefficient;
       s.circles[s.currentCircle.counter] := s.currentCircle;
-      s.currentCircle.reward := 0tez;
+      s.currentCircle.reward := 0n;
       s.currentCircle.counter := s.currentCircle.counter + 1n;
       s.currentCircle.totalLoyalty := 0n;
       s.currentCircle.start := Tezos.now;

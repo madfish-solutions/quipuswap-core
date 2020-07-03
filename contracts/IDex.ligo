@@ -4,20 +4,20 @@ type vote_info is record
 end
 
 type user_circle_info is record
-  reward: tez;
+  reward: nat;
   loyalty: nat;
   lastCircle: nat;
   lastCircleUpdate: timestamp;
 end
 
 type circle_info is record
-  reward: tez;
+  reward: nat;
   counter: nat;
   start: timestamp;
   lastUpdate: timestamp;
   totalLoyalty: nat;
   nextCircle: timestamp;
-  circleCoefficient: tez;
+  circleCoefficient: nat;
 end
 
 type dex_storage is record 
