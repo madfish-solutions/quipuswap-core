@@ -31,7 +31,7 @@ function initializeExchange (const p : dexAction ; const s : dex_storage; const 
       //    | None -> (failwith("01"):contract(x))
       //    end
       //    ) # operations;
-      operations := transaction(Transfer(sender, this, tokenAmount), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations;
+      operations := transaction(Transfer(sender, (this, tokenAmount)), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations;
    }
    | TezToTokenPayment(n) -> failwith("00")
    | TokenToTezPayment(n) -> failwith("00")
@@ -223,7 +223,7 @@ function tezToToken (const p : dexAction ; const s : dex_storage; const this: ad
       //    | None -> (failwith("01"):contract(x))
       //    end
       //    ) # operations;
-       operations :=  transaction(Transfer(this, n.1, tokensOut), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations;
+       operations :=  transaction(Transfer(this, (n.1, tokensOut)), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations;
 
    }
    | TokenToTezPayment(n) -> failwith("00")
@@ -262,7 +262,7 @@ function tokenToTez (const p : dexAction ; const s : dex_storage; const this: ad
       //    | None -> (failwith("01"):contract(x))
       //    end); 
       //    transaction(unit, n.1 * 1mutez, (get_contract(n.2) : contract(unit))); end;
-      operations:= list transaction(Transfer(Tezos.sender, this, n.0), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(unit, n.1 * 1mutez, (get_contract(n.2) : contract(unit))); end;
+      operations:= list transaction(Transfer(Tezos.sender, (this, n.0)), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(unit, n.1 * 1mutez, (get_contract(n.2) : contract(unit))); end;
 
    }
    | TokenToTokenPayment(n) -> failwith("00")
@@ -291,7 +291,7 @@ function tokenToTokenOut (const p : dexAction ; const s : dex_storage; const thi
       const tezOut : nat = abs(s.tezPool - newTezPool);
       s.tezPool := newTezPool;
       s.invariant := newTezPool * s.tokenPool;
-      operations := list transaction(Transfer(Tezos.sender, this, n.0), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(TokenToExchangeLookup(n.2, n.3, n.1), tezOut * 1mutez, (get_contract(s.factoryAddress): contract(exchangeAction))); end;
+      operations := list transaction(Transfer(Tezos.sender, (this, n.0)), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))); transaction(TokenToExchangeLookup(n.2, n.3, n.1), tezOut * 1mutez, (get_contract(s.factoryAddress): contract(exchangeAction))); end;
       // operations := list transaction(Transfer(Tezos.sender, this, n.0), 
       // 0mutez,          
       // case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
@@ -364,7 +364,7 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
       //    | None -> (failwith("01"):contract(x))
       //    end
       //    ) # operations;
-       operations := transaction(Transfer(sender, this, tokensRequired), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations; 
+       operations := transaction(Transfer(sender, (this, tokensRequired)), 0mutez, (get_contract(s.tokenAddress): contract(tokenAction))) # operations; 
 
        case s.voters[Tezos.sender] of None -> 
          skip
@@ -475,7 +475,7 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
       //    | None -> (failwith("01"):contract(x))
       //    end
       //    ); 
-       operations := list transaction(Transfer(this, sender, tokensDivested), 0mutez, (get_contract(s.tokenAddress) : contract(tokenAction))); transaction(unit, tezDivested * 1mutez, (get_contract(sender) : contract(unit))); end;
+       operations := list transaction(Transfer(this, (sender, tokensDivested)), 0mutez, (get_contract(s.tokenAddress) : contract(tokenAction))); transaction(unit, tezDivested * 1mutez, (get_contract(sender) : contract(unit))); end;
 
       //  transaction(unit, tezDivested * 1mutez, (get_contract(Tezos.sender) : contract(unit))); end;
    }
