@@ -648,7 +648,7 @@ block {
     s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
     s.currentCircle.lastUpdate := Tezos.now;
  } with (operations, s)
- 
+
 function setSettings (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : exchange_storage) : exchange_storage is
  block {
     if idx > 10n then failwith("Factory/functions-set") else skip;
@@ -662,7 +662,7 @@ function main (const p : exchangeAction ; const s : exchange_storage) :
   | TokenToExchangeLookup(n) -> (tokenToExchangeLookup(n.0, n.1, n.2, s), s)
   | ConfigDex(n) -> (list transaction(SetSettings(n.0, get_force(n.0, s.lambdas)),
       0tez,
-      (get_contract(n.1): contract(fullAction))) end, s)
+      (get_contract( get_force(n.1, s.tokenToExchange)): contract(fullAction))) end, s)
   | SetFunction(n) -> ((nil:list(operation)), setSettings(n.0, n.1, s))
  end
 

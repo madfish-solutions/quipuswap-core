@@ -10,13 +10,8 @@ const { address: tokenAddress1 } = JSON.parse(
   fs.readFileSync("./deploy/Token.json").toString()
 );
 
-const { address: dexAddress1 } = JSON.parse(
-  fs.readFileSync("./deploy/Dex.json").toString()
-);
-
-const { address: dexAddress2 } = JSON.parse(
-  fs.readFileSync("./deploy/Dex2.json").toString()
-);
+let dexAddress1;
+let dexAddress2;
 
 const { address: factoryAddress } = JSON.parse(
   fs.readFileSync("./deploy/Factory.json").toString()
@@ -265,11 +260,7 @@ const setup = async (keyPath = "../key") => {
 };
 
 class Test {
-  static async before(
-    dexAddress,
-
-    tokenAddress
-  ) {
+  static async before(tokenAddress, count = true) {
     let tezos = await setup();
     let tezos1 = await setup("../key1");
     let token = await tezos.contract.at(tokenAddress);
@@ -284,10 +275,23 @@ class Test {
 
     let factoryContract = await tezos.contract.at(factoryAddress);
     operation = await factoryContract.methods
-      .launchExchange(tokenAddress, dexAddress)
+      .launchExchange(tokenAddress)
       .send();
     await operation.confirmation();
     assert(operation.status === "applied", "Operation was not applied");
+    for (let i = 0; i < 11; i++) {
+      console.log(i);
+      operation = await factoryContract.methods
+        .configDex(i, tokenAddress)
+        .send();
+      await operation.confirmation();
+      assert(operation.status === "applied", "Operation was not applied");
+    }
+    let storage = await getContractFullStorage(tezos, factoryAddress, {
+      tokenToExchange: [tokenAddress],
+    });
+    console.log(storage.tokenToExchangeExtended);
+    return storage.tokenToExchangeExtended[tokenAddress];
   }
 
   static async initializeExchange(dexAddress, tokenAddress) {
@@ -852,8 +856,10 @@ describe("Dex", function () {
   before(async function () {
     this.timeout(1000000);
 
-    await Test.before(dexAddress1, tokenAddress1);
-    await Test.before(dexAddress2, tokenAddress2);
+    dexAddress1 = await Test.before(tokenAddress1);
+    console.log(dexAddress1);
+    dexAddress2 = await Test.before(tokenAddress2);
+    console.log(dexAddress2);
   });
 
   describe("InitializeExchange()", function () {

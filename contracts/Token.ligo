@@ -80,9 +80,9 @@ function approve (const spender : address; const value : amt; var s : storage) :
     const spenderAllowance : amt = getAllowance(senderAccount, spender, s);
 
     (* Prevent a corresponding attack vector *)
-    if spenderAllowance > 0n and value > 0n then
-      failwith("UnsafeAllowanceChange")
-    else skip;
+    // if spenderAllowance > 0n and value > 0n then
+    //   failwith("UnsafeAllowanceChange")
+    // else skip;
 
     (* Set spender allowance *)
     senderAccount.allowances[spender] := value;
