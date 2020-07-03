@@ -234,14 +234,14 @@
                  SENDER ;
                  COMPARE ;
                  NEQ ;
-                 IF { PUSH string "Dex/functions-set" ; FAILWITH } { PUSH unit Unit } ;
+                 IF { PUSH string "Dex/not-permitted" ; FAILWITH } { PUSH unit Unit } ;
                  PUSH nat 10 ;
                  DIG 3 ;
                  DUP ;
                  DUG 4 ;
                  COMPARE ;
                  GT ;
-                 IF { PUSH string "Dex/functions-set" ; FAILWITH } { PUSH unit Unit } ;
+                 IF { PUSH string "Dex/all-functions-set" ; FAILWITH } { PUSH unit Unit } ;
                  DIG 2 ;
                  DUP ;
                  DUG 3 ;

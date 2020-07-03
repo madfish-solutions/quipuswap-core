@@ -18,8 +18,8 @@ function useDefault (const s : full_dex_storage) :  (list(operation) * full_dex_
 
 function setSettings (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_dex_storage) : full_dex_storage is
  block {
-    if Tezos.sender =/= s.storage.factoryAddress then failwith("Dex/functions-set") else skip;
-    if idx > 10n then failwith("Dex/functions-set") else skip;
+    if Tezos.sender =/= s.storage.factoryAddress then failwith("Dex/not-permitted") else skip;
+    if idx > 10n then failwith("Dex/all-functions-set") else skip;
     case s.lambdas[idx] of Some(n) -> failwith("Dex/function-set") | None -> skip end;
     s.lambdas[idx] := f;
  } with s

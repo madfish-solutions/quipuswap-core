@@ -534,6 +534,7 @@ const createDex : (option(key_hash) * tez * full_dex_storage) -> (operation * ad
 
 
 type x is Use1 of (nat * dexAction) 
+type y is SetSettings1 of (nat * ((dexAction * dex_storage * address) -> (list(operation) * dex_storage)))
 function launchExchange (const token : address; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
  block {
     if s.tokenList contains token then failwith("Exchange launched") else skip;
@@ -583,7 +584,7 @@ function launchExchange (const token : address; var s: exchange_storage ) :  (li
             invariant = 0n;      
             totalShares = 0n;      
             tokenAddress = token;      
-            factoryAddress = token;      
+            factoryAddress = Tezos.self_address;      
             shares = (big_map end : big_map(address, nat));      
             voters = (big_map end : big_map(address, vote_info));      
             vetos = (big_map end : big_map(key_hash, timestamp));      
@@ -649,7 +650,7 @@ block {
     s.currentCircle.lastUpdate := Tezos.now;
  } with (operations, s)
 
-function setSettings (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : exchange_storage) : exchange_storage is
+function setFunction (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : exchange_storage) : exchange_storage is
  block {
     if idx > 10n then failwith("Factory/functions-set") else skip;
     case s.lambdas[idx] of Some(n) -> failwith("Factory/function-set") | None -> skip end;
@@ -660,10 +661,13 @@ function main (const p : exchangeAction ; const s : exchange_storage) :
   (list(operation) * exchange_storage) is case p of
     LaunchExchange(n) -> launchExchange(n, s)
   | TokenToExchangeLookup(n) -> (tokenToExchangeLookup(n.0, n.1, n.2, s), s)
-  | ConfigDex(n) -> (list transaction(SetSettings(n.0, get_force(n.0, s.lambdas)),
+  | ConfigDex(n) -> (list transaction(SetSettings1(n.0, get_force(n.0, s.lambdas)),
       0tez,
-      (get_contract( get_force(n.1, s.tokenToExchange)): contract(fullAction))) end, s)
-  | SetFunction(n) -> ((nil:list(operation)), setSettings(n.0, n.1, s))
+      case (Tezos.get_entrypoint_opt("%setSettings", get_force(n.1, s.tokenToExchange)) : option(contract(y))) of Some(contr) -> contr
+      | None -> (failwith("01"):contract(y))
+      end
+   ) end, s)
+  | SetFunction(n) -> ((nil:list(operation)), setFunction(n.0, n.1, s))
  end
 
 // const r: exchange_storage = record
