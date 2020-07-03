@@ -7,7 +7,7 @@ const { InMemorySigner } = require("@taquito/signer");
 let buildContract = (contractName, inputDir, outputDir) => {
   exec(
     `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main`,
-    { maxBuffer: 1024 * 500 },
+    { maxBuffer: 1024 * 1000 },
     (err, stdout, stderr) => {
       if (err) {
         console.log(`Error during ${contractName} built`);
@@ -122,24 +122,25 @@ let setSettings = async (
   inputDir,
   outputDir
 ) => {
-  dexName = dexName || "Dex";
-  contractName = contractName || "Dex";
+  dexName = dexName || "Factory";
+  contractName = contractName || "Factory";
   const { address: dexAddress } = JSON.parse(
     fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
   );
   exec(
-    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetSettings(${num}n, ${functionName})'`,
+    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(${num}n, ${functionName})'`,
     { maxBuffer: 1024 * 500 },
     async (err, stdout, stderr) => {
       if (err) {
         console.log(`Error during ${contractName} built`);
+        console.log(err);
       } else {
         try {
           const operation = await Tezos.contract.transfer({
             to: dexAddress,
             amount: 0,
             parameter: {
-              entrypoint: "setSettings",
+              entrypoint: "setFunction",
               value: JSON.parse(stdout).args[0].args[0],
             },
           });
@@ -224,11 +225,7 @@ program
     "deploy"
   )
   .option("-k, --key_path <file>", "Where private key is located", "key")
-  .option(
-    "-p, --provider <provider>",
-    "Node to connect",
-    "https://api.tez.ie/rpc/carthagenet"
-  )
+  .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
   .action(async function (
     tokens_in,
     min_tokens_out,
@@ -258,11 +255,7 @@ program
     "contracts"
   )
   .option("-k, --key_path <file>", "Where private key is located", "key")
-  .option(
-    "-p, --provider <provider>",
-    "Node to connect",
-    "https://api.tez.ie/rpc/carthagenet"
-  )
+  .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
   .action(async function (num, functionName, dex, contract, options) {
     await setup(options.key_path, options.provider);
     await setSettings(
@@ -286,11 +279,7 @@ program
     "storage"
   )
   .option("-k, --key_path <file>", "Where private key is located", "key")
-  .option(
-    "-p, --provider <provider>",
-    "Node to connect",
-    "https://api.tez.ie/rpc/carthagenet"
-  )
+  .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
   .option("-b, --balance <balance>", "Where private key is located", "0")
   .option("-n, --init", "Wether to use init option")
   .action(async function (contract, output_name, storage_name, options) {

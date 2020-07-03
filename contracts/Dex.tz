@@ -157,16 +157,13 @@
                             address
                             (pair (set %allowances address) (option %candidate key_hash))))
                    (big_map %votes key_hash nat)))) ;
-  code { NIL operation ;
-         DIG 1 ;
-         DUP ;
-         DUG 2 ;
+  code { DUP ;
          CDR ;
          SELF ;
          ADDRESS ;
-         DIG 3 ;
+         DIG 2 ;
          DUP ;
-         DUG 4 ;
+         DUG 3 ;
          CAR ;
          IF_LEFT
            { DUP ;
@@ -227,38 +224,48 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 PUSH nat 10 ;
-                 DIG 2 ;
                  DUP ;
-                 DUG 3 ;
-                 COMPARE ;
-                 GT ;
-                 IF { PUSH string "Only 10 functions are accepted" ; FAILWITH }
-                    { PUSH unit Unit } ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
+                 CDR ;
                  CAR ;
-                 DIG 3 ;
-                 DUP ;
-                 DUG 4 ;
-                 GET ;
-                 IF_NONE { PUSH unit Unit } { PUSH string "Function exist" ; FAILWITH } ;
-                 DIG 2 ;
-                 DUP ;
-                 DUG 3 ;
-                 DIG 3 ;
-                 DUP ;
-                 DUG 4 ;
-                 CAR ;
-                 DIG 6 ;
-                 DUP ;
-                 DUG 7 ;
                  CAR ;
                  CDR ;
-                 DIG 6 ;
+                 CAR ;
+                 CDR ;
+                 SENDER ;
+                 COMPARE ;
+                 NEQ ;
+                 IF { PUSH string "Dex/functions-set" ; FAILWITH } { PUSH unit Unit } ;
+                 PUSH nat 10 ;
+                 DIG 3 ;
                  DUP ;
-                 DUG 7 ;
+                 DUG 4 ;
+                 COMPARE ;
+                 GT ;
+                 IF { PUSH string "Dex/functions-set" ; FAILWITH } { PUSH unit Unit } ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CAR ;
+                 DIG 4 ;
+                 DUP ;
+                 DUG 5 ;
+                 GET ;
+                 IF_NONE { PUSH unit Unit } { PUSH string "Dex/function-set" ; FAILWITH } ;
+                 DIG 3 ;
+                 DUP ;
+                 DUG 4 ;
+                 DIG 4 ;
+                 DUP ;
+                 DUG 5 ;
+                 CAR ;
+                 DIG 7 ;
+                 DUP ;
+                 DUG 8 ;
+                 CAR ;
+                 CDR ;
+                 DIG 7 ;
+                 DUP ;
+                 DUG 8 ;
                  SWAP ;
                  SOME ;
                  SWAP ;
@@ -267,7 +274,7 @@
                  CDR ;
                  SWAP ;
                  PAIR ;
-                 DIP { DROP 5 } ;
+                 DIP { DROP 6 } ;
                  NIL operation ;
                  PAIR ;
                  DIP { DROP } } ;
@@ -338,5 +345,5 @@
              CAR ;
              PAIR ;
              DIP { DROP 5 } } ;
-         DIP { DROP 4 } } }
+         DIP { DROP 3 } } }
 
