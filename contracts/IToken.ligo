@@ -1,19 +1,39 @@
-type account is record
-    balance : nat;
-    allowances: map(address, nat);
-end
+(* Implimentation of the FA1.2 specification in PascaLIGO *)
 
-type contract_storage is record
-  owner: address;
-  totalSupply: nat;
-  ledger: big_map(address, account);
-end
+(* Define types *)
+type trusted is address
+type amt is nat
 
+type account is
+  record [
+    balance         : amt;
+    allowances      : map (trusted, amt);
+  ]
+
+(* contract storage *)
+type storage is
+  record [
+    totalSupply     : amt;
+    ledger          : big_map (address, account);
+  ]
+
+(* define return for readability *)
+type return is list (operation) * storage
+
+(* define noop for readability *)
+const noOperations : list (operation) = nil;
+
+(* Inputs *)
+type transferParams is michelson_pair(address, "from", michelson_pair(address, "to", amt, "value"), "")
+type approveParams is michelson_pair(trusted, "spender", amt, "value")
+type balanceParams is michelson_pair(address, "owner", contract(amt), "")
+type allowanceParams is michelson_pair(michelson_pair(address, "owner", trusted, "spender"), "", contract(amt), "")
+type totalSupplyParams is (unit * contract(amt))
+
+(* Valid entry points *)
 type tokenAction is
-| Transfer of (address * address * nat)
-| Mint of (nat)
-| Burn of (nat)
-| Approve of (address * nat)
-| GetAllowance of (address * address * contract(nat))
-| GetBalance of (address * contract(nat))
-| GetTotalSupply of (unit * contract(nat))
+  | Transfer of transferParams
+  | Approve of approveParams
+  | GetBalance of balanceParams
+  | GetAllowance of allowanceParams
+  | GetTotalSupply of totalSupplyParams
