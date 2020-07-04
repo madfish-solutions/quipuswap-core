@@ -523,58 +523,20 @@ function withdrawProfit (const p : dexAction ; const s : dex_storage; const this
    end
  } with (operations, s)
 
-const createDex : (option(key_hash) * tez * full_dex_storage) -> (operation * address) =
-  [%Michelson ( {| { UNPPAIIR ;
+
+type x is Use1 of (nat * dexAction) 
+type y is SetSettings1 of big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage))
+function launchExchange (const self : address; const token : address; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
+ block {
+    if s.tokenList contains token then failwith("Exchange launched") else skip;
+    s.tokenList := Set.add (token, s.tokenList);
+   const createDex : (option(key_hash) * tez * full_dex_storage) -> (operation * address) =
+     [%Michelson ( {| { UNPPAIIR ;
                      CREATE_CONTRACT 
 #include "Dex.tz"
                ;
                      PAIR } |}
-              : (option(key_hash) * tez * full_dex_storage) -> (operation * address))]
-
-
-
-type x is Use1 of (nat * dexAction) 
-type y is SetSettings1 of (nat * ((dexAction * dex_storage * address) -> (list(operation) * dex_storage)))
-function launchExchange (const token : address; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
- block {
-    if s.tokenList contains token then failwith("Exchange launched") else skip;
-    s.tokenList := Set.add (token, s.tokenList);
-   //  const init : full_dex_storage = (record   storage = record      feeRate = 500n;      tezPool = 0n;      tokenPool = 0n;      invariant = 0n;      totalShares = 0n;      tokenAddress = token;      factoryAddress = Tezos.self_address;      shares = (big_map end : big_map(address, nat));      voters = (big_map end : big_map(address, vote_info));      vetos = (big_map end : big_map(key_hash, timestamp));      vetoVoters = (big_map end : big_map(address, nat));      votes = (big_map end : big_map(key_hash, nat));      veto = 0n;      delegated = (None: option(key_hash));      currentDelegated = (None: option(key_hash));      totalVotes = 0n;      currentCircle = record         reward = 0n;         counter = 0n;         start = Tezos.now; circleCoefficient = 0n;        lastUpdate = Tezos.now;         totalLoyalty = 0n;         nextCircle = Tezos.now;       end;      circles = (big_map end : big_map(nat, circle_info));      circleLoyalty = (big_map end : big_map(address, user_circle_info));   end;   lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));end: full_dex_storage) ;
-   //  const init : full_dex_storage = 
-   //  record 
-   //    storage = 
-   //       record      
-   //          feeRate = 500n;      
-   //          tezPool = 0n;      
-   //          tokenPool = 0n;      
-   //          invariant = 0n;      
-   //          totalShares = 0n;      
-   //          tokenAddress = token;      
-   //          factoryAddress = token;      
-   //          shares = (big_map end : big_map(address, nat));      
-   //          voters = (big_map end : big_map(address, vote_info));      
-   //          vetos = (big_map end : big_map(key_hash, timestamp));      
-   //          vetoVoters = (big_map end : big_map(address, nat));      
-   //          votes = (big_map end : big_map(key_hash, nat));      
-   //          veto = 0n;      
-   //          delegated = (None: option(key_hash));      
-   //          currentDelegated = (None: option(key_hash));      
-   //          totalVotes = 0n;      
-   //          currentCircle = 
-   //             record         
-   //                reward = 0n;         
-   //                counter = 0n;         
-   //                start = Tezos.now; 
-   //                circleCoefficient = 0n;        
-   //                lastUpdate = Tezos.now;         
-   //                totalLoyalty = 0n;         
-   //                nextCircle = Tezos.now;       
-   //             end;
-   //          circles = (big_map end : big_map(nat, circle_info));      
-   //          circleLoyalty = (big_map end : big_map(address, user_circle_info));   
-   //       end;   
-   //    lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));
-   //    end;
+              : (option(key_hash) * tez * full_dex_storage) -> (operation * address))];
     const res : (operation * address) = createDex((None : option(key_hash)), 0tz, record 
       storage = 
          record      
@@ -584,7 +546,7 @@ function launchExchange (const token : address; var s: exchange_storage ) :  (li
             invariant = 0n;      
             totalShares = 0n;      
             tokenAddress = token;      
-            factoryAddress = Tezos.self_address;      
+            factoryAddress = self;      
             shares = (big_map end : big_map(address, nat));      
             voters = (big_map end : big_map(address, vote_info));      
             vetos = (big_map end : big_map(key_hash, timestamp));      
@@ -620,8 +582,8 @@ function tokenToExchangeLookup (const tokenOutAddress : address; const recipient
          end
    )
  end 
-function receiveReward (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage)is
-block {
+
+function receiveReward (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage)is block {
     s.currentCircle.reward := s.currentCircle.reward + Tezos.amount / 1mutez;
     var operations : list(operation) := (nil: list(operation)); 
     if s.currentCircle.nextCircle < Tezos.now then block {
@@ -650,29 +612,43 @@ block {
     s.currentCircle.lastUpdate := Tezos.now;
  } with (operations, s)
 
-function setFunction (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : exchange_storage) : exchange_storage is
+function setFunction (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_exchange_storage) : full_exchange_storage is
  block {
     if idx > 10n then failwith("Factory/functions-set") else skip;
-    case s.lambdas[idx] of Some(n) -> failwith("Factory/function-set") | None -> skip end;
-    s.lambdas[idx] := f;
+    case s.storage.lambdas[idx] of Some(n) -> failwith("Factory/function-set") | None -> skip end;
+    s.storage.lambdas[idx] := f;
  } with s
 
-function main (const p : exchangeAction ; const s : exchange_storage) :
-  (list(operation) * exchange_storage) is case p of
-    LaunchExchange(n) -> launchExchange(n, s)
-  | TokenToExchangeLookup(n) -> (tokenToExchangeLookup(n.0, n.1, n.2, s), s)
-  | ConfigDex(n) -> (list transaction(SetSettings1(n.0, get_force(n.0, s.lambdas)),
+function middle (const token : address ; var s : full_exchange_storage) :  (list(operation) * full_exchange_storage) is
+ block {
+    const f: (address * address * exchange_storage) -> (list(operation) * exchange_storage) = get_force(0n, s.lambdas);
+    const res : (list(operation) * exchange_storage) = f(Tezos.self_address, token, s.storage);
+    s.storage := res.1;
+ } with (res.0, s)
+
+function main (const p : exchangeAction ; const s : full_exchange_storage) :
+  (list(operation) * full_exchange_storage) is case p of
+    LaunchExchange(n) -> middle(n, s)
+  | TokenToExchangeLookup(n) -> (tokenToExchangeLookup(n.0, n.1, n.2, s.storage), s)
+  | ConfigDex(n) -> (list
+      // transaction(SetSettings(s.storage.lambdas),
+      // 0tez,
+      // (get_contract(get_force(n, s.storage.tokenToExchange)) : contract(fullAction))) 
+      
+      transaction(SetSettings1(s.storage.lambdas),
       0tez,
-      case (Tezos.get_entrypoint_opt("%setSettings", get_force(n.1, s.tokenToExchange)) : option(contract(y))) of Some(contr) -> contr
+      case (Tezos.get_entrypoint_opt("%setSettings", get_force(n, s.storage.tokenToExchange)) : option(contract(y))) of Some(contr) -> contr
       | None -> (failwith("01"):contract(y))
       end
-   ) end, s)
+      )
+    end, s)
   | SetFunction(n) -> ((nil:list(operation)), setFunction(n.0, n.1, s))
  end
-
-// const r: exchange_storage = record
-//    tokenList = (set[] : set(address));
-//    tokenToExchange = (big_map[] :big_map(address, address));
-//    exchangeToToken = (big_map[] :big_map(address, address));
-//    lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));
-// end;
+// record
+//    storage = record
+//       tokenList = (set[] : set(address));
+//       tokenToExchange = (big_map[] :big_map(address, address));
+//       lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));
+//    end;
+//    lambdas = (big_map[] : big_map(nat, (address * exchange_storage) -> (list(operation) * exchange_storage)));
+// end
