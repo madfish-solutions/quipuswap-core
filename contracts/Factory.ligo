@@ -644,11 +644,10 @@ function main (const p : exchangeAction ; const s : full_exchange_storage) :
     end, s)
   | SetFunction(n) -> ((nil:list(operation)), setFunction(n.0, n.1, s))
  end
-// record
-//    storage = record
-//       tokenList = (set[] : set(address));
-//       tokenToExchange = (big_map[] :big_map(address, address));
-//       lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));
-//    end;
-//    lambdas = (big_map[] : big_map(nat, (address * exchange_storage) -> (list(operation) * exchange_storage)));
-// end
+   // 'record   
+   // storage = record      
+   //    tokenList = (set[] : set(address));      
+   //    tokenToExchange = (big_map[] :big_map(address, address));      
+   //    lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   
+   // end;   
+   // lambdas =  big_map[0n -> launchExchange]; end'
