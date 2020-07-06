@@ -1,10 +1,11 @@
 echo "build"
+docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract $PWD/contracts/Dex.ligo main > contracts/Dex.tz
 node scripts/cli2.js build Factory
 node scripts/cli2.js build Token
 node scripts/cli2.js build Dex
 
 echo "deploy"
-node scripts/cli2.js compile_storage Factory 'record   storage = record      tokenList = (set[] : set(address));      tokenToExchange = (big_map[] :big_map(address, address));      lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   end;   lambdas =  big_map[0n -> launchExchange]; end'
+# node scripts/cli2.js compile_storage Factory 'record   storage = record      tokenList = (set[] : set(address));      tokenToExchange = (big_map[] :big_map(address, address));      lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   end;   lambdas =  big_map[0n -> launchExchange]; end'
 node scripts/cli2.js deploy -n Factory
 sleep 1
 node scripts/cli2.js deploy Token

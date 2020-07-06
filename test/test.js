@@ -47,6 +47,31 @@ const getContractFullStorage = async (Tezos, address, maps = {}) => {
   return result;
 };
 
+const getContractFullStorageV2 = async (Tezos, address, maps = {}) => {
+  const contract = await Tezos.contract.at(address);
+  const storage = await contract.storage();
+  var result = {
+    ...storage,
+  };
+  for (let key in maps) {
+    result[key + "Extended"] = await maps[key].reduce(async (prev, current) => {
+      let entry;
+
+      try {
+        entry = await storage.storage[key].get(current);
+      } catch (ex) {
+        console.error(ex);
+      }
+
+      return {
+        ...(await prev),
+        [current]: entry,
+      };
+    }, Promise.resolve({}));
+  }
+  return result;
+};
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -279,15 +304,11 @@ class Test {
       .send();
     await operation.confirmation();
     assert(operation.status === "applied", "Operation was not applied");
-    for (let i = 0; i < 11; i++) {
-      console.log(i);
-      operation = await factoryContract.methods
-        .configDex(i, tokenAddress)
-        .send();
-      await operation.confirmation();
-      assert(operation.status === "applied", "Operation was not applied");
-    }
-    let storage = await getContractFullStorage(tezos, factoryAddress, {
+    operation = await factoryContract.methods.configDex(tokenAddress).send();
+    await operation.confirmation();
+    assert(operation.status === "applied", "Operation was not applied");
+
+    let storage = await getContractFullStorageV2(tezos, factoryAddress, {
       tokenToExchange: [tokenAddress],
     });
     console.log(storage.tokenToExchangeExtended);
@@ -857,9 +878,7 @@ describe("Dex", function () {
     this.timeout(1000000);
 
     dexAddress1 = await Test.before(tokenAddress1);
-    console.log(dexAddress1);
     dexAddress2 = await Test.before(tokenAddress2);
-    console.log(dexAddress2);
   });
 
   describe("InitializeExchange()", function () {
