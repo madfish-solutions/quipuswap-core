@@ -225,7 +225,11 @@ program
     "deploy"
   )
   .option("-k, --key_path <file>", "Where private key is located", "key")
-  .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "https://testnet-tezos.giganode.io"
+  )
   .action(async function (
     tokens_in,
     min_tokens_out,
@@ -255,7 +259,11 @@ program
     "contracts"
   )
   .option("-k, --key_path <file>", "Where private key is located", "key")
-  .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "https://testnet-tezos.giganode.io"
+  )
   .action(async function (num, functionName, dex, contract, options) {
     await setup(options.key_path, options.provider);
     await setSettings(
@@ -279,7 +287,11 @@ program
     "storage"
   )
   .option("-k, --key_path <file>", "Where private key is located", "key")
-  .option("-p, --provider <provider>", "Node to connect", "http://0.0.0.0:8732")
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "https://testnet-tezos.giganode.io"
+  )
   .option("-b, --balance <balance>", "Where private key is located", "0")
   .option("-n, --init", "Wether to use init option")
   .action(async function (contract, output_name, storage_name, options) {

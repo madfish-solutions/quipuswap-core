@@ -185,7 +185,7 @@ function veto (const p : dexAction ; const s : dex_storage; const this: address)
          s.veto := 0n;
          case s.currentDelegated of None -> failwith ("Dex/no-delegated")
          | Some(c) -> {
-            s.vetos[c] := Tezos.now + 31104000;
+            s.vetos[c] := Tezos.now + 7889229;
             s.currentDelegated := (None: option(key_hash));
             operations := set_delegate(s.currentDelegated) # operations;
             s.vetoVoters := (big_map end : big_map(address, nat));
@@ -546,7 +546,7 @@ function launchExchange (const self : address; const token : address; var s: exc
     const res : (operation * address) = createDex((None : option(key_hash)), 0tz, record 
       storage = 
          record      
-            feeRate = 500n;      
+            feeRate = 333n;      
             tezPool = 0n;      
             tokenPool = 0n;      
             invariant = 0n;      

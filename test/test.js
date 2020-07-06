@@ -20,7 +20,7 @@ const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
 
-const provider = "http://0.0.0.0:8732";
+const provider = "https://testnet-tezos.giganode.io";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -322,7 +322,7 @@ class Test {
     const tezAmount = "1.0";
     const pkh = await Tezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [pkh] });
-    assert(initialStorage.storage.feeRate == 500);
+    assert(initialStorage.storage.feeRate == 333);
     assert(initialStorage.storage.invariant == 0);
     assert(initialStorage.storage.totalShares == 0);
     assert(initialStorage.storage.tezPool == 0);
@@ -337,7 +337,7 @@ class Test {
     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
-    assert(finalStorage.storage.feeRate == 500);
+    assert(finalStorage.storage.feeRate == 333);
     assert(
       finalStorage.storage.invariant == mutezAmount * parseInt(tokenAmount)
     );
@@ -782,8 +782,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -804,8 +804,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
     let reward = 1;
 
     const pkh = await Tezos.signer.publicKeyHash();
@@ -859,8 +859,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
