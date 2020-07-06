@@ -1149,10 +1149,16 @@
                                                                             "prim": "pair",
                                                                             "args": [
                                                                               {
-                                                                                "prim": "nat"
+                                                                                "prim": "nat",
+                                                                                "annots": [
+                                                                                  "%lastCircle"
+                                                                                ]
                                                                               },
                                                                               {
-                                                                                "prim": "timestamp"
+                                                                                "prim": "timestamp",
+                                                                                "annots": [
+                                                                                  "%lastCircleUpdate"
+                                                                                ]
                                                                               }
                                                                             ]
                                                                           },
@@ -1160,15 +1166,24 @@
                                                                             "prim": "pair",
                                                                             "args": [
                                                                               {
-                                                                                "prim": "nat"
+                                                                                "prim": "nat",
+                                                                                "annots": [
+                                                                                  "%loyalty"
+                                                                                ]
                                                                               },
                                                                               {
-                                                                                "prim": "nat"
+                                                                                "prim": "nat",
+                                                                                "annots": [
+                                                                                  "%reward"
+                                                                                ]
                                                                               }
                                                                             ]
                                                                           }
                                                                         ]
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%circleLoyalty"
                                                                     ]
                                                                   },
                                                                   {
@@ -1187,10 +1202,16 @@
                                                                                 "prim": "pair",
                                                                                 "args": [
                                                                                   {
-                                                                                    "prim": "nat"
+                                                                                    "prim": "nat",
+                                                                                    "annots": [
+                                                                                      "%circleCoefficient"
+                                                                                    ]
                                                                                   },
                                                                                   {
-                                                                                    "prim": "nat"
+                                                                                    "prim": "nat",
+                                                                                    "annots": [
+                                                                                      "%counter"
+                                                                                    ]
                                                                                   }
                                                                                 ]
                                                                               },
@@ -1198,10 +1219,16 @@
                                                                                 "prim": "pair",
                                                                                 "args": [
                                                                                   {
-                                                                                    "prim": "timestamp"
+                                                                                    "prim": "timestamp",
+                                                                                    "annots": [
+                                                                                      "%lastUpdate"
+                                                                                    ]
                                                                                   },
                                                                                   {
-                                                                                    "prim": "timestamp"
+                                                                                    "prim": "timestamp",
+                                                                                    "annots": [
+                                                                                      "%nextCircle"
+                                                                                    ]
                                                                                   }
                                                                                 ]
                                                                               }
@@ -1214,20 +1241,32 @@
                                                                                 "prim": "pair",
                                                                                 "args": [
                                                                                   {
-                                                                                    "prim": "nat"
+                                                                                    "prim": "nat",
+                                                                                    "annots": [
+                                                                                      "%reward"
+                                                                                    ]
                                                                                   },
                                                                                   {
-                                                                                    "prim": "timestamp"
+                                                                                    "prim": "timestamp",
+                                                                                    "annots": [
+                                                                                      "%start"
+                                                                                    ]
                                                                                   }
                                                                                 ]
                                                                               },
                                                                               {
-                                                                                "prim": "nat"
+                                                                                "prim": "nat",
+                                                                                "annots": [
+                                                                                  "%totalLoyalty"
+                                                                                ]
                                                                               }
                                                                             ]
                                                                           }
                                                                         ]
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%circles"
                                                                     ]
                                                                   }
                                                                 ]
@@ -1245,10 +1284,16 @@
                                                                             "prim": "pair",
                                                                             "args": [
                                                                               {
-                                                                                "prim": "nat"
+                                                                                "prim": "nat",
+                                                                                "annots": [
+                                                                                  "%circleCoefficient"
+                                                                                ]
                                                                               },
                                                                               {
-                                                                                "prim": "nat"
+                                                                                "prim": "nat",
+                                                                                "annots": [
+                                                                                  "%counter"
+                                                                                ]
                                                                               }
                                                                             ]
                                                                           },
@@ -1256,10 +1301,16 @@
                                                                             "prim": "pair",
                                                                             "args": [
                                                                               {
-                                                                                "prim": "timestamp"
+                                                                                "prim": "timestamp",
+                                                                                "annots": [
+                                                                                  "%lastUpdate"
+                                                                                ]
                                                                               },
                                                                               {
-                                                                                "prim": "timestamp"
+                                                                                "prim": "timestamp",
+                                                                                "annots": [
+                                                                                  "%nextCircle"
+                                                                                ]
                                                                               }
                                                                             ]
                                                                           }
@@ -1272,18 +1323,30 @@
                                                                             "prim": "pair",
                                                                             "args": [
                                                                               {
-                                                                                "prim": "nat"
+                                                                                "prim": "nat",
+                                                                                "annots": [
+                                                                                  "%reward"
+                                                                                ]
                                                                               },
                                                                               {
-                                                                                "prim": "timestamp"
+                                                                                "prim": "timestamp",
+                                                                                "annots": [
+                                                                                  "%start"
+                                                                                ]
                                                                               }
                                                                             ]
                                                                           },
                                                                           {
-                                                                            "prim": "nat"
+                                                                            "prim": "nat",
+                                                                            "annots": [
+                                                                              "%totalLoyalty"
+                                                                            ]
                                                                           }
                                                                         ]
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%currentCircle"
                                                                     ]
                                                                   },
                                                                   {
@@ -1292,6 +1355,9 @@
                                                                       {
                                                                         "prim": "key_hash"
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%currentDelegated"
                                                                     ]
                                                                   }
                                                                 ]
@@ -1310,10 +1376,16 @@
                                                                       {
                                                                         "prim": "key_hash"
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%delegated"
                                                                     ]
                                                                   },
                                                                   {
-                                                                    "prim": "address"
+                                                                    "prim": "address",
+                                                                    "annots": [
+                                                                      "%factoryAddress"
+                                                                    ]
                                                                   }
                                                                 ]
                                                               },
@@ -1321,10 +1393,16 @@
                                                                 "prim": "pair",
                                                                 "args": [
                                                                   {
-                                                                    "prim": "nat"
+                                                                    "prim": "nat",
+                                                                    "annots": [
+                                                                      "%feeRate"
+                                                                    ]
                                                                   },
                                                                   {
-                                                                    "prim": "nat"
+                                                                    "prim": "nat",
+                                                                    "annots": [
+                                                                      "%invariant"
+                                                                    ]
                                                                   }
                                                                 ]
                                                               }
@@ -1350,10 +1428,16 @@
                                                                       {
                                                                         "prim": "nat"
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%shares"
                                                                     ]
                                                                   },
                                                                   {
-                                                                    "prim": "nat"
+                                                                    "prim": "nat",
+                                                                    "annots": [
+                                                                      "%tezPool"
+                                                                    ]
                                                                   }
                                                                 ]
                                                               },
@@ -1361,10 +1445,16 @@
                                                                 "prim": "pair",
                                                                 "args": [
                                                                   {
-                                                                    "prim": "address"
+                                                                    "prim": "address",
+                                                                    "annots": [
+                                                                      "%tokenAddress"
+                                                                    ]
                                                                   },
                                                                   {
-                                                                    "prim": "nat"
+                                                                    "prim": "nat",
+                                                                    "annots": [
+                                                                      "%tokenPool"
+                                                                    ]
                                                                   }
                                                                 ]
                                                               }
@@ -1383,7 +1473,10 @@
                                                                     ]
                                                                   },
                                                                   {
-                                                                    "prim": "nat"
+                                                                    "prim": "nat",
+                                                                    "annots": [
+                                                                      "%totalVotes"
+                                                                    ]
                                                                   }
                                                                 ]
                                                               },
@@ -1391,7 +1484,10 @@
                                                                 "prim": "pair",
                                                                 "args": [
                                                                   {
-                                                                    "prim": "nat"
+                                                                    "prim": "nat",
+                                                                    "annots": [
+                                                                      "%veto"
+                                                                    ]
                                                                   },
                                                                   {
                                                                     "prim": "big_map",
@@ -1402,6 +1498,9 @@
                                                                       {
                                                                         "prim": "nat"
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%vetoVoters"
                                                                     ]
                                                                   }
                                                                 ]
@@ -1427,7 +1526,8 @@
                                                               {
                                                                 "prim": "timestamp"
                                                               }
-                                                            ]
+                                                            ],
+                                                            "annots": ["%vetos"]
                                                           },
                                                           {
                                                             "prim": "big_map",
@@ -1444,6 +1544,9 @@
                                                                       {
                                                                         "prim": "address"
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%allowances"
                                                                     ]
                                                                   },
                                                                   {
@@ -1452,10 +1555,16 @@
                                                                       {
                                                                         "prim": "key_hash"
                                                                       }
+                                                                    ],
+                                                                    "annots": [
+                                                                      "%candidate"
                                                                     ]
                                                                   }
                                                                 ]
                                                               }
+                                                            ],
+                                                            "annots": [
+                                                              "%voters"
                                                             ]
                                                           }
                                                         ]
@@ -1467,7 +1576,8 @@
                                                             "prim": "key_hash"
                                                           },
                                                           { "prim": "nat" }
-                                                        ]
+                                                        ],
+                                                        "annots": ["%votes"]
                                                       }
                                                     ]
                                                   }
