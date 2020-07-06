@@ -52,7 +52,7 @@ type dexAction is
 | SetVotesDelegation of (address * bool)
 | Vote of (address * key_hash)
 | Veto of (address)
-| WithdrawProfit of (nat * address)
+| WithdrawProfit of (address)
 
 type fullAction is
 | Use of (nat * dexAction)

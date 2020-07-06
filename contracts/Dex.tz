@@ -8,7 +8,7 @@
                                       (or (or (pair %tezToTokenPayment nat address)
                                               (pair %tokenToTezPayment (pair nat nat) address))
                                           (or (pair %tokenToTokenPayment (pair nat nat) (pair address address)) (address %veto))))
-                                  (or (pair %vote address key_hash) (pair %withdrawProfit nat address)))
+                                  (or (pair %vote address key_hash) (address %withdrawProfit)))
                               (pair (pair (pair (pair (pair (big_map %circleLoyalty
                                                                address
                                                                (pair (pair (nat %lastCircle) (timestamp %lastCircleUpdate))
@@ -68,7 +68,7 @@
                    (or (or (pair %tezToTokenPayment nat address)
                            (pair %tokenToTezPayment (pair nat nat) address))
                        (or (pair %tokenToTokenPayment (pair nat nat) (pair address address)) (address %veto))))
-               (or (pair %vote address key_hash) (pair %withdrawProfit nat address))))) ;
+               (or (pair %vote address key_hash) (address %withdrawProfit))))) ;
   storage
     (pair (big_map %lambdas
              nat
@@ -78,7 +78,7 @@
                                     (or (or (pair %tezToTokenPayment nat address)
                                             (pair %tokenToTezPayment (pair nat nat) address))
                                         (or (pair %tokenToTokenPayment (pair nat nat) (pair address address)) (address %veto))))
-                                (or (pair %vote address key_hash) (pair %withdrawProfit nat address)))
+                                (or (pair %vote address key_hash) (address %withdrawProfit)))
                             (pair (pair (pair (pair (pair (big_map %circleLoyalty
                                                              address
                                                              (pair (pair (nat %lastCircle) (timestamp %lastCircleUpdate))
@@ -187,7 +187,7 @@
                      LEFT (or nat (pair address bool)) ;
                      LEFT (or (or (pair nat address) (pair (pair nat nat) address))
                               (or (pair (pair nat nat) (pair address address)) address)) ;
-                     LEFT (or (pair address key_hash) (pair nat address)) ;
+                     LEFT (or (pair address key_hash) address) ;
                      PAIR ;
                      PAIR ;
                      DIG 1 ;
