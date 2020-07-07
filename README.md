@@ -50,7 +50,7 @@ First we need to prepare storage for Factory contract:
 node scripts/cli2.js compile_storage Factory 'record   storage = record      tokenList = (set[] : set(address));      tokenToExchange = (big_map[] :big_map(address, address));      lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   end;   lambdas =  big_map[0n -> launchExchange]; end'
 ```
 
-Then we should **manually** optimize code to avoid **_storage limits issue_**. The simplest way is to strip annotation in `Factory.json`. Only `parameter` and `storage` related anotations shouldn't be removed as they are needed to easy interact with contract and read it storage using Taqito.
+Then we should **_manually_** optimize code to avoid **_storage limits issue_**. The simplest way is to strip annotation in `Factory.json`. Only `parameter` and `storage` related anotations shouldn't be removed as they are needed to easy interact with contract and read it storage using Taqito.
 
 Then contracts are deployed to the network (flag -n says that the storage is in Michelson format).
 
@@ -81,6 +81,23 @@ node scripts/cli2.js set_settings 10 withdrawProfit
 After this step new token pairs can be added.
 
 ## Exchange Pair Deployment
+
+Each token can have no more the one Exchange Pair contract(aka. `Dex`). To add new token `LaunchExchange` of Factory contract is called and new empty `Dex` instance is deployed.
+Run:
+
+```
+node scripts/cli2.js add_token TOKEN_ADDRESS
+```
+
+Then big_map woth functions should be send to `Dex`:
+
+```
+node scripts/cli2.js configure_dex TOKEN_ADDRESS
+```
+
+Now exchnage can be used.
+
+# Entrypoints
 
 # Testing
 
