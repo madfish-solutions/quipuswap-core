@@ -20,7 +20,7 @@ const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
 
-const provider = "https://testnet-tezos.giganode.io";
+const provider = "http://127.0.0.1:8732";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -782,8 +782,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -804,8 +804,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
     let reward = 1;
 
     const pkh = await Tezos.signer.publicKeyHash();
@@ -836,7 +836,7 @@ class Test {
 
     await sleep(3000);
 
-    let operation = await dex.sendReward(reward);
+    let operation = await dex.sendReward(pkh1);
     assert(operation.status === "applied", "Operation was not applied");
     // console.log(JSON.stringify(initialStorage.storage.currentCircle));
     // console.log(JSON.stringify(initialStorage.circleLoyaltyExtended[pkh1]));
@@ -848,7 +848,7 @@ class Test {
     // console.log(JSON.stringify(finalStorage.storage.currentCircle));
     // console.log(JSON.stringify(finalStorage.circleLoyaltyExtended[pkh1]));
 
-    operation = await dex.sendReward(reward);
+    operation = await dex.sendReward(pkh1);
     assert(operation.status === "applied", "Operation was not applied");
     finalStorage = await dex.getFullStorage({ circleLoyalty: [pkh1] });
     // console.log(JSON.stringify(finalStorage.storage.currentCircle));
@@ -859,8 +859,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();

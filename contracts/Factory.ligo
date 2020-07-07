@@ -615,9 +615,9 @@ function setFunction (const idx: nat; const f: (dexAction * dex_storage * addres
 
 function middle (const token : address ; var s : full_exchange_storage) :  (list(operation) * full_exchange_storage) is
  block {
-    const res : (list(operation) * exchange_storage) = case s.lambdas[9n] of 
+    const res : (list(operation) * exchange_storage) = case s.lambdas[0n] of 
     | Some(f) -> f(Tezos.self_address, token, s.storage)
-    | None -> (failwith("Factory/function-set"): (list(operation) * exchange_storage)) end;
+    | None -> (failwith("Factory/function-not-set"): (list(operation) * exchange_storage)) end;
     s.storage := res.1;
  } with (res.0, s)
 
