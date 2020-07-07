@@ -145,9 +145,9 @@ class Dex {
     return operation;
   }
 
-  async withdrawProfit(amount, receiver) {
+  async withdrawProfit(receiver) {
     const operation = await this.contract.methods
-      .use(10, "withdrawProfit", amount, receiver)
+      .use(10, "withdrawProfit", receiver)
       .send();
     await operation.confirmation();
     return operation;
@@ -836,19 +836,19 @@ class Test {
 
     await sleep(3000);
 
-    let operation = await dex.sendReward(pkh1);
+    let operation = await dex.sendReward(amount);
     assert(operation.status === "applied", "Operation was not applied");
     // console.log(JSON.stringify(initialStorage.storage.currentCircle));
     // console.log(JSON.stringify(initialStorage.circleLoyaltyExtended[pkh1]));
     // console.log(JSON.stringify(initialStorage.sharesExtended[pkh1]));
 
-    operation = await dex.withdrawProfit(amount, pkh1);
+    operation = await dex.withdrawProfit(pkh1);
     assert(operation.status === "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ circleLoyalty: [pkh1] });
     // console.log(JSON.stringify(finalStorage.storage.currentCircle));
     // console.log(JSON.stringify(finalStorage.circleLoyaltyExtended[pkh1]));
 
-    operation = await dex.sendReward(pkh1);
+    operation = await dex.sendReward(amount);
     assert(operation.status === "applied", "Operation was not applied");
     finalStorage = await dex.getFullStorage({ circleLoyalty: [pkh1] });
     // console.log(JSON.stringify(finalStorage.storage.currentCircle));

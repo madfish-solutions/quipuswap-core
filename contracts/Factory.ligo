@@ -1,5 +1,9 @@
 #include "IFactory.ligo"
 
+// TODO:
+//  - rename operations
+//  - add veto update in invest/divest 
+//  - code align
 type x is Transfer of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type w is TokenToExchangeLookup1 of (address * address * nat)
 type z is Use1 of (nat * dexAction) 
@@ -15,11 +19,7 @@ function initializeExchange (const p : dexAction ; const s : dex_storage; const 
       or amount < 1mutez 
       or tokenAmount < 10n 
       or amount > 500000000tz then failwith("Dex/non-allowed") else skip ;
-      // if s.totalShares =/= 0n then failwith("Dex/non-zero-total-shares") else skip ;
-      // if amount < 1mutez then failwith("Dex/low-tez") else skip ;
-      // if tokenAmount < 10n then failwith("Dex/low-token") else skip ;
-      // if amount > 500000000tz then failwith("Dex/high-tez") else skip ;
-      
+
       s.tokenPool := tokenAmount;
       s.tezPool := Tezos.amount / 1mutez;
       s.invariant := s.tezPool * s.tokenPool;
@@ -65,8 +65,10 @@ function setVotesDelegation (const p : dexAction ; const s : dex_storage; const 
          const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
             | Some(v) -> v 
             end ;
-         src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances);
-         s.voters[Tezos.sender] := src;
+         if Set.size(src.allowances) > 5n then failwith("Dex/many-voter-delegates") else {
+            src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances);
+            s.voters[Tezos.sender] := src;
+         };
       }
    | Vote(n) -> failwith("00")
    | Veto(n) -> failwith("00")
@@ -119,38 +121,42 @@ function vote (const p : dexAction ; const s : dex_storage; const this: address)
    | InvestLiquidity(n) -> failwith("00")
    | DivestLiquidity(n) -> failwith("00")
    | SetVotesDelegation(n) -> failwith("00")
-   | Vote(n) -> {
-      const share : nat = get_force (Tezos.sender, s.shares);
-      case s.vetos[n.1] of None -> skip
-        | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
-      end;
+   | Vote(n) -> 
+      case s.shares[Tezos.sender] of None -> failwith ("Dex/no-shares")
+      | Some(share) -> {
+         case s.vetos[n.1] of None -> skip
+         | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
+         end;
 
-      const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(n.1); end;
-      case s.voters[n.0] of None -> skip
-        | Some(v) -> {
-           case v.candidate of None -> skip | Some(c) -> {
-             if s.totalVotes < share then failwith ("Dex/invalid-shares") else skip;
-             s.totalVotes := abs(s.totalVotes - share);
-             s.votes[c]:= abs(get_force(c, s.votes) - share);
-             v.candidate := Some(n.1);
-             voterInfo := v;
-           } end;
-        }
-        end;    
-      if Tezos.sender =/= n.0 or voterInfo.allowances contains Tezos.sender then skip else failwith ("Dex/vote-not-permitted");
-      s.voters[n.0]:= voterInfo;
-      s.totalVotes := s.totalVotes + share;
-      const newVotes: nat = (case s.votes[n.1] of  None -> 0n | Some(v) -> v end) + share;
-      s.votes[n.1]:= newVotes;
-      if case s.delegated of None -> True 
-        | Some(delegated) ->
-           if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then False else True
-        end
-      then
-      {
-         s.delegated := Some(n.1);
-      } else skip;
-   }
+         const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(n.1); end;
+         case s.voters[n.0] of None -> skip
+         | Some(v) -> {
+            case v.candidate of None -> skip | Some(c) -> {
+               if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
+                  s.totalVotes := abs(s.totalVotes - share);
+                  s.votes[c]:= abs(get_force(c, s.votes) - share);
+                  v.candidate := Some(n.1);
+                  voterInfo := v;
+               };
+            } end;
+         }
+         end;    
+         if Tezos.sender =/= n.0 or voterInfo.allowances contains Tezos.sender then {
+            s.voters[n.0]:= voterInfo;
+            s.totalVotes := s.totalVotes + share;
+            const newVotes: nat = (case s.votes[n.1] of  None -> 0n | Some(v) -> v end) + share;
+            s.votes[n.1]:= newVotes;
+            if case s.delegated of None -> True 
+               | Some(delegated) ->
+                  if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then False else True
+               end
+            then
+            {
+               s.delegated := Some(n.1);
+            } else skip;
+         } else failwith ("Dex/vote-not-permitted");
+      }
+      end
    | Veto(n) -> failwith("00")
    | WithdrawProfit(n) -> failwith("00")
    end
@@ -168,32 +174,31 @@ function veto (const p : dexAction ; const s : dex_storage; const this: address)
    | DivestLiquidity(n) -> failwith("00")
    | SetVotesDelegation(n) -> failwith("00")
    | Vote(n) -> failwith("00")
-   | Veto(voter) -> {
-      const src: vote_info = get_force(voter, s.voters);
-      if Tezos.sender =/= voter or src.allowances contains Tezos.sender then skip else failwith ("Dex/vote-not-permitted");
-
-      const share : nat = get_force (voter, s.shares);
-      var newShare: nat := 0n;
-      case s.vetoVoters[voter] of None -> newShare := share
-      | Some(prev) -> {
-         if share > prev then skip else failwith ("Dex/old-shares");
-         newShare := abs(share - prev);
-      } 
-      end;
-      s.veto := s.veto + newShare;
-      if s.veto > s.totalVotes / 2n then {
-         s.veto := 0n;
-         case s.currentDelegated of None -> failwith ("Dex/no-delegated")
-         | Some(c) -> {
-            s.vetos[c] := Tezos.now + 7889229;
-            s.currentDelegated := (None: option(key_hash));
-            operations := set_delegate(s.currentDelegated) # operations;
-            s.vetoVoters := (big_map end : big_map(address, nat));
-         }
-         end;
-      } else skip;
-      s.vetoVoters[voter] := share;
-   }
+   | Veto(voter) -> 
+      case s.voters[voter] of None -> failwith ("Dex/no-voter")
+      | Some(src) -> {
+         if Tezos.sender =/= voter or src.allowances contains Tezos.sender then {
+            const share : nat = get_force (voter, s.shares);
+            var newShare: nat := case s.vetoVoters[voter] of None -> share
+            | Some(prev) ->
+               if share > prev then abs(share - prev) else (failwith ("Dex/old-shares") : nat)
+            end;
+            s.veto := s.veto + newShare;
+            if s.veto > s.totalVotes / 2n then {
+               s.veto := 0n;
+               case s.currentDelegated of None -> failwith ("Dex/no-delegated")
+               | Some(c) -> {
+                  s.vetos[c] := Tezos.now + 7889229;
+                  s.currentDelegated := (None: option(key_hash));
+                  operations := set_delegate(s.currentDelegated) # operations;
+                  s.vetoVoters := (big_map end : big_map(address, nat));
+               }
+               end;
+            } else skip;
+            s.vetoVoters[voter] := share;
+         } else failwith ("Dex/vote-not-permitted");
+      }
+      end
    | WithdrawProfit(n) -> failwith("00")
    end
  } with (operations, s)
