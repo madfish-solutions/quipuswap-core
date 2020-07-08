@@ -20,7 +20,7 @@ const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
 
-const provider = "http://127.0.0.1:8732";
+const provider = "https://api.tez.ie/rpc/carthagenet";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -304,8 +304,8 @@ class Test {
       .send();
     await operation.confirmation();
     assert(operation.status === "applied", "Operation was not applied");
-    operation = await factoryContract.methods.configDex(tokenAddress).send();
-    await operation.confirmation();
+    // operation = await factoryContract.methods.configDex(tokenAddress).send();
+    // await operation.confirmation();
     assert(operation.status === "applied", "Operation was not applied");
 
     let storage = await getContractFullStorageV2(tezos, factoryAddress, {

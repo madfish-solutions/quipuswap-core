@@ -119,17 +119,17 @@ Now exchnage can be used.
 
 Actions have the following parameters (index in the list matches the index in `lambdas`):
 
-0. initializeExchange(tokenAmount: nat)
-1. tezToToken(minTokensOut: nat, receiver: address)
-2. tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address)
-3. tokenToTokenOut(tokensIn: nat, minTokensOut: nat, token: address, receiver: address)
-4. investLiquidity(minShares: nat)
-5. divestLiquidity(minSharesBurned: nat, minTezDivested: nat, minSharesDivested: nat)
-6. setVotesDelegation(deputy: address, isAllowed: bool)
-7. vote(voter: address)
-8. veto(voter: address)
-9. default()
-10. withdrawProfit(receiver: address)
+0. initializeExchange(tokenAmount: nat) : sets initial liquiidty, XTZ must be sent.
+1. tezToToken(minTokensOut: nat, receiver: address) : exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `minTokensOut`.
+2. tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address) : exchanges `tokensIn` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minTezOut`.
+3. tokenToTokenOut(tokensIn: nat, minTokensOut: nat, token: address, receiver: address) : exchanges `tokensIn` of current token to `token` and sends them to `receiver`; operation is reverted if the amount of exchanged `token` is less than `minTokensOut`.
+4. investLiquidity(minShares: nat) : allows to own `minShares` by investing tokens and XTZ; corresponding amount of XTZ should be sent woth transaction and amount of tokens should be approved to be spent by `Dex`.
+5. divestLiquidity(sharesBurned: nat, minTezDivested: nat, minSharesDivested: nat) : divests `sharesBurned` and sends tokens and XTZ to owner; operation is reverted if the amount of divested tokens is smaller than `minTezDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
+6. setVotesDelegation(deputy: address, isAllowed: bool) : allows or prohibits `deputy` to vote with sender shares.
+7. vote(voter: address, candidate: key_hash) : votes for `candidate` with shares of `voter`.
+8. veto(voter: address) : votes agains current deligate with shares of `voter`.
+9. default() : default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation circle.
+10. withdrawProfit(receiver: address) : withdraws delagation reward of sender to `receiver` address.
 
 ## Token FA1.2
 
