@@ -40,15 +40,14 @@ Contracts are processed the following stages:
 To compile the contracts and generate Michelson:
 
 ```
-docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract $PWD/contracts/Dex.ligo main > contracts/Dex.tz
+node scripts/cli2.js build Dex --no-json -o contracts
 node scripts/cli2.js build Factory
 node scripts/cli2.js build Token
-node scripts/cli2.js build Dex
 ```
 
 Here we compile `Dex.ligo` to raw Michelson. This code will be deployed during Factories `LaunchExchange` call to add new exchange-pair. And then compile other contracts and store them in json format to deploy with [taquito](https://tezostaquito.io/).
 
-All compiled contracts are stored in `build`.
+Сompiled Factory and Token are stored in `build`.
 
 ## Factory & Token Deployment
 
@@ -57,8 +56,6 @@ First we need to prepare storage for Factory contract:
 ```
 node scripts/cli2.js compile_storage Factory 'record   storage = record      tokenList = (set[] : set(address));      tokenToExchange = (big_map[] :big_map(address, address));      lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   end;   lambdas =  big_map[0n -> launchExchange]; end'
 ```
-
-Then we should **_manually_** optimize code to avoid **_storage limits issue_**. The simplest way is to strip annotation in `Factory.json`. Only `parameter` and `storage` related anotations shouldn't be removed as they are needed to easy interact with contract and read it storage using Taqito.
 
 Then contracts are deployed to the network (flag -n says that the storage is in Michelson format) with commands:
 
@@ -100,16 +97,41 @@ node scripts/cli2.js add_token
 node scripts/cli2.js add_token Token2
 ```
 
-Then big map with functions should be send to `Dex`(it cannot be set to initial storage because of **_gas limit issue_**):
-
-```
-node scripts/cli2.js configure_dex
-node scripts/cli2.js configure_dex Token2
-```
-
 Now exchnage can be used.
 
 # Entrypoints
+
+## Factory
+
+- launchExchange(token: address): deploys new empty `Dex` for `token` and store the address of new contract;
+- tokenToExchangeLookup(token: address, receiver: address, minTokenOut: nat) : look for `Dex` address for `token` and call `use(1n,TezToTokenPayment(minTokenOut, receiver))` resending received TRX to exchange.
+- configDex(token: address): set lambdas to deployed `Dex` contract.
+- setFunction(funcIndex: nat, func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)):
+
+## Dex
+
+- DivestLiquidity of (nat _ nat _ nat)
+- SetVotesDelegation of (address \* bool)
+
+- setSettings(funcs: big_map(nat, (dexAction, dex_storage, address) -> (list(operation), dex_storage))) : set `funcs` that are sent from Factory to `lambdas`; these functions can be executed with `use` entrypoint.
+- default() : default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation circle.
+- use(funcIndex: nat, action: dexAction) : executes the function with index `funcIndex` from `lambdas` with parameters `action`.
+
+Actions have the following parameters (index in the list matches the index in `lambdas`):
+
+0. initializeExchange(tokenAmount: nat)
+1. tezToToken(minTokensOut: nat, receiver: address)
+2. tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address)
+3. tokenToTokenOut(tokensIn: nat, minTokensOut: nat, token: address, receiver: address)
+4. investLiquidity(minShares: nat)
+5. divestLiquidity(minSharesBurned: nat, minTezDivested: nat, minSharesDivested: nat)
+6. setVotesDelegation(deputy: address, isAllowed: bool)
+7. vote(voter: address)
+8. veto(voter: address)
+9. default()
+10. withdrawProfit(receiver: address)
+
+## Token FA1.2
 
 # Testing
 
