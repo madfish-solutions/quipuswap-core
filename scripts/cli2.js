@@ -74,44 +74,42 @@ let deployContract = async (
   console.log(`${contractName} deployed at: ${contract.address}`);
 };
 
-let tokenToTokenSwap = async (
-  tokensIn,
-  minTokensOut,
-  dexName,
-  tokenFromName,
-  tokenToName,
-  inputDir
-) => {
-  dexName = dexName || "Dex";
-  tokenFromName = tokenFromName || "Token";
-  tokenToName = tokenToName || "Token2";
-  const { address: tokenFromAddress } = JSON.parse(
-    fs.readFileSync(`./${inputDir}/${tokenFromName}.json`).toString()
+let addToken = async (tokenName, factoryName, inputDir) => {
+  tokenName = tokenName || "Token";
+  factoryName = factoryName || "Factory";
+  const { address: tokenAddress } = JSON.parse(
+    fs.readFileSync(`./${inputDir}/${tokenName}.json`).toString()
   );
-  const { address: tokenToAddress } = JSON.parse(
-    fs.readFileSync(`./${inputDir}/${tokenToName}.json`).toString()
-  );
-  const { address: dexAddress } = JSON.parse(
-    fs.readFileSync(`./${inputDir}/${dexName}.json`).toString()
+  const { address: factoryAddress } = JSON.parse(
+    fs.readFileSync(`./${inputDir}/${factoryName}.json`).toString()
   );
 
-  const tokenFromContract = await Tezos.contract.at(tokenFromAddress);
-  const dexContract = await Tezos.contract.at(dexAddress);
+  const factoryContract = await Tezos.contract.at(factoryAddress);
 
-  const operation0 = await tokenFromContract.methods
-    .approve(dexAddress, tokensIn)
+  const operation = await factoryContract.methods
+    .launchExchange(tokenAddress)
     .send();
-  await operation0.confirmation();
+  await operation.confirmation();
+  console.log(operation);
+};
 
-  try {
-    const operation1 = await dexContract.methods
-      .tokenToTokenSwap(tokensIn, minTokensOut.toString(), tokenToAddress)
-      .send();
-    await operation1.confirmation();
-    console.log(operation1);
-  } catch (e) {
-    console.log(e);
-  }
+let configDex = async (tokenName, factoryName, inputDir) => {
+  tokenName = tokenName || "Token";
+  factoryName = factoryName || "Factory";
+  const { address: tokenAddress } = JSON.parse(
+    fs.readFileSync(`./${inputDir}/${tokenName}.json`).toString()
+  );
+  const { address: factoryAddress } = JSON.parse(
+    fs.readFileSync(`./${inputDir}/${factoryName}.json`).toString()
+  );
+
+  const factoryContract = await Tezos.contract.at(factoryAddress);
+
+  const operation = await factoryContract.methods
+    .configDex(tokenAddress)
+    .send();
+  await operation.confirmation();
+  console.log(operation);
 };
 
 let setSettings = async (
@@ -215,38 +213,41 @@ program
   });
 
 program
-  .command(
-    "token_to_token <tokens_in> <min_tokens_out> [dex] [token_from] [token_to]"
-  )
-  .description("build contracts")
+  .command("add_token [token] [factory]")
+  .description("add token")
   .option(
     "-i, --input_dir <dir>",
-    "Where built contracts are located",
+    "Where deployed contracts are located",
     "deploy"
   )
   .option("-k, --key_path <file>", "Where private key is located", "key")
   .option(
     "-p, --provider <provider>",
     "Node to connect",
-    "https://testnet-tezos.giganode.io"
+    "http://127.0.0.1:8732"
   )
-  .action(async function (
-    tokens_in,
-    min_tokens_out,
-    dex,
-    token_from,
-    token_to,
-    options
-  ) {
+  .action(async function (token, factory, options) {
     await setup(options.key_path, options.provider);
-    await tokenToTokenSwap(
-      tokens_in,
-      min_tokens_out,
-      dex,
-      token_from,
-      token_to,
-      options.input_dir
-    );
+    await addToken(token, factory, options.input_dir);
+  });
+
+program
+  .command("configure_dex [token] [factory]")
+  .description("add token")
+  .option(
+    "-i, --input_dir <dir>",
+    "Where deployed contracts are located",
+    "deploy"
+  )
+  .option("-k, --key_path <file>", "Where private key is located", "key")
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "http://127.0.0.1:8732"
+  )
+  .action(async function (token, factory, options) {
+    await setup(options.key_path, options.provider);
+    await configDex(token, factory, options.input_dir);
   });
 
 program
@@ -262,7 +263,7 @@ program
   .option(
     "-p, --provider <provider>",
     "Node to connect",
-    "https://testnet-tezos.giganode.io"
+    "http://127.0.0.1:8732"
   )
   .action(async function (num, functionName, dex, contract, options) {
     await setup(options.key_path, options.provider);
@@ -290,7 +291,7 @@ program
   .option(
     "-p, --provider <provider>",
     "Node to connect",
-    "https://testnet-tezos.giganode.io"
+    "http://127.0.0.1:8732"
   )
   .option("-b, --balance <balance>", "Where private key is located", "0")
   .option("-n, --init", "Wether to use init option")

@@ -6,6 +6,12 @@ Current implementation supports FA1.2 tokens.
 
 # Architecture
 
+The solution consist of 3 type of contracts:
+
+1. Factory : singleton used to deploy new exchange pair and route Tez during token to token exchanges;
+2. Dex : repre
+3. Token
+
 # Prerequirements
 
 - Ligo installed in Docker:
@@ -42,7 +48,9 @@ node scripts/cli2.js build Dex
 
 Here we compile `Dex.ligo` to raw Michelson. This code will be deployed during Factories `LaunchExchange` call to add new exchange-pair. And then compile other contracts and store them in json format to deploy with [taquito](https://tezostaquito.io/).
 
-## Factory Deployment
+All compiled contracts are stored in `build`.
+
+## Factory & Token Deployment
 
 First we need to prepare storage for Factory contract:
 
@@ -52,13 +60,15 @@ node scripts/cli2.js compile_storage Factory 'record   storage = record      tok
 
 Then we should **_manually_** optimize code to avoid **_storage limits issue_**. The simplest way is to strip annotation in `Factory.json`. Only `parameter` and `storage` related anotations shouldn't be removed as they are needed to easy interact with contract and read it storage using Taqito.
 
-Then contracts are deployed to the network (flag -n says that the storage is in Michelson format).
+Then contracts are deployed to the network (flag -n says that the storage is in Michelson format) with commands:
 
 ```
 node scripts/cli2.js deploy -n Factory
 node scripts/cli2.js deploy Token
 node scripts/cli2.js deploy Token Token2
 ```
+
+Addresses of deployed contacts sre displayed and stored to `deploy` folder in JSON format.
 
 ## Factory Configuration
 
@@ -86,13 +96,15 @@ Each token can have no more the one Exchange Pair contract(aka. `Dex`). To add n
 Run:
 
 ```
-node scripts/cli2.js add_token TOKEN_ADDRESS
+node scripts/cli2.js add_token
+node scripts/cli2.js add_token Token2
 ```
 
-Then big_map woth functions should be send to `Dex`:
+Then big map with functions should be send to `Dex`(it cannot be set to initial storage because of **_gas limit issue_**):
 
 ```
-node scripts/cli2.js configure_dex TOKEN_ADDRESS
+node scripts/cli2.js configure_dex
+node scripts/cli2.js configure_dex Token2
 ```
 
 Now exchnage can be used.

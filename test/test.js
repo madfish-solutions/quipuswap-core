@@ -782,8 +782,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -804,8 +804,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
     let reward = 1;
 
     const pkh = await Tezos.signer.publicKeyHash();
@@ -825,7 +825,7 @@ class Test {
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos1, dexAddress);
     let reward = 10;
-    let amount = 1000;
+    let amount = 1;
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -859,8 +859,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    // let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
