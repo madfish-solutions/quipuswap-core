@@ -630,13 +630,5 @@ function main (const p : exchangeAction ; const s : full_exchange_storage) :
          end
    ) end
   , s)
-//   | ConfigDex(n) -> (list
-//       transaction(SetSettings1(s.storage.lambdas),
-//       0tez,
-//       case (Tezos.get_entrypoint_opt("%setSettings", get_force(n, s.storage.tokenToExchange)) : option(contract(y))) of Some(contr) -> contr
-//       | None -> (failwith("01"):contract(y))
-//       end
-//       )
-//     end, s)
   | SetFunction(n) -> ((nil:list(operation)), if n.0 > 10n then (failwith("Factory/functions-set") : full_exchange_storage) else  setFunction(n.0, n.1, s))
  end
