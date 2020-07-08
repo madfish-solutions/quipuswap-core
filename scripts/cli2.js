@@ -4,9 +4,11 @@ const fs = require("fs");
 const { Tezos } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 
-let buildContract = (contractName, inputDir, outputDir) => {
+let buildContract = (contractName, inputDir, outputDir, jsonFormat) => {
   exec(
-    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main`,
+    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract ${
+      jsonFormat ? "--michelson-format=json" : ""
+    } $PWD/${inputDir}/${contractName}.ligo main`,
     { maxBuffer: 1024 * 1000 },
     (err, stdout, stderr) => {
       if (err) {
@@ -15,7 +17,10 @@ let buildContract = (contractName, inputDir, outputDir) => {
         console.log(err);
       } else {
         console.log(`${contractName} built`);
-        fs.writeFileSync(`./${outputDir}/${contractName}.json`, stdout);
+        fs.writeFileSync(
+          `./${outputDir}/${contractName}.${jsonFormat ? "json" : "tz"}`,
+          stdout
+        );
       }
     }
   );
@@ -93,25 +98,6 @@ let addToken = async (tokenName, factoryName, inputDir) => {
   console.log(operation);
 };
 
-let configDex = async (tokenName, factoryName, inputDir) => {
-  tokenName = tokenName || "Token";
-  factoryName = factoryName || "Factory";
-  const { address: tokenAddress } = JSON.parse(
-    fs.readFileSync(`./${inputDir}/${tokenName}.json`).toString()
-  );
-  const { address: factoryAddress } = JSON.parse(
-    fs.readFileSync(`./${inputDir}/${factoryName}.json`).toString()
-  );
-
-  const factoryContract = await Tezos.contract.at(factoryAddress);
-
-  const operation = await factoryContract.methods
-    .configDex(tokenAddress)
-    .send();
-  await operation.confirmation();
-  console.log(operation);
-};
-
 let setSettings = async (
   num,
   functionName,
@@ -180,6 +166,7 @@ program
   .description("build contracts")
   .option("-o, --output_dir <dir>", "Where store builds", "build")
   .option("-i, --input_dir <dir>", "Where files are located", "contracts")
+  .option("-j, --no-json", "The format of output file")
   .action(function (contract, options) {
     let contractName = contract || "*";
     exec("mkdir -p " + options.output_dir);
@@ -191,7 +178,12 @@ program
         }
       });
     } else {
-      buildContract(contractName, options.input_dir, options.output_dir);
+      buildContract(
+        contractName,
+        options.input_dir,
+        options.output_dir,
+        options.json
+      );
     }
   });
 
@@ -229,25 +221,6 @@ program
   .action(async function (token, factory, options) {
     await setup(options.key_path, options.provider);
     await addToken(token, factory, options.input_dir);
-  });
-
-program
-  .command("configure_dex [token] [factory]")
-  .description("add token")
-  .option(
-    "-i, --input_dir <dir>",
-    "Where deployed contracts are located",
-    "deploy"
-  )
-  .option("-k, --key_path <file>", "Where private key is located", "key")
-  .option(
-    "-p, --provider <provider>",
-    "Node to connect",
-    "http://127.0.0.1:8732"
-  )
-  .action(async function (token, factory, options) {
-    await setup(options.key_path, options.provider);
-    await configDex(token, factory, options.input_dir);
   });
 
 program
