@@ -598,7 +598,8 @@ function launchExchange (const self : address; const token : address; var s: exc
                circles = (big_map end : big_map(nat, circle_info));      
                circleLoyalty = (big_map end : big_map(address, user_circle_info));   
             end;   
-         lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));
+         lambdas = s.lambdas;
+         // (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));
          end);
       s.tokenToExchange[token] := res.1;
  } with (list[res.0], s)
@@ -629,13 +630,13 @@ function main (const p : exchangeAction ; const s : full_exchange_storage) :
          end
    ) end
   , s)
-  | ConfigDex(n) -> (list
-      transaction(SetSettings1(s.storage.lambdas),
-      0tez,
-      case (Tezos.get_entrypoint_opt("%setSettings", get_force(n, s.storage.tokenToExchange)) : option(contract(y))) of Some(contr) -> contr
-      | None -> (failwith("01"):contract(y))
-      end
-      )
-    end, s)
+//   | ConfigDex(n) -> (list
+//       transaction(SetSettings1(s.storage.lambdas),
+//       0tez,
+//       case (Tezos.get_entrypoint_opt("%setSettings", get_force(n, s.storage.tokenToExchange)) : option(contract(y))) of Some(contr) -> contr
+//       | None -> (failwith("01"):contract(y))
+//       end
+//       )
+//     end, s)
   | SetFunction(n) -> ((nil:list(operation)), if n.0 > 10n then (failwith("Factory/functions-set") : full_exchange_storage) else  setFunction(n.0, n.1, s))
  end
