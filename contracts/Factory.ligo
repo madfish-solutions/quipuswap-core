@@ -2,7 +2,7 @@
 
 // TODO:
 //  - add veto update in invest/divest 
-//  - code align
+
 type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type token_lookup_type is TokenLookupType of (address * address * nat)
 type use_type is UseType of (nat * dexAction) 
@@ -533,7 +533,7 @@ block {
 
 function launchExchange (const self : address; const token : address; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
 block {
-  if s.tokenList contains token then failwith("Exchange launched") else skip ;
+  if s.tokenList contains token then failwith("Factory/exchange-launched") else skip ;
     s.tokenList := Set.add (token, s.tokenList);
     const createDex : (option(key_hash) * tez * full_dex_storage) -> (operation * address) =
     [%Michelson ( {| { UNPPAIIR ;

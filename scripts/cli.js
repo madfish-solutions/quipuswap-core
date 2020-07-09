@@ -119,12 +119,15 @@ let addToken = async (tokenName, factoryName, inputDir) => {
   );
 
   const factoryContract = await Tezos.contract.at(factoryAddress);
-
-  const operation = await factoryContract.methods
-    .launchExchange(tokenAddress)
-    .send();
-  await operation.confirmation();
-  console.log(operation);
+  try {
+    const operation = await factoryContract.methods
+      .launchExchange(tokenAddress)
+      .send();
+    await operation.confirmation();
+    console.log(`Dex for ${tokenAddress} deployed!`);
+  } catch (E) {
+    console.log(E);
+  }
 };
 
 let setFunctions = async (

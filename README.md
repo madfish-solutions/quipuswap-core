@@ -75,8 +75,7 @@ Each token can have no more the one Exchange Pair contract(aka. `Dex`). To add n
 Run:
 
 ```
-node scripts/cli.js add_token
-node scripts/cli.js add_token Token2
+npm run add-tokens
 ```
 
 Now exchnage can be used.
