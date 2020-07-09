@@ -126,7 +126,7 @@ let addToken = async (tokenName, factoryName, inputDir) => {
   console.log(operation);
 };
 
-let setSettings = async (
+let setFunctions = async (
   num,
   functionName,
   dexName,
@@ -159,6 +159,7 @@ let setSettings = async (
             },
           });
           await operation.confirmation();
+          console.log(`Function ${functionName} added`);
         } catch (E) {
           console.log(E);
         }
@@ -260,7 +261,7 @@ program
   });
 
 program
-  .command("set_settings <num> <function_name> [dex] [contract]")
+  .command("set_functions <num> <function_name> [dex] [contract]")
   .description("build contracts")
   .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
   .option(
@@ -277,7 +278,7 @@ program
   .option("-g, --no-dockerized_ligo", "Switch global ligo")
   .action(async function (num, functionName, dex, contract, options) {
     await setup(options.key_path, options.provider);
-    await setSettings(
+    await setFunctions(
       num,
       functionName,
       dex,
