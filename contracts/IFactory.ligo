@@ -14,5 +14,4 @@ end
 type exchangeAction is
 | LaunchExchange of (address)
 | TokenToExchangeLookup of (address * address * nat)
-// | ConfigDex of (address)
 | SetFunction of (nat * ((dexAction * dex_storage * address) -> (list(operation) * dex_storage)))

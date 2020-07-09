@@ -1,19 +1,47 @@
 const { program } = require("commander");
-const { exec } = require("child_process");
+const { exec, execSync } = require("child_process");
 const fs = require("fs");
 const { Tezos } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 
-let buildContract = (contractName, inputDir, outputDir, jsonFormat) => {
+const getLigo = (isDockerizedLigo) => {
+  let path = "ligo";
+  if (isDockerizedLigo) {
+    path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
+    try {
+      execSync(`${path}  --help`);
+    } catch (err) {
+      console.log("Trying to use global version...");
+      path = "ligo";
+      execSync(`${path}  --help`);
+    }
+  } else {
+    try {
+      execSync(`${path}  --help`);
+    } catch (err) {
+      console.log("Trying to use Dockerized version...");
+      path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
+      execSync(`${path}  --help`);
+    }
+  }
+  return path;
+};
+const buildContract = (
+  contractName,
+  inputDir,
+  outputDir,
+  jsonFormat,
+  isDockerizedLigo
+) => {
+  let ligo = getLigo(isDockerizedLigo);
   exec(
-    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-contract ${
+    `${ligo} compile-contract ${
       jsonFormat ? "--michelson-format=json" : ""
     } $PWD/${inputDir}/${contractName}.ligo main`,
     { maxBuffer: 1024 * 1000 },
     (err, stdout, stderr) => {
       if (err) {
         console.log(`Error during ${contractName} built`);
-        console.log(stderr);
         console.log(err);
       } else {
         console.log(`${contractName} built`);
@@ -104,15 +132,17 @@ let setSettings = async (
   dexName,
   contractName,
   inputDir,
-  outputDir
+  outputDir,
+  isDockerizedLigo
 ) => {
   dexName = dexName || "Factory";
   contractName = contractName || "Factory";
   const { address: dexAddress } = JSON.parse(
     fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
   );
+  let ligo = getLigo(isDockerizedLigo);
   exec(
-    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(${num}n, ${functionName})'`,
+    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(${num}n, ${functionName})'`,
     { maxBuffer: 1024 * 500 },
     async (err, stdout, stderr) => {
       if (err) {
@@ -142,10 +172,12 @@ let compileStorage = (
   inputDir,
   outputDir,
   params,
-  outputName
+  outputName,
+  isDockerizedLigo
 ) => {
+  let ligo = getLigo(isDockerizedLigo);
   exec(
-    `docker run -v $PWD:$PWD --rm -i ligolang/ligo:next compile-storage --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main '${params}'`,
+    `${ligo} compile-storage --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main '${params}'`,
     { maxBuffer: 1024 * 500 },
     (err, stdout, stderr) => {
       if (err) {
@@ -167,6 +199,7 @@ program
   .option("-o, --output_dir <dir>", "Where store builds", "build")
   .option("-i, --input_dir <dir>", "Where files are located", "contracts")
   .option("-j, --no-json", "The format of output file")
+  .option("-g, --no-dockerized_ligo", "Switch global ligo")
   .action(function (contract, options) {
     let contractName = contract || "*";
     exec("mkdir -p " + options.output_dir);
@@ -182,7 +215,8 @@ program
         contractName,
         options.input_dir,
         options.output_dir,
-        options.json
+        options.json,
+        options.dockerized_ligo
       );
     }
   });
@@ -192,6 +226,7 @@ program
   .description("build contracts")
   .option("-o, --output_dir <dir>", "Where store builds", "storage")
   .option("-i, --input_dir <dir>", "Where files are located", "contracts")
+  .option("-g, --no-dockerized_ligo", "Switch global ligo")
   .action(function (contract, params, output_name, options) {
     exec("mkdir -p " + options.output_dir);
     output_name = output_name || contract;
@@ -200,7 +235,8 @@ program
       options.input_dir,
       options.output_dir,
       params,
-      output_name
+      output_name,
+      options.dockerized_ligo
     );
   });
 
@@ -238,6 +274,7 @@ program
     "Node to connect",
     "http://127.0.0.1:8732"
   )
+  .option("-g, --no-dockerized_ligo", "Switch global ligo")
   .action(async function (num, functionName, dex, contract, options) {
     await setup(options.key_path, options.provider);
     await setSettings(
@@ -246,7 +283,8 @@ program
       dex,
       contract,
       options.input_dir,
-      options.output_dir
+      options.output_dir,
+      options.dockerized_ligo
     );
   });
 
