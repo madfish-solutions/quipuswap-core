@@ -1,208 +1,201 @@
 #include "IFactory.ligo"
 
 // TODO:
-//  - rename operations
 //  - add veto update in invest/divest 
 //  - code align
 type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type token_lookup_type is TokenLookupType of (address * address * nat)
 type use_type is UseType of (nat * dexAction) 
 
-function initializeExchange (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
- block {
-   var operations: list(operation) := list[];
-   case p of
-   | InitializeExchange(tokenAmount) -> {
-      if s.invariant =/= 0n 
-      or s.totalShares =/= 0n 
-      or amount < 1mutez 
-      or tokenAmount < 10n 
-      or amount > 500000000tz then failwith("Dex/non-allowed") else skip ;
+function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
+block {
+  var operations : list(operation) := list[];
+    case p of
+    | InitializeExchange(tokenAmount) -> {
+        if s.invariant =/= 0n 
+          or s.totalShares =/= 0n 
+          or amount < 1mutez 
+          or tokenAmount < 10n 
+          or amount > 500000000tz then failwith("Dex/non-allowed") else skip ; 
+        s.tokenPool := tokenAmount;
+        s.tezPool := Tezos.amount / 1mutez;
+        s.invariant := s.tezPool * s.tokenPool;
+        s.shares[Tezos.sender] := 1000n;
+        s.totalShares := 1000n;
+        
+         // update user loyalty
+        s.currentCircle.lastUpdate := Tezos.now;
+        s.circleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCircle = 0n; lastCircleUpdate = Tezos.now; end;  
+        operations := transaction(
+          TransferType(Tezos.sender, (this, tokenAmount)), 
+          0mutez, 
+          case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
+            | None -> (failwith("01"):contract(transfer_type))
+          end
+          ) # operations;
+    }
+    | TezToTokenPayment(n) -> failwith("00")
+    | TokenToTezPayment(n) -> failwith("00")
+    | TokenToTokenPayment(n) -> failwith("00")
+    | InvestLiquidity(n) -> failwith("00")
+    | DivestLiquidity(n) -> failwith("00")
+    | SetVotesDelegation(n) -> failwith("00")
+    | Vote(n) -> failwith("00")
+    | Veto(n) -> failwith("00")
+    | WithdrawProfit(n) -> failwith("00")
+    end
+} with (operations, s)
 
-      s.tokenPool := tokenAmount;
-      s.tezPool := Tezos.amount / 1mutez;
-      s.invariant := s.tezPool * s.tokenPool;
-      s.shares[Tezos.sender] := 1000n;
-      s.totalShares := 1000n;
+function setVotesDelegation (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
+block {
+  case p of
+  | InitializeExchange(tokenAmount) -> failwith("00")
+  | TezToTokenPayment(n) -> failwith("00")
+  | TokenToTezPayment(n) -> failwith("00")
+  | TokenToTokenPayment(n) -> failwith("00")
+  | InvestLiquidity(n) -> failwith("00")
+  | DivestLiquidity(n) -> failwith("00")
+  | SetVotesDelegation(n) -> 
+     if Tezos.sender = n.0 then skip
+     else block {
+        const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
+           | Some(v) -> v 
+           end ;
+        if Set.size(src.allowances) > 5n then failwith("Dex/many-voter-delegates") else {
+           src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances) ;
+           s.voters[Tezos.sender] := src;
+        };
+     }
+  | Vote(n) -> failwith("00")
+  | Veto(n) -> failwith("00")
+  | WithdrawProfit(n) -> failwith("00")
+  end
+} with ((nil:list(operation)), s)
 
-       // update user loyalty
-       s.currentCircle.lastUpdate := Tezos.now;
-       s.circleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCircle = 0n; lastCircleUpdate = Tezos.now; end;
-
-      operations := transaction(
-         TransferType(Tezos.sender, (this, tokenAmount)), 
-         0mutez, 
-         case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-         | None -> (failwith("01"):contract(transfer_type))
-         end
-         ) # operations;
-   }
-   | TezToTokenPayment(n) -> failwith("00")
-   | TokenToTezPayment(n) -> failwith("00")
-   | TokenToTokenPayment(n) -> failwith("00")
-   | InvestLiquidity(n) -> failwith("00")
-   | DivestLiquidity(n) -> failwith("00")
-   | SetVotesDelegation(n) -> failwith("00")
-   | Vote(n) -> failwith("00")
-   | Veto(n) -> failwith("00")
-   | WithdrawProfit(n) -> failwith("00")
-   end
- } with (operations, s)
-
-function setVotesDelegation (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
- block {
-   case p of
-   | InitializeExchange(tokenAmount) -> failwith("00")
-   | TezToTokenPayment(n) -> failwith("00")
-   | TokenToTezPayment(n) -> failwith("00")
-   | TokenToTokenPayment(n) -> failwith("00")
-   | InvestLiquidity(n) -> failwith("00")
-   | DivestLiquidity(n) -> failwith("00")
-   | SetVotesDelegation(n) -> 
-      if Tezos.sender = n.0 then skip
-      else block {
-         const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
-            | Some(v) -> v 
-            end ;
-         if Set.size(src.allowances) > 5n then failwith("Dex/many-voter-delegates") else {
-            src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances);
-            s.voters[Tezos.sender] := src;
-         };
-      }
-   | Vote(n) -> failwith("00")
-   | Veto(n) -> failwith("00")
-   | WithdrawProfit(n) -> failwith("00")
-   end
- } with ((nil:list(operation)),s)
-
-function redelegate (const voter : address; const candidate : key_hash; const prevShare : nat; const share : nat; var s: dex_storage ) :  (dex_storage) is
- block {
-    case s.vetos[candidate] of None -> skip
-      | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
-    end;
-
-    const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
-    case s.voters[voter] of None -> skip
-      | Some(v) -> {
-         case v.candidate of None -> skip | Some(c) -> {
-           if s.totalVotes < prevShare then failwith ("Dex/invalid-shares") else skip;
-           s.totalVotes := abs(s.totalVotes - prevShare);
-           s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
-           v.candidate := Some(candidate);
-           voterInfo := v;
-         } end;
-      }
-      end;    
-    if Tezos.sender =/= voter or voterInfo.allowances contains Tezos.sender then {
-      s.voters[voter]:= voterInfo;
-      s.totalVotes := s.totalVotes + share;
-      const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share;
-      s.votes[candidate]:= newVotes;
-      if case s.delegated of None -> True 
-         | Some(delegated) ->
-            if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then True else False
-         end
-      then
-      {
-         s.delegated := Some(candidate);
-      } else skip;
-    } else failwith ("Dex/vote-not-permitted");
-
- } with (s)
+function redelegate (const voter : address; const candidate : key_hash; const prevShare : nat; const share : nat; var s: dex_storage) :  (dex_storage) is
+block {
+  case s.vetos[candidate] of None -> skip
+    | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
+  end;
+  const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
+  case s.voters[voter] of None -> skip
+    | Some(v) -> {
+      case v.candidate of None -> skip | Some(c) -> {
+        if s.totalVotes < prevShare then failwith ("Dex/invalid-shares") else skip ;
+        s.totalVotes := abs(s.totalVotes - prevShare);
+        s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
+        v.candidate := Some(candidate);
+        voterInfo := v;
+      } end;
+    }
+    end;    
+  if Tezos.sender =/= voter or voterInfo.allowances contains Tezos.sender then {
+    s.voters[voter]:= voterInfo;
+    s.totalVotes := s.totalVotes + share;
+    const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share;
+    s.votes[candidate]:= newVotes;
+    if case s.delegated of None -> True 
+      | Some(delegated) ->
+        if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then True else False
+      end
+    then {
+      s.delegated := Some(candidate);
+    } else skip ;
+  } else failwith ("Dex/vote-not-permitted");
+} with (s)
 
 function vote (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
- block {
-   case p of
-   | InitializeExchange(tokenAmount) -> failwith("00")
-   | TezToTokenPayment(n) -> failwith("00")
-   | TokenToTezPayment(n) -> failwith("00")
-   | TokenToTokenPayment(n) -> failwith("00")
-   | InvestLiquidity(n) -> failwith("00")
-   | DivestLiquidity(n) -> failwith("00")
-   | SetVotesDelegation(n) -> failwith("00")
-   | Vote(n) -> 
+block {
+  case p of
+  | InitializeExchange(tokenAmount) -> failwith("00")
+  | TezToTokenPayment(n) -> failwith("00")
+  | TokenToTezPayment(n) -> failwith("00")
+  | TokenToTokenPayment(n) -> failwith("00")
+  | InvestLiquidity(n) -> failwith("00")
+  | DivestLiquidity(n) -> failwith("00")
+  | SetVotesDelegation(n) -> failwith("00")
+  | Vote(n) -> 
       case s.shares[Tezos.sender] of None -> failwith ("Dex/no-shares")
       | Some(share) -> {
-         case s.vetos[n.1] of None -> skip
-         | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
-         end;
-
-         const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(n.1); end;
-         case s.voters[n.0] of None -> skip
-         | Some(v) -> {
+        case s.vetos[n.1] of None -> skip
+          | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
+        end; 
+        const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(n.1); end;
+        case s.voters[n.0] of None -> skip
+          | Some(v) -> {
             case v.candidate of None -> skip | Some(c) -> {
-               if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
-                  s.totalVotes := abs(s.totalVotes - share);
-                  s.votes[c]:= abs(get_force(c, s.votes) - share);
-                  v.candidate := Some(n.1);
-                  voterInfo := v;
-               };
+              if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
+                s.totalVotes := abs(s.totalVotes - share);
+                s.votes[c]:= abs(get_force(c, s.votes) - share);
+                v.candidate := Some(n.1);
+                voterInfo := v;
+              };
             } end;
-         }
-         end;    
-         if Tezos.sender =/= n.0 or voterInfo.allowances contains Tezos.sender then {
-            s.voters[n.0]:= voterInfo;
-            s.totalVotes := s.totalVotes + share;
-            const newVotes: nat = (case s.votes[n.1] of  None -> 0n | Some(v) -> v end) + share;
-            s.votes[n.1]:= newVotes;
-            if case s.delegated of None -> True 
-               | Some(delegated) ->
-                  if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then False else True
-               end
-            then
-            {
-               s.delegated := Some(n.1);
-            } else skip;
-         } else failwith ("Dex/vote-not-permitted");
+          }
+          end;    
+        if Tezos.sender =/= n.0 or voterInfo.allowances contains Tezos.sender then {
+          s.voters[n.0]:= voterInfo;
+          s.totalVotes := s.totalVotes + share;
+          const newVotes: nat = (case s.votes[n.1] of  None -> 0n | Some(v) -> v end) + share;
+          s.votes[n.1]:= newVotes;
+          if case s.delegated of None -> True 
+            | Some(delegated) ->
+              if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then False else True
+            end
+          then
+          {
+             s.delegated := Some(n.1);
+          } else skip ;
+        } else failwith ("Dex/vote-not-permitted");
       }
       end
-   | Veto(n) -> failwith("00")
-   | WithdrawProfit(n) -> failwith("00")
-   end
- } with ((nil:list(operation)), s)
+  | Veto(n) -> failwith("00")
+  | WithdrawProfit(n) -> failwith("00")
+  end
+} with ((nil:list(operation)), s)
 
 function veto (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
- block {
-   var operations: list(operation) := list[];
-   case p of
-   | InitializeExchange(tokenAmount) -> failwith("00")
-   | TezToTokenPayment(n) -> failwith("00")
-   | TokenToTezPayment(n) -> failwith("00")
-   | TokenToTokenPayment(n) -> failwith("00")
-   | InvestLiquidity(n) -> failwith("00")
-   | DivestLiquidity(n) -> failwith("00")
-   | SetVotesDelegation(n) -> failwith("00")
-   | Vote(n) -> failwith("00")
-   | Veto(voter) -> 
-      case s.voters[voter] of None -> failwith ("Dex/no-voter")
+block {
+  var operations: list(operation) := list[];
+  case p of
+  | InitializeExchange(tokenAmount) -> failwith("00")
+  | TezToTokenPayment(n) -> failwith("00")
+  | TokenToTezPayment(n) -> failwith("00")
+  | TokenToTokenPayment(n) -> failwith("00")
+  | InvestLiquidity(n) -> failwith("00")
+  | DivestLiquidity(n) -> failwith("00")
+  | SetVotesDelegation(n) -> failwith("00")
+  | Vote(n) -> failwith("00")
+  | Veto(voter) -> 
+    case s.voters[voter] of None -> failwith ("Dex/no-voter")
       | Some(src) -> {
-         if Tezos.sender =/= voter or src.allowances contains Tezos.sender then {
-            const share : nat = get_force (voter, s.shares);
-            var newShare: nat := case s.vetoVoters[voter] of None -> share
+        if Tezos.sender =/= voter or src.allowances contains Tezos.sender then {
+          const share : nat = get_force (voter, s.shares);
+          var newShare: nat := case s.vetoVoters[voter] of None -> share
             | Some(prev) ->
-               if share > prev then abs(share - prev) else (failwith ("Dex/old-shares") : nat)
+              if share > prev then abs(share - prev) else (failwith ("Dex/old-shares") : nat)
             end;
-            s.veto := s.veto + newShare;
-            if s.veto > s.totalVotes / 2n then {
-               s.veto := 0n;
-               case s.currentDelegated of None -> failwith ("Dex/no-delegated")
-               | Some(c) -> {
-                  s.vetos[c] := Tezos.now + 7889229;
-                  s.currentDelegated := (None: option(key_hash));
-                  operations := set_delegate(s.currentDelegated) # operations;
-                  s.vetoVoters := (big_map end : big_map(address, nat));
-               }
-               end;
-            } else skip;
-            s.vetoVoters[voter] := share;
-         } else failwith ("Dex/vote-not-permitted");
+          s.veto := s.veto + newShare;
+          if s.veto > s.totalVotes / 2n then {
+              s.veto := 0n;
+              case s.currentDelegated of None -> failwith ("Dex/no-delegated")
+              | Some(c) -> {
+                s.vetos[c] := Tezos.now + 7889229;
+                s.currentDelegated := (None: option(key_hash));
+                operations := set_delegate(s.currentDelegated) # operations;
+                s.vetoVoters := (big_map end : big_map(address, nat));
+              }
+              end;
+          } else skip ;
+          s.vetoVoters[voter] := share;
+        } else failwith ("Dex/vote-not-permitted");
       }
       end
-   | WithdrawProfit(n) -> failwith("00")
-   end
- } with (operations, s)
+  | WithdrawProfit(n) -> failwith("00")
+  end
+} with (operations, s)
 
-
+///////
 function tezToToken (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
  block {
    var operations: list(operation) := list[];
@@ -336,13 +329,13 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
           userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(circle.nextCircle - userCircle.lastCircleUpdate)) / circle.totalLoyalty;
           userCircle.loyalty := 0n;
           userCircle.lastCircleUpdate := circle.start;
-       } else skip;
+       } else skip ;
 
        if s.currentCircle.counter - userCircle.lastCircle > 1 then {
           const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
           const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
           userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
-       } else skip;
+       } else skip ;
        userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
        userCircle.lastCircleUpdate := Tezos.now;
        userCircle.lastCircle := s.currentCircle.counter;
@@ -374,7 +367,7 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
             case s.voters[Tezos.sender] of None -> skip
               | Some(v) -> {
                  case v.candidate of None -> skip | Some(c) -> {
-                   if s.totalVotes < share then failwith ("Dex/invalid-shares") else skip;
+                   if s.totalVotes < share then failwith ("Dex/invalid-shares") else skip ;
                    s.totalVotes := abs(s.totalVotes - share);
                    s.votes[c]:= abs(get_force(c, s.votes) - share);
                    v.candidate := Some(candidate);
@@ -393,7 +386,7 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
             then
             {
                s.delegated := Some(candidate);
-            } else skip;
+            } else skip ;
           } end;
        } end;
    }
@@ -437,7 +430,7 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
                } 
                | None -> failwith("Dex/no-circle")
                end;
-            } else skip;
+            } else skip ;
 
             if s.currentCircle.counter - userCircle.lastCircle > 1 then 
                case s.circles[abs(s.currentCircle.counter - 1n)] of 
@@ -447,7 +440,7 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
                      | Some(lastUserCircle) -> userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient)
                      end
                end
-               else skip;
+               else skip ;
             userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
             userCircle.lastCircleUpdate := Tezos.now;
             userCircle.lastCircle := s.currentCircle.counter;
@@ -464,7 +457,7 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
                case v.candidate of None -> skip | Some(candidate) -> {
                   const prevVotes: nat = get_force(candidate, s.votes);
                   s.votes[candidate]:= abs(prevVotes - n.0);
-                  if prevVotes = n.0 then remove Tezos.sender from map s.voters; else skip;
+                  if prevVotes = n.0 then remove Tezos.sender from map s.voters; else skip ;
                } end;
             } end;
             operations := list transaction(TransferType(this, (Tezos.sender, tokensDivested)), 
@@ -509,7 +502,7 @@ function receiveReward (const p : dexAction ; const s : dex_storage; const this:
       then {
          operations := set_delegate(s.delegated) # operations;
          s.currentDelegated := s.delegated;
-      } else skip;
+      } else skip ;
     } else skip ;
     s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
     s.currentCircle.lastUpdate := Tezos.now;
@@ -536,12 +529,12 @@ function withdrawProfit (const p : dexAction ; const s : dex_storage; const this
          userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(circle.nextCircle - userCircle.lastCircleUpdate)) / circle.totalLoyalty;
          userCircle.loyalty := 0n;
          userCircle.lastCircleUpdate := circle.start;
-      } else skip;
+      } else skip ;
       if s.currentCircle.counter - userCircle.lastCircle > 1 then {
          const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
          const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
          userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
-      } else skip;
+      } else skip ;
       userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
       userCircle.lastCircleUpdate := Tezos.now;
       userCircle.lastCircle := s.currentCircle.counter;
@@ -556,7 +549,7 @@ function withdrawProfit (const p : dexAction ; const s : dex_storage; const this
 
 function launchExchange (const self : address; const token : address; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
  block {
-    if s.tokenList contains token then failwith("Exchange launched") else skip;
+    if s.tokenList contains token then failwith("Exchange launched") else skip ;
       s.tokenList := Set.add (token, s.tokenList);
       const createDex : (option(key_hash) * tez * full_dex_storage) -> (operation * address) =
       [%Michelson ( {| { UNPPAIIR ;
