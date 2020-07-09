@@ -9,4 +9,4 @@ echo "set functions"
 npm run set-functions
 
 echo "test"
-npm run test
+npm test

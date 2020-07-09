@@ -4,10 +4,9 @@
 //  - rename operations
 //  - add veto update in invest/divest 
 //  - code align
-type x is Transfer of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
-type w is TokenToExchangeLookup1 of (address * address * nat)
-type z is Use1 of (nat * dexAction) 
-type y is SetSettings1 of big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage))
+type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
+type token_lookup_type is TokenLookupType of (address * address * nat)
+type use_type is UseType of (nat * dexAction) 
 
 function initializeExchange (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
  block {
@@ -31,10 +30,10 @@ function initializeExchange (const p : dexAction ; const s : dex_storage; const 
        s.circleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCircle = 0n; lastCircleUpdate = Tezos.now; end;
 
       operations := transaction(
-         Transfer(Tezos.sender, (this, tokenAmount)), 
+         TransferType(Tezos.sender, (this, tokenAmount)), 
          0mutez, 
-         case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
-         | None -> (failwith("01"):contract(x))
+         case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(transfer_type))
          end
          ) # operations;
    }
@@ -219,10 +218,10 @@ function tezToToken (const p : dexAction ; const s : dex_storage; const this: ad
                s.tokenPool := newTokenPool;
                s.invariant := s.tezPool * newTokenPool;
                operations :=  transaction(
-                  Transfer(this, (n.1, tokensOut)), 
+                  TransferType(this, (n.1, tokensOut)), 
                   0mutez, 
-                  case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
-                  | None -> (failwith("01"):contract(x))
+                  case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
+                  | None -> (failwith("01"):contract(transfer_type))
                   end
                   ) # operations;
             } else failwith("Dex/high-min-out");
@@ -254,10 +253,10 @@ function tokenToTez (const p : dexAction ; const s : dex_storage; const this: ad
             s.tezPool := newTezPool;
             s.invariant := newTezPool * s.tokenPool;
             operations:= list transaction(
-               Transfer(Tezos.sender, (this, n.0)), 
+               TransferType(Tezos.sender, (this, n.0)), 
                0mutez, 
-               case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
-               | None -> (failwith("01"):contract(x))
+               case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
+               | None -> (failwith("01"):contract(transfer_type))
                end); 
                transaction(unit, n.1 * 1mutez, (get_contract(n.2) : contract(unit))); end;
          } else failwith("Dex/high-min-tez-out");
@@ -287,15 +286,15 @@ function tokenToTokenOut (const p : dexAction ; const s : dex_storage; const thi
          const tezOut : nat = abs(s.tezPool - newTezPool);
          s.tezPool := newTezPool;
          s.invariant := newTezPool * s.tokenPool;
-         operations := list[ transaction(Transfer(Tezos.sender, (this, n.0)), 
+         operations := list[ transaction(TransferType(Tezos.sender, (this, n.0)), 
             0mutez,          
-            case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
-            | None -> (failwith("01"):contract(x))
+            case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
+            | None -> (failwith("01"):contract(transfer_type))
             end);
-            transaction(TokenToExchangeLookup1(n.2, n.3, n.1), 
+            transaction(TokenLookupType(n.2, n.3, n.1), 
             tezOut * 1mutez,          
-            case (Tezos.get_entrypoint_opt("%tokenToExchangeLookup", s.factoryAddress) : option(contract(w))) of Some(contr) -> contr
-            | None -> (failwith("01"):contract(w))
+            case (Tezos.get_entrypoint_opt("%tokenLookup", s.factoryAddress) : option(contract(token_lookup_type))) of Some(contr) -> contr
+            | None -> (failwith("01"):contract(token_lookup_type))
             end);
          ];
       } else failwith("Dex/wrong-params")
@@ -355,10 +354,10 @@ function investLiquidity (const p : dexAction ; const s : dex_storage; const thi
        s.invariant := s.tezPool * s.tokenPool;
        s.totalShares := s.totalShares + sharesPurchased;
 
-       operations := transaction(Transfer(Tezos.sender, (this, tokensRequired)), 
+       operations := transaction(TransferType(Tezos.sender, (this, tokensRequired)), 
        0mutez, 
-       case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
-         | None -> (failwith("01"):contract(x))
+       case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(transfer_type))
          end
          ) # operations;
 
@@ -468,10 +467,10 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
                   if prevVotes = n.0 then remove Tezos.sender from map s.voters; else skip;
                } end;
             } end;
-            operations := list transaction(Transfer(this, (Tezos.sender, tokensDivested)), 
+            operations := list transaction(TransferType(this, (Tezos.sender, tokensDivested)), 
             0mutez,          
-            case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(x))) of Some(contr) -> contr
-               | None -> (failwith("01"):contract(x))
+            case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
+               | None -> (failwith("01"):contract(transfer_type))
                end
                ); 
             transaction(unit, tezDivested * 1mutez, (get_contract(Tezos.sender) : contract(unit))); end;
@@ -622,11 +621,11 @@ function middle (const token : address ; var s : full_exchange_storage) :  (list
 function main (const p : exchangeAction ; const s : full_exchange_storage) :
   (list(operation) * full_exchange_storage) is case p of
     LaunchExchange(n) -> middle(n, s)
-  | TokenToExchangeLookup(n) -> (
-  list transaction(Use1(1n, TezToTokenPayment(n.2, n.1)), 
+  | TokenLookup(n) -> (
+  list transaction(UseType(1n, TezToTokenPayment(n.2, n.1)), 
    Tezos.amount, 
-   case (Tezos.get_entrypoint_opt("%use", get_force(n.0, s.storage.tokenToExchange)) : option(contract(z))) of Some(contr) -> contr
-         | None -> (failwith("01"):contract(z))
+   case (Tezos.get_entrypoint_opt("%use", get_force(n.0, s.storage.tokenToExchange)) : option(contract(use_type))) of Some(contr) -> contr
+         | None -> (failwith("01"):contract(use_type))
          end
    ) end
   , s)

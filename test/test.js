@@ -13,14 +13,12 @@ const { address: tokenAddress1 } = JSON.parse(
 let dexAddress1;
 let dexAddress2;
 
-const { address: factoryAddress } = JSON.parse(
+const { address: factoryAddress, network: provider } = JSON.parse(
   fs.readFileSync("./deploy/Factory.json").toString()
 );
 const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
-
-const provider = "https://api.tez.ie/rpc/carthagenet";
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);

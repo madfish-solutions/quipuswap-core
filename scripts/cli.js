@@ -3,7 +3,7 @@ const { exec, execSync } = require("child_process");
 const fs = require("fs");
 const { Tezos } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
-
+let rpcProvider;
 const getLigo = (isDockerizedLigo) => {
   let path = "ligo";
   if (isDockerizedLigo) {
@@ -56,7 +56,7 @@ const buildContract = (
 
 const setup = async (keyPath, provider) => {
   const secretKey = fs.readFileSync(keyPath).toString();
-
+  rpcProvider = provider;
   return await Tezos.setProvider({
     rpc: provider,
     signer: await new InMemorySigner.fromSecretKey(secretKey),
@@ -96,6 +96,7 @@ let deployContract = async (
   }
   let contract = await operation.contract();
   const detail = {
+    network: rpcProvider,
     address: contract.address,
   };
   outputName = outputName || contractName;
@@ -291,7 +292,7 @@ program
 
 program
   .command("deploy <contract> [output_name] [storage_name]")
-  .description("build contracts")
+  .description("deploy contracts")
   .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
   .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
   .option(
