@@ -1,4 +1,3 @@
-network="-p https://api.tez.ie/rpc/carthagenet"
 echo "build"
 npm run build
 

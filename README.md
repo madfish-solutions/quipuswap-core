@@ -9,15 +9,15 @@ Current implementation supports FA1.2 tokens.
 The solution consist of 3 type of contracts:
 
 1. Factory : singleton used to deploy new exchange pair and route Tez during token to token exchanges;
-2. Dex : repre
-3. Token
+2. Dex : contract for TokenX-XTZ pair exchanges;
+3. Token : FA1.2 token standart.
 
 # Prerequirements
 
-- Ligo installed in Docker:
+- installled Ligo:
 
 ```
-docker pull ligolang/ligo:next
+curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "next"
 ```
 
 - node packages:
@@ -40,52 +40,34 @@ Contracts are processed the following stages:
 To compile the contracts and generate Michelson:
 
 ```
-node scripts/cli2.js build Dex --no-json -o contracts
-node scripts/cli2.js build Factory
-node scripts/cli2.js build Token
+npm run build
 ```
 
 Here we compile `Dex.ligo` to raw Michelson. This code will be deployed during Factories `LaunchExchange` call to add new exchange-pair. And then compile other contracts and store them in json format to deploy with [taquito](https://tezostaquito.io/).
 
-Сompiled Factory and Token are stored in `build`.
+Сompiled Factory and Token are stored in `build/`.
 
 ## Factory & Token Deployment
 
-First we need to prepare storage for Factory contract:
+Run:
 
 ```
-node scripts/cli2.js compile_storage Factory 'record   storage = record      tokenList = (set[] : set(address));      tokenToExchange = (big_map[] :big_map(address, address));      lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   end;   lambdas =  big_map[0n -> launchExchange]; end'
+npm run deploy
 ```
 
-Then contracts are deployed to the network (flag -n says that the storage is in Michelson format) with commands:
-
-```
-node scripts/cli2.js deploy -n Factory
-node scripts/cli2.js deploy Token
-node scripts/cli2.js deploy Token Token2
-```
+First we prepare storage for Factory contract and then contracts are deployed to the network.
 
 Addresses of deployed contacts sre displayed and stored to `deploy` folder in JSON format.
 
 ## Factory Configuration
 
-Because of **_gas limit issue_** it is impossible to put all the functions to the code sections of the contract(and execute it). Instead they are stored in as lambdas in `big_map`. Their code cannot be placed to the storage due to **_storage limits issue_**. Each Dex function is added by separate transaction:
+Because of **_gas limit issue_** it is impossible to put all the functions to the code sections of the contract(and execute it). Instead they are stored in as lambdas in `big_map`. Their code cannot be placed to the storage due to **_operation size limits issue_**. So each Dex function is added to Factory by separate transaction. Run:
 
 ```
-node scripts/cli2.js set_settings 0 initializeExchange
-node scripts/cli2.js set_settings 1 tezToToken
-node scripts/cli2.js set_settings 2 tokenToTez
-node scripts/cli2.js set_settings 3 tokenToTokenOut
-node scripts/cli2.js set_settings 4 investLiquidity
-node scripts/cli2.js set_settings 5 divestLiquidity
-node scripts/cli2.js set_settings 6 setVotesDelegation
-node scripts/cli2.js set_settings 7 vote
-node scripts/cli2.js set_settings 8 veto
-node scripts/cli2.js set_settings 9 receiveReward
-node scripts/cli2.js set_settings 10 withdrawProfit
+npm run set-functions
 ```
 
-After this step new token pairs can be added.
+After this step new token pairs can be deployed.
 
 ## Exchange Pair Deployment
 
@@ -93,8 +75,8 @@ Each token can have no more the one Exchange Pair contract(aka. `Dex`). To add n
 Run:
 
 ```
-node scripts/cli2.js add_token
-node scripts/cli2.js add_token Token2
+node scripts/cli.js add_token
+node scripts/cli.js add_token Token2
 ```
 
 Now exchnage can be used.
@@ -109,9 +91,6 @@ Now exchnage can be used.
 - setFunction(funcIndex: nat, func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)):
 
 ## Dex
-
-- DivestLiquidity of (nat _ nat _ nat)
-- SetVotesDelegation of (address \* bool)
 
 - setSettings(funcs: big_map(nat, (dexAction, dex_storage, address) -> (list(operation), dex_storage))) : set `funcs` that are sent from Factory to `lambdas`; these functions can be executed with `use` entrypoint.
 - default() : default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation circle.
@@ -133,14 +112,15 @@ Actions have the following parameters (index in the list matches the index in `l
 
 ## Token FA1.2
 
+Implements standart [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md).
+
 # Testing
 
 Mocha is used for testing and is installed along with other packages.
-
-Launch sandbox network. For instance, using [truffle](https://www.trufflesuite.com/docs/tezos/truffle/quickstart).
-
-Run testing:
+Run:
 
 ```
-./node_modules/mocha/bin/mocha
+npm test
 ```
+
+NOTE: if you want to use different network, configure `$npm_package_config_network` in `package.json`
