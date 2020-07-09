@@ -26,6 +26,8 @@ curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "ne
 npm i
 ```
 
+- keys to sign transactions. Unecrypted private key should be placed in `key` file in root directory.
+
 # Usage
 
 Contracts are processed the following stages:
@@ -115,7 +117,7 @@ Implements standart [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master
 
 # Testing
 
-Mocha is used for testing and is installed along with other packages.
+Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in files `key` and `key1`.
 Run:
 
 ```

@@ -724,7 +724,7 @@
               },
               { "prim": "nat" }
             ],
-            "annots": ["%tokenToExchangeLookup"]
+            "annots": ["%tokenLookup"]
           }
         ]
       }

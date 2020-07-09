@@ -18,7 +18,7 @@
                     [ [ { "prim": "PUSH",
                           "args":
                             [ { "prim": "string" },
-                              { "string": "Exchange launched" } ] },
+                              { "string": "Factory/exchange-launched" } ] },
                         { "prim": "FAILWITH" } ],
                       [ { "prim": "PUSH",
                           "args": [ { "prim": "unit" }, { "prim": "Unit" } ] } ] ] },
