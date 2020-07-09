@@ -1,9 +1,12 @@
 {
   "name": "quipuswap",
   "version": "0.0.1",
+  "config": {
+    "network": "https://api.tez.ie/rpc/carthagenet"
+  },
   "scripts": {
-    "build": "node build.js",
-    "deploy": "node deploy.js",
+    "build": "node scripts/cli.js build Dex --no-json -o contracts && node scripts/cli.js build Factory  -o test && node scripts/cli.js build Token",
+    "deploy": "node scripts/cli.js compile_storage Factory 'record   storage = record      tokenList = (set[] : set(address));      tokenToExchange = (big_map[] :big_map(address, address));      lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   end;   lambdas =  big_map[0n -> launchExchange]; end' && node scripts/cli.js deploy -n Factory -p $npm_package_config_network && sleep 3 && node scripts/cli.js deploy Token -p $npm_package_config_network && sleep 3 && node scripts/cli.js deploy Token Token2 -p $npm_package_config_network && sleep 3",
     "test": "node scripts/build.js && node scripts/deploy.js && node tests/tests.js",
     "test:latest": "node tests/tests.js"
   },
