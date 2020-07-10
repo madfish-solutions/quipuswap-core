@@ -117,7 +117,8 @@ Implements standart [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master
 
 # Testing
 
-Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in files `key` and `key1`.
+Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in files `key` and `key1`. `Factory`, `Token` and `Token2` contracts should be deployed before and their addresses should be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Look at `test.sh` for better understanding.
+
 Run:
 
 ```
