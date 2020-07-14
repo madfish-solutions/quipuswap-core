@@ -45,31 +45,6 @@ const getContractFullStorage = async (Tezos, address, maps = {}) => {
   return result;
 };
 
-const getContractFullStorageV2 = async (Tezos, address, maps = {}) => {
-  const contract = await Tezos.contract.at(address);
-  const storage = await contract.storage();
-  var result = {
-    ...storage,
-  };
-  for (let key in maps) {
-    result[key + "Extended"] = await maps[key].reduce(async (prev, current) => {
-      let entry;
-
-      try {
-        entry = await storage.storage[key].get(current);
-      } catch (ex) {
-        console.error(ex);
-      }
-
-      return {
-        ...(await prev),
-        [current]: entry,
-      };
-    }, Promise.resolve({}));
-  }
-  return result;
-};
-
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -108,9 +83,8 @@ class Factory {
     return operation;
   }
 
-  async getFullStorage(Tezos, address, maps = {}) {
-    const contract = await Tezos.contract.at(address);
-    const storage = await contract.storage();
+  async getFullStorage(maps = {}) {
+    const storage = await this.contract.storage();
     var result = {
       ...storage,
     };
@@ -359,21 +333,21 @@ class Test {
       .send();
     await operation.confirmation();
 
-    let factoryContract = await tezos.contract.at(factoryAddress);
-    operation = await factoryContract.methods
-      .launchExchange(tokenAddress)
-      .send();
+    let factory = await Factory.init(tezos);
+    operation = await factory.launchExchange(tokenAddress);
     await operation.confirmation();
     assert(operation.status === "applied", "Operation was not applied");
 
-    let storage = await getContractFullStorageV2(tezos, factoryAddress, {
+    let storage = await factory.getFullStorage({
       tokenToExchange: [tokenAddress],
     });
     return storage.tokenToExchangeExtended[tokenAddress];
   }
+
   static async getDexAddress(tokenAddress) {
     let tezos = await setup();
-    let storage = await getContractFullStorageV2(tezos, factoryAddress, {
+    let factory = await Factory.init(tezos);
+    let storage = await factory.getFullStorage({
       tokenToExchange: [tokenAddress],
     });
     return storage.tokenToExchangeExtended[tokenAddress];
