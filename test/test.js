@@ -392,10 +392,28 @@ class Test {
     let factory = await Dex.init(Tezos);
     let index = 11;
     let initialStorage = await factory.getFullStorage({ lambdas: [index] });
+    let lambda = { prim: "DUP" };
 
     assert(initialStorage.lambdas[index] == undefined);
     try {
-      await dex.setFunction(index, lamda);
+      await dex.setFunction(index, lambda);
+      assert(false, "Adding function should fail");
+    } catch (e) {}
+
+    let finalStorage = await factory.getFullStorage({ lambdas: [index] });
+    assert(finalStorage.lambdas[index] == undefined);
+  }
+
+  static async setFunctionWithExistedIndex() {
+    let Tezos = await setup();
+    let factory = await Dex.init(Tezos);
+    let index = 1;
+    let initialStorage = await factory.getFullStorage({ lambdas: [index] });
+    let lambda = { prim: "DUP" };
+
+    assert(initialStorage.lambdas[index] == undefined);
+    try {
+      await dex.setFunction(index, lambda);
       assert(false, "Adding function should fail");
     } catch (e) {}
 
@@ -1101,6 +1119,10 @@ describe("Incorrect Factory calls", function () {
     it("shouldn't add function with higher index", async function () {
       this.timeout(1000000);
       await Test.setFunctionWithHigherIndex();
+    });
+    it("shouldn't add function with existed index", async function () {
+      this.timeout(1000000);
+      await Test.setFunctionWithExistedIndex();
     });
   });
 });
