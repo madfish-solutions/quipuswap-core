@@ -387,6 +387,22 @@ class Test {
     assert(finalStorage.storage.totalShares == 1000);
   }
 
+  static async setFunctionWithHigherIndex() {
+    let Tezos = await setup();
+    let factory = await Dex.init(Tezos);
+    let index = 11;
+    let initialStorage = await factory.getFullStorage({ lambdas: [index] });
+
+    assert(initialStorage.lambdas[index] == undefined);
+    try {
+      await dex.setFunction(index, lamda);
+      assert(false, "Adding function should fail");
+    } catch (e) {}
+
+    let finalStorage = await factory.getFullStorage({ lambdas: [index] });
+    assert(finalStorage.lambdas[index] == undefined);
+  }
+
   static async investLiquidity(dexAddress, tokenAddress) {
     let Tezos = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
@@ -1082,14 +1098,9 @@ describe("Incorrect Factory calls", function () {
   });
 
   describe("SetFunction()", function () {
-    it("shouldn't add function with higher index 1", async function () {
+    it("shouldn't add function with higher index", async function () {
       this.timeout(1000000);
-      await Test.setFunctionWithHigherIndex(dexAddress1);
-    });
-
-    it("shouldn't add function with higher index 2", async function () {
-      this.timeout(1000000);
-      await Test.setFunctionWithHigherIndex(dexAddress2);
+      await Test.setFunctionWithHigherIndex();
     });
   });
 });
