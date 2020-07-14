@@ -74,6 +74,69 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+class Factory {
+  constructor(Tezos, contract) {
+    this.tezos = Tezos;
+    this.contract = contract;
+  }
+
+  static async init(Tezos) {
+    return new Factory(Tezos, await Tezos.contract.at(factoryAddress));
+  }
+
+  async launchExchange(tokenAddress) {
+    const operation = await this.contract.methods
+      .launchExchange(tokenAddress)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
+
+  async setFunction(index, lambda) {
+    const operation = await this.contract.methods
+      .setFunction(index, lambda)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
+
+  async tokenLookup(token, receiver, minTokensOut) {
+    const operation = await this.contract.methods
+      .tokenLookup(token, receiver, minTokensOut)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
+
+  async getFullStorage(Tezos, address, maps = {}) {
+    const contract = await Tezos.contract.at(address);
+    const storage = await contract.storage();
+    var result = {
+      ...storage,
+    };
+    for (let key in maps) {
+      result[key + "Extended"] = await maps[key].reduce(
+        async (prev, current) => {
+          let entry;
+
+          try {
+            entry = await storage.storage[key].get(current);
+          } catch (ex) {
+            console.error(ex);
+          }
+
+          return {
+            ...(await prev),
+            [current]: entry,
+          };
+        },
+        Promise.resolve({})
+      );
+    }
+    return result;
+  }
+}
+
 class Dex {
   constructor(Tezos, contract) {
     this.tezos = Tezos;
@@ -302,14 +365,17 @@ class Test {
       .send();
     await operation.confirmation();
     assert(operation.status === "applied", "Operation was not applied");
-    // operation = await factoryContract.methods.configDex(tokenAddress).send();
-    // await operation.confirmation();
-    assert(operation.status === "applied", "Operation was not applied");
 
     let storage = await getContractFullStorageV2(tezos, factoryAddress, {
       tokenToExchange: [tokenAddress],
     });
-    console.log(storage.tokenToExchangeExtended);
+    return storage.tokenToExchangeExtended[tokenAddress];
+  }
+  static async getDexAddress(tokenAddress) {
+    let tezos = await setup();
+    let storage = await getContractFullStorageV2(tezos, factoryAddress, {
+      tokenToExchange: [tokenAddress],
+    });
     return storage.tokenToExchangeExtended[tokenAddress];
   }
 
@@ -871,7 +937,7 @@ class Test {
   }
 }
 
-describe("Dex", function () {
+describe("Correct calls", function () {
   before(async function () {
     this.timeout(1000000);
 
@@ -1029,6 +1095,27 @@ describe("Dex", function () {
     it("should withdraw baker's profit 2", async function () {
       this.timeout(1000000);
       await Test.withdrawProfit(dexAddress2);
+    });
+  });
+});
+
+describe("Incorrect Factory calls", function () {
+  before(async function () {
+    this.timeout(1000000);
+
+    dexAddress1 = await Test.getDexAddress(tokenAddress1);
+    dexAddress2 = await Test.getDexAddress(tokenAddress2);
+  });
+
+  describe("SetFunction()", function () {
+    it("shouldn't add function with higher index 1", async function () {
+      this.timeout(1000000);
+      await Test.setFunctionWithHigherIndex(dexAddress1);
+    });
+
+    it("shouldn't add function with higher index 2", async function () {
+      this.timeout(1000000);
+      await Test.setFunctionWithHigherIndex(dexAddress2);
     });
   });
 });
