@@ -5,6 +5,7 @@ const BigNumber = require("bignumber.js");
 const { InMemorySigner } = require("@taquito/signer");
 const path = require("path");
 const { MichelsonMap } = require("@taquito/michelson-encoder");
+const { exec, execSync } = require("child_process");
 
 const { address: tokenAddress1 } = JSON.parse(
   fs.readFileSync("./deploy/Token.json").toString()
@@ -19,6 +20,29 @@ const { address: factoryAddress, network: provider } = JSON.parse(
 const { address: tokenAddress2 } = JSON.parse(
   fs.readFileSync("./deploy/Token2.json").toString()
 );
+
+const getLigo = (isDockerizedLigo) => {
+  let path = "ligo";
+  if (isDockerizedLigo) {
+    path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
+    try {
+      execSync(`${path}  --help`);
+    } catch (err) {
+      console.log("Trying to use global version...");
+      path = "ligo";
+      execSync(`${path}  --help`);
+    }
+  } else {
+    try {
+      execSync(`${path}  --help`);
+    } catch (err) {
+      console.log("Trying to use Dockerized version...");
+      path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
+      execSync(`${path}  --help`);
+    }
+  }
+  return path;
+};
 
 const getContractFullStorage = async (Tezos, address, maps = {}) => {
   const contract = await Tezos.contract.at(address);
@@ -67,10 +91,20 @@ class Factory {
     return operation;
   }
 
-  async setFunction(index, lambda) {
-    const operation = await this.contract.methods
-      .setFunction(index, lambda)
-      .send();
+  async setFunction(index, lambdaName) {
+    let ligo = getLigo(true);
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/Factory.ligo main 'SetFunction(${index}n, ${lambdaName})'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await this.tezos.contract.transfer({
+      to: factoryAddress,
+      amount: 0,
+      parameter: {
+        entrypoint: "setFunction",
+        value: JSON.parse(stdout).args[0].args[0],
+      },
+    });
     await operation.confirmation();
     return operation;
   }
@@ -95,9 +129,7 @@ class Factory {
 
           try {
             entry = await storage.storage[key].get(current);
-          } catch (ex) {
-            console.error(ex);
-          }
+          } catch (ex) {}
 
           return {
             ...(await prev),
@@ -389,16 +421,20 @@ class Test {
 
   static async setFunctionWithHigherIndex() {
     let Tezos = await setup();
-    let factory = await Dex.init(Tezos);
+    let factory = await Factory.init(Tezos);
     let index = 11;
     let initialStorage = await factory.getFullStorage({ lambdas: [index] });
-    let lambda = { prim: "DUP" };
-
+    let lambda = "initializeExchange";
     assert(initialStorage.lambdas[index] == undefined);
     try {
-      await dex.setFunction(index, lambda);
+      await factory.setFunction(index, lambda);
       assert(false, "Adding function should fail");
-    } catch (e) {}
+    } catch (e) {
+      assert(
+        e.message === "Factory/functions-set",
+        "Adding function should fail"
+      );
+    }
 
     let finalStorage = await factory.getFullStorage({ lambdas: [index] });
     assert(finalStorage.lambdas[index] == undefined);
@@ -406,16 +442,21 @@ class Test {
 
   static async setFunctionWithExistedIndex() {
     let Tezos = await setup();
-    let factory = await Dex.init(Tezos);
+    let factory = await Factory.init(Tezos);
     let index = 1;
     let initialStorage = await factory.getFullStorage({ lambdas: [index] });
-    let lambda = { prim: "DUP" };
+    let lambda = "initializeExchange";
 
     assert(initialStorage.lambdas[index] == undefined);
     try {
-      await dex.setFunction(index, lambda);
+      await factory.setFunction(index, lambda);
       assert(false, "Adding function should fail");
-    } catch (e) {}
+    } catch (e) {
+      assert(
+        e.message === "Factory/function-set",
+        "Adding function should fail"
+      );
+    }
 
     let finalStorage = await factory.getFullStorage({ lambdas: [index] });
     assert(finalStorage.lambdas[index] == undefined);
@@ -854,8 +895,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
@@ -876,8 +917,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
     let reward = 1;
 
     const pkh = await Tezos.signer.publicKeyHash();
@@ -931,8 +972,8 @@ class Test {
     let Tezos = await setup();
     let Tezos1 = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
-    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    // let delegate = await Tezos.signer.publicKeyHash();
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
     const pkh1 = await Tezos1.signer.publicKeyHash();
