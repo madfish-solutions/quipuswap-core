@@ -68,8 +68,8 @@
 
 ### WithdrawProfit
 
-- no profit to withdraw
+- [ ] no profit to withdraw
 
 ## General
 
-- try spam by 5 accounts
+- [ ] try spam by 5 accounts
