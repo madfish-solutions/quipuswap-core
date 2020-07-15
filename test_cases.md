@@ -37,10 +37,11 @@
 
 ### InvestLiquidity
 
-- [ ] amount is 0
-- [ ] tokenAmount is 0
-- [ ] wrong minShares
-- [ ] receiver is explicit
+- [x] amount is 0
+- [x] tokenAmount is 0
+- [x] low minShares
+- [x] high minShares
+- [ ] total shares higher than tokens or xtz
 - [ ] if vetted candidate
 
 ### DivestLiquidity
@@ -48,6 +49,8 @@
 - [ ] divestedShares is 0
 - [ ] amountOut is too low
 - [ ] tokensOut is too low
+- [ ] amountOut is too high
+- [ ] tokensOut is too high
 
 ### SetVotesDelegation
 

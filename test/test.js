@@ -682,6 +682,98 @@ class Test {
     }
   }
 
+  static async investLiquidityWithoutTez(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tezAmount = "0";
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const minShares = parseInt(
+      (mutezAmount / initialStorage.storage.tezPool) *
+        initialStorage.storage.totalShares
+    );
+    const tokenAmount = parseInt(
+      (minShares * initialStorage.storage.tokenPool) /
+        initialStorage.storage.totalShares
+    );
+    try {
+      await dex.investLiquidity(tokenAmount, tezAmount, minShares);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+
+  static async investLiquidityWithoutTokens(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tezAmount = "5.0";
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const minShares = parseInt(
+      (mutezAmount / initialStorage.storage.tezPool) *
+        initialStorage.storage.totalShares
+    );
+    const tokenAmount = 0;
+    try {
+      await dex.investLiquidity(tokenAmount, tezAmount, minShares);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/invalid-shares", "Adding function should fail");
+    }
+  }
+
+  static async investLiquidityWithoutShares(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tezAmount = "5.0";
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const minShares = parseInt(
+      (mutezAmount / initialStorage.storage.tezPool) *
+        initialStorage.storage.totalShares
+    );
+    const tokenAmount = parseInt(
+      (minShares * initialStorage.storage.tokenPool) /
+        initialStorage.storage.totalShares
+    );
+    try {
+      await dex.investLiquidity(tokenAmount, tezAmount, 0);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+  static async investLiquidityWithHighShares(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tezAmount = "5.0";
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const minShares = parseInt(
+      (mutezAmount / initialStorage.storage.tezPool) *
+        initialStorage.storage.totalShares
+    );
+    const tokenAmount = parseInt(
+      (minShares * initialStorage.storage.tokenPool) /
+        initialStorage.storage.totalShares
+    );
+    try {
+      await dex.investLiquidity(tokenAmount, tezAmount, 100000000000);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+
   static async tokenToTezPaymentWithoutTokens(dexAddress) {
     let Tezos = await setup();
     let dex = await Dex.init(Tezos, dexAddress);
@@ -1633,38 +1725,80 @@ describe("Incorrect Factory calls", function () {
   //   });
   // });
 
-  describe("TokenToTokenPayment()", function () {
+  // describe("TokenToTokenPayment()", function () {
+  //   it("shouldn't swap token if no token is provided", async function () {
+  //     this.timeout(1000000);
+  //     await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
+  //   });
+  //   it("shouldn't swap token if desirable output is zero", async function () {
+  //     this.timeout(1000000);
+  //     await Test.tokenToTokenPaymentWithoutTokensOut(
+  //       dexAddress1,
+  //       tokenAddress2
+  //     );
+  //   });
+  //   it("shouldn't swap token if token output is too high", async function () {
+  //     this.timeout(1000000);
+  //     await Test.tokenToTokenPaymentWithHighTokensOut(
+  //       dexAddress1,
+  //       tokenAddress2
+  //     );
+  //   });
+  //   it("should swap token even if receiver is explicit account(contract)", async function () {
+  //     this.timeout(1000000);
+  //     await Test.tokenToTokenPaymentWithExplicitReceiver(
+  //       dexAddress1,
+  //       tokenAddress2
+  //     );
+  //   });
+  //   it("shouldn't swap token if token pair doesn't exist", async function () {
+  //     this.timeout(1000000);
+  //     await Test.tokenToTokenPaymentToUnexistedToken(
+  //       dexAddress1,
+  //       factoryAddress
+  //     );
+  //   });
+  // });
+
+  describe("InvestLiquidity()", function () {
+    it("shouldn't swap token if no tez is provided", async function () {
+      this.timeout(1000000);
+      await Test.investLiquidityWithoutTez(dexAddress1);
+    });
     it("shouldn't swap token if no token is provided", async function () {
       this.timeout(1000000);
-      await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
+      await Test.investLiquidityWithoutTokens(dexAddress1);
     });
-    it("shouldn't swap token if desirable output is zero", async function () {
+    it("shouldn't swap token if min shares is zero", async function () {
       this.timeout(1000000);
-      await Test.tokenToTokenPaymentWithoutTokensOut(
-        dexAddress1,
-        tokenAddress2
-      );
+      await Test.investLiquidityWithoutShares(dexAddress1);
     });
-    it("shouldn't swap token if token output is too high", async function () {
+    it("shouldn't swap token if min shares are too high", async function () {
       this.timeout(1000000);
-      await Test.tokenToTokenPaymentWithHighTokensOut(
-        dexAddress1,
-        tokenAddress2
-      );
+      await Test.investLiquidityWithHighShares(dexAddress1);
     });
-    it("should swap token even if receiver is explicit account(contract)", async function () {
+  });
+
+  describe("DivestLiquidity()", function () {
+    it("shouldn't divest if no shares are burned", async function () {
       this.timeout(1000000);
-      await Test.tokenToTokenPaymentWithExplicitReceiver(
-        dexAddress1,
-        tokenAddress2
-      );
+      await Test.divestLiquidityWithZeroSharesBurned(dexAddress1);
     });
-    it("shouldn't swap token if token pair doesn't exist", async function () {
+    it("shouldn't divest if min tokens out are zero", async function () {
       this.timeout(1000000);
-      await Test.tokenToTokenPaymentToUnexistedToken(
-        dexAddress1,
-        factoryAddress
-      );
+      await Test.divestLiquidityWithZeroTokensOut(dexAddress1);
+    });
+    it("shouldn't divest if min tez out are zero", async function () {
+      this.timeout(1000000);
+      await Test.divestLiquidityWithZeroTezOut(dexAddress1);
+    });
+    it("shouldn't divest if min tokens out are too high", async function () {
+      this.timeout(1000000);
+      await Test.divestLiquidityWithHighTokensOut(dexAddress1);
+    });
+    it("shouldn't divest if min tez out are too high", async function () {
+      this.timeout(1000000);
+      await Test.divestLiquidityWithHighTezOut(dexAddress1);
     });
   });
 });
