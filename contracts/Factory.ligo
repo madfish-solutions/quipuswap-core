@@ -413,7 +413,7 @@ block {
         const tezDivested : nat = tezPerShare * n.0;
         const tokensDivested : nat = tokensPerShare * n.0;
 
-        if  n.1 > 0n and n.2 > 0n tezDivested >= n.1 and tokensDivested >= n.2 then {
+        if n.1 > 0n and n.2 > 0n and tezDivested >= n.1 and tokensDivested >= n.2 then {
           var userCircle : user_circle_info := get_force(Tezos.sender, s.circleLoyalty);
           if userCircle.lastCircle =/= s.currentCircle.counter then {
             case s.circles[userCircle.lastCircle] of Some(circle) -> {
