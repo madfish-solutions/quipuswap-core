@@ -46,11 +46,11 @@
 
 ### DivestLiquidity
 
-- [ ] divestedShares is 0
-- [ ] amountOut is too low
-- [ ] tokensOut is too low
-- [ ] amountOut is too high
-- [ ] tokensOut is too high
+- [x] divestedShares is 0
+- [x] amountOut is too low
+- [x] tokensOut is too low
+- [x] amountOut is too high
+- [x] tokensOut is too high
 
 ### SetVotesDelegation
 

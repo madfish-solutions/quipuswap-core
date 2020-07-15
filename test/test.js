@@ -706,6 +706,121 @@ class Test {
     }
   }
 
+  static async divestLiquidityWithZeroSharesBurned(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let sharesBurned = 0;
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const tezPerShare = parseInt(
+      initialStorage.storage.tezPool / initialStorage.storage.totalShares
+    );
+    const tokensPerShare = parseInt(
+      initialStorage.storage.tokenPool / initialStorage.storage.totalShares
+    );
+    const minTez = tezPerShare * sharesBurned;
+    const minTokens = tokensPerShare * sharesBurned;
+    try {
+      await dex.divestLiquidity(minTokens, minTez, sharesBurned);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+
+  static async divestLiquidityWithZeroTokensOut(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let sharesBurned = 10;
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const tezPerShare = parseInt(
+      initialStorage.storage.tezPool / initialStorage.storage.totalShares
+    );
+    const tokensPerShare = parseInt(
+      initialStorage.storage.tokenPool / initialStorage.storage.totalShares
+    );
+    const minTez = tezPerShare * sharesBurned;
+    const minTokens = tokensPerShare * sharesBurned;
+    try {
+      await dex.divestLiquidity(0, minTez, sharesBurned);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      console.log(e);
+      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+    }
+  }
+
+  static async divestLiquidityWithHighTokensOut(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let sharesBurned = 10;
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const tezPerShare = parseInt(
+      initialStorage.storage.tezPool / initialStorage.storage.totalShares
+    );
+    const tokensPerShare = parseInt(
+      initialStorage.storage.tokenPool / initialStorage.storage.totalShares
+    );
+    const minTez = tezPerShare * sharesBurned;
+    const minTokens = tokensPerShare * sharesBurned;
+    try {
+      await dex.divestLiquidity(100000000, minTez, sharesBurned);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+    }
+  }
+
+  static async divestLiquidityWithZeroTezOut(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let sharesBurned = 10;
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const tezPerShare = parseInt(
+      initialStorage.storage.tezPool / initialStorage.storage.totalShares
+    );
+    const tokensPerShare = parseInt(
+      initialStorage.storage.tokenPool / initialStorage.storage.totalShares
+    );
+    const minTokens = tokensPerShare * sharesBurned;
+    try {
+      await dex.divestLiquidity(minTokens, 0, sharesBurned);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      console.log(e);
+      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+    }
+  }
+
+  static async divestLiquidityWithHighTezOut(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let sharesBurned = 10;
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const tezPerShare = parseInt(
+      initialStorage.storage.tezPool / initialStorage.storage.totalShares
+    );
+    const tokensPerShare = parseInt(
+      initialStorage.storage.tokenPool / initialStorage.storage.totalShares
+    );
+    const minTokens = tokensPerShare * sharesBurned;
+    try {
+      await dex.divestLiquidity(minTokens, 100000000, sharesBurned);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+    }
+  }
+
   static async investLiquidityWithoutTokens(dexAddress) {
     let Tezos = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
@@ -1479,167 +1594,167 @@ class Test {
   }
 }
 
-// describe("Correct calls", function () {
-//   before(async function () {
-//     this.timeout(1000000);
+describe("Correct calls", function () {
+  before(async function () {
+    this.timeout(1000000);
 
-//     dexAddress1 = await Test.before(tokenAddress1);
-//     dexAddress2 = await Test.before(tokenAddress2);
-//   });
+    dexAddress1 = await Test.before(tokenAddress1);
+    dexAddress2 = await Test.before(tokenAddress2);
+  });
 
-//   describe("InitializeExchange()", function () {
-//     it("should initialize exchange 1", async function () {
-//       this.timeout(1000000);
-//       await Test.initializeExchange(dexAddress1, tokenAddress1);
-//     });
+  describe("InitializeExchange()", function () {
+    it("should initialize exchange 1", async function () {
+      this.timeout(1000000);
+      await Test.initializeExchange(dexAddress1, tokenAddress1);
+    });
 
-//     it("should initialize exchange 2", async function () {
-//       this.timeout(1000000);
-//       await Test.initializeExchange(dexAddress2, tokenAddress2);
-//     });
-//   });
+    it("should initialize exchange 2", async function () {
+      this.timeout(1000000);
+      await Test.initializeExchange(dexAddress2, tokenAddress2);
+    });
+  });
 
-//   describe("InvestLiquidity()", function () {
-//     it("should invest liquidity 1", async function () {
-//       this.timeout(1000000);
-//       await Test.investLiquidity(dexAddress1, tokenAddress1);
-//     });
+  describe("InvestLiquidity()", function () {
+    it("should invest liquidity 1", async function () {
+      this.timeout(1000000);
+      await Test.investLiquidity(dexAddress1, tokenAddress1);
+    });
 
-//     it("should invest liquidity 2", async function () {
-//       this.timeout(1000000);
-//       await Test.investLiquidity(dexAddress2, tokenAddress2);
-//     });
-//   });
+    it("should invest liquidity 2", async function () {
+      this.timeout(1000000);
+      await Test.investLiquidity(dexAddress2, tokenAddress2);
+    });
+  });
 
-//   describe("TezToTokenSwap()", function () {
-//     it("should exchange tez to token 1", async function () {
-//       this.timeout(1000000);
-//       await Test.tezToTokenSwap(dexAddress1, tokenAddress1);
-//     });
+  describe("TezToTokenSwap()", function () {
+    it("should exchange tez to token 1", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenSwap(dexAddress1, tokenAddress1);
+    });
 
-//     it("should exchange tez to token 2", async function () {
-//       this.timeout(1000000);
-//       await Test.tezToTokenSwap(dexAddress2, tokenAddress2);
-//     });
-//   });
+    it("should exchange tez to token 2", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenSwap(dexAddress2, tokenAddress2);
+    });
+  });
 
-//   describe("TokenToTezSwap()", function () {
-//     it("should exchange tez to token 1", async function () {
-//       this.timeout(1000000);
-//       await Test.tokenToTezSwap(dexAddress1, tokenAddress1);
-//     });
-//     it("should exchange tez to token 2", async function () {
-//       this.timeout(1000000);
-//       await Test.tokenToTezSwap(dexAddress2, tokenAddress2);
-//     });
-//   });
+  describe("TokenToTezSwap()", function () {
+    it("should exchange tez to token 1", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezSwap(dexAddress1, tokenAddress1);
+    });
+    it("should exchange tez to token 2", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezSwap(dexAddress2, tokenAddress2);
+    });
+  });
 
-//   describe("TezToTokenPayment()", function () {
-//     it("should exchange tez to token and send to requested address 1", async function () {
-//       this.timeout(1000000);
-//       await Test.tezToTokenPayment(dexAddress1, tokenAddress1);
-//     });
-//     it("should exchange tez to token and send to requested address 2", async function () {
-//       this.timeout(1000000);
-//       await Test.tezToTokenPayment(dexAddress2, tokenAddress2);
-//     });
-//   });
+  describe("TezToTokenPayment()", function () {
+    it("should exchange tez to token and send to requested address 1", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenPayment(dexAddress1, tokenAddress1);
+    });
+    it("should exchange tez to token and send to requested address 2", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenPayment(dexAddress2, tokenAddress2);
+    });
+  });
 
-//   describe("TokenToTezPayment()", function () {
-//     it("should exchange tez to token 1", async function () {
-//       this.timeout(1000000);
-//       await Test.tokenToTezPayment(dexAddress1, tokenAddress1);
-//     });
-//     it("should exchange tez to token 2", async function () {
-//       this.timeout(1000000);
-//       await Test.tokenToTezPayment(dexAddress2, tokenAddress2);
-//     });
-//   });
+  describe("TokenToTezPayment()", function () {
+    it("should exchange tez to token 1", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPayment(dexAddress1, tokenAddress1);
+    });
+    it("should exchange tez to token 2", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPayment(dexAddress2, tokenAddress2);
+    });
+  });
 
-//   describe("TokenToTokenSwap()", function () {
-//     it("should exchange token to token 1", async function () {
-//       this.timeout(1000000);
-//       await Test.tokenToTokenSwap(dexAddress1, tokenAddress1, tokenAddress2);
-//     });
+  describe("TokenToTokenSwap()", function () {
+    it("should exchange token to token 1", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTokenSwap(dexAddress1, tokenAddress1, tokenAddress2);
+    });
 
-//     it("should exchange token to token 2", async function () {
-//       this.timeout(1000000);
-//       await Test.tokenToTokenSwap(dexAddress2, tokenAddress2, tokenAddress1);
-//     });
-//   });
+    it("should exchange token to token 2", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTokenSwap(dexAddress2, tokenAddress2, tokenAddress1);
+    });
+  });
 
-//   describe("DivestLiquidity()", function () {
-//     it("should divest liquidity 1", async function () {
-//       this.timeout(1000000);
-//       await Test.divestLiquidity(dexAddress1, tokenAddress1);
-//     });
+  describe("DivestLiquidity()", function () {
+    it("should divest liquidity 1", async function () {
+      this.timeout(1000000);
+      await Test.divestLiquidity(dexAddress1, tokenAddress1);
+    });
 
-//     it("should divest liquidity 2", async function () {
-//       this.timeout(1000000);
-//       await Test.divestLiquidity(dexAddress2, tokenAddress2);
-//     });
-//   });
+    it("should divest liquidity 2", async function () {
+      this.timeout(1000000);
+      await Test.divestLiquidity(dexAddress2, tokenAddress2);
+    });
+  });
 
-//   describe("SetVotesDelegation()", function () {
-//     it("should set vote delegate 1", async function () {
-//       this.timeout(1000000);
-//       await Test.setVotesDelegation(dexAddress1);
-//     });
+  describe("SetVotesDelegation()", function () {
+    it("should set vote delegate 1", async function () {
+      this.timeout(1000000);
+      await Test.setVotesDelegation(dexAddress1);
+    });
 
-//     it("should set vote delegate 2", async function () {
-//       this.timeout(1000000);
-//       await Test.setVotesDelegation(dexAddress2);
-//     });
-//   });
+    it("should set vote delegate 2", async function () {
+      this.timeout(1000000);
+      await Test.setVotesDelegation(dexAddress2);
+    });
+  });
 
-//   describe("Vote()", function () {
-//     it("should vote 1", async function () {
-//       this.timeout(1000000);
-//       await Test.vote(dexAddress1);
-//     });
+  describe("Vote()", function () {
+    it("should vote 1", async function () {
+      this.timeout(1000000);
+      await Test.vote(dexAddress1);
+    });
 
-//     it("should vote 2", async function () {
-//       this.timeout(1000000);
-//       await Test.vote(dexAddress2);
-//     });
-//   });
+    it("should vote 2", async function () {
+      this.timeout(1000000);
+      await Test.vote(dexAddress2);
+    });
+  });
 
-//   describe("Default()", function () {
-//     it("should receive reward 1", async function () {
-//       this.timeout(1000000);
-//       await Test.default(dexAddress1);
-//     });
+  describe("Default()", function () {
+    it("should receive reward 1", async function () {
+      this.timeout(1000000);
+      await Test.default(dexAddress1);
+    });
 
-//     it("should receive reward 2", async function () {
-//       this.timeout(1000000);
-//       await Test.default(dexAddress2);
-//     });
-//   });
+    it("should receive reward 2", async function () {
+      this.timeout(1000000);
+      await Test.default(dexAddress2);
+    });
+  });
 
-//   describe("Veto()", function () {
-//     it("should set veto 1", async function () {
-//       this.timeout(1000000);
-//       await Test.veto(dexAddress1);
-//     });
+  describe("Veto()", function () {
+    it("should set veto 1", async function () {
+      this.timeout(1000000);
+      await Test.veto(dexAddress1);
+    });
 
-//     it("should set veto 2", async function () {
-//       this.timeout(1000000);
-//       await Test.veto(dexAddress2);
-//     });
-//   });
+    it("should set veto 2", async function () {
+      this.timeout(1000000);
+      await Test.veto(dexAddress2);
+    });
+  });
 
-//   describe("WithdrawProfit()", function () {
-//     it("should withdraw baker's profit 1", async function () {
-//       this.timeout(1000000);
-//       await Test.withdrawProfit(dexAddress1);
-//     });
+  describe("WithdrawProfit()", function () {
+    it("should withdraw baker's profit 1", async function () {
+      this.timeout(1000000);
+      await Test.withdrawProfit(dexAddress1);
+    });
 
-//     it("should withdraw baker's profit 2", async function () {
-//       this.timeout(1000000);
-//       await Test.withdrawProfit(dexAddress2);
-//     });
-//   });
-// });
+    it("should withdraw baker's profit 2", async function () {
+      this.timeout(1000000);
+      await Test.withdrawProfit(dexAddress2);
+    });
+  });
+});
 
 describe("Incorrect Factory calls", function () {
   before(async function () {
@@ -1649,116 +1764,116 @@ describe("Incorrect Factory calls", function () {
     dexAddress2 = await Test.getDexAddress(tokenAddress2);
   });
 
-  //   describe("SetFunction()", function () {
-  //     it("shouldn't add function with higher index", async function () {
-  //       this.timeout(1000000);
-  //       await Test.setFunctionWithHigherIndex();
-  //     });
-  //     it("shouldn't add function with existed index", async function () {
-  //       this.timeout(1000000);
-  //       await Test.setFunctionWithExistedIndex();
-  //     });
-  //   });
+  describe("SetFunction()", function () {
+    it("shouldn't add function with higher index", async function () {
+      this.timeout(1000000);
+      await Test.setFunctionWithHigherIndex();
+    });
+    it("shouldn't add function with existed index", async function () {
+      this.timeout(1000000);
+      await Test.setFunctionWithExistedIndex();
+    });
+  });
 
-  //   describe("LaunchExchange()", function () {
-  //     it("shouldn't launch new exchange", async function () {
-  //       this.timeout(1000000);
-  //       await Test.launchExchangeForExistedToken();
-  //     });
-  //   });
+  describe("LaunchExchange()", function () {
+    it("shouldn't launch new exchange", async function () {
+      this.timeout(1000000);
+      await Test.launchExchangeForExistedToken();
+    });
+  });
 
-  //   describe("InitializeExchange()", function () {
-  //     it("shouldn't initialize exchange with invariant", async function () {
-  //       this.timeout(1000000);
-  //       await Test.initializeExchangeWithInvariant(dexAddress1);
-  //     });
-  //     it("shouldn't initialize exchange with shares", async function () {
-  //       this.timeout(1000000);
-  //       await Test.initializeExchangeWithShares(dexAddress1);
-  //     });
-  //     it("shouldn't initialize exchange without tesz", async function () {
-  //       this.timeout(1000000);
-  //       // TODO: use empty dex!!!
-  //       await Test.initializeExchangeWithoutTez(dexAddress1);
-  //     });
-  //     it("shouldn't initialize exchange without tokens", async function () {
-  //       this.timeout(1000000);
-  //       // TODO: use empty dex!!!
-  //       await Test.initializeExchangeWithoutTokens(dexAddress1);
-  //     });
-  //   });
+  describe("InitializeExchange()", function () {
+    it("shouldn't initialize exchange with invariant", async function () {
+      this.timeout(1000000);
+      await Test.initializeExchangeWithInvariant(dexAddress1);
+    });
+    it("shouldn't initialize exchange with shares", async function () {
+      this.timeout(1000000);
+      await Test.initializeExchangeWithShares(dexAddress1);
+    });
+    it("shouldn't initialize exchange without tesz", async function () {
+      this.timeout(1000000);
+      // TODO: use empty dex!!!
+      await Test.initializeExchangeWithoutTez(dexAddress1);
+    });
+    it("shouldn't initialize exchange without tokens", async function () {
+      this.timeout(1000000);
+      // TODO: use empty dex!!!
+      await Test.initializeExchangeWithoutTokens(dexAddress1);
+    });
+  });
 
-  // describe("TezToTokenPayment()", function () {
-  //   it("shouldn't swap tez if no tez is provided", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tezToTokenPaymentWithoutTez(dexAddress1);
-  //   });
-  //   it("shouldn't swap tez if desirable output is zero", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tezToTokenPaymentWithoutTokens(dexAddress1);
-  //   });
-  //   it("shouldn't swap tez if tokens output is too high", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tezToTokenPaymentWithHighTokensOut(dexAddress1);
-  //   });
-  //   it("should swap tez even if receiver is explicit account(contract)", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tezToTokenPaymentWithExplicitReceiver(dexAddress1);
-  //   });
-  // });
-  // describe("TokenToTezPayment()", function () {
-  //   it("shouldn't swap token if no token is provided", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTezPaymentWithoutTokens(dexAddress1);
-  //   });
-  //   it("shouldn't swap token if desirable output is zero", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTezPaymentWithoutTez(dexAddress1);
-  //   });
-  //   it("shouldn't swap token if tez output is too high", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTezPaymentWithHighTezOut(dexAddress1);
-  //   });
-  //   it("should swap token even if receiver is explicit account(contract)", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTezPaymentWithExplicitReceiver(dexAddress1);
-  //   });
-  // });
+  describe("TezToTokenPayment()", function () {
+    it("shouldn't swap tez if no tez is provided", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenPaymentWithoutTez(dexAddress1);
+    });
+    it("shouldn't swap tez if desirable output is zero", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenPaymentWithoutTokens(dexAddress1);
+    });
+    it("shouldn't swap tez if tokens output is too high", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenPaymentWithHighTokensOut(dexAddress1);
+    });
+    it("should swap tez even if receiver is explicit account(contract)", async function () {
+      this.timeout(1000000);
+      await Test.tezToTokenPaymentWithExplicitReceiver(dexAddress1);
+    });
+  });
+  describe("TokenToTezPayment()", function () {
+    it("shouldn't swap token if no token is provided", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithoutTokens(dexAddress1);
+    });
+    it("shouldn't swap token if desirable output is zero", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithoutTez(dexAddress1);
+    });
+    it("shouldn't swap token if tez output is too high", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithHighTezOut(dexAddress1);
+    });
+    it("should swap token even if receiver is explicit account(contract)", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithExplicitReceiver(dexAddress1);
+    });
+  });
 
-  // describe("TokenToTokenPayment()", function () {
-  //   it("shouldn't swap token if no token is provided", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
-  //   });
-  //   it("shouldn't swap token if desirable output is zero", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTokenPaymentWithoutTokensOut(
-  //       dexAddress1,
-  //       tokenAddress2
-  //     );
-  //   });
-  //   it("shouldn't swap token if token output is too high", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTokenPaymentWithHighTokensOut(
-  //       dexAddress1,
-  //       tokenAddress2
-  //     );
-  //   });
-  //   it("should swap token even if receiver is explicit account(contract)", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTokenPaymentWithExplicitReceiver(
-  //       dexAddress1,
-  //       tokenAddress2
-  //     );
-  //   });
-  //   it("shouldn't swap token if token pair doesn't exist", async function () {
-  //     this.timeout(1000000);
-  //     await Test.tokenToTokenPaymentToUnexistedToken(
-  //       dexAddress1,
-  //       factoryAddress
-  //     );
-  //   });
-  // });
+  describe("TokenToTokenPayment()", function () {
+    it("shouldn't swap token if no token is provided", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
+    });
+    it("shouldn't swap token if desirable output is zero", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTokenPaymentWithoutTokensOut(
+        dexAddress1,
+        tokenAddress2
+      );
+    });
+    it("shouldn't swap token if token output is too high", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTokenPaymentWithHighTokensOut(
+        dexAddress1,
+        tokenAddress2
+      );
+    });
+    it("should swap token even if receiver is explicit account(contract)", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTokenPaymentWithExplicitReceiver(
+        dexAddress1,
+        tokenAddress2
+      );
+    });
+    it("shouldn't swap token if token pair doesn't exist", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTokenPaymentToUnexistedToken(
+        dexAddress1,
+        factoryAddress
+      );
+    });
+  });
 
   describe("InvestLiquidity()", function () {
     it("shouldn't swap token if no tez is provided", async function () {

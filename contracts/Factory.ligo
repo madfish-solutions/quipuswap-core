@@ -81,11 +81,13 @@ block {
   case s.voters[voter] of None -> skip
     | Some(v) -> {
       case v.candidate of None -> skip | Some(c) -> {
-        if s.totalVotes < prevShare then failwith ("Dex/invalid-shares") else skip ;
-        s.totalVotes := abs(s.totalVotes - prevShare);
-        s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
-        v.candidate := Some(candidate);
-        voterInfo := v;
+        if s.totalVotes < prevShare then failwith ("Dex/invalid-shares") else {
+          s.totalVotes := abs(s.totalVotes - prevShare);
+          s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
+          v.candidate := Some(candidate);
+          voterInfo := v;
+
+        } ;
       } end;
     }
     end;    
@@ -357,11 +359,12 @@ block {
             case s.voters[Tezos.sender] of None -> skip
               | Some(v) -> {
                 case v.candidate of None -> skip | Some(c) -> {
-                  if s.totalVotes < share then failwith ("Dex/invalid-shares") else skip ;
-                  s.totalVotes := abs(s.totalVotes - share);
-                  s.votes[c]:= abs(get_force(c, s.votes) - share);
-                  v.candidate := Some(candidate);
-                  voterInfo := v;
+                  if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
+                    s.totalVotes := abs(s.totalVotes - share);
+                    s.votes[c]:= abs(get_force(c, s.votes) - share);
+                    v.candidate := Some(candidate);
+                    voterInfo := v;
+                  } ;
                 } end;
               }
               end;    
@@ -410,7 +413,7 @@ block {
         const tezDivested : nat = tezPerShare * n.0;
         const tokensDivested : nat = tokensPerShare * n.0;
 
-        if tezDivested >= n.1 and tokensDivested >= n.2 then {
+        if  n.1 > 0n and n.2 > 0n tezDivested >= n.1 and tokensDivested >= n.2 then {
           var userCircle : user_circle_info := get_force(Tezos.sender, s.circleLoyalty);
           if userCircle.lastCircle =/= s.currentCircle.counter then {
             case s.circles[userCircle.lastCircle] of Some(circle) -> {
