@@ -8,10 +8,10 @@
 
 ### InitializeExchange
 
-- [ ] is initiated
-- [ ] is initiated
-- [ ] amount is 0
-- [ ] tokenAmount is 0
+- [x] is initiated
+- [x] is initiated
+- [x] amount is 0
+- [x] tokenAmount is 0
 
 ### TezToTokenPayment
 
