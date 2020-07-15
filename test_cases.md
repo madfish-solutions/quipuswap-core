@@ -29,11 +29,11 @@
 
 ### TokenToTokenPayment
 
-- [ ] amount is 0
-- [ ] tokenAmount is 0
-- [ ] wrong tezOut
-- [ ] receiver is explicit
-- [ ] token to token transfer for unexisted pair
+- [x] amount is 0
+- [x] tokenAmount is 0
+- [x] wrong tezOut
+- [x] receiver is explicit
+- [x] token to token transfer for unexisted pair
 
 ### InvestLiquidity
 
