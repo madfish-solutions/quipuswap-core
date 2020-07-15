@@ -748,7 +748,6 @@ class Test {
       await dex.divestLiquidity(0, minTez, sharesBurned);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      console.log(e);
       assert(e.message === "Dex/wrong-out", "Adding function should fail");
     }
   }
@@ -794,7 +793,6 @@ class Test {
       await dex.divestLiquidity(minTokens, 0, sharesBurned);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      console.log(e);
       assert(e.message === "Dex/wrong-out", "Adding function should fail");
     }
   }
