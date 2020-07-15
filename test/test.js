@@ -560,6 +560,92 @@ class Test {
       assert(e.message === "Dex/wrong-params", "Adding function should fail");
     }
   }
+
+  static async tokenToTezPaymentWithoutTokens(dexAddress) {
+    let Tezos = await setup();
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tokensIn = "0";
+    const pkh = await Tezos.signer.publicKeyHash();
+
+    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
+    const newTokenPool = parseInt(
+      +initialDexStorage.storage.tokenPool + +tokensIn
+    );
+    const tempTokenPool = parseInt(newTokenPool - fee);
+    const newTezPool = parseInt(
+      initialDexStorage.storage.invariant / tempTokenPool
+    );
+
+    const minTezOut = parseInt(
+      parseInt(initialDexStorage.storage.tezPool - newTezPool)
+    );
+
+    try {
+      await dex.tokenToTezSwap(tokensIn, minTezOut);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+
+  static async tokenToTezPaymentWithExplicitReceiver(dexAddress) {
+    let Tezos = await setup();
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tokensIn = "1000";
+    const pkh = await Tezos.signer.publicKeyHash();
+
+    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
+    const newTokenPool = parseInt(
+      +initialDexStorage.storage.tokenPool + +tokensIn
+    );
+    const tempTokenPool = parseInt(newTokenPool - fee);
+    const newTezPool = parseInt(
+      initialDexStorage.storage.invariant / tempTokenPool
+    );
+
+    const minTezOut = parseInt(
+      parseInt(initialDexStorage.storage.tezPool - newTezPool)
+    );
+
+    let operation = await dex.tokenToTezPayment(
+      tokensIn,
+      minTezOut,
+      dexAddress2
+    );
+    assert(operation.status === "applied", "Operation was not applied");
+  }
+
+  static async tokenToTezPaymentWithoutTez(dexAddress) {
+    let Tezos = await setup();
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tokensIn = "1000";
+
+    try {
+      await dex.tokenToTezSwap(tokensIn, 0);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+
+  static async tokenToTezPaymentWithHighTezOut(dexAddress) {
+    let Tezos = await setup();
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tokensIn = "1000";
+
+    try {
+      await dex.tokenToTezSwap(tokensIn, 10000000000);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(
+        e.message === "Dex/high-min-tez-out",
+        "Adding function should fail"
+      );
+    }
+  }
+
   static async tezToTokenPaymentWithExplicitReceiver(dexAddress) {
     let Tezos = await setup();
     let dex = await Dex.init(Tezos, dexAddress);
@@ -582,7 +668,12 @@ class Test {
       parseInt(initialDexStorage.storage.tokenPool - newTokenPool)
     );
 
-    await dex.tezToTokenPayment(minTokens, tezAmount, dexAddress2);
+    let operation = await dex.tezToTokenPayment(
+      minTokens,
+      tezAmount,
+      dexAddress2
+    );
+    assert(operation.status === "applied", "Operation was not applied");
   }
 
   static async tezToTokenPaymentWithoutTokens(dexAddress) {
@@ -728,12 +819,10 @@ class Test {
     const minTezOut = parseInt(
       parseInt(initialDexStorage.storage.tezPool - newTezPool)
     );
-    try {
-      let operation = await dex.tokenToTezSwap(tokensIn, minTezOut);
-      assert(operation.status === "applied", "Operation was not applied");
-    } catch (e) {
-      console.log(e);
-    }
+
+    let operation = await dex.tokenToTezSwap(tokensIn, minTezOut);
+    assert(operation.status === "applied", "Operation was not applied");
+
     let finalStorage = await dex.getFullStorage({ shares: [pkh] });
 
     const finalTokenStorage = await getContractFullStorage(
@@ -1403,9 +1492,27 @@ describe("Incorrect Factory calls", function () {
       this.timeout(1000000);
       await Test.tezToTokenPaymentWithHighTokensOut(dexAddress1);
     });
-    it("shouldn't swap tez if tokens output is too high", async function () {
+    it("should swap tez even if receiver is explicit account(contract)", async function () {
       this.timeout(1000000);
       await Test.tezToTokenPaymentWithExplicitReceiver(dexAddress1);
+    });
+  });
+  describe("TokenToTezPayment()", function () {
+    it("shouldn't swap token if no token is provided", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithoutTokens(dexAddress1);
+    });
+    it("shouldn't swap tez if desirable output is zero", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithoutTez(dexAddress1);
+    });
+    it("shouldn't swap teoken if tez output is too high", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithHighTezOut(dexAddress1);
+    });
+    it("should swap token even if receiver is explicit account(contract)", async function () {
+      this.timeout(1000000);
+      await Test.tokenToTezPaymentWithExplicitReceiver(dexAddress1);
     });
   });
 });

@@ -22,10 +22,10 @@
 
 ### TokenToTezPayment
 
-- [ ] amount is 0
-- [ ] tokenAmount is 0
-- [ ] wrong tezOut
-- [ ] receiver is explicit
+- [x] amount is 0
+- [x] tokenAmount is 0
+- [x] wrong tezOut
+- [x] receiver is explicit
 
 ### TokenToTokenPayment
 
