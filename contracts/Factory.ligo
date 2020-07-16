@@ -61,7 +61,7 @@ block {
         const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
            | Some(v) -> v 
            end ;
-        if Set.size(src.allowances) > 5n then failwith("Dex/many-voter-delegates") else {
+        if Set.size(src.allowances) >= 5n and n.1 then failwith("Dex/many-voter-delegates") else {
            src.allowances := if n.1 then Set.add (n.0, src.allowances) else Set.remove (n.0, src.allowances) ;
            s.voters[Tezos.sender] := src;
         };

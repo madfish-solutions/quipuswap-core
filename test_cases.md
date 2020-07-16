@@ -54,8 +54,8 @@
 
 ### SetVotesDelegation
 
-- [ ] set to Self
-- [ ] set more than 5
+- [x] set to Self
+- [x] set more than 5
 
 ### Vote
 

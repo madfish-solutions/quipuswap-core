@@ -819,6 +819,95 @@ class Test {
     }
   }
 
+  static async voteWithoutPersmission(dexAddress) {
+    let Tezos = await setup("../key2");
+    let Tezos1 = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let delegate = await Tezos.signer.publicKeyHash();
+
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+
+    try {
+      await dex.vote(pkh1, delegate);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(
+        e.message === "Dex/vote-not-permitted",
+        "Adding function should fail"
+      );
+    }
+  }
+
+  static async voteWithoutShares(dexAddress) {
+    let Tezos = await setup("../key2");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let delegate = await Tezos.signer.publicKeyHash();
+
+    const pkh = await Tezos.signer.publicKeyHash();
+
+    try {
+      await dex.vote(pkh, delegate);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/no-shares", "Adding function should fail");
+    }
+  }
+
+  static async voteForVetted(dexAddress) {
+    let Tezos = await setup();
+    let dex = await Dex.init(Tezos, dexAddress);
+    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    let delegate = await Tezos.signer.publicKeyHash();
+
+    const pkh = await Tezos.signer.publicKeyHash();
+
+    try {
+      await dex.vote(pkh, delegate);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/veto-candidate", "Adding function should fail");
+    }
+  }
+
+  static async setVotesDelegationToSelf(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    const pkh = await Tezos.signer.publicKeyHash();
+
+    let operation = await dex.setVotesDelegation(pkh, true);
+    assert(operation.status === "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ voters: [pkh] });
+    assert(!finalStorage.votersExtended[pkh].allowances.includes(pkh));
+  }
+
+  static async setVotesDelegationToMoreThanFiveDeputies(dexAddress) {
+    let Tezos = await setup("../key1");
+    let Tezos1 = await setup();
+    let dex = await Dex.init(Tezos, dexAddress);
+    const pkh = await Tezos.signer.publicKeyHash();
+    const pkhs = [
+      "tz1Lmi1HELe8hNbw1heWwpHgdLM7DaPJuZvq",
+      "tz1SVwdLNf3ANMQE1AXrxS1pBG8tcn2joVZg",
+      "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf",
+      "tz1aWXP237BLwNHJcCD4b3DutCevhqq2T1Z9",
+      "tz1NRTQeqcuwybgrZfJavBY3of83u8uLpFBj",
+      "tz1T8UYSbVuRm6CdhjvwCfXsKXb4yL9ai9Q3",
+    ];
+
+    try {
+      for (const user of pkhs) {
+        let operation = await dex.setVotesDelegation(user, true);
+        assert(operation.status === "applied", "Operation was not applied");
+      }
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(
+        e.message === "Dex/many-voter-delegates",
+        "Adding function should fail"
+      );
+    }
+  }
+
   static async investLiquidityWithoutTokens(dexAddress) {
     let Tezos = await setup("../key1");
     let dex = await Dex.init(Tezos, dexAddress);
@@ -1912,6 +2001,32 @@ describe("Incorrect Factory calls", function () {
     it("shouldn't divest if min tez out are too high", async function () {
       this.timeout(1000000);
       await Test.divestLiquidityWithHighTezOut(dexAddress1);
+    });
+  });
+
+  describe("SetVotesDelegation()", function () {
+    it("shouldn't fail if set to self", async function () {
+      this.timeout(1000000);
+      await Test.setVotesDelegationToSelf(dexAddress1);
+    });
+    it("shouldn't set more than 5", async function () {
+      this.timeout(1000000);
+      await Test.setVotesDelegationToMoreThanFiveDeputies(dexAddress1);
+    });
+  });
+
+  describe("Vote()", function () {
+    it("shouldn't vote if not allowed deputy", async function () {
+      this.timeout(1000000);
+      await Test.voteWithoutPersmission(dexAddress1);
+    });
+    it("shouldn't vote for vetted", async function () {
+      this.timeout(1000000);
+      await Test.voteForVetted(dexAddress1);
+    });
+    it("shouldn't vote without shares", async function () {
+      this.timeout(1000000);
+      await Test.voteWithoutShares(dexAddress1);
     });
   });
 });
