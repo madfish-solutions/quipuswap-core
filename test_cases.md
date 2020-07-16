@@ -67,13 +67,13 @@
 
 ### Veto
 
-- [ ] old shares
+- [x] old shares
 - [ ] veto for None
-- [ ] veto without permission
+- [x] veto without permission
 
 ### WithdrawProfit
 
-- [ ] no profit to withdraw
+- [x] no profit to withdraw
 
 ## General
 

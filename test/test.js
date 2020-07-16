@@ -827,14 +827,10 @@ class Test {
 
     const pkh1 = await Tezos1.signer.publicKeyHash();
 
-    let initialStorage = await dex.getFullStorage({ voters: [pkh1] });
-    console.log(initialStorage.votersExtended[pkh1].allowances);
-    console.log(await Tezos.signer.publicKeyHash());
     try {
       await dex.vote(pkh1, delegate);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      console.log(e);
       assert(
         e.message === "Dex/vote-not-permitted",
         "Adding function should fail"
@@ -1191,7 +1187,7 @@ class Test {
     );
 
     try {
-      console.log(await dex.tezToTokenSwap(minTokens, tezAmount));
+      await dex.tezToTokenSwap(minTokens, tezAmount);
     } catch (e) {
       assert(e.message === "Dex/wrong-params", "Adding function should fail");
     }
@@ -1698,21 +1694,57 @@ class Test {
 
     let operation = await dex.sendReward(amount);
     assert(operation.status === "applied", "Operation was not applied");
-    // console.log(JSON.stringify(initialStorage.storage.currentCircle));
-    // console.log(JSON.stringify(initialStorage.circleLoyaltyExtended[pkh1]));
-    // console.log(JSON.stringify(initialStorage.sharesExtended[pkh1]));
 
     operation = await dex.withdrawProfit(pkh1);
     assert(operation.status === "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ circleLoyalty: [pkh1] });
-    // console.log(JSON.stringify(finalStorage.storage.currentCircle));
-    // console.log(JSON.stringify(finalStorage.circleLoyaltyExtended[pkh1]));
-
     operation = await dex.sendReward(amount);
     assert(operation.status === "applied", "Operation was not applied");
     finalStorage = await dex.getFullStorage({ circleLoyalty: [pkh1] });
-    // console.log(JSON.stringify(finalStorage.storage.currentCircle));
-    // console.log(JSON.stringify(finalStorage.circleLoyaltyExtended[pkh1]));
+  }
+
+  static async withdrawProfitWithoutProfit(dexAddress) {
+    let Tezos1 = await setup("../key1");
+    let dex = await Dex.init(Tezos1, dexAddress);
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+    try {
+      await dex.withdrawProfit(pkh1);
+      await dex.withdrawProfit(pkh1);
+    } catch (e) {
+      assert(
+        e.message === "(branch) proto.006-PsCARTHA.contract.empty_transaction",
+        "Adding function should fail"
+      );
+    }
+  }
+
+  static async vetoWithOldShares(dexAddress) {
+    let Tezos = await setup();
+    let Tezos1 = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+    try {
+      await dex.veto(pkh1);
+    } catch (e) {
+      assert(e.message === "Dex/old-shares", "Adding function should fail");
+    }
+  }
+
+  static async vetoWithoutPermission(dexAddress) {
+    let Tezos = await setup("../key2");
+    let Tezos1 = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+
+    const pkh1 = await Tezos1.signer.publicKeyHash();
+    try {
+      await dex.veto(pkh1);
+    } catch (e) {
+      assert(
+        e.message === "Dex/vote-not-permitted",
+        "Adding function should fail"
+      );
+    }
   }
 
   static async veto(dexAddress, tokenAddress) {
@@ -2088,6 +2120,24 @@ describe("Incorrect Factory calls", function () {
     it("shouldn't vote without shares", async function () {
       this.timeout(1000000);
       await Test.voteWithoutShares(dexAddress1);
+    });
+  });
+
+  describe("WithdrawProfit()", function () {
+    it("should withdraw even if nothing to withdraw", async function () {
+      this.timeout(1000000);
+      await Test.withdrawProfitWithoutProfit(dexAddress1);
+    });
+  });
+
+  describe("Veto()", function () {
+    it("shouldn't make veto if shares weren't changed", async function () {
+      this.timeout(1000000);
+      await Test.vetoWithOldShares(dexAddress1);
+    });
+    it("shouldn't make veto without permission", async function () {
+      this.timeout(1000000);
+      await Test.vetoWithoutPermission(dexAddress1);
     });
   });
 });
