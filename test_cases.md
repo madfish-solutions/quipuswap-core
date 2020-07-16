@@ -12,6 +12,7 @@
 - [x] is initiated
 - [x] amount is 0
 - [x] tokenAmount is 0
+- [ ] relaunch
 
 ### TezToTokenPayment
 
@@ -41,7 +42,8 @@
 - [x] tokenAmount is 0
 - [x] low minShares
 - [x] high minShares
-- [ ] total shares higher than tokens or xtz
+- [x] total shares higher than tokens
+- [x] total shares higher than xtz
 - [ ] if vetted candidate
 
 ### DivestLiquidity
@@ -59,9 +61,9 @@
 
 ### Vote
 
-- [ ] not voter/not allowed
-- [ ] vote for vetted
-- [ ] vote without shares
+- [x] not voter/not allowed
+- [x] vote for vetted
+- [x] vote without shares
 
 ### Veto
 

@@ -75,7 +75,7 @@ block {
 function redelegate (const voter : address; const candidate : key_hash; const prevShare : nat; const share : nat; var s: dex_storage) :  (dex_storage) is
 block {
   case s.vetos[candidate] of None -> skip
-    | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
+    | Some(c) -> if c > Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
   end;
   const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
   case s.voters[voter] of None -> skip
@@ -85,13 +85,13 @@ block {
           s.totalVotes := abs(s.totalVotes - prevShare);
           s.votes[c]:= abs(get_force(c, s.votes) - prevShare);
           v.candidate := Some(candidate);
-          voterInfo := v;
 
         } ;
       } end;
+      voterInfo := v;
     }
     end;    
-  if Tezos.sender =/= voter or voterInfo.allowances contains Tezos.sender then {
+  if Tezos.sender = voter or voterInfo.allowances contains Tezos.sender then {
     s.voters[voter]:= voterInfo;
     s.totalVotes := s.totalVotes + share;
     const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share;
@@ -117,25 +117,25 @@ block {
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
   | Vote(n) -> 
-      case s.shares[Tezos.sender] of None -> failwith ("Dex/no-shares")
+      case s.shares[n.0] of None -> failwith ("Dex/no-shares")
       | Some(share) -> {
         case s.vetos[n.1] of None -> skip
-          | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
+          | Some(c) -> if c > Tezos.now then failwith ("Dex/veto-candidate") else remove n.1 from map s.vetos
         end; 
         const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(n.1); end;
         case s.voters[n.0] of None -> skip
-          | Some(v) -> {
-            case v.candidate of None -> skip | Some(c) -> {
-              if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
-                s.totalVotes := abs(s.totalVotes - share);
-                s.votes[c]:= abs(get_force(c, s.votes) - share);
-                v.candidate := Some(n.1);
-                voterInfo := v;
-              };
-            } end;
-          }
+          | Some(v) -> 
+            case v.candidate of None -> voterInfo := v 
+              | Some(c) -> {
+                if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
+                  s.totalVotes := abs(s.totalVotes - share);
+                  s.votes[c]:= abs(get_force(c, s.votes) - share);
+                  voterInfo := v;
+                };
+              } end
           end;    
-        if Tezos.sender =/= n.0 or voterInfo.allowances contains Tezos.sender then {
+        if Tezos.sender = n.0 or voterInfo.allowances contains Tezos.sender then {
+          voterInfo.candidate := Some(n.1);
           s.voters[n.0]:= voterInfo;
           s.totalVotes := s.totalVotes + share;
           const newVotes: nat = (case s.votes[n.1] of  None -> 0n | Some(v) -> v end) + share;
@@ -171,7 +171,7 @@ block {
   | Veto(voter) -> 
     case s.voters[voter] of None -> failwith ("Dex/no-voter")
       | Some(src) -> {
-        if Tezos.sender =/= voter or src.allowances contains Tezos.sender then {
+        if Tezos.sender = voter or src.allowances contains Tezos.sender then {
           const share : nat = get_force (voter, s.shares);
           var newShare: nat := case s.vetoVoters[voter] of None -> share
             | Some(prev) ->
@@ -310,13 +310,13 @@ block {
   | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(minShares) -> {
     const tezPerShare : nat = s.tezPool / s.totalShares;
-    const sharesPurchased : nat = (amount / 1mutez) / tezPerShare;
+    const sharesPurchased : nat = (Tezos.amount / 1mutez) / tezPerShare;
     if Tezos.amount > 0mutez and minShares > 0n and Tezos.amount >= tezPerShare * 1mutez and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
     s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
     s.currentCircle.lastUpdate := Tezos.now;
     const tokensPerShare : nat = s.tokenPool / s.totalShares;
     const tokensRequired : nat = sharesPurchased * tokensPerShare;
-    if tokensRequired < s.totalShares then failwith("Dex/dangerous-rate") else {
+    if tokensRequired < s.totalShares or (Tezos.amount / 1mutez) < s.totalShares then failwith("Dex/dangerous-rate") else {
       const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
       // update user loyalty
       var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
@@ -353,22 +353,15 @@ block {
           case v.candidate of None -> skip 
           | Some(candidate) -> {
             case s.vetos[candidate] of None -> skip
-              | Some(c) -> if c < Tezos.now then failwith ("Dex/veto-candidate") else remove candidate from map s.vetos
+              | Some(c) -> if c > Tezos.now then failwith ("Dex/veto-candidate") else
+                remove candidate from map s.vetos
             end;
-            const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(candidate); end;
-            case s.voters[Tezos.sender] of None -> skip
-              | Some(v) -> {
-                case v.candidate of None -> skip | Some(c) -> {
-                  if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
-                    s.totalVotes := abs(s.totalVotes - share);
-                    s.votes[c]:= abs(get_force(c, s.votes) - share);
-                    v.candidate := Some(candidate);
-                    voterInfo := v;
-                  } ;
-                } end;
-              }
-              end;    
-            s.voters[Tezos.sender]:= voterInfo;
+            if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
+              s.totalVotes := abs(s.totalVotes - share);
+              s.votes[candidate]:= abs(get_force(candidate, s.votes) - share);
+              v.candidate := Some(candidate);
+            } ;
+            s.voters[Tezos.sender]:= v;
             s.totalVotes := s.totalVotes + share + sharesPurchased;
             const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share + sharesPurchased;
             s.votes[candidate]:= newVotes;

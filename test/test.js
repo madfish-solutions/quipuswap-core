@@ -827,10 +827,14 @@ class Test {
 
     const pkh1 = await Tezos1.signer.publicKeyHash();
 
+    let initialStorage = await dex.getFullStorage({ voters: [pkh1] });
+    console.log(initialStorage.votersExtended[pkh1].allowances);
+    console.log(await Tezos.signer.publicKeyHash());
     try {
       await dex.vote(pkh1, delegate);
       assert(false, "Adding token pair should fail");
     } catch (e) {
+      console.log(e);
       assert(
         e.message === "Dex/vote-not-permitted",
         "Adding function should fail"
@@ -854,10 +858,11 @@ class Test {
   }
 
   static async voteForVetted(dexAddress) {
-    let Tezos = await setup();
+    let Tezos = await setup("../key1");
+    let Tezos1 = await setup();
     let dex = await Dex.init(Tezos, dexAddress);
     // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await Tezos.signer.publicKeyHash();
+    let delegate = await Tezos1.signer.publicKeyHash();
 
     const pkh = await Tezos.signer.publicKeyHash();
 
@@ -865,6 +870,7 @@ class Test {
       await dex.vote(pkh, delegate);
       assert(false, "Adding token pair should fail");
     } catch (e) {
+      let initialStorage = await dex.getFullStorage({ vetos: [delegate] });
       assert(e.message === "Dex/veto-candidate", "Adding function should fail");
     }
   }
@@ -925,7 +931,7 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, minShares);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/invalid-shares", "Adding function should fail");
+      assert(e.message === "NotEnoughAllowance", "Adding function should fail");
     }
   }
 
@@ -970,6 +976,52 @@ class Test {
     );
     try {
       await dex.investLiquidity(tokenAmount, tezAmount, 100000000000);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+  static async investLiquidityIfTezRateIsDangerous(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tezAmount = "0.0001";
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const minShares = parseInt(
+      (mutezAmount / initialStorage.storage.tezPool) *
+        initialStorage.storage.totalShares
+    );
+    const tokenAmount = parseInt(
+      (minShares * initialStorage.storage.tokenPool) /
+        initialStorage.storage.totalShares
+    );
+    try {
+      await dex.investLiquidity(tokenAmount, tezAmount, minShares);
+      assert(false, "Adding token pair should fail");
+    } catch (e) {
+      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+    }
+  }
+  static async investLiquidityIfTokenRateIsDangerous(dexAddress) {
+    let Tezos = await setup("../key1");
+    let dex = await Dex.init(Tezos, dexAddress);
+    let tezAmount = "0.000001";
+    const pkh = await Tezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+
+    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const minShares = parseInt(
+      (mutezAmount / initialStorage.storage.tezPool) *
+        initialStorage.storage.totalShares
+    );
+    const tokenAmount = parseInt(
+      (minShares * initialStorage.storage.tokenPool) /
+        initialStorage.storage.totalShares
+    );
+    try {
+      await dex.investLiquidity(tokenAmount, tezAmount, minShares);
       assert(false, "Adding token pair should fail");
     } catch (e) {
       assert(e.message === "Dex/wrong-params", "Adding function should fail");
@@ -1684,7 +1736,8 @@ class Test {
 describe("Correct calls", function () {
   before(async function () {
     this.timeout(1000000);
-
+    // dexAddress1 = await Test.getDexAddress(tokenAddress1);
+    // dexAddress2 = await Test.getDexAddress(tokenAddress2);
     dexAddress1 = await Test.before(tokenAddress1);
     dexAddress2 = await Test.before(tokenAddress2);
   });
@@ -1978,6 +2031,14 @@ describe("Incorrect Factory calls", function () {
     it("shouldn't swap token if min shares are too high", async function () {
       this.timeout(1000000);
       await Test.investLiquidityWithHighShares(dexAddress1);
+    });
+    it("shouldn't invest liquidity if tez rate is dangerous", async function () {
+      this.timeout(1000000);
+      await Test.investLiquidityIfTezRateIsDangerous(dexAddress1);
+    });
+    it("shouldn't invest liquidity if token rate is dangerous", async function () {
+      this.timeout(1000000);
+      await Test.investLiquidityIfTokenRateIsDangerous(dexAddress1);
     });
   });
 
