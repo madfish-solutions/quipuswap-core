@@ -2,7 +2,7 @@
   "name": "quipuswap",
   "version": "0.0.1",
   "config": {
-    "network": "https://api.tez.ie/rpc/carthagenet"
+    "network": "http://127.0.0.1:8732"
   },
   "scripts": {
     "build": "node scripts/cli.js build Dex --no-json -o contracts && node scripts/cli.js build Factory && node scripts/cli.js build Token",
