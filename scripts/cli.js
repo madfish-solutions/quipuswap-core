@@ -60,6 +60,9 @@ const setup = async (keyPath, provider) => {
   return await Tezos.setProvider({
     rpc: provider,
     signer: await new InMemorySigner.fromSecretKey(secretKey),
+    config: {
+      confirmationPollingTimeoutSecond: 1000,
+    },
   });
 };
 
