@@ -169,30 +169,32 @@ block {
   | SetVotesDelegation(n) -> failwith("00")
   | Vote(n) -> failwith("00")
   | Veto(voter) -> 
-    case s.voters[voter] of None -> failwith ("Dex/no-voter")
-      | Some(src) -> {
-        if Tezos.sender = voter or src.allowances contains Tezos.sender then {
-          const share : nat = get_force (voter, s.shares);
-          var newShare: nat := case s.vetoVoters[voter] of None -> share
-            | Some(prev) ->
-              if share > prev then abs(share - prev) else (failwith ("Dex/old-shares") : nat)
+    case s.shares[voter] of None -> failwith ("Dex/no-voter")
+    | Some(share) -> {
+      const src : vote_info = case s.voters[voter] of None -> record allowances = (set [] : set(address)); candidate = (None: option(key_hash)); end
+      | Some(src) -> src
+      end;
+      if Tezos.sender = voter or src.allowances contains Tezos.sender then {
+        var newShare: nat := case s.vetoVoters[voter] of None -> share
+          | Some(prev) ->
+            if share > prev then abs(share - prev) else (failwith ("Dex/old-shares") : nat)
+          end;
+        s.veto := s.veto + newShare;
+        if s.veto > s.totalVotes / 2n then {
+            s.veto := 0n;
+            case s.currentDelegated of None -> failwith ("Dex/no-delegated")
+            | Some(c) -> {
+              s.vetos[c] := Tezos.now + 7889229;
+              s.currentDelegated := (None: option(key_hash));
+              operations := set_delegate(s.currentDelegated) # operations;
+              s.vetoVoters := (big_map end : big_map(address, nat));
+            }
             end;
-          s.veto := s.veto + newShare;
-          if s.veto > s.totalVotes / 2n then {
-              s.veto := 0n;
-              case s.currentDelegated of None -> failwith ("Dex/no-delegated")
-              | Some(c) -> {
-                s.vetos[c] := Tezos.now + 7889229;
-                s.currentDelegated := (None: option(key_hash));
-                operations := set_delegate(s.currentDelegated) # operations;
-                s.vetoVoters := (big_map end : big_map(address, nat));
-              }
-              end;
-          } else skip ;
-          s.vetoVoters[voter] := share;
-        } else failwith ("Dex/vote-not-permitted");
-      }
-      end
+        } else skip ;
+        s.vetoVoters[voter] := share;
+      } else failwith ("Dex/vote-not-permitted");
+    }
+    end
   | WithdrawProfit(n) -> failwith("00")
   end
 } with (operations, s)

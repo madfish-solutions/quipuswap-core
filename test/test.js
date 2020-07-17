@@ -927,7 +927,8 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, minShares);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "NotEnoughAllowance", "Adding function should fail");
+      console.log(e.message);
+      assert(e.message === "Dex/veto-candidate", "Adding function should fail");
     }
   }
 
@@ -1730,6 +1731,18 @@ class Test {
       assert(e.message === "Dex/old-shares", "Adding function should fail");
     }
   }
+  static async vetoWithoutCandidate(dexAddress) {
+    let Tezos = await setup();
+    let dex = await Dex.init(Tezos, dexAddress);
+
+    const pkh = await Tezos.signer.publicKeyHash();
+    try {
+      await dex.veto(pkh);
+    } catch (e) {
+      console.log(e);
+      assert(e.message === "Dex/no-delegated", "Adding function should fail");
+    }
+  }
 
   static async vetoWithoutPermission(dexAddress) {
     let Tezos = await setup("../key2");
@@ -2048,19 +2061,19 @@ describe("Incorrect Factory calls", function () {
   });
 
   describe("InvestLiquidity()", function () {
-    it("shouldn't swap token if no tez is provided", async function () {
+    it("shouldn't invest token if no tez is provided", async function () {
       this.timeout(1000000);
       await Test.investLiquidityWithoutTez(dexAddress1);
     });
-    it("shouldn't swap token if no token is provided", async function () {
+    it("shouldn't invest token if no token is provided", async function () {
       this.timeout(1000000);
       await Test.investLiquidityWithoutTokens(dexAddress1);
     });
-    it("shouldn't swap token if min shares is zero", async function () {
+    it("shouldn't invest token if min shares is zero", async function () {
       this.timeout(1000000);
       await Test.investLiquidityWithoutShares(dexAddress1);
     });
-    it("shouldn't swap token if min shares are too high", async function () {
+    it("shouldn't invest token if min shares are too high", async function () {
       this.timeout(1000000);
       await Test.investLiquidityWithHighShares(dexAddress1);
     });
@@ -2138,6 +2151,10 @@ describe("Incorrect Factory calls", function () {
     it("shouldn't make veto without permission", async function () {
       this.timeout(1000000);
       await Test.vetoWithoutPermission(dexAddress1);
+    });
+    it("shouldn't make veto for None candidate", async function () {
+      this.timeout(1000000);
+      await Test.vetoWithoutCandidate(dexAddress1);
     });
   });
 });

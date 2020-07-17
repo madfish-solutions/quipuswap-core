@@ -68,7 +68,7 @@
 ### Veto
 
 - [x] old shares
-- [ ] veto for None
+- [x] veto for None
 - [x] veto without permission
 
 ### WithdrawProfit
