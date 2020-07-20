@@ -6,6 +6,8 @@ The current implementation supports FA1.2 tokens.
 
 # Architecture
 
+![Architecture](Architecture.png)
+
 The solution consist of 3 types of contracts:
 
 1. Factory : singleton used to deploy new exchange pair and route Tez during token to token exchanges;
