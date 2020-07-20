@@ -86,30 +86,28 @@ Now exchange can be used.
 
 ## Factory
 
-- launchExchange(token: address): deploys new empty `Dex` for `token` and store the address of new contract;
-- tokenToExchangeLookup(token: address, receiver: address, minTokenOut: nat) : look for `Dex` address for `token` and call `use(1n,TezToTokenPayment(minTokenOut, receiver))` resending received TRX to exchange.
-- configDex(token: address): set lambdas to deployed `Dex` contract.
-- setFunction(funcIndex: nat, func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)):
+- `launchExchange(token: address)`: deploys new empty `Dex` for `token` and store the address of new contract;
+- `tokenToExchangeLookup(token: address, receiver: address, minTokenOut: nat)` : look for `Dex` address for `token` and call `use(1n,TezToTokenPayment(minTokenOut, receiver))` resending received TRX to exchange.
+- `setFunction(funcIndex: nat, func : (dexAction, dex_storage, address) -> (list(operation), dex_storage))`: set lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
 
 ## Dex
 
-- setSettings(funcs: big_map(nat, (dexAction, dex_storage, address) -> (list(operation), dex_storage))) : set `funcs` that are sent from Factory to `lambdas`; these functions can be executed with `use` entrypoint.
-- default() : default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation circle.
-- use(funcIndex: nat, action: dexAction) : executes the function with index `funcIndex` from `lambdas` with parameters `action`.
+- `default()` : default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation circle.
+- `use(funcIndex: nat, action: dexAction)` : executes the function with index `funcIndex` from `lambdas` with parameters `action`.
 
 Actions have the following parameters (index in the list matches the index in `lambdas`):
 
-0. initializeExchange(tokenAmount: nat) : sets initial liquidity, XTZ must be sent.
-1. tezToToken(minTokensOut: nat, receiver: address) : exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `minTokensOut`.
-2. tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address) : exchanges `tokensIn` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minTezOut`.
-3. tokenToTokenOut(tokensIn: nat, minTokensOut: nat, token: address, receiver: address) : exchanges `tokensIn` of current token to `token` and sends them to `receiver`; operation is reverted if the amount of exchanged `token` is less than `minTokensOut`.
-4. investLiquidity(minShares: nat) : allows to own `minShares` by investing tokens and XTZ; the corresponding amount of XTZ should be sent with transaction and amount of tokens should be approved to be spent by `Dex`.
-5. divestLiquidity(sharesBurned: nat, minTezDivested: nat, minSharesDivested: nat) : divests `sharesBurned` and sends tokens and XTZ to owner; operation is reverted if the amount of divested tokens is smaller than `minTezDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
-6. setVotesDelegation(deputy: address, isAllowed: bool) : allows or prohibits `deputy` to vote with sender shares.
-7. vote(voter: address, candidate: key_hash) : votes for `candidate` with shares of `voter`.
-8. veto(voter: address) : votes agains current deligate with shares of `voter`.
-9. default() : default entrypoint to receive payments; received XTZ is distributed between liquidity providers in the end of the delegation circle.
-10. withdrawProfit(receiver: address) : withdraws delegation reward of the sender to `receiver` address.
+0. `initializeExchange(tokenAmount: nat)` : sets initial liquidity, XTZ must be sent.
+1. `tezToToken(minTokensOut: nat, receiver: address)` : exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `minTokensOut`.
+2. `tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address)` : exchanges `tokensIn` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minTezOut`.
+3. `tokenToTokenOut(tokensIn: nat, minTokensOut: nat, token: address, receiver: address)` : exchanges `tokensIn` of current token to `token` and sends them to `receiver`; operation is reverted if the amount of exchanged `token` is less than `minTokensOut`.
+4. `investLiquidity(minShares: nat)` : allows to own `minShares` by investing tokens and XTZ; the corresponding amount of XTZ should be sent with transaction and amount of tokens should be approved to be spent by `Dex`.
+5. `divestLiquidity(sharesBurned: nat, minTezDivested: nat, minSharesDivested: nat)` : divests `sharesBurned` and sends tokens and XTZ to owner; operation is reverted if the amount of divested tokens is smaller than `minTezDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
+6. `setVotesDelegation(deputy: address, isAllowed: bool)` : allows or prohibits `deputy` to vote with sender shares.
+7. `vote(voter: address, candidate: key_hash)` : votes for `candidate` with shares of `voter`.
+8. `veto(voter: address)` : votes agains current deligate with shares of `voter`.
+9. `default()` : default entrypoint to receive payments; received XTZ is distributed between liquidity providers in the end of the delegation circle.
+10. `withdrawProfit(receiver: address)` : withdraws delegation reward of the sender to `receiver` address.
 
 ## Token FA1.2
 
@@ -117,7 +115,7 @@ Implements standart [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master
 
 # Testing
 
-Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `key` and `key1`. `Factory`, `Token` and `Token2` contracts should be deployed before and their addresses should be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Look at `test.sh` for better understanding.
+Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `key`, `key1`, and `key2`. `Factory`, `Token` and `Token2` contracts should be deployed before and their addresses should be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Look at `test.sh` for better understanding.
 
 Run:
 
