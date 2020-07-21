@@ -2,6 +2,7 @@ const { setup, getContractFullStorage, sleep } = require("./utils");
 const { Dex } = require("./dex");
 const { Factory, factoryAddress } = require("./factory");
 const assert = require("assert");
+const TEST_RPC = "http://127.0.0.1:8732";
 
 class Test {
   static async before(tokenAddress) {
@@ -499,8 +500,10 @@ class Test {
     let AliceTezos = await setup("../fixtures/key1");
     let BobTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await BobTezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+      delegate = await BobTezos.signer.publicKeyHash();
+    }
 
     const alicePkh = await AliceTezos.signer.publicKeyHash();
 
@@ -1271,8 +1274,10 @@ class Test {
     let AliceTezos = await setup();
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await AliceTezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+      delegate = await AliceTezos.signer.publicKeyHash();
+    }
 
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
@@ -1293,8 +1298,10 @@ class Test {
     let AliceTezos = await setup();
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await AliceTezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+      delegate = await AliceTezos.signer.publicKeyHash();
+    }
     let reward = 1;
 
     const alicePkh = await AliceTezos.signer.publicKeyHash();
@@ -1396,8 +1403,10 @@ class Test {
     let AliceTezos = await setup();
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
-    // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    let delegate = await AliceTezos.signer.publicKeyHash();
+    let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
+    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+      delegate = await AliceTezos.signer.publicKeyHash();
+    }
 
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
