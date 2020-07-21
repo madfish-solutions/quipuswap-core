@@ -7,7 +7,7 @@ const { address: tokenAddress1 } = JSON.parse(
 let dexAddress1;
 let dexAddress2;
 
-const { address: factoryAddress, network: provider } = JSON.parse(
+const { address: factoryAddress } = JSON.parse(
   fs.readFileSync("./deploy/Factory.json").toString()
 );
 const { address: tokenAddress2 } = JSON.parse(
@@ -169,7 +169,7 @@ describe("Incorrect Factory calls", function () {
 
   describe("LaunchExchange()", function () {
     it("shouldn't launch new exchange", async function () {
-      await Test.launchExchangeForExistedToken();
+      await Test.launchExchangeForExistedToken(tokenAddress1);
     });
   });
 
@@ -201,7 +201,10 @@ describe("Incorrect Factory calls", function () {
       await Test.tezToTokenPaymentWithHighTokensOut(dexAddress1);
     });
     it("should swap tez even if receiver is explicit account(contract)", async function () {
-      await Test.tezToTokenPaymentWithExplicitReceiver(dexAddress1);
+      await Test.tezToTokenPaymentWithExplicitReceiver(
+        dexAddress1,
+        dexAddress2
+      );
     });
   });
   describe("TokenToTezPayment()", function () {
@@ -215,7 +218,10 @@ describe("Incorrect Factory calls", function () {
       await Test.tokenToTezPaymentWithHighTezOut(dexAddress1);
     });
     it("should swap token even if receiver is explicit account(contract)", async function () {
-      await Test.tokenToTezPaymentWithExplicitReceiver(dexAddress1);
+      await Test.tokenToTezPaymentWithExplicitReceiver(
+        dexAddress1,
+        dexAddress2
+      );
     });
   });
 
@@ -238,7 +244,8 @@ describe("Incorrect Factory calls", function () {
     it("should swap token even if receiver is explicit account(contract)", async function () {
       await Test.tokenToTokenPaymentWithExplicitReceiver(
         dexAddress1,
-        tokenAddress2
+        tokenAddress2,
+        dexAddress1
       );
     });
     it("shouldn't swap token if token pair doesn't exist", async function () {

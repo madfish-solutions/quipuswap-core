@@ -313,12 +313,12 @@ block {
   | InvestLiquidity(minShares) -> {
     const tezPerShare : nat = s.tezPool / s.totalShares;
     const sharesPurchased : nat = (Tezos.amount / 1mutez) / tezPerShare;
-    if Tezos.amount > 0mutez and minShares > 0n and Tezos.amount >= tezPerShare * 1mutez and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
+    if minShares > 0n and tezPerShare > 0n and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
     s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
     s.currentCircle.lastUpdate := Tezos.now;
     const tokensPerShare : nat = s.tokenPool / s.totalShares;
     const tokensRequired : nat = sharesPurchased * tokensPerShare;
-    if tokensRequired < s.totalShares or (Tezos.amount / 1mutez) < s.totalShares then failwith("Dex/dangerous-rate") else {
+    if tokensPerShare = 0n then failwith("Dex/dangerous-rate") else {
       const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
       // update user loyalty
       var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
