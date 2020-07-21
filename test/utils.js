@@ -60,7 +60,7 @@ exports.sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-exports.setup = async (keyPath = "../key") => {
+exports.setup = async (keyPath = "../fixtures/key") => {
   keyPath = path.join(__dirname, keyPath);
   const secretKey = fs.readFileSync(keyPath).toString();
   let tezos = new TezosToolkit();

@@ -6,7 +6,7 @@ const assert = require("assert");
 class Test {
   static async before(tokenAddress) {
     let tezos = await setup();
-    let tezos1 = await setup("../key1");
+    let tezos1 = await setup("../fixtures/key1");
     let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods
       .transfer(
@@ -20,7 +20,7 @@ class Test {
     let factory = await Factory.init(tezos);
     operation = await factory.launchExchange(tokenAddress);
     await operation.confirmation();
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
 
     let storage = await factory.getFullStorage({
       tokenToExchange: [tokenAddress],
@@ -42,33 +42,34 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     const tokenAmount = "1000";
     const tezAmount = "1.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
-    assert(initialStorage.storage.feeRate == 333);
-    assert(initialStorage.storage.invariant == 0);
-    assert(initialStorage.storage.totalShares == 0);
-    assert(initialStorage.storage.tezPool == 0);
-    assert(initialStorage.storage.tokenPool == 0);
-    assert(initialStorage.storage.tokenAddress == tokenAddress);
-    assert(initialStorage.storage.factoryAddress == factoryAddress);
-    assert(initialStorage.sharesExtended[pkh] == undefined);
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
+    assert.equal(initialStorage.storage.feeRate, 333);
+    assert.equal(initialStorage.storage.invariant, 0);
+    assert.equal(initialStorage.storage.totalShares, 0);
+    assert.equal(initialStorage.storage.tezPool, 0);
+    assert.equal(initialStorage.storage.tokenPool, 0);
+    assert.equal(initialStorage.storage.tokenAddress, tokenAddress);
+    assert.equal(initialStorage.storage.factoryAddress, factoryAddress);
+    assert.equal(initialStorage.sharesExtended[alicePkh], undefined);
 
     let operation = await dex.initializeExchange(tokenAmount, tezAmount);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
 
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
-    assert(finalStorage.storage.feeRate == 333);
-    assert(
-      finalStorage.storage.invariant == mutezAmount * parseInt(tokenAmount)
+    assert.equal(finalStorage.storage.feeRate, 333);
+    assert.equal(
+      finalStorage.storage.invariant,
+      mutezAmount * parseInt(tokenAmount)
     );
-    assert(finalStorage.storage.tezPool == mutezAmount);
-    assert(finalStorage.storage.tokenPool == tokenAmount);
-    assert(finalStorage.storage.tokenAddress == tokenAddress);
-    assert(finalStorage.storage.factoryAddress == factoryAddress);
-    assert(finalStorage.sharesExtended[pkh] == 1000);
-    assert(finalStorage.storage.totalShares == 1000);
+    assert.equal(finalStorage.storage.tezPool, mutezAmount);
+    assert.equal(finalStorage.storage.tokenPool, tokenAmount);
+    assert.equal(finalStorage.storage.tokenAddress, tokenAddress);
+    assert.equal(finalStorage.storage.factoryAddress, factoryAddress);
+    assert.equal(finalStorage.sharesExtended[alicePkh], 1000);
+    assert.equal(finalStorage.storage.totalShares, 1000);
   }
 
   static async setFunctionWithHigherIndex() {
@@ -77,19 +78,16 @@ class Test {
     let index = 11;
     let initialStorage = await factory.getFullStorage({ lambdas: [index] });
     let lambda = "initializeExchange";
-    assert(initialStorage.lambdas[index] == undefined);
+    assert.equal(initialStorage.lambdas[index], undefined);
     try {
       await factory.setFunction(index, lambda);
       assert(false, "Adding function should fail");
     } catch (e) {
-      assert(
-        e.message === "Factory/functions-set",
-        "Adding function should fail"
-      );
+      assert.equal(e.message, "Factory/functions-set");
     }
 
     let finalStorage = await factory.getFullStorage({ lambdas: [index] });
-    assert(finalStorage.lambdas[index] == undefined);
+    assert.equal(finalStorage.lambdas[index], undefined);
   }
 
   static async setFunctionWithExistedIndex() {
@@ -99,19 +97,16 @@ class Test {
     let initialStorage = await factory.getFullStorage({ lambdas: [index] });
     let lambda = "initializeExchange";
 
-    assert(initialStorage.lambdas[index] == undefined);
+    assert.equal(initialStorage.lambdas[index], undefined);
     try {
       await factory.setFunction(index, lambda);
       assert(false, "Adding function should fail");
     } catch (e) {
-      assert(
-        e.message === "Factory/function-set",
-        "Adding function should fail"
-      );
+      assert.equal(e.message, "Factory/function-set");
     }
 
     let finalStorage = await factory.getFullStorage({ lambdas: [index] });
-    assert(finalStorage.lambdas[index] == undefined);
+    assert.equal(finalStorage.lambdas[index], undefined);
   }
 
   static async launchExchangeForExistedToken(tokenAddress) {
@@ -122,10 +117,7 @@ class Test {
       await factory.launchExchange(tokenAddress);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(
-        e.message === "Factory/exchange-launched",
-        "Adding function should fail"
-      );
+      assert.equal(e.message, "Factory/exchange-launched");
     }
   }
 
@@ -134,8 +126,8 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     const tokenAmount = "1000";
     const tezAmount = "1.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
     assert(initialStorage.storage.invariant > 0);
     assert(initialStorage.storage.totalShares > 0);
 
@@ -143,7 +135,7 @@ class Test {
       await dex.initializeExchange(tokenAmount, tezAmount);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/non-allowed", "Adding function should fail");
+      assert.equal(e.message, "Dex/non-allowed");
     }
   }
 
@@ -152,8 +144,8 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     const tokenAmount = "1000";
     const tezAmount = "1.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
     assert(initialStorage.storage.invariant > 0);
     assert(initialStorage.storage.totalShares > 0);
 
@@ -161,7 +153,7 @@ class Test {
       await dex.initializeExchange(tokenAmount, tezAmount);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/non-allowed", "Adding function should fail");
+      assert.equal(e.message, "Dex/non-allowed");
     }
   }
 
@@ -170,8 +162,8 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     const tokenAmount = "0";
     const tezAmount = "1.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
     assert(initialStorage.storage.invariant > 0);
     assert(initialStorage.storage.totalShares > 0);
 
@@ -179,7 +171,7 @@ class Test {
       await dex.initializeExchange(tokenAmount, tezAmount);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/non-allowed", "Adding function should fail");
+      assert.equal(e.message, "Dex/non-allowed");
     }
   }
 
@@ -187,8 +179,8 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
 
@@ -209,7 +201,7 @@ class Test {
       await dex.tezToTokenSwap(minTokens, tezAmount);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
@@ -217,8 +209,8 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
@@ -238,15 +230,15 @@ class Test {
       await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
   static async tokenToTokenPaymentToUnexistedToken(dexAddress, tokenAddressTo) {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
@@ -266,7 +258,7 @@ class Test {
       await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "MAP FIND", "Adding function should fail");
+      assert.equal(e.message, "MAP FIND");
     }
   }
 
@@ -278,8 +270,8 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
@@ -301,7 +293,7 @@ class Test {
       tokenAddressTo,
       receiver
     );
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
   }
 
   static async tokenToTokenPaymentWithoutTokensOut(dexAddress, tokenAddressTo) {
@@ -314,7 +306,7 @@ class Test {
       await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
@@ -331,16 +323,16 @@ class Test {
       await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/high-min-out", "Adding function should fail");
+      assert.equal(e.message, "Dex/high-min-out");
     }
   }
 
   static async investLiquidityWithoutTez(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
     const minShares = parseInt(
@@ -355,16 +347,16 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, minShares);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
   static async divestLiquidityWithZeroSharesBurned(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let sharesBurned = 0;
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const tezPerShare = parseInt(
       initialStorage.storage.tezPool / initialStorage.storage.totalShares
@@ -378,16 +370,16 @@ class Test {
       await dex.divestLiquidity(minTokens, minTez, sharesBurned);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
   static async divestLiquidityWithZeroTokensOut(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let sharesBurned = 10;
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const tezPerShare = parseInt(
       initialStorage.storage.tezPool / initialStorage.storage.totalShares
@@ -401,16 +393,16 @@ class Test {
       await dex.divestLiquidity(0, minTez, sharesBurned);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-out");
     }
   }
 
   static async divestLiquidityWithHighTokensOut(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let sharesBurned = 10;
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const tezPerShare = parseInt(
       initialStorage.storage.tezPool / initialStorage.storage.totalShares
@@ -424,16 +416,16 @@ class Test {
       await dex.divestLiquidity(100000000, minTez, sharesBurned);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-out");
     }
   }
 
   static async divestLiquidityWithZeroTezOut(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let sharesBurned = 10;
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const tezPerShare = parseInt(
       initialStorage.storage.tezPool / initialStorage.storage.totalShares
@@ -446,16 +438,16 @@ class Test {
       await dex.divestLiquidity(minTokens, 0, sharesBurned);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-out");
     }
   }
 
   static async divestLiquidityWithHighTezOut(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let sharesBurned = 10;
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const tezPerShare = parseInt(
       initialStorage.storage.tezPool / initialStorage.storage.totalShares
@@ -468,13 +460,13 @@ class Test {
       await dex.divestLiquidity(minTokens, 100000000, sharesBurned);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-out", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-out");
     }
   }
 
   static async voteWithoutPersmission(dexAddress) {
-    let AliceTezos = await setup("../key2");
-    let BobTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key2");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let delegate = await AliceTezos.signer.publicKeyHash();
 
@@ -484,62 +476,60 @@ class Test {
       await dex.vote(bobPkh, delegate);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(
-        e.message === "Dex/vote-not-permitted",
-        "Adding function should fail"
-      );
+      assert.equal(e.message, "Dex/vote-not-permitted");
     }
   }
 
   static async voteWithoutShares(dexAddress) {
-    let AliceTezos = await setup("../key2");
+    let AliceTezos = await setup("../fixtures/key2");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let delegate = await AliceTezos.signer.publicKeyHash();
 
     const alicePkh = await AliceTezos.signer.publicKeyHash();
 
     try {
-      await dex.vote(pkh, delegate);
+      await dex.vote(alicePkh, delegate);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/no-shares", "Adding function should fail");
+      assert.equal(e.message, "Dex/no-shares");
     }
   }
 
   static async voteForVetted(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let BobTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
     let delegate = await BobTezos.signer.publicKeyHash();
 
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
 
     try {
-      await dex.vote(pkh, delegate);
+      await dex.vote(alicePkh, delegate);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      let initialStorage = await dex.getFullStorage({ vetos: [delegate] });
-      assert(e.message === "Dex/veto-candidate", "Adding function should fail");
+      assert.equal(e.message, "Dex/veto-candidate");
     }
   }
 
   static async setVotesDelegationToSelf(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
 
-    let operation = await dex.setVotesDelegation(pkh, true);
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ voters: [pkh] });
-    assert(!finalStorage.votersExtended[pkh].allowances.includes(pkh));
+    let operation = await dex.setVotesDelegation(alicePkh, true);
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ voters: [alicePkh] });
+    assert(
+      !finalStorage.votersExtended[alicePkh].allowances.includes(alicePkh)
+    );
   }
 
   static async setVotesDelegationToMoreThanFiveDeputies(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let BobTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const pkhs = [
       "tz1Lmi1HELe8hNbw1heWwpHgdLM7DaPJuZvq",
       "tz1SVwdLNf3ANMQE1AXrxS1pBG8tcn2joVZg",
@@ -552,23 +542,20 @@ class Test {
     try {
       for (const user of pkhs) {
         let operation = await dex.setVotesDelegation(user, true);
-        assert(operation.status === "applied", "Operation was not applied");
+        assert.equal(operation.status, "applied", "Operation was not applied");
       }
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(
-        e.message === "Dex/many-voter-delegates",
-        "Adding function should fail"
-      );
+      assert.equal(e.message, "Dex/many-voter-delegates");
     }
   }
 
   static async investLiquidityWithoutTokens(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "5.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
     const minShares = parseInt(
@@ -580,16 +567,16 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, minShares);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/veto-candidate", "Adding function should fail");
+      assert.equal(e.message, "Dex/veto-candidate");
     }
   }
 
   static async investLiquidityWithoutShares(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "5.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
     const minShares = parseInt(
@@ -604,15 +591,15 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, 0);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
   static async investLiquidityWithHighShares(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "5.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
     const minShares = parseInt(
@@ -627,15 +614,15 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, 100000000000);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
   static async investLiquidityIfTezRateIsDangerous(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0.0001";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
     const minShares = parseInt(
@@ -650,15 +637,15 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, minShares);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
   static async investLiquidityIfTokenRateIsDangerous(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0.000001";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
     const minShares = parseInt(
@@ -673,7 +660,7 @@ class Test {
       await dex.investLiquidity(tokenAmount, tezAmount, minShares);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
@@ -681,9 +668,9 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
 
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
       +initialDexStorage.storage.tokenPool + +tokensIn
@@ -701,7 +688,7 @@ class Test {
       await dex.tokenToTezSwap(tokensIn, minTezOut);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
@@ -709,9 +696,9 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
 
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
       +initialDexStorage.storage.tokenPool + +tokensIn
@@ -726,7 +713,7 @@ class Test {
     );
 
     let operation = await dex.tokenToTezPayment(tokensIn, minTezOut, receiver);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
   }
 
   static async tokenToTezPaymentWithoutTez(dexAddress) {
@@ -738,7 +725,7 @@ class Test {
       await dex.tokenToTezSwap(tokensIn, 0);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
@@ -751,10 +738,7 @@ class Test {
       await dex.tokenToTezSwap(tokensIn, 10000000000);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(
-        e.message === "Dex/high-min-tez-out",
-        "Adding function should fail"
-      );
+      assert.equal(e.message, "Dex/high-min-tez-out");
     }
   }
 
@@ -762,8 +746,8 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0.001";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
 
@@ -781,7 +765,7 @@ class Test {
     );
 
     let operation = await dex.tezToTokenPayment(minTokens, tezAmount, receiver);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
   }
 
   static async tezToTokenPaymentWithoutTokens(dexAddress) {
@@ -793,7 +777,7 @@ class Test {
       await dex.tezToTokenSwap(0, tezAmount);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
   static async tezToTokenPaymentWithHighTokensOut(dexAddress) {
@@ -805,7 +789,7 @@ class Test {
       await dex.tezToTokenSwap(100000000, tezAmount);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/high-min-out", "Adding function should fail");
+      assert.equal(e.message, "Dex/high-min-out");
     }
   }
 
@@ -813,8 +797,8 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
 
@@ -834,7 +818,7 @@ class Test {
     try {
       await dex.tezToTokenSwap(minTokens, tezAmount);
     } catch (e) {
-      assert(e.message === "Dex/wrong-params", "Adding function should fail");
+      assert.equal(e.message, "Dex/wrong-params");
     }
   }
 
@@ -843,8 +827,8 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     const tokenAmount = "1000";
     const tezAmount = "0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
     assert(initialStorage.storage.invariant > 0);
     assert(initialStorage.storage.totalShares > 0);
 
@@ -852,16 +836,16 @@ class Test {
       await dex.initializeExchange(tokenAmount, tezAmount);
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert(e.message === "Dex/non-allowed", "Adding function should fail");
+      assert.equal(e.message, "Dex/non-allowed");
     }
   }
 
   static async investLiquidity(dexAddress, tokenAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "5.0";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
     const minShares = parseInt(
@@ -878,26 +862,26 @@ class Test {
       tezAmount,
       minShares
     );
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    assert(finalStorage.sharesExtended[pkh] == minShares);
-    assert(
-      finalStorage.storage.tezPool ==
-        parseInt(initialStorage.storage.tezPool) + parseInt(mutezAmount)
+    assert.equal(finalStorage.sharesExtended[alicePkh], minShares);
+    assert.equal(
+      finalStorage.storage.tezPool,
+      parseInt(initialStorage.storage.tezPool) + parseInt(mutezAmount)
     );
-    assert(
-      finalStorage.storage.tokenPool ==
-        parseInt(initialStorage.storage.tokenPool) + parseInt(tokenAmount)
+    assert.equal(
+      finalStorage.storage.tokenPool,
+      parseInt(initialStorage.storage.tokenPool) + parseInt(tokenAmount)
     );
-    assert(
-      finalStorage.storage.totalShares ==
-        parseInt(initialStorage.storage.totalShares) + parseInt(minShares)
+    assert.equal(
+      finalStorage.storage.totalShares,
+      parseInt(initialStorage.storage.totalShares) + parseInt(minShares)
     );
-    assert(
-      finalStorage.storage.invariant ==
-        (parseInt(initialStorage.storage.tezPool) + parseInt(mutezAmount)) *
-          (parseInt(initialStorage.storage.tokenPool) + parseInt(tokenAmount))
+    assert.equal(
+      finalStorage.storage.invariant,
+      (parseInt(initialStorage.storage.tezPool) + parseInt(mutezAmount)) *
+        (parseInt(initialStorage.storage.tokenPool) + parseInt(tokenAmount))
     );
   }
 
@@ -905,14 +889,14 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
 
-    const initialTezBalance = await AliceTezos.tz.getBalance(pkh);
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const initialTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh] }
+      { ledger: [alicePkh] }
     );
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
@@ -929,39 +913,39 @@ class Test {
     );
 
     let operation = await dex.tokenToTezSwap(tokensIn, minTezOut);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
 
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh] }
+      { ledger: [alicePkh] }
     );
-    const finalTezBalance = await AliceTezos.tz.getBalance(pkh);
+    const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
-    assert(
-      finalTokenStorage.ledgerExtended[pkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) -
-          parseInt(tokensIn)
+    assert.equal(
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) -
+        parseInt(tokensIn)
     );
     assert(finalTezBalance >= parseInt(initialTezBalance));
     assert(
       finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut)
     );
-    assert(
-      finalStorage.storage.tezPool ==
-        parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)
+    assert.equal(
+      finalStorage.storage.tezPool,
+      parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)
     );
-    assert(
-      finalStorage.storage.tokenPool ==
-        parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn)
+    assert.equal(
+      finalStorage.storage.tokenPool,
+      parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn)
     );
 
-    assert(
-      finalStorage.storage.invariant ==
-        (parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)) *
-          (parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn))
+    assert.equal(
+      finalStorage.storage.invariant,
+      (parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)) *
+        (parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn))
     );
   }
 
@@ -969,14 +953,14 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
 
-    const initialTezBalance = await AliceTezos.tz.getBalance(pkh);
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const initialTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh] }
+      { ledger: [alicePkh] }
     );
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
@@ -997,35 +981,35 @@ class Test {
       tokensOut,
       tokenAddressTo
     );
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh] }
+      { ledger: [alicePkh] }
     );
-    const finalTezBalance = await AliceTezos.tz.getBalance(pkh);
+    const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
-    assert(
-      finalTokenStorage.ledgerExtended[pkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) -
-          parseInt(tokensIn)
+    assert.equal(
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) -
+        parseInt(tokensIn)
     );
     assert(finalTezBalance <= parseInt(initialTezBalance));
-    assert(
-      finalStorage.storage.tezPool ==
-        parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)
+    assert.equal(
+      finalStorage.storage.tezPool,
+      parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)
     );
-    assert(
-      finalStorage.storage.tokenPool ==
-        parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn)
+    assert.equal(
+      finalStorage.storage.tokenPool,
+      parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn)
     );
 
-    assert(
-      finalStorage.storage.invariant ==
-        (parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)) *
-          (parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn))
+    assert.equal(
+      finalStorage.storage.invariant,
+      (parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)) *
+        (parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn))
     );
   }
 
@@ -1033,14 +1017,14 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0.01";
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const initialTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh] }
+      { ledger: [alicePkh] }
     );
-    const initialTezBalance = await AliceTezos.tz.getBalance(pkh);
+    const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
 
@@ -1058,56 +1042,56 @@ class Test {
     );
 
     let operation = await dex.tezToTokenSwap(minTokens, tezAmount);
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh] }
+      { ledger: [alicePkh] }
     );
-    const finalTezBalance = await AliceTezos.tz.getBalance(pkh);
+    const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
-    assert(
-      finalTokenStorage.ledgerExtended[pkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) +
-          parseInt(minTokens)
+    assert.equal(
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) +
+        parseInt(minTokens)
     );
     assert(
       finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount)
     );
-    assert(
-      finalStorage.storage.tezPool ==
-        parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)
+    assert.equal(
+      finalStorage.storage.tezPool,
+      parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)
     );
-    assert(
-      finalStorage.storage.tokenPool ==
-        parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens)
+    assert.equal(
+      finalStorage.storage.tokenPool,
+      parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens)
     );
 
-    assert(
-      finalStorage.storage.invariant ==
-        (parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)) *
-          (parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens))
+    assert.equal(
+      finalStorage.storage.invariant,
+      (parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)) *
+        (parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens))
     );
   }
 
   static async tezToTokenPayment(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tezAmount = "0.1";
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({
-      shares: [pkh, bobPkh],
+      shares: [alicePkh, bobPkh],
     });
     const initialTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh, bobPkh] }
+      { ledger: [alicePkh, bobPkh] }
     );
-    const initialTezBalance = await AliceTezos.tz.getBalance(pkh);
+    const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
 
@@ -1125,56 +1109,56 @@ class Test {
     );
 
     let operation = await dex.tezToTokenPayment(minTokens, tezAmount, bobPkh);
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
       { ledger: [bobPkh] }
     );
-    const finalTezBalance = await AliceTezos.tz.getBalance(pkh);
+    const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
-    assert(
-      finalTokenStorage.ledgerExtended[bobPkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[bobPkh].balance) +
-          parseInt(minTokens)
+    assert.equal(
+      finalTokenStorage.ledgerExtended[bobPkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[bobPkh].balance) +
+        parseInt(minTokens)
     );
     assert(
       finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount)
     );
-    assert(
-      finalStorage.storage.tezPool ==
-        parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)
+    assert.equal(
+      finalStorage.storage.tezPool,
+      parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)
     );
-    assert(
-      finalStorage.storage.tokenPool ==
-        parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens)
+    assert.equal(
+      finalStorage.storage.tokenPool,
+      parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens)
     );
 
-    assert(
-      finalStorage.storage.invariant ==
-        (parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)) *
-          (parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens))
+    assert.equal(
+      finalStorage.storage.invariant,
+      (parseInt(initialDexStorage.storage.tezPool) + parseInt(mutezAmount)) *
+        (parseInt(initialDexStorage.storage.tokenPool) - parseInt(minTokens))
     );
   }
 
   static async tokenToTezPayment(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
 
     const initialTezBalance = await AliceTezos.tz.getBalance(bobPkh);
     const initialDexStorage = await dex.getFullStorage({
-      shares: [pkh, bobPkh],
+      shares: [alicePkh, bobPkh],
     });
     const initialTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh, bobPkh] }
+      { ledger: [alicePkh, bobPkh] }
     );
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
@@ -1190,47 +1174,47 @@ class Test {
       parseInt(initialDexStorage.storage.tezPool - newTezPool)
     );
     let operation = await dex.tokenToTezPayment(tokensIn, minTezOut, bobPkh);
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await getContractFullStorage(
       AliceTezos,
       tokenAddress,
-      { ledger: [pkh, bobPkh] }
+      { ledger: [alicePkh, bobPkh] }
     );
     const finalTezBalance = await AliceTezos.tz.getBalance(bobPkh);
 
-    assert(
-      finalTokenStorage.ledgerExtended[pkh].balance ==
-        parseInt(initialTokenStorage.ledgerExtended[pkh].balance) -
-          parseInt(tokensIn)
+    assert.equal(
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) -
+        parseInt(tokensIn)
     );
     assert(finalTezBalance >= parseInt(initialTezBalance));
     assert(
       finalTezBalance <= parseInt(initialTezBalance) + parseInt(minTezOut)
     );
-    assert(
-      finalStorage.storage.tezPool ==
-        parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)
+    assert.equal(
+      finalStorage.storage.tezPool,
+      parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)
     );
-    assert(
-      finalStorage.storage.tokenPool ==
-        parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn)
+    assert.equal(
+      finalStorage.storage.tokenPool,
+      parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn)
     );
 
-    assert(
-      finalStorage.storage.invariant ==
-        (parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)) *
-          (parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn))
+    assert.equal(
+      finalStorage.storage.invariant,
+      (parseInt(initialDexStorage.storage.tezPool) - parseInt(minTezOut)) *
+        (parseInt(initialDexStorage.storage.tokenPool) + parseInt(tokensIn))
     );
   }
 
   static async divestLiquidity(dexAddress, tokenAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let sharesBurned = 10;
-    const pkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [pkh] });
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
+    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const tezPerShare = parseInt(
       initialStorage.storage.tezPool / initialStorage.storage.totalShares
@@ -1241,98 +1225,98 @@ class Test {
     const minTez = tezPerShare * sharesBurned;
     const minTokens = tokensPerShare * sharesBurned;
     let operation = await dex.divestLiquidity(minTokens, minTez, sharesBurned);
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ shares: [pkh] });
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    assert(
-      finalStorage.sharesExtended[pkh] ==
-        initialStorage.sharesExtended[pkh] - sharesBurned
+    assert.equal(
+      finalStorage.sharesExtended[alicePkh],
+      initialStorage.sharesExtended[alicePkh] - sharesBurned
     );
-    assert(
-      finalStorage.storage.tezPool ==
-        parseInt(initialStorage.storage.tezPool) - minTez
+    assert.equal(
+      finalStorage.storage.tezPool,
+      parseInt(initialStorage.storage.tezPool) - minTez
     );
-    assert(
-      finalStorage.storage.tokenPool ==
-        parseInt(initialStorage.storage.tokenPool) - minTokens
+    assert.equal(
+      finalStorage.storage.tokenPool,
+      parseInt(initialStorage.storage.tokenPool) - minTokens
     );
-    assert(
-      finalStorage.storage.totalShares ==
-        parseInt(initialStorage.storage.totalShares) - sharesBurned
+    assert.equal(
+      finalStorage.storage.totalShares,
+      parseInt(initialStorage.storage.totalShares) - sharesBurned
     );
-    assert(
-      finalStorage.storage.invariant ==
-        (parseInt(initialStorage.storage.tezPool) - minTez) *
-          (parseInt(initialStorage.storage.tokenPool) - minTokens)
+    assert.equal(
+      finalStorage.storage.invariant,
+      (parseInt(initialStorage.storage.tezPool) - minTez) *
+        (parseInt(initialStorage.storage.tokenPool) - minTokens)
     );
   }
 
   static async setVotesDelegation(dexAddress) {
-    let AliceTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key1");
     let BobTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ voters: [pkh] });
+    let initialStorage = await dex.getFullStorage({ voters: [alicePkh] });
 
-    assert(!initialStorage.votersExtended[pkh]);
+    assert(!initialStorage.votersExtended[alicePkh]);
 
     let operation = await dex.setVotesDelegation(bobPkh, true);
-    assert(operation.status === "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ voters: [pkh] });
-    assert(finalStorage.votersExtended[pkh].allowances.includes(bobPkh));
+    assert.equal(operation.status, "applied", "Operation was not applied");
+    let finalStorage = await dex.getFullStorage({ voters: [alicePkh] });
+    assert(finalStorage.votersExtended[alicePkh].allowances.includes(bobPkh));
   }
 
   static async vote(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
     let delegate = await AliceTezos.signer.publicKeyHash();
 
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ voters: [bobPkh] });
 
-    assert(initialStorage.votersExtended[bobPkh].allowances.includes(pkh));
+    assert(initialStorage.votersExtended[bobPkh].allowances.includes(alicePkh));
     assert(!initialStorage.votersExtended[bobPkh].candidate);
     assert(!initialStorage.storage.delegated);
 
     let operation = await dex.vote(bobPkh, delegate);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ voters: [bobPkh] });
-    assert(finalStorage.votersExtended[bobPkh].candidate == delegate);
-    assert(finalStorage.storage.delegated == delegate);
+    assert.equal(finalStorage.votersExtended[bobPkh].candidate, delegate);
+    assert.equal(finalStorage.storage.delegated, delegate);
   }
 
   static async default(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
     let delegate = await AliceTezos.signer.publicKeyHash();
     let reward = 1;
 
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ voters: [bobPkh] });
 
-    assert(initialStorage.storage.delegated == delegate);
+    assert.equal(initialStorage.storage.delegated, delegate);
 
     let operation = await dex.sendReward(reward);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ voters: [bobPkh] });
-    assert(finalStorage.storage.currentDelegated == delegate);
+    assert.equal(finalStorage.storage.currentDelegated, delegate);
   }
 
   static async withdrawProfit(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(BobTezos, dexAddress);
     let reward = 10;
     let amount = 1;
 
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({
       circleLoyalty: [bobPkh],
@@ -1342,85 +1326,86 @@ class Test {
     await sleep(3000);
 
     let operation = await dex.sendReward(amount);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
 
     operation = await dex.withdrawProfit(bobPkh);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ circleLoyalty: [bobPkh] });
     operation = await dex.sendReward(amount);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
     finalStorage = await dex.getFullStorage({ circleLoyalty: [bobPkh] });
   }
 
   static async withdrawProfitWithoutProfit(dexAddress) {
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(BobTezos, dexAddress);
     const bobPkh = await BobTezos.signer.publicKeyHash();
     try {
       await dex.withdrawProfit(bobPkh);
       await dex.withdrawProfit(bobPkh);
     } catch (e) {
-      assert(
-        e.message === "(branch) proto.006-PsCARTHA.contract.empty_transaction",
-        "Adding function should fail"
+      assert.equal(
+        e.message,
+        "(branch) proto.006-PsCARTHA.contract.empty_transaction"
       );
     }
   }
 
   static async vetoWithOldShares(dexAddress) {
     let AliceTezos = await setup();
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
 
     const bobPkh = await BobTezos.signer.publicKeyHash();
     try {
       await dex.veto(bobPkh);
     } catch (e) {
-      assert(e.message === "Dex/old-shares", "Adding function should fail");
+      assert.equal(e.message, "Dex/old-shares", "Adding function should fail");
     }
   }
   static async vetoWithoutCandidate(dexAddress) {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
 
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     try {
-      await dex.veto(pkh);
+      await dex.veto(alicePkh);
     } catch (e) {
-      assert(e.message === "Dex/no-delegated", "Adding function should fail");
+      assert.equal(
+        e.message,
+        "Dex/no-delegated",
+        "Adding function should fail"
+      );
     }
   }
 
   static async vetoWithoutPermission(dexAddress) {
-    let AliceTezos = await setup("../key2");
-    let BobTezos = await setup("../key1");
+    let AliceTezos = await setup("../fixtures/key2");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
 
     const bobPkh = await BobTezos.signer.publicKeyHash();
     try {
       await dex.veto(bobPkh);
     } catch (e) {
-      assert(
-        e.message === "Dex/vote-not-permitted",
-        "Adding function should fail"
-      );
+      assert.equal(e.message, "Dex/vote-not-permitted");
     }
   }
 
   static async veto(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
-    let BobTezos = await setup("../key1");
+    let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     // let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
     let delegate = await AliceTezos.signer.publicKeyHash();
 
-    const pkh = await AliceTezos.signer.publicKeyHash();
+    const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
 
     let operation = await dex.veto(bobPkh);
-    assert(operation.status === "applied", "Operation was not applied");
+    assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({});
-    assert(finalStorage.storage.veto == 0);
+    assert.equal(finalStorage.storage.veto, 0);
     assert(!finalStorage.storage.currentDelegated);
   }
 }

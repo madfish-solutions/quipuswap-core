@@ -256,7 +256,11 @@ program
     "Where deployed contracts are located",
     "deploy"
   )
-  .option("-k, --key_path <file>", "Where private key is located", "key")
+  .option(
+    "-k, --key_path <file>",
+    "Where private key is located",
+    "fixtures/key"
+  )
   .option(
     "-p, --provider <provider>",
     "Node to connect",
@@ -276,7 +280,11 @@ program
     "Where built contracts are located",
     "contracts"
   )
-  .option("-k, --key_path <file>", "Where private key is located", "key")
+  .option(
+    "-k, --key_path <file>",
+    "Where private key is located",
+    "fixtures/key"
+  )
   .option(
     "-p, --provider <provider>",
     "Node to connect",
@@ -306,7 +314,11 @@ program
     "Where built contracts are located",
     "storage"
   )
-  .option("-k, --key_path <file>", "Where private key is located", "key")
+  .option(
+    "-k, --key_path <file>",
+    "Where private key is located",
+    "fixtures/key"
+  )
   .option(
     "-p, --provider <provider>",
     "Node to connect",
