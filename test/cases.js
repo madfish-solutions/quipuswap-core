@@ -501,7 +501,7 @@ class Test {
     let BobTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+    if (AliceTezos.rpc.getRpcUrl() == TEST_RPC) {
       delegate = await BobTezos.signer.publicKeyHash();
     }
 
@@ -1275,7 +1275,7 @@ class Test {
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+    if (AliceTezos.rpc.getRpcUrl() == TEST_RPC) {
       delegate = await AliceTezos.signer.publicKeyHash();
     }
 
@@ -1299,7 +1299,7 @@ class Test {
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+    if (AliceTezos.rpc.getRpcUrl() == TEST_RPC) {
       delegate = await AliceTezos.signer.publicKeyHash();
     }
     let reward = 1;
@@ -1404,7 +1404,7 @@ class Test {
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
     let delegate = "tz1VxS7ff4YnZRs8b4mMP4WaMVpoQjuo1rjf";
-    if (tezos.rpc.getRpcUrl() == TEST_RPC) {
+    if (AliceTezos.rpc.getRpcUrl() == TEST_RPC) {
       delegate = await AliceTezos.signer.publicKeyHash();
     }
 
