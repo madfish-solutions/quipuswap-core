@@ -35,14 +35,13 @@
                                               (pair (pair (option %delegated key_hash) (address %factoryAddress))
                                                     (pair (nat %feeRate) (nat %invariant))))
                                         (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
-                                                    (pair (address %tokenAddress) (nat %tokenPool)))
-                                              (pair (pair (nat %totalShares) (nat %totalVotes))
-                                                    (pair (nat %veto) (big_map %vetoVoters address nat)))))
-                                  (pair (pair (big_map %vetos key_hash timestamp)
-                                              (big_map %voters
+                                                    (pair (address %tokenAddress) (nat %tokenId)))
+                                              (pair (pair (nat %tokenPool) (nat %totalShares)) (pair (nat %totalVotes) (nat %veto)))))
+                                  (pair (pair (big_map %vetoVoters address nat) (big_map %vetos key_hash timestamp))
+                                        (pair (big_map %voters
                                                  address
-                                                 (pair (set %allowances address) (option %candidate key_hash))))
-                                        (big_map %votes key_hash nat))))
+                                                 (pair (set %allowances address) (option %candidate key_hash)))
+                                              (big_map %votes key_hash nat)))))
                       address)
                 (pair (list operation)
                       (pair (pair (pair (pair (pair (big_map %circleLoyalty
@@ -62,14 +61,13 @@
                                         (pair (pair (option %delegated key_hash) (address %factoryAddress))
                                               (pair (nat %feeRate) (nat %invariant))))
                                   (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
-                                              (pair (address %tokenAddress) (nat %tokenPool)))
-                                        (pair (pair (nat %totalShares) (nat %totalVotes))
-                                              (pair (nat %veto) (big_map %vetoVoters address nat)))))
-                            (pair (pair (big_map %vetos key_hash timestamp)
-                                        (big_map %voters
+                                              (pair (address %tokenAddress) (nat %tokenId)))
+                                        (pair (pair (nat %tokenPool) (nat %totalShares)) (pair (nat %totalVotes) (nat %veto)))))
+                            (pair (pair (big_map %vetoVoters address nat) (big_map %vetos key_hash timestamp))
+                                  (pair (big_map %voters
                                            address
-                                           (pair (set %allowances address) (option %candidate key_hash))))
-                                  (big_map %votes key_hash nat))))))
+                                           (pair (set %allowances address) (option %candidate key_hash)))
+                                        (big_map %votes key_hash nat)))))))
           (pair %storage
              (pair (pair (pair (pair (big_map %circleLoyalty
                                         address
@@ -88,14 +86,13 @@
                          (pair (pair (option %delegated key_hash) (address %factoryAddress))
                                (pair (nat %feeRate) (nat %invariant))))
                    (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
-                               (pair (address %tokenAddress) (nat %tokenPool)))
-                         (pair (pair (nat %totalShares) (nat %totalVotes))
-                               (pair (nat %veto) (big_map %vetoVoters address nat)))))
-             (pair (pair (big_map %vetos key_hash timestamp)
-                         (big_map %voters
+                               (pair (address %tokenAddress) (nat %tokenId)))
+                         (pair (pair (nat %tokenPool) (nat %totalShares)) (pair (nat %totalVotes) (nat %veto)))))
+             (pair (pair (big_map %vetoVoters address nat) (big_map %vetos key_hash timestamp))
+                   (pair (big_map %voters
                             address
-                            (pair (set %allowances address) (option %candidate key_hash))))
-                   (big_map %votes key_hash nat)))) ;
+                            (pair (set %allowances address) (option %candidate key_hash)))
+                         (big_map %votes key_hash nat))))) ;
   code { DUP ;
          CDR ;
          SELF ;

@@ -2,10 +2,11 @@
   "name": "quipuswap",
   "version": "0.0.1",
   "config": {
-    "network": "http://127.0.0.1:8732"
+    "network": "https://testnet-tezos.giganode.io"
   },
   "scripts": {
     "build": "node scripts/cli.js build Dex --no-json -o contracts && node scripts/cli.js build Factory && node scripts/cli.js build Token",
+    "build-fa2": "node scripts/cli.js build Dex --no-json -o contractsV2 -i contractsV2 && node scripts/cli.js build Factory -i contractsV2 && cp misc/FA2.json build/Token.json",
     "deploy": "node scripts/cli.js compile_storage Factory 'record   storage = record      tokenList = (set[] : set(address));      tokenToExchange = (big_map[] :big_map(address, address));      lambdas = (big_map[] : big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage)));   end;   lambdas =  big_map[0n -> launchExchange]; end' && node scripts/cli.js deploy -n Factory -p $npm_package_config_network && sleep 3 && node scripts/cli.js deploy Token -p $npm_package_config_network && sleep 3 && node scripts/cli.js deploy Token Token2 -p $npm_package_config_network && sleep 3",
     "set-functions": "node scripts/cli.js set_functions 0 initializeExchange -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 1 tezToToken -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 2 tokenToTez -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 3 tokenToTokenOut -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 4 investLiquidity -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 5 divestLiquidity -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 6 setVotesDelegation -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 7 vote -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 8 veto -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 9 receiveReward -p $npm_package_config_network && sleep 3 && node scripts/cli.js set_functions 10 withdrawProfit -p $npm_package_config_network && sleep 3",
     "add-tokens": "node scripts/cli.js add_token -p $npm_package_config_network && node scripts/cli.js add_token -p $npm_package_config_network Token2",
