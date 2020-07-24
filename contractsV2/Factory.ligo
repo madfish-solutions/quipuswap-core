@@ -12,7 +12,6 @@ type transfer_type is TransferType of list (record [
   ]);
 ])
 
-type token_lookup_type is TokenLookupType of (address * address * nat)
 type use_type is UseType of (nat * dexAction) 
 
 function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
@@ -54,7 +53,6 @@ block {
     }
     | TezToTokenPayment(n) -> failwith("00")
     | TokenToTezPayment(n) -> failwith("00")
-    | TokenToTokenPayment(n) -> failwith("00")
     | InvestLiquidity(n) -> failwith("00")
     | DivestLiquidity(n) -> failwith("00")
     | SetVotesDelegation(n) -> failwith("00")
@@ -70,7 +68,6 @@ block {
   | InitializeExchange(tokenAmount) -> failwith("00")
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(n) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> 
@@ -130,7 +127,6 @@ block {
   | InitializeExchange(tokenAmount) -> failwith("00")
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(n) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
@@ -181,7 +177,6 @@ block {
   | InitializeExchange(tokenAmount) -> failwith("00")
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(n) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
@@ -250,7 +245,6 @@ block {
       } else failwith("Dex/high-min-out");
     } else failwith("Dex/wrong-params")
   | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(n) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
@@ -295,7 +289,6 @@ block {
       } else failwith("Dex/high-min-tez-out");
   
     } else failwith("Dex/wrong-params")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(n) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
@@ -312,7 +305,6 @@ block {
   | InitializeExchange(tokenAmount) -> failwith("00")
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(minShares) -> {
     const tezPerShare : nat = s.tezPool / s.totalShares;
     const sharesPurchased : nat = (Tezos.amount / 1mutez) / tezPerShare;
@@ -407,7 +399,6 @@ block {
   | InitializeExchange(tokenAmount) -> failwith("00")
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(minShares) -> failwith("00")
   | DivestLiquidity(n) -> {
       const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
@@ -525,7 +516,6 @@ block {
   | InitializeExchange(tokenAmount) -> failwith("00")
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(minShares) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
@@ -606,11 +596,11 @@ block {
  } with (list[res.0], s)
 
 function setFunction (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_exchange_storage) : full_exchange_storage is
-block {
-  case s.storage.lambdas[idx] of 
-    Some(n) -> failwith("Factory/function-set") 
-    | None -> s.storage.lambdas[idx] := f 
-  end;
+block { skip
+  // case s.storage.lambdas[idx] of 
+  //   Some(n) -> failwith("Factory/function-set") 
+  //   | None -> s.storage.lambdas[idx] := f 
+  // end;
 } with s
 
 function middle (const token : address ; const tokenId : nat ; var s : full_exchange_storage) :  (list(operation) * full_exchange_storage) is

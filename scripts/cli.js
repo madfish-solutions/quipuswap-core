@@ -175,6 +175,48 @@ let setFunctions = async (
   );
 };
 
+let setFunctionsFA2 = async (
+  num,
+  functionName,
+  dexName,
+  contractName,
+  inputDir,
+  outputDir,
+  isDockerizedLigo
+) => {
+  dexName = dexName || "Factory";
+  contractName = contractName || "Factory";
+  const { address: dexAddress } = JSON.parse(
+    fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
+  );
+  let ligo = getLigo(isDockerizedLigo);
+  exec(
+    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(${num}n, ${functionName})'`,
+    { maxBuffer: 1024 * 500 },
+    async (err, stdout, stderr) => {
+      if (err) {
+        console.log(`Error during ${contractName} built`);
+        console.log(err);
+      } else {
+        try {
+          const operation = await Tezos.contract.transfer({
+            to: dexAddress,
+            amount: 0,
+            parameter: {
+              entrypoint: "setFunction",
+              value: JSON.parse(stdout).args[0],
+            },
+          });
+          await operation.confirmation();
+          console.log(`Function ${functionName} added`);
+        } catch (E) {
+          console.log(E);
+        }
+      }
+    }
+  );
+};
+
 let compileStorage = (
   contractName,
   inputDir,
@@ -291,17 +333,30 @@ program
     "http://127.0.0.1:8732"
   )
   .option("-g, --no-dockerized_ligo", "Switch global ligo")
+  .option("-f, --fa2", "Set function to fa2 version", false)
   .action(async function (num, functionName, dex, contract, options) {
     await setup(options.key_path, options.provider);
-    await setFunctions(
-      num,
-      functionName,
-      dex,
-      contract,
-      options.input_dir,
-      options.output_dir,
-      options.dockerized_ligo
-    );
+    if (options.fa2) {
+      await setFunctionsFA2(
+        num,
+        functionName,
+        dex,
+        contract,
+        options.input_dir,
+        options.output_dir,
+        options.dockerized_ligo
+      );
+    } else {
+      await setFunctions(
+        num,
+        functionName,
+        dex,
+        contract,
+        options.input_dir,
+        options.output_dir,
+        options.dockerized_ligo
+      );
+    }
   });
 
 program

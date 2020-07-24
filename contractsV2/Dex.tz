@@ -6,8 +6,8 @@
                        (or (nat %investLiquidity) (pair %setVotesDelegation address bool)))
                    (or (or (pair %tezToTokenPayment nat address)
                            (pair %tokenToTezPayment (pair nat nat) address))
-                       (or (pair %tokenToTokenPayment (pair nat nat) (pair address address)) (address %veto))))
-               (or (pair %vote address key_hash) (address %withdrawProfit))))) ;
+                       (or (address %veto) (pair %vote address key_hash))))
+               (address %withdrawProfit)))) ;
   storage
     (pair (big_map %lambdas
              nat
@@ -16,8 +16,8 @@
                                         (or (nat %investLiquidity) (pair %setVotesDelegation address bool)))
                                     (or (or (pair %tezToTokenPayment nat address)
                                             (pair %tokenToTezPayment (pair nat nat) address))
-                                        (or (pair %tokenToTokenPayment (pair nat nat) (pair address address)) (address %veto))))
-                                (or (pair %vote address key_hash) (address %withdrawProfit)))
+                                        (or (address %veto) (pair %vote address key_hash))))
+                                (address %withdrawProfit))
                             (pair (pair (pair (pair (pair (big_map %circleLoyalty
                                                              address
                                                              (pair (pair (nat %lastCircle) (timestamp %lastCircleUpdate))
@@ -120,8 +120,8 @@
                  RIGHT (pair (pair nat nat) nat) ;
                  LEFT (or nat (pair address bool)) ;
                  LEFT (or (or (pair nat address) (pair (pair nat nat) address))
-                          (or (pair (pair nat nat) (pair address address)) address)) ;
-                 LEFT (or (pair address key_hash) address) ;
+                          (or address (pair address key_hash))) ;
+                 LEFT address ;
                  PAIR ;
                  PAIR ;
                  DIG 1 ;

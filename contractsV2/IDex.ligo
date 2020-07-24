@@ -47,7 +47,6 @@ type dexAction is
 | InitializeExchange of (nat)
 | TezToTokenPayment of (nat * address)
 | TokenToTezPayment of (nat * nat * address)
-| TokenToTokenPayment of (nat * nat * address * address)
 | InvestLiquidity of (nat)
 | DivestLiquidity of (nat * nat * nat)
 | SetVotesDelegation of (address * bool)
