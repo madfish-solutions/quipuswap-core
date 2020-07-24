@@ -305,52 +305,6 @@ block {
   end
 } with (operations, s)
 
-function tokenToTokenOut (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
-block {
-  var operations: list(operation) := list[];
-  case p of
-  | InitializeExchange(tokenAmount) -> failwith("00")
-  | TezToTokenPayment(n) -> failwith("00")
-  | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> 
-    if n.0 > 0n and n.1 > 0n then {
-      s.tokenPool := s.tokenPool + n.0;
-      const newTezPool : nat = s.invariant / abs(s.tokenPool - n.0 / s.feeRate);
-      const tezOut : nat = abs(s.tezPool - newTezPool);
-      s.tezPool := newTezPool;
-      s.invariant := newTezPool * s.tokenPool;
-      operations := list[transaction(
-        TransferType(list[
-          record[
-            from_ = Tezos.sender; 
-            txs = list [ record [
-                to_ = this; 
-                token_id = s.tokenId;
-                amount = n.0;
-              ]
-            ]
-          ]
-        ]), 
-        0mutez,          
-        case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-          | None -> (failwith("01"):contract(transfer_type))
-        end);
-        transaction(TokenLookupType(n.2, n.3, n.1), 
-        tezOut * 1mutez,          
-        case (Tezos.get_entrypoint_opt("%tokenLookup", s.factoryAddress) : option(contract(token_lookup_type))) of Some(contr) -> contr
-          | None -> (failwith("01"):contract(token_lookup_type))
-        end);
-      ];
-    } else failwith("Dex/wrong-params")
-  | InvestLiquidity(minShares) -> failwith("00")
-  | DivestLiquidity(n) -> failwith("00")
-  | SetVotesDelegation(n) -> failwith("00")
-  | Vote(n) -> failwith("00")
-  | Veto(voter) -> failwith("00")
-  | WithdrawProfit(n) -> failwith("00")
-  end
-} with (operations, s)
-
 function investLiquidity (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 block {
   var operations: list(operation) := list[];
@@ -604,8 +558,8 @@ block {
 
 function launchExchange (const self : address; const token : address; const tokenId : nat; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
 block {
-  if s.tokenList contains token then failwith("Factory/exchange-launched") else skip ;
-    s.tokenList := Set.add (token, s.tokenList);
+  if s.tokenList contains (token, tokenId) then failwith("Factory/exchange-launched") else skip ;
+    s.tokenList := Set.add ((token, tokenId), s.tokenList);
     const createDex : (option(key_hash) * tez * full_dex_storage) -> (operation * address) =
     [%Michelson ( {| { UNPPAIIR ;
                       CREATE_CONTRACT 
@@ -648,7 +602,7 @@ block {
        end;   
     lambdas = s.lambdas;
     end);
-  s.tokenToExchange[token] := res.1;
+  s.tokenToExchange[(token, tokenId)] := res.1;
  } with (list[res.0], s)
 
 function setFunction (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_exchange_storage) : full_exchange_storage is
@@ -671,13 +625,5 @@ block {
 function main (const p : exchangeAction ; const s : full_exchange_storage) :
   (list(operation) * full_exchange_storage) is case p of
   LaunchExchange(n) -> middle(n.0, n.1, s)
-  | TokenLookup(n) -> (
-    list transaction(UseType(1n, TezToTokenPayment(n.2, n.1)), 
-      Tezos.amount, 
-      case (Tezos.get_entrypoint_opt("%use", get_force(n.0, s.storage.tokenToExchange)) : option(contract(use_type))) of Some(contr) -> contr
-        | None -> (failwith("01"):contract(use_type))
-      end
-    ) end,
-    s)
   | SetFunction(n) -> ((nil:list(operation)), if n.0 > 10n then (failwith("Factory/wrong-index") : full_exchange_storage) else  setFunction(n.0, n.1, s))
  end

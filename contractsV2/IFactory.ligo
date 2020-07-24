@@ -1,8 +1,8 @@
 #include "IDex.ligo"
 
 type exchange_storage is record 
-   tokenList: set (address);
-   tokenToExchange: big_map(address, address);
+   tokenList: set ((address * nat));
+   tokenToExchange: big_map((address * nat), address);
    lambdas: big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage));
 end
 
@@ -13,5 +13,4 @@ end
 
 type exchangeAction is
 | LaunchExchange of (address * nat)
-| TokenLookup of (address * address * nat)
 | SetFunction of (nat * ((dexAction * dex_storage * address) -> (list(operation) * dex_storage)))
