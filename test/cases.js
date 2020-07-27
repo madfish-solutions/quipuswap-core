@@ -937,9 +937,9 @@ class Test {
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance,
+      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
       parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance
+        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
       ) - parseInt(tokensIn)
     );
     assert(finalTezBalance >= parseInt(initialTezBalance));
@@ -1005,9 +1005,9 @@ class Test {
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance,
+      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
       parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance
+        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
       ) - parseInt(tokensIn)
     );
     assert(finalTezBalance <= parseInt(initialTezBalance));
@@ -1067,9 +1067,9 @@ class Test {
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance,
+      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
       parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance
+        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
       ) + parseInt(minTokens)
     );
     assert(
@@ -1140,10 +1140,9 @@ class Test {
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[bobPkh, TOKEN_IDX]].balance,
-      parseInt(
-        initialTokenStorage.tokensLedgerExtended[[bobPkh, TOKEN_IDX]].balance
-      ) + parseInt(minTokens)
+      finalTokenStorage.tokensLedgerExtended[[bobPkh, TOKEN_IDX]],
+      parseInt(initialTokenStorage.tokensLedgerExtended[[bobPkh, TOKEN_IDX]]) +
+        parseInt(minTokens)
     );
     assert(
       finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount)
@@ -1216,9 +1215,9 @@ class Test {
     const finalTezBalance = await AliceTezos.tz.getBalance(bobPkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance,
+      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
       parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]].balance
+        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
       ) - parseInt(tokensIn)
     );
     assert(finalTezBalance >= parseInt(initialTezBalance));

@@ -42,7 +42,7 @@ exports.getContractFullStorage = async (Tezos, address, maps = {}) => {
       let entry;
 
       try {
-        entry = await storage[key].get(current);
+        entry = await storage.tzip12[key].get(current);
       } catch (ex) {
         console.error(ex);
       }
