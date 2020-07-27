@@ -34,122 +34,122 @@ describe("Correct calls", function () {
     });
   });
 
-  // describe("InvestLiquidity()", function () {
-  //   it("should invest liquidity 1", async function () {
-  //     await Test.investLiquidity(dexAddress1, tokenAddress1);
-  //   });
+  describe("InvestLiquidity()", function () {
+    it("should invest liquidity 1", async function () {
+      await Test.investLiquidity(dexAddress1, tokenAddress1);
+    });
 
-  //   it("should invest liquidity 2", async function () {
-  //     await Test.investLiquidity(dexAddress2, tokenAddress2);
-  //   });
-  // });
+    it("should invest liquidity 2", async function () {
+      await Test.investLiquidity(dexAddress2, tokenAddress2);
+    });
+  });
 
-  // describe("TezToTokenSwap()", function () {
-  //   it("should exchange tez to token 1", async function () {
-  //     await Test.tezToTokenSwap(dexAddress1, tokenAddress1);
-  //   });
+  describe("TezToTokenSwap()", function () {
+    it("should exchange tez to token 1", async function () {
+      await Test.tezToTokenSwap(dexAddress1, tokenAddress1);
+    });
 
-  //   it("should exchange tez to token 2", async function () {
-  //     await Test.tezToTokenSwap(dexAddress2, tokenAddress2);
-  //   });
-  // });
+    it("should exchange tez to token 2", async function () {
+      await Test.tezToTokenSwap(dexAddress2, tokenAddress2);
+    });
+  });
 
-  // describe("TokenToTezSwap()", function () {
-  //   it("should exchange tez to token 1", async function () {
-  //     await Test.tokenToTezSwap(dexAddress1, tokenAddress1);
-  //   });
-  //   it("should exchange tez to token 2", async function () {
-  //     await Test.tokenToTezSwap(dexAddress2, tokenAddress2);
-  //   });
-  // });
+  describe("TokenToTezSwap()", function () {
+    it("should exchange tez to token 1", async function () {
+      await Test.tokenToTezSwap(dexAddress1, tokenAddress1);
+    });
+    it("should exchange tez to token 2", async function () {
+      await Test.tokenToTezSwap(dexAddress2, tokenAddress2);
+    });
+  });
 
-  // describe("TezToTokenPayment()", function () {
-  //   it("should exchange tez to token and send to requested address 1", async function () {
-  //     await Test.tezToTokenPayment(dexAddress1, tokenAddress1);
-  //   });
-  //   it("should exchange tez to token and send to requested address 2", async function () {
-  //     await Test.tezToTokenPayment(dexAddress2, tokenAddress2);
-  //   });
-  // });
+  describe("TezToTokenPayment()", function () {
+    it("should exchange tez to token and send to requested address 1", async function () {
+      await Test.tezToTokenPayment(dexAddress1, tokenAddress1);
+    });
+    it("should exchange tez to token and send to requested address 2", async function () {
+      await Test.tezToTokenPayment(dexAddress2, tokenAddress2);
+    });
+  });
 
-  // describe("TokenToTezPayment()", function () {
-  //   it("should exchange tez to token 1", async function () {
-  //     await Test.tokenToTezPayment(dexAddress1, tokenAddress1);
-  //   });
-  //   it("should exchange tez to token 2", async function () {
-  //     await Test.tokenToTezPayment(dexAddress2, tokenAddress2);
-  //   });
-  // });
+  describe("TokenToTezPayment()", function () {
+    it("should exchange tez to token 1", async function () {
+      await Test.tokenToTezPayment(dexAddress1, tokenAddress1);
+    });
+    it("should exchange tez to token 2", async function () {
+      await Test.tokenToTezPayment(dexAddress2, tokenAddress2);
+    });
+  });
 
-  // describe("TokenToTokenSwap()", function () {
-  //   it("should exchange token to token 1", async function () {
-  //     await Test.tokenToTokenSwap(dexAddress1, tokenAddress1, tokenAddress2);
-  //   });
+  describe("TokenToTokenSwap()", function () {
+    it("should exchange token to token 1", async function () {
+      await Test.tokenToTokenSwap(dexAddress1, tokenAddress1, tokenAddress2);
+    });
 
-  //   it("should exchange token to token 2", async function () {
-  //     await Test.tokenToTokenSwap(dexAddress2, tokenAddress2, tokenAddress1);
-  //   });
-  // });
+    it("should exchange token to token 2", async function () {
+      await Test.tokenToTokenSwap(dexAddress2, tokenAddress2, tokenAddress1);
+    });
+  });
 
-  // describe("DivestLiquidity()", function () {
-  //   it("should divest liquidity 1", async function () {
-  //     await Test.divestLiquidity(dexAddress1, tokenAddress1);
-  //   });
+  describe("DivestLiquidity()", function () {
+    it("should divest liquidity 1", async function () {
+      await Test.divestLiquidity(dexAddress1, tokenAddress1);
+    });
 
-  //   it("should divest liquidity 2", async function () {
-  //     await Test.divestLiquidity(dexAddress2, tokenAddress2);
-  //   });
-  // });
+    it("should divest liquidity 2", async function () {
+      await Test.divestLiquidity(dexAddress2, tokenAddress2);
+    });
+  });
 
-  // describe("SetVotesDelegation()", function () {
-  //   it("should set vote delegate 1", async function () {
-  //     await Test.setVotesDelegation(dexAddress1);
-  //   });
+  describe("SetVotesDelegation()", function () {
+    it("should set vote delegate 1", async function () {
+      await Test.setVotesDelegation(dexAddress1);
+    });
 
-  //   it("should set vote delegate 2", async function () {
-  //     await Test.setVotesDelegation(dexAddress2);
-  //   });
-  // });
+    it("should set vote delegate 2", async function () {
+      await Test.setVotesDelegation(dexAddress2);
+    });
+  });
 
-  // describe("Vote()", function () {
-  //   it("should vote 1", async function () {
-  //     await Test.vote(dexAddress1);
-  //   });
+  describe("Vote()", function () {
+    it("should vote 1", async function () {
+      await Test.vote(dexAddress1);
+    });
 
-  //   it("should vote 2", async function () {
-  //     await Test.vote(dexAddress2);
-  //   });
-  // });
+    it("should vote 2", async function () {
+      await Test.vote(dexAddress2);
+    });
+  });
 
-  // describe("Default()", function () {
-  //   it("should receive reward 1", async function () {
-  //     await Test.default(dexAddress1);
-  //   });
+  describe("Default()", function () {
+    it("should receive reward 1", async function () {
+      await Test.default(dexAddress1);
+    });
 
-  //   it("should receive reward 2", async function () {
-  //     await Test.default(dexAddress2);
-  //   });
-  // });
+    it("should receive reward 2", async function () {
+      await Test.default(dexAddress2);
+    });
+  });
 
-  // describe("Veto()", function () {
-  //   it("should set veto 1", async function () {
-  //     await Test.veto(dexAddress1);
-  //   });
+  describe("Veto()", function () {
+    it("should set veto 1", async function () {
+      await Test.veto(dexAddress1);
+    });
 
-  //   it("should set veto 2", async function () {
-  //     await Test.veto(dexAddress2);
-  //   });
-  // });
+    it("should set veto 2", async function () {
+      await Test.veto(dexAddress2);
+    });
+  });
 
-  // describe("WithdrawProfit()", function () {
-  //   it("should withdraw baker's profit 1", async function () {
-  //     await Test.withdrawProfit(dexAddress1);
-  //   });
+  describe("WithdrawProfit()", function () {
+    it("should withdraw baker's profit 1", async function () {
+      await Test.withdrawProfit(dexAddress1);
+    });
 
-  //   it("should withdraw baker's profit 2", async function () {
-  //     await Test.withdrawProfit(dexAddress2);
-  //   });
-  // });
+    it("should withdraw baker's profit 2", async function () {
+      await Test.withdrawProfit(dexAddress2);
+    });
+  });
 });
 
 // describe("Incorrect Factory calls", function () {

@@ -3,14 +3,22 @@
 // TODO:
 //  - add veto update in invest/divest 
 
-type transfer_type is TransferType of list (record [
-  from_ : address;
-  txs : list (record [
-    to_ : address;
-    token_id : nat;
-    amount : nat;
-  ]);
-])
+type transferContents is record[
+    to_: address;
+    token_id: nat;
+    amount: nat;
+];
+
+type transferContentsMichelson is michelson_pair_right_comb(transferContents);
+
+type transferAuxiliary is record[
+    from_: address;
+    txs: list(transferContentsMichelson);
+];
+
+type transferMichelson is michelson_pair_right_comb(transferAuxiliary);
+
+type transfer_type is TransferType of list(transferMichelson)
 
 type use_type is UseType of (nat * dexAction) 
 
@@ -33,17 +41,21 @@ block {
          // update user loyalty
         s.currentCircle.lastUpdate := Tezos.now;
         s.circleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCircle = 0n; lastCircleUpdate = Tezos.now; end;  
-        operations := transaction(
-          TransferType(list[
-            record[
-              from_ = Tezos.sender; 
-              txs = list [ record [
+        const t : transferContentsMichelson = Layout.convert_to_right_comb((record [
                   to_ = this; 
                   token_id = s.tokenId;
                   amount = tokenAmount;
-                ]
-              ]
-            ]
+                ]: transferContents));
+        operations := transaction(
+          TransferType(list[Layout.convert_to_right_comb(
+            (record[
+              from_ = Tezos.sender; 
+              txs = list [ Layout.convert_to_right_comb((record [
+                  to_ = this; 
+                  token_id = s.tokenId;
+                  amount = tokenAmount;
+                ]: transferContents)) ]
+            ]: transferAuxiliary))
           ]), 
           0mutez, 
           case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
@@ -226,16 +238,15 @@ block {
           s.tokenPool := newTokenPool;
           s.invariant := s.tezPool * newTokenPool;
           operations :=  transaction(
-            TransferType(list[
-              record[
+            TransferType(list[Layout.convert_to_right_comb(
+              (record[
                 from_ = this; 
-                txs = list [ record [
+                txs = list [ Layout.convert_to_right_comb((record [
                     to_ = n.1; 
                     token_id = s.tokenId;
                     amount = tokensOut;
-                  ]
-                ]
-              ]
+                  ]: transferContents)) ]
+              ]: transferAuxiliary))
             ]), 
             0mutez, 
             case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
@@ -270,16 +281,15 @@ block {
         s.tezPool := newTezPool;
         s.invariant := newTezPool * s.tokenPool;
         operations:= list transaction(
-          TransferType(list[
-            record[
+          TransferType(list[Layout.convert_to_right_comb(
+            (record[
               from_ = Tezos.sender; 
-              txs = list [ record [
+              txs = list [ Layout.convert_to_right_comb((record [
                   to_ = this; 
                   token_id = s.tokenId;
                   amount = n.0;
-                ]
-              ]
-            ]
+                ]: transferContents)) ]
+            ]: transferAuxiliary))
           ]), 
           0mutez, 
           case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
@@ -340,17 +350,16 @@ block {
       s.invariant := s.tezPool * s.tokenPool;
       s.totalShares := s.totalShares + sharesPurchased;
       operations := transaction(
-        TransferType(list[
-          record[
-            from_ = Tezos.sender; 
-            txs = list [ record [
-                to_ = this; 
-                token_id = s.tokenId;
-                amount = tokensRequired;
-              ]
-            ]
-          ]
-        ]),         
+        TransferType(list[Layout.convert_to_right_comb(
+            (record[
+              from_ = Tezos.sender; 
+              txs = list [ Layout.convert_to_right_comb((record [
+                  to_ = this; 
+                  token_id = s.tokenId;
+                  amount = tokensRequired;
+                ]: transferContents)) ]
+            ]: transferAuxiliary))
+          ]),       
         0mutez, 
         case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
           | None -> (failwith("01"):contract(transfer_type))
@@ -453,17 +462,16 @@ block {
               } end;
           } end;
           operations := list transaction(
-            TransferType(list[
-              record[
+            TransferType(list[Layout.convert_to_right_comb(
+              (record[
                 from_ = this; 
-                txs = list [ record [
+                txs = list [ Layout.convert_to_right_comb((record [
                     to_ = Tezos.sender; 
                     token_id = s.tokenId;
                     amount = tokensDivested;
-                  ]
-                ]
-              ]
-            ]), 
+                  ]: transferContents)) ]
+              ]: transferAuxiliary))
+            ]),       
             0mutez,          
             case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
               | None -> (failwith("01"):contract(transfer_type))
