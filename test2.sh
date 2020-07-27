@@ -8,4 +8,4 @@ echo "set functions"
 npm run set-functions-fa2
 
 echo "test"
-# npm test
+npm test

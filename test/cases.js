@@ -1,6 +1,8 @@
 const { setup, getContractFullStorage, sleep } = require("./utils");
-const { Dex } = require("./dex");
-const { Factory, factoryAddress } = require("./factory");
+const { Dex } = require("./dexFA2");
+const { Factory, factoryAddress } = require("./factoryFA2");
+// const { Dex } = require("./dex");
+// const { Factory, factoryAddress } = require("./factory");
 const assert = require("assert");
 const TEST_RPC = "http://127.0.0.1:8732";
 
@@ -9,33 +11,41 @@ class Test {
     let tezos = await setup();
     let tezos1 = await setup("../fixtures/key1");
     let token = await tezos.contract.at(tokenAddress);
+    let tokenIdx = 1;
     let operation = await token.methods
-      .transfer(
-        await tezos.signer.publicKeyHash(),
-        await tezos1.signer.publicKeyHash(),
-        "100000"
-      )
+      .transfer([
+        {
+          from_: await tezos.signer.publicKeyHash(),
+          txs: [
+            {
+              token_id: 1,
+              amount: 100000,
+              to_: await tezos1.signer.publicKeyHash(),
+            },
+          ],
+        },
+      ])
       .send();
     await operation.confirmation();
 
     let factory = await Factory.init(tezos);
-    operation = await factory.launchExchange(tokenAddress);
+    operation = await factory.launchExchange(tokenAddress, tokenIdx);
     await operation.confirmation();
     assert.equal(operation.status, "applied", "Operation was not applied");
 
     let storage = await factory.getFullStorage({
-      tokenToExchange: [tokenAddress],
+      tokenToExchange: [[tokenAddress, tokenIdx]],
     });
-    return storage.tokenToExchangeExtended[tokenAddress];
+    return storage.tokenToExchangeExtended[[tokenAddress, tokenIdx]];
   }
 
-  static async getDexAddress(tokenAddress) {
+  static async getDexAddress(tokenAddress, tokenId = 1) {
     let tezos = await setup();
     let factory = await Factory.init(tezos);
     let storage = await factory.getFullStorage({
-      tokenToExchange: [tokenAddress],
+      tokenToExchange: [[tokenAddress, tokenId]],
     });
-    return storage.tokenToExchangeExtended[tokenAddress];
+    return storage.tokenToExchangeExtended[[tokenAddress, tokenId]];
   }
 
   static async initializeExchange(dexAddress, tokenAddress) {
@@ -113,9 +123,10 @@ class Test {
   static async launchExchangeForExistedToken(tokenAddress) {
     let AliceTezos = await setup();
     let factory = await Factory.init(AliceTezos);
+    let tokenIdx = 1;
 
     try {
-      await factory.launchExchange(tokenAddress);
+      await factory.launchExchange(tokenAddress, tokenIdx);
       assert(false, "Adding token pair should fail");
     } catch (e) {
       assert.equal(e.message, "Factory/exchange-launched");

@@ -37,13 +37,6 @@ class Dex {
     return result;
   }
 
-  async approve(tokenAmount) {
-    let storage = await this.getFullStorage();
-    let token = await this.tezos.contract.at(storage.tokenAddress);
-    let operation = await token.methods.approve(dexAddress, tokenAmount).send();
-    await operation.confirmation();
-  }
-
   async veto(voter) {
     const operation = await this.contract.methods.use(8, "veto", voter).send();
     await operation.confirmation();

@@ -596,11 +596,11 @@ block {
  } with (list[res.0], s)
 
 function setFunction (const idx: nat; const f: (dexAction * dex_storage * address) -> (list(operation) * dex_storage) ;const s : full_exchange_storage) : full_exchange_storage is
-block { skip
-  // case s.storage.lambdas[idx] of 
-  //   Some(n) -> failwith("Factory/function-set") 
-  //   | None -> s.storage.lambdas[idx] := f 
-  // end;
+block {
+  case s.storage.lambdas[idx] of 
+    Some(n) -> failwith("Factory/function-set") 
+    | None -> s.storage.lambdas[idx] := f 
+  end;
 } with s
 
 function middle (const token : address ; const tokenId : nat ; var s : full_exchange_storage) :  (list(operation) * full_exchange_storage) is
