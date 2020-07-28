@@ -152,185 +152,185 @@ describe("Correct calls", function () {
   });
 });
 
-// describe("Incorrect Factory calls", function () {
-//   before(async function () {
-//     dexAddress1 = await Test.getDexAddress(tokenAddress1);
-//     dexAddress2 = await Test.getDexAddress(tokenAddress2);
-//   });
+describe("Incorrect Factory calls", function () {
+  before(async function () {
+    dexAddress1 = await Test.getDexAddress(tokenAddress1);
+    dexAddress2 = await Test.getDexAddress(tokenAddress2);
+  });
 
-//   describe("SetFunction()", function () {
-//     it("shouldn't add function with higher index", async function () {
-//       await Test.setFunctionWithHigherIndex();
-//     });
-//     it("shouldn't add function with existed index", async function () {
-//       await Test.setFunctionWithExistedIndex();
-//     });
-//   });
+  describe("SetFunction()", function () {
+    it("shouldn't add function with higher index", async function () {
+      await Test.setFunctionWithHigherIndex();
+    });
+    it("shouldn't add function with existed index", async function () {
+      await Test.setFunctionWithExistedIndex();
+    });
+  });
 
-//   describe("LaunchExchange()", function () {
-//     it("shouldn't launch new exchange", async function () {
-//       await Test.launchExchangeForExistedToken(tokenAddress1);
-//     });
-//   });
+  describe("LaunchExchange()", function () {
+    it("shouldn't launch new exchange", async function () {
+      await Test.launchExchangeForExistedToken(tokenAddress1);
+    });
+  });
 
-//   describe("InitializeExchange()", function () {
-//     it("shouldn't initialize exchange with invariant", async function () {
-//       await Test.initializeExchangeWithInvariant(dexAddress1);
-//     });
-//     it("shouldn't initialize exchange with shares", async function () {
-//       await Test.initializeExchangeWithShares(dexAddress1);
-//     });
-//     it("shouldn't initialize exchange without tesz", async function () {
-//       // TODO: use empty dex!!!
-//       await Test.initializeExchangeWithoutTez(dexAddress1);
-//     });
-//     it("shouldn't initialize exchange without tokens", async function () {
-//       // TODO: use empty dex!!!
-//       await Test.initializeExchangeWithoutTokens(dexAddress1);
-//     });
-//   });
+  describe("InitializeExchange()", function () {
+    it("shouldn't initialize exchange with invariant", async function () {
+      await Test.initializeExchangeWithInvariant(dexAddress1);
+    });
+    it("shouldn't initialize exchange with shares", async function () {
+      await Test.initializeExchangeWithShares(dexAddress1);
+    });
+    it("shouldn't initialize exchange without tesz", async function () {
+      // TODO: use empty dex!!!
+      await Test.initializeExchangeWithoutTez(dexAddress1);
+    });
+    it("shouldn't initialize exchange without tokens", async function () {
+      // TODO: use empty dex!!!
+      await Test.initializeExchangeWithoutTokens(dexAddress1);
+    });
+  });
 
-//   describe("TezToTokenPayment()", function () {
-//     it("shouldn't swap tez if no tez is provided", async function () {
-//       await Test.tezToTokenPaymentWithoutTez(dexAddress1);
-//     });
-//     it("shouldn't swap tez if desirable output is zero", async function () {
-//       await Test.tezToTokenPaymentWithoutTokens(dexAddress1);
-//     });
-//     it("shouldn't swap tez if tokens output is too high", async function () {
-//       await Test.tezToTokenPaymentWithHighTokensOut(dexAddress1);
-//     });
-//     it("should swap tez even if receiver is explicit account(contract)", async function () {
-//       await Test.tezToTokenPaymentWithExplicitReceiver(
-//         dexAddress1,
-//         dexAddress2
-//       );
-//     });
-//   });
-//   describe("TokenToTezPayment()", function () {
-//     it("shouldn't swap token if no token is provided", async function () {
-//       await Test.tokenToTezPaymentWithoutTokens(dexAddress1);
-//     });
-//     it("shouldn't swap token if desirable output is zero", async function () {
-//       await Test.tokenToTezPaymentWithoutTez(dexAddress1);
-//     });
-//     it("shouldn't swap token if tez output is too high", async function () {
-//       await Test.tokenToTezPaymentWithHighTezOut(dexAddress1);
-//     });
-//     it("should swap token even if receiver is explicit account(contract)", async function () {
-//       await Test.tokenToTezPaymentWithExplicitReceiver(
-//         dexAddress1,
-//         dexAddress2
-//       );
-//     });
-//   });
+  describe("TezToTokenPayment()", function () {
+    it("shouldn't swap tez if no tez is provided", async function () {
+      await Test.tezToTokenPaymentWithoutTez(dexAddress1);
+    });
+    it("shouldn't swap tez if desirable output is zero", async function () {
+      await Test.tezToTokenPaymentWithoutTokens(dexAddress1);
+    });
+    it("shouldn't swap tez if tokens output is too high", async function () {
+      await Test.tezToTokenPaymentWithHighTokensOut(dexAddress1);
+    });
+    it("should swap tez even if receiver is explicit account(contract)", async function () {
+      await Test.tezToTokenPaymentWithExplicitReceiver(
+        dexAddress1,
+        dexAddress2
+      );
+    });
+  });
+  describe("TokenToTezPayment()", function () {
+    it("shouldn't swap token if no token is provided", async function () {
+      await Test.tokenToTezPaymentWithoutTokens(dexAddress1);
+    });
+    it("shouldn't swap token if desirable output is zero", async function () {
+      await Test.tokenToTezPaymentWithoutTez(dexAddress1);
+    });
+    it("shouldn't swap token if tez output is too high", async function () {
+      await Test.tokenToTezPaymentWithHighTezOut(dexAddress1);
+    });
+    it("should swap token even if receiver is explicit account(contract)", async function () {
+      await Test.tokenToTezPaymentWithExplicitReceiver(
+        dexAddress1,
+        dexAddress2
+      );
+    });
+  });
 
-//   describe("TokenToTokenPayment()", function () {
-//     it("shouldn't swap token if no token is provided", async function () {
-//       await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
-//     });
-//     it("shouldn't swap token if desirable output is zero", async function () {
-//       await Test.tokenToTokenPaymentWithoutTokensOut(
-//         dexAddress1,
-//         tokenAddress2
-//       );
-//     });
-//     it("shouldn't swap token if token output is too high", async function () {
-//       await Test.tokenToTokenPaymentWithHighTokensOut(
-//         dexAddress1,
-//         tokenAddress2
-//       );
-//     });
-//     it("should swap token even if receiver is explicit account(contract)", async function () {
-//       await Test.tokenToTokenPaymentWithExplicitReceiver(
-//         dexAddress1,
-//         tokenAddress2,
-//         dexAddress1
-//       );
-//     });
-//     it("shouldn't swap token if token pair doesn't exist", async function () {
-//       await Test.tokenToTokenPaymentToUnexistedToken(
-//         dexAddress1,
-//         factoryAddress
-//       );
-//     });
-//   });
+  // describe("TokenToTokenPayment()", function () {
+  //   it("shouldn't swap token if no token is provided", async function () {
+  //     await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
+  //   });
+  //   it("shouldn't swap token if desirable output is zero", async function () {
+  //     await Test.tokenToTokenPaymentWithoutTokensOut(
+  //       dexAddress1,
+  //       tokenAddress2
+  //     );
+  //   });
+  //   it("shouldn't swap token if token output is too high", async function () {
+  //     await Test.tokenToTokenPaymentWithHighTokensOut(
+  //       dexAddress1,
+  //       tokenAddress2
+  //     );
+  //   });
+  //   it("should swap token even if receiver is explicit account(contract)", async function () {
+  //     await Test.tokenToTokenPaymentWithExplicitReceiver(
+  //       dexAddress1,
+  //       tokenAddress2,
+  //       dexAddress1
+  //     );
+  //   });
+  //   it("shouldn't swap token if token pair doesn't exist", async function () {
+  //     await Test.tokenToTokenPaymentToUnexistedToken(
+  //       dexAddress1,
+  //       factoryAddress
+  //     );
+  //   });
+  // });
 
-//   describe("InvestLiquidity()", function () {
-//     it("shouldn't invest token if no tez is provided", async function () {
-//       await Test.investLiquidityWithoutTez(dexAddress1);
-//     });
-//     it("shouldn't invest token if no token is provided", async function () {
-//       await Test.investLiquidityWithoutTokens(dexAddress1);
-//     });
-//     it("shouldn't invest token if min shares is zero", async function () {
-//       await Test.investLiquidityWithoutShares(dexAddress1);
-//     });
-//     it("shouldn't invest token if min shares are too high", async function () {
-//       await Test.investLiquidityWithHighShares(dexAddress1);
-//     });
-//     it("shouldn't invest liquidity if tez rate is dangerous", async function () {
-//       await Test.investLiquidityIfTezRateIsDangerous(dexAddress1);
-//     });
-//     it("shouldn't invest liquidity if token rate is dangerous", async function () {
-//       await Test.investLiquidityIfTokenRateIsDangerous(dexAddress1);
-//     });
-//   });
+  describe("InvestLiquidity()", function () {
+    it("shouldn't invest token if no tez is provided", async function () {
+      await Test.investLiquidityWithoutTez(dexAddress1);
+    });
+    it("shouldn't invest token if no token is provided", async function () {
+      await Test.investLiquidityWithoutTokens(dexAddress1);
+    });
+    it("shouldn't invest token if min shares is zero", async function () {
+      await Test.investLiquidityWithoutShares(dexAddress1);
+    });
+    it("shouldn't invest token if min shares are too high", async function () {
+      await Test.investLiquidityWithHighShares(dexAddress1);
+    });
+    it("shouldn't invest liquidity if tez rate is dangerous", async function () {
+      await Test.investLiquidityIfTezRateIsDangerous(dexAddress1);
+    });
+    it("shouldn't invest liquidity if token rate is dangerous", async function () {
+      await Test.investLiquidityIfTokenRateIsDangerous(dexAddress1);
+    });
+  });
 
-//   describe("DivestLiquidity()", function () {
-//     it("shouldn't divest if no shares are burned", async function () {
-//       await Test.divestLiquidityWithZeroSharesBurned(dexAddress1);
-//     });
-//     it("shouldn't divest if min tokens out are zero", async function () {
-//       await Test.divestLiquidityWithZeroTokensOut(dexAddress1);
-//     });
-//     it("shouldn't divest if min tez out are zero", async function () {
-//       await Test.divestLiquidityWithZeroTezOut(dexAddress1);
-//     });
-//     it("shouldn't divest if min tokens out are too high", async function () {
-//       await Test.divestLiquidityWithHighTokensOut(dexAddress1);
-//     });
-//     it("shouldn't divest if min tez out are too high", async function () {
-//       await Test.divestLiquidityWithHighTezOut(dexAddress1);
-//     });
-//   });
+  describe("DivestLiquidity()", function () {
+    it("shouldn't divest if no shares are burned", async function () {
+      await Test.divestLiquidityWithZeroSharesBurned(dexAddress1);
+    });
+    it("shouldn't divest if min tokens out are zero", async function () {
+      await Test.divestLiquidityWithZeroTokensOut(dexAddress1);
+    });
+    it("shouldn't divest if min tez out are zero", async function () {
+      await Test.divestLiquidityWithZeroTezOut(dexAddress1);
+    });
+    it("shouldn't divest if min tokens out are too high", async function () {
+      await Test.divestLiquidityWithHighTokensOut(dexAddress1);
+    });
+    it("shouldn't divest if min tez out are too high", async function () {
+      await Test.divestLiquidityWithHighTezOut(dexAddress1);
+    });
+  });
 
-//   describe("SetVotesDelegation()", function () {
-//     it("shouldn't fail if set to self", async function () {
-//       await Test.setVotesDelegationToSelf(dexAddress1);
-//     });
-//     it("shouldn't set more than 5", async function () {
-//       await Test.setVotesDelegationToMoreThanFiveDeputies(dexAddress1);
-//     });
-//   });
+  describe("SetVotesDelegation()", function () {
+    it("shouldn't fail if set to self", async function () {
+      await Test.setVotesDelegationToSelf(dexAddress1);
+    });
+    it("shouldn't set more than 5", async function () {
+      await Test.setVotesDelegationToMoreThanFiveDeputies(dexAddress1);
+    });
+  });
 
-//   describe("Vote()", function () {
-//     it("shouldn't vote if not allowed deputy", async function () {
-//       await Test.voteWithoutPersmission(dexAddress1);
-//     });
-//     it("shouldn't vote for vetted", async function () {
-//       await Test.voteForVetted(dexAddress1);
-//     });
-//     it("shouldn't vote without shares", async function () {
-//       await Test.voteWithoutShares(dexAddress1);
-//     });
-//   });
+  describe("Vote()", function () {
+    it("shouldn't vote if not allowed deputy", async function () {
+      await Test.voteWithoutPersmission(dexAddress1);
+    });
+    it("shouldn't vote for vetted", async function () {
+      await Test.voteForVetted(dexAddress1);
+    });
+    it("shouldn't vote without shares", async function () {
+      await Test.voteWithoutShares(dexAddress1);
+    });
+  });
 
-//   describe("WithdrawProfit()", function () {
-//     it("should withdraw even if nothing to withdraw", async function () {
-//       await Test.withdrawProfitWithoutProfit(dexAddress1);
-//     });
-//   });
+  describe("WithdrawProfit()", function () {
+    it("should withdraw even if nothing to withdraw", async function () {
+      await Test.withdrawProfitWithoutProfit(dexAddress1);
+    });
+  });
 
-//   describe("Veto()", function () {
-//     it("shouldn't make veto if shares weren't changed", async function () {
-//       await Test.vetoWithOldShares(dexAddress1);
-//     });
-//     it("shouldn't make veto without permission", async function () {
-//       await Test.vetoWithoutPermission(dexAddress1);
-//     });
-//     it("shouldn't make veto for None candidate", async function () {
-//       await Test.vetoWithoutCandidate(dexAddress1);
-//     });
-//   });
-// });
+  describe("Veto()", function () {
+    it("shouldn't make veto if shares weren't changed", async function () {
+      await Test.vetoWithOldShares(dexAddress1);
+    });
+    it("shouldn't make veto without permission", async function () {
+      await Test.vetoWithoutPermission(dexAddress1);
+    });
+    it("shouldn't make veto for None candidate", async function () {
+      await Test.vetoWithoutCandidate(dexAddress1);
+    });
+  });
+});

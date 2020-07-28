@@ -62,7 +62,7 @@ class Dex {
 
   async withdrawProfit(receiver) {
     const operation = await this.contract.methods
-      .use(10, "withdrawProfit", receiver)
+      .use(3, "withdrawProfit", receiver)
       .send();
     await operation.confirmation();
     return operation;

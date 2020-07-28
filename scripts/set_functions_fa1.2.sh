@@ -4,7 +4,7 @@ node scripts/cli.js set_functions 1 tezToToken -p $npm_package_config_network
 sleep 3
 node scripts/cli.js set_functions 2 tokenToTez -p $npm_package_config_network
 sleep 3
-node scripts/cli.js set_functions 3 tokenToTokenOut -p $npm_package_config_network
+node scripts/cli.js set_functions 3 withdrawProfit -p $npm_package_config_network
 sleep 3
 node scripts/cli.js set_functions 4 investLiquidity -p $npm_package_config_network
 sleep 3
@@ -17,6 +17,4 @@ sleep 3
 node scripts/cli.js set_functions 8 veto -p $npm_package_config_network
 sleep 3
 node scripts/cli.js set_functions 9 receiveReward -p $npm_package_config_network
-sleep 3
-node scripts/cli.js set_functions 10 withdrawProfit -p $npm_package_config_network
 sleep 3
