@@ -1,34 +1,35 @@
-const { setup, getContractFullStorage, sleep } = require("./utils");
-const { Dex } = require("./dexFA2");
-const { Factory, factoryAddress } = require("./factoryFA2");
-// const { Dex } = require("./dex");
-// const { Factory, factoryAddress } = require("./factory");
+const { setup, sleep } = require("./utils");
+const { config } = require("../package.json");
+let Dex, Factory, factoryAddress, Token;
+if (config.standard === "fa2") {
+  Dex = require("./dexFA2").Dex;
+  Token = require("./tokenFA2").Token;
+  const factory = require("./factoryFA2");
+  Factory = factory.Factory;
+  factoryAddress = factory.factoryAddress;
+} else {
+  Dex = require("./dex").Dex;
+  Token = require("./token").Token;
+  const factory = require("./factory");
+  Factory = factory.Factory;
+  factoryAddress = factory.factoryAddress;
+}
 const assert = require("assert");
 const TEST_RPC = "http://127.0.0.1:8732";
 const TOKEN_IDX = 1;
+
 class Test {
   static async before(tokenAddress) {
     let tezos = await setup();
     let tezos1 = await setup("../fixtures/key1");
-    let token = await tezos.contract.at(tokenAddress);
-    let operation = await token.methods
-      .transfer([
-        {
-          from_: await tezos.signer.publicKeyHash(),
-          txs: [
-            {
-              token_id: 1,
-              amount: 100000,
-              to_: await tezos1.signer.publicKeyHash(),
-            },
-          ],
-        },
-      ])
-      .send();
-    await operation.confirmation();
-
+    let token = await Token.init(tezos, tokenAddress);
+    let operation = await token.transfer(
+      await tezos.signer.publicKeyHash(),
+      await tezos1.signer.publicKeyHash(),
+      100000
+    );
     let factory = await Factory.init(tezos);
-    operation = await factory.launchExchange(tokenAddress, TOKEN_IDX);
+    operation = await factory.launchExchange(tokenAddress);
     await operation.confirmation();
     assert.equal(operation.status, "applied", "Operation was not applied");
 
@@ -900,16 +901,15 @@ class Test {
   static async tokenToTezSwap(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
+    let token = await Token.init(AliceTezos, tokenAddress);
     let tokensIn = "1000";
     const alicePkh = await AliceTezos.signer.publicKeyHash();
 
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
-    const initialTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      { tokensLedger: [[alicePkh, TOKEN_IDX]] }
-    );
+    const initialTokenStorage = await token.getFullStorage({
+      tokensLedger: [[alicePkh, TOKEN_IDX]],
+    });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
@@ -929,11 +929,9 @@ class Test {
 
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const finalTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      { tokensLedger: [[alicePkh, TOKEN_IDX]] }
-    );
+    const finalTokenStorage = await token.getFullStorage({
+      tokensLedger: [[alicePkh, TOKEN_IDX]],
+    });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
@@ -965,16 +963,15 @@ class Test {
   static async tokenToTokenSwap(dexAddress, tokenAddress, tokenAddressTo) {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
+    let token = await Token.init(AliceTezos, tokenAddress);
     let tokensIn = "1000";
     const alicePkh = await AliceTezos.signer.publicKeyHash();
 
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
-    const initialTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      { tokensLedger: [[alicePkh, TOKEN_IDX]] }
-    );
+    const initialTokenStorage = await token.getFullStorage({
+      tokensLedger: [[alicePkh, TOKEN_IDX]],
+    });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
@@ -997,11 +994,9 @@ class Test {
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const finalTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      { tokensLedger: [[alicePkh, TOKEN_IDX]] }
-    );
+    const finalTokenStorage = await token.getFullStorage({
+      tokensLedger: [[alicePkh, TOKEN_IDX]],
+    });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
@@ -1030,14 +1025,13 @@ class Test {
   static async tezToTokenSwap(dexAddress, tokenAddress) {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
+    let token = await Token.init(AliceTezos, tokenAddress);
     let tezAmount = "0.01";
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
-    const initialTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      { tokensLedger: [[alicePkh, TOKEN_IDX]] }
-    );
+    const initialTokenStorage = await token.getFullStorage({
+      tokensLedger: [[alicePkh, TOKEN_IDX]],
+    });
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
@@ -1059,11 +1053,9 @@ class Test {
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const finalTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      { tokensLedger: [[alicePkh, TOKEN_IDX]] }
-    );
+    const finalTokenStorage = await token.getFullStorage({
+      tokensLedger: [[alicePkh, TOKEN_IDX]],
+    });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
@@ -1095,22 +1087,19 @@ class Test {
     let AliceTezos = await setup();
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
+    let token = await Token.init(AliceTezos, tokenAddress);
     let tezAmount = "0.1";
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({
       shares: [alicePkh, bobPkh],
     });
-    const initialTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      {
-        tokensLedger: [
-          [alicePkh, TOKEN_IDX],
-          [bobPkh, TOKEN_IDX],
-        ],
-      }
-    );
+    const initialTokenStorage = await token.getFullStorage({
+      tokensLedger: [
+        [alicePkh, TOKEN_IDX],
+        [bobPkh, TOKEN_IDX],
+      ],
+    });
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     const mutezAmount = parseFloat(tezAmount) * 1000000;
@@ -1132,11 +1121,9 @@ class Test {
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const finalTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      { tokensLedger: [[bobPkh, TOKEN_IDX]] }
-    );
+    const finalTokenStorage = await token.getFullStorage({
+      tokensLedger: [[bobPkh, TOKEN_IDX]],
+    });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
@@ -1167,6 +1154,7 @@ class Test {
     let AliceTezos = await setup();
     let BobTezos = await setup("../fixtures/key1");
     let dex = await Dex.init(AliceTezos, dexAddress);
+    let token = await Token.init(AliceTezos, tokenAddress);
     let tokensIn = "1000";
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
@@ -1175,16 +1163,12 @@ class Test {
     const initialDexStorage = await dex.getFullStorage({
       shares: [alicePkh, bobPkh],
     });
-    const initialTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      {
-        tokensLedger: [
-          [alicePkh, TOKEN_IDX],
-          [bobPkh, TOKEN_IDX],
-        ],
-      }
-    );
+    const initialTokenStorage = await token.getFullStorage({
+      tokensLedger: [
+        [alicePkh, TOKEN_IDX],
+        [bobPkh, TOKEN_IDX],
+      ],
+    });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
     const newTokenPool = parseInt(
@@ -1202,16 +1186,12 @@ class Test {
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const finalTokenStorage = await getContractFullStorage(
-      AliceTezos,
-      tokenAddress,
-      {
-        tokensLedger: [
-          [alicePkh, TOKEN_IDX],
-          [bobPkh, TOKEN_IDX],
-        ],
-      }
-    );
+    const finalTokenStorage = await token.getFullStorage({
+      tokensLedger: [
+        [alicePkh, TOKEN_IDX],
+        [bobPkh, TOKEN_IDX],
+      ],
+    });
     const finalTezBalance = await AliceTezos.tz.getBalance(bobPkh);
 
     assert.equal(

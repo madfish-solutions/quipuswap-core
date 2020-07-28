@@ -31,31 +31,6 @@ exports.getLigo = (isDockerizedLigo) => {
   return path;
 };
 
-exports.getContractFullStorage = async (Tezos, address, maps = {}) => {
-  const contract = await Tezos.contract.at(address);
-  const storage = await contract.storage();
-  var result = {
-    ...storage,
-  };
-  for (let key in maps) {
-    result[key + "Extended"] = await maps[key].reduce(async (prev, current) => {
-      let entry;
-
-      try {
-        entry = await storage.tzip12[key].get(current);
-      } catch (ex) {
-        console.error(ex);
-      }
-
-      return {
-        ...(await prev),
-        [current]: entry,
-      };
-    }, Promise.resolve({}));
-  }
-  return result;
-};
-
 exports.sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };

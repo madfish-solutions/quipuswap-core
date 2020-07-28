@@ -18,8 +18,6 @@ const { Test } = require("./cases");
 
 describe("Correct calls", function () {
   before(async function () {
-    // dexAddress1 = await Test.getDexAddress(tokenAddress1);
-    // dexAddress2 = await Test.getDexAddress(tokenAddress2);
     dexAddress1 = await Test.before(tokenAddress1);
     dexAddress2 = await Test.before(tokenAddress2);
   });

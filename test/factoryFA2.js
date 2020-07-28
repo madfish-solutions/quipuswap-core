@@ -1,12 +1,13 @@
 const { Factory: Factory12, factoryAddress } = require("./factory");
 const { execSync } = require("child_process");
 const { getLigo } = require("./utils");
+const { TOKEN_IDX } = require("./tokenFA2");
 
 class Factory extends Factory12 {
   static async init(Tezos) {
     return new Factory(Tezos, await Tezos.contract.at(factoryAddress));
   }
-  async launchExchange(tokenAddress, tokenId) {
+  async launchExchange(tokenAddress, tokenId = TOKEN_IDX) {
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, tokenId)
       .send();
