@@ -85,7 +85,7 @@ class Test {
   static async setFunctionWithHigherIndex() {
     let AliceTezos = await setup();
     let factory = await Factory.init(AliceTezos);
-    let index = 11;
+    let index = 10;
     let initialStorage = await factory.getFullStorage({ lambdas: [index] });
     let lambda = "initializeExchange";
     assert.equal(initialStorage.lambdas[index], undefined);
@@ -93,7 +93,7 @@ class Test {
       await factory.setFunction(index, lambda);
       assert(false, "Adding function should fail");
     } catch (e) {
-      assert.equal(e.message, "Factory/functions-set");
+      assert.equal(e.message, "Factory/wrong-index");
     }
 
     let finalStorage = await factory.getFullStorage({ lambdas: [index] });

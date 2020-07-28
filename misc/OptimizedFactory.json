@@ -3392,7 +3392,7 @@
                             "prim": "PUSH",
                             "args": [
                               { "prim": "string" },
-                              { "string": "Factory/functions-set" }
+                              { "string": "Factory/wrong-index" }
                             ]
                           },
                           { "prim": "FAILWITH" }
