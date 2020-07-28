@@ -487,6 +487,8 @@ block {
     then {
        operations := set_delegate(s.delegated) # operations;
        s.currentDelegated := s.delegated;
+       s.vetoVoters := (big_map end : big_map(address, nat));
+       s.veto := 0n;
     } else skip ;
   } else skip ;
   s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;

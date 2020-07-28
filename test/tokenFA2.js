@@ -10,7 +10,7 @@ class Token {
     return new Token(Tezos, await Tezos.contract.at(tokenAddress));
   }
 
-  async getFullStorage(maps = {}) {
+  async getRealStorage(maps = {}) {
     const storage = await this.contract.storage();
     var result = {
       ...storage,
@@ -22,6 +22,38 @@ class Token {
 
           try {
             entry = await storage.tzip12[key].get(current);
+          } catch (ex) {
+            console.error(ex);
+          }
+
+          return {
+            ...(await prev),
+            [current]: entry,
+          };
+        },
+        Promise.resolve({})
+      );
+    }
+    return result;
+  }
+  async getFullStorage(maps = {}, token_id = TOKEN_IDX) {
+    const storage = await this.contract.storage();
+    var result = {
+      ...storage,
+    };
+    for (let key in maps) {
+      result[key + "Extended"] = await maps[key].reduce(
+        async (prev, current) => {
+          let entry;
+
+          try {
+            if (key === "ledger") {
+              entry = {
+                balance: await storage.tzip12[key].get([current, token_id]),
+              };
+            } else {
+              entry = await storage.tzip12[key].get(current);
+            }
           } catch (ex) {
             console.error(ex);
           }

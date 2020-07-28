@@ -3376,7 +3376,7 @@
                   [
                     {
                       "prim": "PUSH",
-                      "args": [{ "prim": "nat" }, { "int": "10" }]
+                      "args": [{ "prim": "nat" }, { "int": "9" }]
                     },
                     { "prim": "DIG", "args": [{ "int": "1" }] },
                     { "prim": "DUP" },

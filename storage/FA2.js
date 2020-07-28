@@ -2,7 +2,7 @@ const { MichelsonMap, UnitValue } = require("@taquito/michelson-encoder");
 
 module.exports = {
   tzip12: {
-    tokensLedger: (() => {
+    ledger: (() => {
       const map = new MichelsonMap();
       map.set(["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb", 1], 10000000);
       map.set(["tz1aSkwEot3L2kmUvcoxzjMomb9mvBNuzFK6", 1], 10000000);

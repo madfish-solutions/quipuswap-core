@@ -34,18 +34,18 @@ class Test {
     assert.equal(operation.status, "applied", "Operation was not applied");
 
     let storage = await factory.getFullStorage({
-      tokenToExchange: [[tokenAddress, TOKEN_IDX]],
+      tokenToExchange: [tokenAddress],
     });
-    return storage.tokenToExchangeExtended[[tokenAddress, TOKEN_IDX]];
+    return storage.tokenToExchangeExtended[tokenAddress];
   }
 
   static async getDexAddress(tokenAddress) {
     let tezos = await setup();
     let factory = await Factory.init(tezos);
     let storage = await factory.getFullStorage({
-      tokenToExchange: [[tokenAddress, TOKEN_IDX]],
+      tokenToExchange: [tokenAddress],
     });
-    return storage.tokenToExchangeExtended[[tokenAddress, TOKEN_IDX]];
+    return storage.tokenToExchangeExtended[tokenAddress];
   }
 
   static async initializeExchange(dexAddress, tokenAddress) {
@@ -908,7 +908,7 @@ class Test {
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const initialTokenStorage = await token.getFullStorage({
-      tokensLedger: [[alicePkh, TOKEN_IDX]],
+      ledger: [alicePkh],
     });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
@@ -930,15 +930,14 @@ class Test {
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await token.getFullStorage({
-      tokensLedger: [[alicePkh, TOKEN_IDX]],
+      ledger: [alicePkh],
     });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
-      parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
-      ) - parseInt(tokensIn)
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) -
+        parseInt(tokensIn)
     );
     assert(finalTezBalance >= parseInt(initialTezBalance));
     assert(
@@ -970,7 +969,7 @@ class Test {
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const initialTokenStorage = await token.getFullStorage({
-      tokensLedger: [[alicePkh, TOKEN_IDX]],
+      ledger: [alicePkh],
     });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
@@ -995,15 +994,14 @@ class Test {
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await token.getFullStorage({
-      tokensLedger: [[alicePkh, TOKEN_IDX]],
+      ledger: [alicePkh],
     });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
-      parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
-      ) - parseInt(tokensIn)
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) -
+        parseInt(tokensIn)
     );
     assert(finalTezBalance <= parseInt(initialTezBalance));
     assert.equal(
@@ -1030,7 +1028,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const initialTokenStorage = await token.getFullStorage({
-      tokensLedger: [[alicePkh, TOKEN_IDX]],
+      ledger: [alicePkh],
     });
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
@@ -1054,15 +1052,13 @@ class Test {
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await token.getFullStorage({
-      tokensLedger: [[alicePkh, TOKEN_IDX]],
+      ledger: [alicePkh],
     });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
-
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
-      parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
-      ) + parseInt(minTokens)
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) +
+        parseInt(minTokens)
     );
     assert(
       finalTezBalance < parseInt(initialTezBalance) - parseInt(mutezAmount)
@@ -1095,10 +1091,7 @@ class Test {
       shares: [alicePkh, bobPkh],
     });
     const initialTokenStorage = await token.getFullStorage({
-      tokensLedger: [
-        [alicePkh, TOKEN_IDX],
-        [bobPkh, TOKEN_IDX],
-      ],
+      ledger: [alicePkh, bobPkh],
     });
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
@@ -1122,13 +1115,13 @@ class Test {
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await token.getFullStorage({
-      tokensLedger: [[bobPkh, TOKEN_IDX]],
+      ledger: [bobPkh],
     });
     const finalTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[bobPkh, TOKEN_IDX]],
-      parseInt(initialTokenStorage.tokensLedgerExtended[[bobPkh, TOKEN_IDX]]) +
+      finalTokenStorage.ledgerExtended[bobPkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[bobPkh].balance) +
         parseInt(minTokens)
     );
     assert(
@@ -1164,10 +1157,7 @@ class Test {
       shares: [alicePkh, bobPkh],
     });
     const initialTokenStorage = await token.getFullStorage({
-      tokensLedger: [
-        [alicePkh, TOKEN_IDX],
-        [bobPkh, TOKEN_IDX],
-      ],
+      ledger: [alicePkh, bobPkh],
     });
 
     const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
@@ -1187,18 +1177,14 @@ class Test {
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const finalTokenStorage = await token.getFullStorage({
-      tokensLedger: [
-        [alicePkh, TOKEN_IDX],
-        [bobPkh, TOKEN_IDX],
-      ],
+      ledger: [alicePkh, bobPkh],
     });
     const finalTezBalance = await AliceTezos.tz.getBalance(bobPkh);
 
     assert.equal(
-      finalTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]],
-      parseInt(
-        initialTokenStorage.tokensLedgerExtended[[alicePkh, TOKEN_IDX]]
-      ) - parseInt(tokensIn)
+      finalTokenStorage.ledgerExtended[alicePkh].balance,
+      parseInt(initialTokenStorage.ledgerExtended[alicePkh].balance) -
+        parseInt(tokensIn)
     );
     assert(finalTezBalance >= parseInt(initialTezBalance));
     assert(

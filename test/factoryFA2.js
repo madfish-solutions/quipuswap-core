@@ -31,6 +31,33 @@ class Factory extends Factory12 {
     await operation.confirmation();
     return operation;
   }
+
+  async getFullStorage(maps = {}, tokenId = TOKEN_IDX) {
+    const storage = await this.contract.storage();
+    var result = {
+      ...storage,
+    };
+    for (let key in maps) {
+      result[key + "Extended"] = await maps[key].reduce(
+        async (prev, current) => {
+          let entry;
+
+          try {
+            entry = await storage.storage[key].get(
+              key === "tokenToExchange" ? [current, tokenId] : current
+            );
+          } catch (ex) {}
+
+          return {
+            ...(await prev),
+            [current]: entry,
+          };
+        },
+        Promise.resolve({})
+      );
+    }
+    return result;
+  }
 }
 exports.Factory = Factory;
 exports.factoryAddress = factoryAddress;

@@ -269,7 +269,7 @@
                       },
                       { "prim": "nat" }
                     ],
-                    "annots": ["%tokensLedger"]
+                    "annots": ["%ledger"]
                   }
                 ]
               },
