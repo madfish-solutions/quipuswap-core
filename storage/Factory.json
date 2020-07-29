@@ -7,12 +7,19 @@
                 { "prim": "DIG", "args": [ { "int": "1" } ] },
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "2" } ] },
-                { "prim": "CDR" }, { "prim": "DUP" }, { "prim": "CAR" },
-                { "prim": "CDR" },
+                { "prim": "CDR" }, { "prim": "CAR" },
                 { "prim": "DIG", "args": [ { "int": "2" } ] },
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "3" } ] },
-                { "prim": "MEM" },
+                { "prim": "CDR" }, { "prim": "CDR" }, { "prim": "DUP" },
+                { "prim": "CAR" }, { "prim": "CDR" },
+                { "prim": "DIG", "args": [ { "int": "2" } ] },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "3" } ] },
+                { "prim": "DIG", "args": [ { "int": "4" } ] },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "5" } ] },
+                { "prim": "PAIR" }, { "prim": "MEM" },
                 { "prim": "IF",
                   "args":
                     [ [ { "prim": "PUSH",
@@ -32,6 +39,10 @@
                 { "prim": "DIG", "args": [ { "int": "4" } ] },
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "5" } ] },
+                { "prim": "DIG", "args": [ { "int": "6" } ] },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "7" } ] },
+                { "prim": "PAIR" },
                 { "prim": "PUSH",
                   "args": [ { "prim": "bool" }, { "prim": "True" } ] },
                 { "prim": "SWAP" }, { "prim": "UPDATE" },
@@ -52,11 +63,14 @@
                               "args": [ { "prim": "address" } ] },
                             { "prim": "option",
                               "args": [ { "prim": "key_hash" } ] } ] } ] },
+                { "prim": "PAIR" },
                 { "prim": "EMPTY_BIG_MAP",
                   "args": [ { "prim": "key_hash" }, { "prim": "timestamp" } ] },
-                { "prim": "PAIR" }, { "prim": "PAIR" },
                 { "prim": "EMPTY_BIG_MAP",
                   "args": [ { "prim": "address" }, { "prim": "nat" } ] },
+                { "prim": "PAIR" }, { "prim": "PAIR" },
+                { "prim": "PUSH",
+                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
                 { "prim": "PUSH",
                   "args": [ { "prim": "nat" }, { "int": "0" } ] },
                 { "prim": "PAIR" },
@@ -65,11 +79,12 @@
                 { "prim": "PUSH",
                   "args": [ { "prim": "nat" }, { "int": "0" } ] },
                 { "prim": "PAIR" }, { "prim": "PAIR" },
-                { "prim": "PUSH",
-                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
-                { "prim": "DIG", "args": [ { "int": "6" } ] },
+                { "prim": "DIG", "args": [ { "int": "5" } ] },
                 { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "7" } ] },
+                { "prim": "DUG", "args": [ { "int": "6" } ] },
+                { "prim": "DIG", "args": [ { "int": "7" } ] },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "8" } ] },
                 { "prim": "PAIR" },
                 { "prim": "PUSH",
                   "args": [ { "prim": "nat" }, { "int": "0" } ] },
@@ -81,9 +96,9 @@
                 { "prim": "PUSH",
                   "args": [ { "prim": "nat" }, { "int": "333" } ] },
                 { "prim": "PAIR" },
-                { "prim": "DIG", "args": [ { "int": "7" } ] },
+                { "prim": "DIG", "args": [ { "int": "8" } ] },
                 { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "8" } ] },
+                { "prim": "DUG", "args": [ { "int": "9" } ] },
                 { "prim": "CAR" }, { "prim": "CAR" },
                 { "prim": "NONE", "args": [ { "prim": "key_hash" } ] },
                 { "prim": "PAIR" }, { "prim": "PAIR" },
@@ -170,11 +185,17 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minTez" ] },
                                                                     { "prim":
-                                                                    "nat" } ] },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minTokens" ] } ] },
                                                                     { "prim":
-                                                                    "nat" } ],
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%shares" ] } ],
                                                                     "annots":
                                                                     [ "%divestLiquidity" ] },
                                                                   { "prim":
@@ -191,9 +212,13 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "address" },
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%account" ] },
                                                                     { "prim":
-                                                                    "bool" } ],
+                                                                    "bool",
+                                                                    "annots":
+                                                                    [ "%isAllowed" ] } ],
                                                                     "annots":
                                                                     [ "%setVotesDelegation" ] } ] } ] },
                                                       { "prim": "or",
@@ -204,9 +229,13 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%amount" ] },
                                                                     { "prim":
-                                                                    "address" } ],
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%receiver" ] } ],
                                                                     "annots":
                                                                     [ "%tezToTokenPayment" ] },
                                                                   { "prim":
@@ -216,50 +245,41 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%amount" ] },
                                                                     { "prim":
-                                                                    "nat" } ] },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minOut" ] } ] },
                                                                     { "prim":
-                                                                    "address" } ],
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%receiver" ] } ],
                                                                     "annots":
                                                                     [ "%tokenToTezPayment" ] } ] },
                                                             { "prim": "or",
                                                               "args":
                                                                 [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat" },
-                                                                    { "prim":
-                                                                    "nat" } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "address" } ] } ],
-                                                                    "annots":
-                                                                    [ "%tokenToTokenPayment" ] },
-                                                                  { "prim":
                                                                     "address",
                                                                     "annots":
-                                                                    [ "%veto" ] } ] } ] } ] },
-                                                { "prim": "or",
-                                                  "args":
-                                                    [ { "prim": "pair",
-                                                        "args":
-                                                          [ { "prim":
-                                                                "address" },
-                                                            { "prim":
-                                                                "key_hash" } ],
-                                                        "annots": [ "%vote" ] },
-                                                      { "prim": "address",
-                                                        "annots":
-                                                          [ "%withdrawProfit" ] } ] } ] } ],
+                                                                    [ "%veto" ] },
+                                                                  { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "key_hash",
+                                                                    "annots":
+                                                                    [ "%candidate" ] },
+                                                                    { "prim":
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%voter" ] } ],
+                                                                    "annots":
+                                                                    [ "%vote" ] } ] } ] } ] },
+                                                { "prim": "address",
+                                                  "annots":
+                                                    [ "%withdrawProfit" ] } ] } ],
                                       "annots": [ "%use" ] } ] } ] },
                         { "prim": "storage",
                           "args":
@@ -292,11 +312,17 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minTez" ] },
                                                                     { "prim":
-                                                                    "nat" } ] },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minTokens" ] } ] },
                                                                     { "prim":
-                                                                    "nat" } ],
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%shares" ] } ],
                                                                     "annots":
                                                                     [ "%divestLiquidity" ] },
                                                                     { "prim":
@@ -314,9 +340,13 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "address" },
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%account" ] },
                                                                     { "prim":
-                                                                    "bool" } ],
+                                                                    "bool",
+                                                                    "annots":
+                                                                    [ "%isAllowed" ] } ],
                                                                     "annots":
                                                                     [ "%setVotesDelegation" ] } ] } ] },
                                                                     { "prim":
@@ -329,9 +359,13 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%amount" ] },
                                                                     { "prim":
-                                                                    "address" } ],
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%receiver" ] } ],
                                                                     "annots":
                                                                     [ "%tezToTokenPayment" ] },
                                                                     { "prim":
@@ -341,55 +375,43 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%amount" ] },
                                                                     { "prim":
-                                                                    "nat" } ] },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minOut" ] } ] },
                                                                     { "prim":
-                                                                    "address" } ],
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%receiver" ] } ],
                                                                     "annots":
                                                                     [ "%tokenToTezPayment" ] } ] },
                                                                     { "prim":
                                                                     "or",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat" },
-                                                                    { "prim":
-                                                                    "nat" } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "address" } ] } ],
+                                                                    "address",
                                                                     "annots":
-                                                                    [ "%tokenToTokenPayment" ] },
+                                                                    [ "%veto" ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "key_hash",
+                                                                    "annots":
+                                                                    [ "%candidate" ] },
                                                                     { "prim":
                                                                     "address",
                                                                     "annots":
-                                                                    [ "%veto" ] } ] } ] } ] },
+                                                                    [ "%voter" ] } ],
+                                                                    "annots":
+                                                                    [ "%vote" ] } ] } ] } ] },
                                                                   { "prim":
-                                                                    "or",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "key_hash" } ],
-                                                                    "annots":
-                                                                    [ "%vote" ] },
-                                                                    { "prim":
                                                                     "address",
                                                                     "annots":
-                                                                    [ "%withdrawProfit" ] } ] } ] },
+                                                                    [ "%withdrawProfit" ] } ] },
                                                             { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
@@ -607,7 +629,7 @@
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenPool" ] } ] } ] },
+                                                                    [ "%tokenId" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -617,27 +639,22 @@
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalShares" ] },
+                                                                    [ "%tokenPool" ] },
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalVotes" ] } ] },
+                                                                    [ "%totalShares" ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%veto" ] },
+                                                                    [ "%totalVotes" ] },
                                                                     { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "nat" } ],
+                                                                    "nat",
                                                                     "annots":
-                                                                    [ "%vetoVoters" ] } ] } ] } ] } ] },
+                                                                    [ "%veto" ] } ] } ] } ] } ] },
                                                                   { "prim":
                                                                     "pair",
                                                                     "args":
@@ -648,12 +665,24 @@
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "nat" } ],
+                                                                    "annots":
+                                                                    [ "%vetoVoters" ] },
+                                                                    { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
                                                                     "key_hash" },
                                                                     { "prim":
                                                                     "timestamp" } ],
                                                                     "annots":
-                                                                    [ "%vetos" ] },
+                                                                    [ "%vetos" ] } ] },
                                                                     { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
@@ -676,7 +705,7 @@
                                                                     "annots":
                                                                     [ "%candidate" ] } ] } ],
                                                                     "annots":
-                                                                    [ "%voters" ] } ] },
+                                                                    [ "%voters" ] },
                                                                     { "prim":
                                                                     "big_map",
                                                                     "args":
@@ -685,7 +714,7 @@
                                                                     { "prim":
                                                                     "nat" } ],
                                                                     "annots":
-                                                                    [ "%votes" ] } ] } ] } ] },
+                                                                    [ "%votes" ] } ] } ] } ] } ] },
                                                       { "prim": "address" } ] },
                                                 { "prim": "pair",
                                                   "args":
@@ -909,7 +938,7 @@
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenPool" ] } ] } ] },
+                                                                    [ "%tokenId" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -919,27 +948,22 @@
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalShares" ] },
+                                                                    [ "%tokenPool" ] },
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalVotes" ] } ] },
+                                                                    [ "%totalShares" ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%veto" ] },
+                                                                    [ "%totalVotes" ] },
                                                                     { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "nat" } ],
+                                                                    "nat",
                                                                     "annots":
-                                                                    [ "%vetoVoters" ] } ] } ] } ] } ] },
+                                                                    [ "%veto" ] } ] } ] } ] } ] },
                                                             { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
@@ -949,12 +973,24 @@
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "nat" } ],
+                                                                    "annots":
+                                                                    [ "%vetoVoters" ] },
+                                                                    { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
                                                                     "key_hash" },
                                                                     { "prim":
                                                                     "timestamp" } ],
                                                                     "annots":
-                                                                    [ "%vetos" ] },
-                                                                    { "prim":
+                                                                    [ "%vetos" ] } ] },
+                                                                  { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
@@ -977,8 +1013,8 @@
                                                                     "annots":
                                                                     [ "%candidate" ] } ] } ],
                                                                     "annots":
-                                                                    [ "%voters" ] } ] },
-                                                                  { "prim":
+                                                                    [ "%voters" ] },
+                                                                    { "prim":
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
@@ -986,7 +1022,7 @@
                                                                     { "prim":
                                                                     "nat" } ],
                                                                     "annots":
-                                                                    [ "%votes" ] } ] } ] } ] } ] } ],
+                                                                    [ "%votes" ] } ] } ] } ] } ] } ] } ],
                                       "annots": [ "%lambdas" ] },
                                     { "prim": "pair",
                                       "args":
@@ -1193,7 +1229,7 @@
                                                                   { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenPool" ] } ] } ] },
+                                                                    [ "%tokenId" ] } ] } ] },
                                                       { "prim": "pair",
                                                         "args":
                                                           [ { "prim": "pair",
@@ -1201,26 +1237,21 @@
                                                                 [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalShares" ] },
+                                                                    [ "%tokenPool" ] },
                                                                   { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalVotes" ] } ] },
+                                                                    [ "%totalShares" ] } ] },
                                                             { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%veto" ] },
+                                                                    [ "%totalVotes" ] },
                                                                   { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "nat" } ],
+                                                                    "nat",
                                                                     "annots":
-                                                                    [ "%vetoVoters" ] } ] } ] } ] } ] },
+                                                                    [ "%veto" ] } ] } ] } ] } ] },
                                           { "prim": "pair",
                                             "args":
                                               [ { "prim": "pair",
@@ -1228,12 +1259,21 @@
                                                     [ { "prim": "big_map",
                                                         "args":
                                                           [ { "prim":
+                                                                "address" },
+                                                            { "prim": "nat" } ],
+                                                        "annots":
+                                                          [ "%vetoVoters" ] },
+                                                      { "prim": "big_map",
+                                                        "args":
+                                                          [ { "prim":
                                                                 "key_hash" },
                                                             { "prim":
                                                                 "timestamp" } ],
                                                         "annots":
-                                                          [ "%vetos" ] },
-                                                      { "prim": "big_map",
+                                                          [ "%vetos" ] } ] },
+                                                { "prim": "pair",
+                                                  "args":
+                                                    [ { "prim": "big_map",
                                                         "args":
                                                           [ { "prim":
                                                                 "address" },
@@ -1254,12 +1294,14 @@
                                                                     "annots":
                                                                     [ "%candidate" ] } ] } ],
                                                         "annots":
-                                                          [ "%voters" ] } ] },
-                                                { "prim": "big_map",
-                                                  "args":
-                                                    [ { "prim": "key_hash" },
-                                                      { "prim": "nat" } ],
-                                                  "annots": [ "%votes" ] } ] } ],
+                                                          [ "%voters" ] },
+                                                      { "prim": "big_map",
+                                                        "args":
+                                                          [ { "prim":
+                                                                "key_hash" },
+                                                            { "prim": "nat" } ],
+                                                        "annots":
+                                                          [ "%votes" ] } ] } ] } ],
                                       "annots": [ "%storage" ] } ] } ] },
                         { "prim": "code",
                           "args":
@@ -1309,10 +1351,16 @@
                                                           [ { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minTez" ] },
                                                                   { "prim":
-                                                                    "nat" } ] },
-                                                            { "prim": "nat" } ] } ] },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minTokens" ] } ] },
+                                                            { "prim": "nat",
+                                                              "annots":
+                                                                [ "%shares" ] } ] } ] },
                                                 { "prim": "LEFT",
                                                   "args":
                                                     [ { "prim": "or",
@@ -1321,9 +1369,13 @@
                                                             { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
-                                                                    "address" },
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%account" ] },
                                                                   { "prim":
-                                                                    "bool" } ] } ] } ] },
+                                                                    "bool",
+                                                                    "annots":
+                                                                    [ "%isAllowed" ] } ] } ] } ] },
                                                 { "prim": "LEFT",
                                                   "args":
                                                     [ { "prim": "or",
@@ -1334,9 +1386,13 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%amount" ] },
                                                                     { "prim":
-                                                                    "address" } ] },
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%receiver" ] } ] },
                                                                   { "prim":
                                                                     "pair",
                                                                     "args":
@@ -1344,44 +1400,35 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "nat" },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%amount" ] },
                                                                     { "prim":
-                                                                    "nat" } ] },
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%minOut" ] } ] },
                                                                     { "prim":
-                                                                    "address" } ] } ] },
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%receiver" ] } ] } ] },
                                                             { "prim": "or",
                                                               "args":
                                                                 [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat" },
-                                                                    { "prim":
-                                                                    "nat" } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
                                                                     "address" },
-                                                                    { "prim":
-                                                                    "address" } ] } ] },
                                                                   { "prim":
-                                                                    "address" } ] } ] } ] },
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "key_hash",
+                                                                    "annots":
+                                                                    [ "%candidate" ] },
+                                                                    { "prim":
+                                                                    "address",
+                                                                    "annots":
+                                                                    [ "%voter" ] } ] } ] } ] } ] },
                                                 { "prim": "LEFT",
                                                   "args":
-                                                    [ { "prim": "or",
-                                                        "args":
-                                                          [ { "prim": "pair",
-                                                              "args":
-                                                                [ { "prim":
-                                                                    "address" },
-                                                                  { "prim":
-                                                                    "key_hash" } ] },
-                                                            { "prim":
-                                                                "address" } ] } ] },
+                                                    [ { "prim": "address" } ] },
                                                 { "prim": "PAIR" },
                                                 { "prim": "PAIR" },
                                                 { "prim": "DIG",
@@ -1538,9 +1585,12 @@
                 { "prim": "DIG", "args": [ { "int": "7" } ] },
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "8" } ] },
-                { "prim": "SWAP" }, { "prim": "SOME" }, { "prim": "SWAP" },
-                { "prim": "UPDATE" }, { "prim": "SWAP" }, { "prim": "CAR" },
-                { "prim": "PAIR" },
+                { "prim": "DIG", "args": [ { "int": "9" } ] },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "10" } ] },
+                { "prim": "PAIR" }, { "prim": "SWAP" }, { "prim": "SOME" },
+                { "prim": "SWAP" }, { "prim": "UPDATE" }, { "prim": "SWAP" },
+                { "prim": "CAR" }, { "prim": "PAIR" },
                 { "prim": "NIL", "args": [ { "prim": "operation" } ] },
                 { "prim": "DIG", "args": [ { "int": "2" } ] },
                 { "prim": "DUP" },
@@ -1548,7 +1598,7 @@
                 { "prim": "CAR" }, { "prim": "CONS" }, { "prim": "PAIR" },
                 { "prim": "DIP",
                   "args":
-                    [ [ { "prim": "DROP", "args": [ { "int": "6" } ] } ] ] } ] ] } ],
+                    [ [ { "prim": "DROP", "args": [ { "int": "7" } ] } ] ] } ] ] } ],
       { "prim": "Pair",
         "args": [ { "prim": "Pair", "args": [ [], [] ] }, [] ] } ] }
 

@@ -54,7 +54,7 @@ class Dex {
 
   async vote(voter, delegate) {
     const operation = await this.contract.methods
-      .use(7, "vote", voter, delegate)
+      .use(7, "vote", delegate, voter)
       .send();
     await operation.confirmation();
     return operation;
@@ -97,7 +97,7 @@ class Dex {
   async divestLiquidity(tokenAmount, tezAmount, sharesBurned) {
     await this.approve(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
-      .use(5, "divestLiquidity", sharesBurned, tezAmount, tokenAmount)
+      .use(5, "divestLiquidity", tezAmount, tokenAmount, sharesBurned)
       .send();
     await operation.confirmation();
     return operation;
@@ -148,20 +148,39 @@ class Dex {
     return operation;
   }
 
-  async tokenToTokenSwap(tokenAmount, minTokensOut, tokenAddress) {
+  async tokenToTokenSwap(
+    tokenAmount,
+    minTokensOut,
+    tezAmount,
+    secondDexContract
+  ) {
     await this.approve(tokenAmount, this.contract.address);
-    const operation = await this.contract.methods
-      .use(
-        3,
-        "tokenToTokenPayment",
-        tokenAmount,
-        minTokensOut,
-        tokenAddress,
-        await this.tezos.signer.publicKeyHash()
-      )
-      .send();
-    await operation.confirmation();
-    return operation;
+    // const batch = tezos
+    //   .batch([])
+    //   .withTransfer(
+    //     this.contract.methods
+    //       .use(
+    //         2,
+    //         "tokenToTezPayment",
+    //         tokenAmount,
+    //         1,
+    //         await this.tezos.signer.publicKeyHash()
+    //       )
+    //       .toTransferParams()
+    //   )
+    //   .withTransfer(
+    //     secondDexContract.methods
+    //       .use(
+    //         1,
+    //         "tezToTokenPayment",
+    //         minTokensOut,
+    //         await this.tezos.signer.publicKeyHash()
+    //       )
+    //       .toTransferParams({ amount: tezAmount.toNumber() })
+    //   );
+    // const operation = await batch.send();
+    // await operation.confirmation();
+    // return operation;
   }
 
   async tokenToTokenPayment(tokenAmount, minTokensOut, tokenAddress, receiver) {
