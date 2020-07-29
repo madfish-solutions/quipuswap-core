@@ -70,10 +70,7 @@ class Test {
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     assert.equal(finalStorage.storage.feeRate, 333);
-    assert.equal(
-      finalStorage.storage.invariant,
-      mutezAmount * parseInt(tokenAmount)
-    );
+    assert.equal(finalStorage.storage.invariant, mutezAmount * +tokenAmount);
     assert.equal(finalStorage.storage.tezPool, mutezAmount);
     assert.equal(finalStorage.storage.tokenPool, tokenAmount);
     assert.equal(finalStorage.storage.tokenAddress, tokenAddress);
@@ -219,21 +216,6 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "0";
-    const alicePkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
-
-    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
-    const newTokenPool = parseInt(
-      +initialDexStorage.storage.tokenPool + +tokensIn
-    );
-    const tempTokenPool = parseInt(newTokenPool - fee);
-    const newTezPool = parseInt(
-      initialDexStorage.storage.invariant / tempTokenPool
-    );
-
-    const minTezOut = parseInt(
-      parseInt(initialDexStorage.storage.tezPool - newTezPool)
-    );
     const tokensOut = 1;
 
     try {
@@ -247,21 +229,6 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const alicePkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
-
-    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
-    const newTokenPool = parseInt(
-      +initialDexStorage.storage.tokenPool + +tokensIn
-    );
-    const tempTokenPool = parseInt(newTokenPool - fee);
-    const newTezPool = parseInt(
-      initialDexStorage.storage.invariant / tempTokenPool
-    );
-
-    const minTezOut = parseInt(
-      parseInt(initialDexStorage.storage.tezPool - newTezPool)
-    );
     const tokensOut = 1;
 
     try {
@@ -280,21 +247,6 @@ class Test {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
-    const alicePkh = await AliceTezos.signer.publicKeyHash();
-    const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
-
-    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
-    const newTokenPool = parseInt(
-      +initialDexStorage.storage.tokenPool + +tokensIn
-    );
-    const tempTokenPool = parseInt(newTokenPool - fee);
-    const newTezPool = parseInt(
-      initialDexStorage.storage.invariant / tempTokenPool
-    );
-
-    const minTezOut = parseInt(
-      parseInt(initialDexStorage.storage.tezPool - newTezPool)
-    );
     const tokensOut = 1;
 
     let operation = await dex.tokenToTokenPayment(
