@@ -2,6 +2,8 @@
 
 // TODO:
 //  - add veto update in invest/divest 
+const circlePeriod : int = 3 // 1474560
+const vetoPeriod : int = 7889229;
 
 type transferContents is record[
     to_: address;
@@ -209,7 +211,7 @@ block {
             s.veto := 0n;
             case s.currentDelegated of None -> failwith ("Dex/no-delegated")
             | Some(c) -> {
-              s.vetos[c] := Tezos.now + 7889229;
+              s.vetos[c] := Tezos.now + vetoPeriod;
               s.currentDelegated := (None: option(key_hash));
               operations := set_delegate(s.currentDelegated) # operations;
               s.vetoVoters := (big_map end : big_map(address, nat));
@@ -500,8 +502,7 @@ block {
     s.currentCircle.counter := s.currentCircle.counter + 1n;
     s.currentCircle.totalLoyalty := 0n;
     s.currentCircle.start := Tezos.now;
-    // s.currentCircle.nextCircle := Tezos.now + 1474560;
-    s.currentCircle.nextCircle := Tezos.now + 3;
+    s.currentCircle.nextCircle := Tezos.now + circlePeriod;
     if case s.delegated of None -> False
       | Some(delegated) ->
         case s.currentDelegated of None -> True

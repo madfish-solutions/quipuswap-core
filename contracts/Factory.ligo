@@ -2,6 +2,8 @@
 
 // TODO:
 //  - add veto update in invest/divest 
+const circlePeriod : int = 3 // 1474560
+const vetoPeriod : int = 7889229;
 
 type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type token_lookup_type is TokenLookupType of (address * address * nat)
@@ -184,7 +186,7 @@ block {
             s.veto := 0n;
             case s.currentDelegated of None -> failwith ("Dex/no-delegated")
             | Some(c) -> {
-              s.vetos[c] := Tezos.now + 7889229;
+              s.vetos[c] := Tezos.now + vetoPeriod;
               s.currentDelegated := (None: option(key_hash));
               operations := set_delegate(s.currentDelegated) # operations;
               s.vetoVoters := (big_map end : big_map(address, nat));
@@ -259,41 +261,6 @@ block {
     } else failwith("Dex/wrong-params")
   | TokenToTokenPayment(n) -> failwith("00")
   | InvestLiquidity(n) -> failwith("00")
-  | DivestLiquidity(n) -> failwith("00")
-  | SetVotesDelegation(n) -> failwith("00")
-  | Vote(n) -> failwith("00")
-  | Veto(voter) -> failwith("00")
-  | WithdrawProfit(n) -> failwith("00")
-  end
-} with (operations, s)
-
-function tokenToTokenOut (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
-block {
-  var operations: list(operation) := list[];
-  case p of
-  | InitializeExchange(tokenAmount) -> failwith("00")
-  | TezToTokenPayment(n) -> failwith("00")
-  | TokenToTezPayment(n) -> failwith("00")
-  | TokenToTokenPayment(n) -> 
-    if n.0 > 0n and n.1 > 0n then {
-      s.tokenPool := s.tokenPool + n.0;
-      const newTezPool : nat = s.invariant / abs(s.tokenPool - n.0 / s.feeRate);
-      const tezOut : nat = abs(s.tezPool - newTezPool);
-      s.tezPool := newTezPool;
-      s.invariant := newTezPool * s.tokenPool;
-      operations := list[transaction(TransferType(Tezos.sender, (this, n.0)), 
-        0mutez,          
-        case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-          | None -> (failwith("01"):contract(transfer_type))
-        end);
-        transaction(TokenLookupType(n.2, n.3, n.1), 
-        tezOut * 1mutez,          
-        case (Tezos.get_entrypoint_opt("%tokenLookup", s.factoryAddress) : option(contract(token_lookup_type))) of Some(contr) -> contr
-          | None -> (failwith("01"):contract(token_lookup_type))
-        end);
-      ];
-    } else failwith("Dex/wrong-params")
-  | InvestLiquidity(minShares) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
   | Vote(n) -> failwith("00")
@@ -476,8 +443,7 @@ block {
     s.currentCircle.counter := s.currentCircle.counter + 1n;
     s.currentCircle.totalLoyalty := 0n;
     s.currentCircle.start := Tezos.now;
-    // s.currentCircle.nextCircle := Tezos.now + 1474560;
-    s.currentCircle.nextCircle := Tezos.now + 3;
+    s.currentCircle.nextCircle := Tezos.now + circlePeriod;
     if case s.delegated of None -> False
       | Some(delegated) ->
         case s.currentDelegated of None -> True

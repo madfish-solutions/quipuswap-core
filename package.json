@@ -7,11 +7,14 @@
     "standard": "fa2"
   },
   "scripts": {
-    "build": "./scripts/build_fa1.2.sh",
+    "build": "./scripts/build.sh",
+    "build_fa1.2": "./scripts/build_fa1.2.sh",
     "build-fa2": "./scripts/build_fa2.sh",
-    "deploy": "./scripts/deploy_fa1.2.sh",
+    "deploy": "./scripts/deploy.sh",
+    "deploy-fa1.2": "./scripts/deploy_fa1.2.sh",
     "deploy-fa2": "./scripts/deploy_fa2.sh",
-    "set-functions": "./scripts/set_functions_fa1.2.sh",
+    "set-functions": "./scripts/set_functions.sh",
+    "set-functions-fa1.2": "./scripts/set_functions_fa1.2.sh",
     "set-functions-fa2": "./scripts/set_functions_fa2.sh",
     "add-tokens": "node scripts/cli.js add_token -p $npm_package_config_network && node scripts/cli.js add_token -p $npm_package_config_network Token2",
     "test": "mocha --timeout 2000000"
