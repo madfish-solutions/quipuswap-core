@@ -9,7 +9,7 @@ class Factory extends Factory12 {
   }
   async launchExchange(tokenAddress, tokenId = TOKEN_IDX) {
     const operation = await this.contract.methods
-      .launchExchange(tokenAddress, tokenId)
+      .launchExchange(tokenId, tokenAddress)
       .send();
     await operation.confirmation();
     return operation;

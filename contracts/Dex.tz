@@ -2,22 +2,26 @@
     (or (unit %default)
         (pair %use
            nat
-           (or (or (or (or (pair %divestLiquidity (pair nat nat) nat) (nat %initializeExchange))
-                       (or (nat %investLiquidity) (pair %setVotesDelegation address bool)))
-                   (or (or (pair %tezToTokenPayment nat address)
-                           (pair %tokenToTezPayment (pair nat nat) address))
-                       (or (pair %tokenToTokenPayment (pair nat nat) (pair address address)) (address %veto))))
-               (or (pair %vote address key_hash) (address %withdrawProfit))))) ;
+           (or (or (or (or (pair %divestLiquidity (pair (nat %minTez) (nat %minTokens)) (nat %shares))
+                           (nat %initializeExchange))
+                       (or (nat %investLiquidity)
+                           (pair %setVotesDelegation (address %account) (bool %isAllowed))))
+                   (or (or (pair %tezToTokenPayment (nat %amount) (address %receiver))
+                           (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver)))
+                       (or (address %veto) (pair %vote (key_hash %candidate) (address %voter)))))
+               (address %withdrawProfit)))) ;
   storage
     (pair (big_map %lambdas
              nat
              (lambda
-                (pair (pair (or (or (or (or (pair %divestLiquidity (pair nat nat) nat) (nat %initializeExchange))
-                                        (or (nat %investLiquidity) (pair %setVotesDelegation address bool)))
-                                    (or (or (pair %tezToTokenPayment nat address)
-                                            (pair %tokenToTezPayment (pair nat nat) address))
-                                        (or (pair %tokenToTokenPayment (pair nat nat) (pair address address)) (address %veto))))
-                                (or (pair %vote address key_hash) (address %withdrawProfit)))
+                (pair (pair (or (or (or (or (pair %divestLiquidity (pair (nat %minTez) (nat %minTokens)) (nat %shares))
+                                            (nat %initializeExchange))
+                                        (or (nat %investLiquidity)
+                                            (pair %setVotesDelegation (address %account) (bool %isAllowed))))
+                                    (or (or (pair %tezToTokenPayment (nat %amount) (address %receiver))
+                                            (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver)))
+                                        (or (address %veto) (pair %vote (key_hash %candidate) (address %voter)))))
+                                (address %withdrawProfit))
                             (pair (pair (pair (pair (pair (big_map %circleLoyalty
                                                              address
                                                              (pair (pair (nat %lastCircle) (timestamp %lastCircleUpdate))
@@ -120,11 +124,12 @@
                  DUG 5 ;
                  CDR ;
                  PUSH nat 0 ;
-                 RIGHT (pair (pair nat nat) nat) ;
-                 LEFT (or nat (pair address bool)) ;
-                 LEFT (or (or (pair nat address) (pair (pair nat nat) address))
-                          (or (pair (pair nat nat) (pair address address)) address)) ;
-                 LEFT (or (pair address key_hash) address) ;
+                 RIGHT (pair (pair (nat %minTez) (nat %minTokens)) (nat %shares)) ;
+                 LEFT (or nat (pair (address %account) (bool %isAllowed))) ;
+                 LEFT (or (or (pair (nat %amount) (address %receiver))
+                              (pair (pair (nat %amount) (nat %minOut)) (address %receiver)))
+                          (or address (pair (key_hash %candidate) (address %voter)))) ;
+                 LEFT address ;
                  PAIR ;
                  PAIR ;
                  DIG 1 ;

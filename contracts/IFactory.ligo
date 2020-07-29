@@ -11,7 +11,11 @@ type full_exchange_storage is record
   lambdas: big_map(nat, (address * address * exchange_storage) -> (list(operation) * exchange_storage));
 end
 
+type setFunctionArgs is record
+  func: ((dexAction * dex_storage * address) -> (list(operation) * dex_storage));
+  index: nat;
+end
+
 type exchangeAction is
 | LaunchExchange of (address)
-| TokenLookup of (address * address * nat)
-| SetFunction of (nat * ((dexAction * dex_storage * address) -> (list(operation) * dex_storage)))
+| SetFunction of setFunctionArgs

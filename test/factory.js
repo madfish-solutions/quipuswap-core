@@ -27,7 +27,7 @@ class Factory {
   async setFunction(index, lambdaName) {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/Factory.ligo main 'SetFunction(${index}n, ${lambdaName})'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/Factory.ligo main 'SetFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await this.tezos.contract.transfer({

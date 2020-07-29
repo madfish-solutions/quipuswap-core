@@ -149,7 +149,7 @@ let setFunctions = async (
   );
   let ligo = getLigo(isDockerizedLigo);
   exec(
-    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(${num}n, ${functionName})'`,
+    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(record index =${num}n; func = ${functionName}; end)'`,
     { maxBuffer: 1024 * 500 },
     async (err, stdout, stderr) => {
       if (err) {
@@ -162,7 +162,7 @@ let setFunctions = async (
             amount: 0,
             parameter: {
               entrypoint: "setFunction",
-              value: JSON.parse(stdout).args[0].args[0],
+              value: JSON.parse(stdout).args[0],
             },
           });
           await operation.confirmation();
@@ -191,7 +191,7 @@ let setFunctionsFA2 = async (
   );
   let ligo = getLigo(isDockerizedLigo);
   exec(
-    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(${num}n, ${functionName})'`,
+    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(record index =${num}n; func = ${functionName}; end)'`,
     { maxBuffer: 1024 * 500 },
     async (err, stdout, stderr) => {
       if (err) {

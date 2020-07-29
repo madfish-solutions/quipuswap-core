@@ -42,15 +42,41 @@ type dex_storage is record
   circleLoyalty: big_map(address, user_circle_info);
 end
 
+type tezToTokenPaymentArgs is record 
+  amount : nat; 
+  receiver : address; 
+end
+
+type tokenToTezPaymentArgs is record 
+  amount : nat; 
+  minOut : nat; 
+  receiver : address;
+end
+
+type divestLiquidityArgs is record 
+  minTez : nat; 
+  minTokens : nat;
+  shares : nat; 
+end
+
+type setVotesDelegationArgs is record 
+  account : address;
+  isAllowed : bool;
+end
+
+type voteArgs is record 
+  candidate : key_hash;
+  voter : address; 
+end
+
 type dexAction is
 | InitializeExchange of (nat)
-| TezToTokenPayment of (nat * address)
-| TokenToTezPayment of (nat * nat * address)
-| TokenToTokenPayment of (nat * nat * address * address)
+| TezToTokenPayment of tezToTokenPaymentArgs
+| TokenToTezPayment of tokenToTezPaymentArgs
 | InvestLiquidity of (nat)
-| DivestLiquidity of (nat * nat * nat)
-| SetVotesDelegation of (address * bool)
-| Vote of (address * key_hash)
+| DivestLiquidity of divestLiquidityArgs
+| SetVotesDelegation of setVotesDelegationArgs
+| Vote of voteArgs
 | Veto of (address)
 | WithdrawProfit of (address)
 

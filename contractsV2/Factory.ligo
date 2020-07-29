@@ -625,6 +625,6 @@ block {
 
 function main (const p : exchangeAction ; const s : full_exchange_storage) :
   (list(operation) * full_exchange_storage) is case p of
-  LaunchExchange(n) -> middle(n.0, n.1, s)
-  | SetFunction(n) -> ((nil:list(operation)), if n.0 > 9n then (failwith("Factory/wrong-index") : full_exchange_storage) else  setFunction(n.0, n.1, s))
+  LaunchExchange(args) -> middle(args.token, args.id, s)
+  | SetFunction(args) -> ((nil:list(operation)), if args.index > 9n then (failwith("Factory/wrong-index") : full_exchange_storage) else  setFunction(args.index, args.func, s))
  end
