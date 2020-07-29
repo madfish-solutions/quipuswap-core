@@ -14,23 +14,6 @@ class Factory extends Factory12 {
     await operation.confirmation();
     return operation;
   }
-  async setFunction(index, lambdaName) {
-    let ligo = getLigo(true);
-    const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contractsV2/Factory.ligo main 'SetFunction(${index}n, ${lambdaName})'`,
-      { maxBuffer: 1024 * 500 }
-    );
-    const operation = await this.tezos.contract.transfer({
-      to: factoryAddress,
-      amount: 0,
-      parameter: {
-        entrypoint: "setFunction",
-        value: JSON.parse(stdout).args[0],
-      },
-    });
-    await operation.confirmation();
-    return operation;
-  }
 
   async getFullStorage(maps = {}, tokenId = TOKEN_IDX) {
     const storage = await this.contract.storage();

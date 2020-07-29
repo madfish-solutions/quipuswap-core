@@ -35,7 +35,7 @@ class Factory {
       amount: 0,
       parameter: {
         entrypoint: "setFunction",
-        value: JSON.parse(stdout).args[0].args[0],
+        value: JSON.parse(stdout).args[0],
       },
     });
     await operation.confirmation();
