@@ -9,11 +9,12 @@ The current implementation supports only [FA1.2 tokens](https://gitlab.com/tzip/
 
 The solution consists of 3 types of contracts:
 
-1. `Factory` singleton used to deploy new exchange pair and route Tez during token to token exchanges;
+1. `Factory` singleton used to deploy new exchange pair;
 2. `Dex` contract for TokenX-XTZ pair exchanges;
-3. `Token` FA1.2 token standard.
+3. `Token` FA token implementation.
 
 # Prerequisites
+
 - Installed NodeJS (tested with NodeJS v12+)
 - Installed Ligo:
 
@@ -27,7 +28,7 @@ curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "ne
 cd quipuswap-core && npm i
 ```
 
-- Private keys for signing transactions. The unencrypted private key has to be placed in `key` file in the root directory.
+- Private keys for signing transactions. The unencrypted private key has to be placed in `key` file in the `fixtures` directory.
 
 # Usage
 
@@ -49,6 +50,10 @@ npm run build
 It will compile `Dex.ligo` to raw Michelson code. This code will be deployed during `Factory.LaunchExchange` call when adding a new exchange-pair. And then compile other contracts and store them in JSON format to deploy with [Taquito](https://tezostaquito.io/) library.
 
 Сompiled `Factory` and `Token` are stored in the `build/` directory.
+
+## Standard
+
+Exchange support FA1.2 and FA2 tokens separately. Set `$npm_package_config_standard` to `fa1.2` or `fa2` according to the goals in `package.json`.
 
 ## Factory & Token Deployment
 
@@ -89,7 +94,6 @@ After the command is completed, the exchange can be used.
 ## Factory
 
 - `launchExchange(token: address)`: deploys new empty `Dex` for `token` and stores the address of a new contract;
-- `tokenToExchangeLookup(token: address, receiver: address, minTokenOut: nat)`: lookup by `Dex` address for `token` and call `use(1n,TezToTokenPayment(minTokenOut, receiver))` sending received XTZ to exchange.
 - `setFunction(funcIndex: nat, func : (dexAction, dex_storage, address) -> (list(operation), dex_storage))`: add lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
 
 ## Dex
@@ -102,22 +106,21 @@ Actions have the following parameters (index in the list matches the index in `l
 0. `initializeExchange(tokenAmount: nat)`: sets initial liquidity, XTZ must be sent.
 1. `tezToToken(minTokensOut: nat, receiver: address)`: exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `minTokensOut`.
 2. `tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address)`: exchanges `tokensIn` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minTezOut`.
-3. `tokenToTokenOut(tokensIn: nat, minTokensOut: nat, token: address, receiver: address)`: exchanges `tokensIn` of current token to `token` and sends them to `receiver`; operation is reverted if the amount of exchanged `token` is less than `minTokensOut`.
+3. `withdrawProfit(receiver: address)`: withdraws delegation reward of the sender to `receiver` address.
 4. `investLiquidity(minShares: nat)`: allows to own `minShares` by investing tokens and XTZ; the corresponding amount of XTZ should be sent via transaction and amount of tokens should be approved to be spent by `Dex`.
 5. `divestLiquidity(sharesBurned: nat, minTezDivested: nat, minTokensDivested: nat)`: divests `sharesBurned` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `minTokensDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
 6. `setVotesDelegation(deputy: address, isAllowed: bool)`: allows or prohibits `deputy` to vote with sender shares.
 7. `vote(voter: address, candidate: key_hash)`: votes for `candidate` with shares of `voter`.
 8. `veto(voter: address)`: votes against current delegate with shares of `voter`.
 9. `default()`: default entrypoint to receive payments; received XTZ is distributed between liquidity providers at the end of the delegation circle.
-10. `withdrawProfit(receiver: address)`: withdraws delegation reward of the sender to `receiver` address.
 
 ## Token
 
-Implements standard [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md).
+Implements standard [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or Implements standard [FA2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md) or.
 
 # Testing
 
-Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `key`, `key1`, and `key2`. `Factory`, `Token` and `Token2` contracts should be deployed before and their addresses should be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Look at `test.sh` for better understanding.
+Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `fixtures/key`, `fixtures/key1`, and `fixtures/key2`. `Factory`, `Token` and `Token2` contracts should be deployed before and their addresses should be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Look at `test.sh` for better understanding.
 
 Run:
 
