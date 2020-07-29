@@ -94,7 +94,7 @@ After the command is completed, the exchange can be used.
 ## Factory
 
 - `launchExchange(token: address)`: deploys new empty `Dex` for `token` and stores the address of a new contract;
-- `setFunction(funcIndex: nat, func : (dexAction, dex_storage, address) -> (list(operation), dex_storage))`: add lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
+- `setFunction(func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)), funcIndex: nat`: add lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
 
 ## Dex
 
@@ -108,9 +108,9 @@ Actions have the following parameters (index in the list matches the index in `l
 2. `tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address)`: exchanges `tokensIn` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minTezOut`.
 3. `withdrawProfit(receiver: address)`: withdraws delegation reward of the sender to `receiver` address.
 4. `investLiquidity(minShares: nat)`: allows to own `minShares` by investing tokens and XTZ; the corresponding amount of XTZ should be sent via transaction and amount of tokens should be approved to be spent by `Dex`.
-5. `divestLiquidity(sharesBurned: nat, minTezDivested: nat, minTokensDivested: nat)`: divests `sharesBurned` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `minTokensDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
+5. `divestLiquidity(minTezDivested: nat, minTokensDivested: nat, sharesBurned: nat)`: divests `sharesBurned` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `minTokensDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
 6. `setVotesDelegation(deputy: address, isAllowed: bool)`: allows or prohibits `deputy` to vote with sender shares.
-7. `vote(voter: address, candidate: key_hash)`: votes for `candidate` with shares of `voter`.
+7. `vote(candidate: key_hash, voter: address)`: votes for `candidate` with shares of `voter`.
 8. `veto(voter: address)`: votes against current delegate with shares of `voter`.
 9. `default()`: default entrypoint to receive payments; received XTZ is distributed between liquidity providers at the end of the delegation circle.
 
