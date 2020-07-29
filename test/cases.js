@@ -68,8 +68,7 @@ class Test {
     assert.equal(operation.status, "applied", "Operation was not applied");
 
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
-
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     assert.equal(finalStorage.storage.feeRate, 333);
     assert.equal(
       finalStorage.storage.invariant,
@@ -193,7 +192,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
 
     const fee = parseInt(mutezAmount / initialDexStorage.storage.feeRate);
     const newTezPool = parseInt(
@@ -345,7 +344,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
       (mutezAmount / initialStorage.storage.tezPool) *
         initialStorage.storage.totalShares
@@ -570,7 +569,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
       (mutezAmount / initialStorage.storage.tezPool) *
         initialStorage.storage.totalShares
@@ -591,7 +590,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
       (mutezAmount / initialStorage.storage.tezPool) *
         initialStorage.storage.totalShares
@@ -614,7 +613,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
       (mutezAmount / initialStorage.storage.tezPool) *
         initialStorage.storage.totalShares
@@ -637,7 +636,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
       (mutezAmount / initialStorage.storage.tezPool) *
         initialStorage.storage.totalShares
@@ -660,7 +659,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
       (mutezAmount / initialStorage.storage.tezPool) *
         initialStorage.storage.totalShares
@@ -762,7 +761,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
 
     const fee = parseInt(mutezAmount / initialDexStorage.storage.feeRate);
     const newTezPool = parseInt(
@@ -813,7 +812,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const initialDexStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
 
     const fee = parseInt(mutezAmount / initialDexStorage.storage.feeRate);
     const newTezPool = parseInt(
@@ -860,7 +859,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
       (mutezAmount / initialStorage.storage.tezPool) *
         initialStorage.storage.totalShares
@@ -1032,7 +1031,7 @@ class Test {
     });
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
 
     const fee = parseInt(mutezAmount / initialDexStorage.storage.feeRate);
     const newTezPool = parseInt(
@@ -1095,7 +1094,7 @@ class Test {
     });
     const initialTezBalance = await AliceTezos.tz.getBalance(alicePkh);
 
-    const mutezAmount = parseFloat(tezAmount) * 1000000;
+    const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
 
     const fee = parseInt(mutezAmount / initialDexStorage.storage.feeRate);
     const newTezPool = parseInt(
