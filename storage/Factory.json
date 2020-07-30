@@ -87,20 +87,6 @@
                 { "prim": "CAR" }, { "prim": "CAR" },
                 { "prim": "NONE", "args": [ { "prim": "key_hash" } ] },
                 { "prim": "PAIR" }, { "prim": "PAIR" },
-                { "prim": "NONE", "args": [ { "prim": "key_hash" } ] },
-                { "prim": "PUSH",
-                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
-                { "prim": "NOW" },
-                { "prim": "PUSH",
-                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
-                { "prim": "PAIR" }, { "prim": "PAIR" }, { "prim": "NOW" },
-                { "prim": "NOW" }, { "prim": "PAIR" },
-                { "prim": "PUSH",
-                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
-                { "prim": "PUSH",
-                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
-                { "prim": "PAIR" }, { "prim": "PAIR" }, { "prim": "PAIR" },
-                { "prim": "PAIR" },
                 { "prim": "EMPTY_BIG_MAP",
                   "args":
                     [ { "prim": "nat" },
@@ -135,6 +121,20 @@
                             { "prim": "pair",
                               "args":
                                 [ { "prim": "nat" }, { "prim": "nat" } ] } ] } ] },
+                { "prim": "PAIR" },
+                { "prim": "NONE", "args": [ { "prim": "key_hash" } ] },
+                { "prim": "PUSH",
+                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
+                { "prim": "NOW" },
+                { "prim": "PUSH",
+                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
+                { "prim": "PAIR" }, { "prim": "PAIR" }, { "prim": "NOW" },
+                { "prim": "NOW" }, { "prim": "PAIR" },
+                { "prim": "PUSH",
+                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
+                { "prim": "PUSH",
+                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
+                { "prim": "PAIR" }, { "prim": "PAIR" }, { "prim": "PAIR" },
                 { "prim": "PAIR" }, { "prim": "PAIR" }, { "prim": "PAIR" },
                 { "prim": "PAIR" }, { "prim": "PAIR" },
                 { "prim": "DIG", "args": [ { "int": "1" } ] },
@@ -412,43 +412,6 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%lastCircle" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%lastCircleUpdate" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%loyalty" ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%reward" ] } ] } ] } ],
-                                                                    "annots":
-                                                                    [ "%circleLoyalty" ] },
-                                                                    { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat" },
-                                                                    { "prim":
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
@@ -460,11 +423,11 @@
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%circleCoefficient" ] },
+                                                                    [ "%counter" ] },
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%counter" ] } ] },
+                                                                    [ "%cycleCoefficient" ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -475,58 +438,7 @@
                                                                     { "prim":
                                                                     "timestamp",
                                                                     "annots":
-                                                                    [ "%nextCircle" ] } ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%reward" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%start" ] } ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%totalLoyalty" ] } ] } ] } ],
-                                                                    "annots":
-                                                                    [ "%circles" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%circleCoefficient" ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%counter" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%lastUpdate" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%nextCircle" ] } ] } ] },
+                                                                    [ "%nextCycle" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -546,14 +458,102 @@
                                                                     "annots":
                                                                     [ "%totalLoyalty" ] } ] } ],
                                                                     "annots":
-                                                                    [ "%currentCircle" ] },
+                                                                    [ "%currentCycle" ] },
                                                                     { "prim":
                                                                     "option",
                                                                     "args":
                                                                     [ { "prim":
                                                                     "key_hash" } ],
                                                                     "annots":
-                                                                    [ "%currentDelegated" ] } ] } ] },
+                                                                    [ "%currentDelegated" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%lastCycle" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%lastCycleUpdate" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%loyalty" ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%reward" ] } ] } ] } ],
+                                                                    "annots":
+                                                                    [ "%cycleLoyalty" ] },
+                                                                    { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat" },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%counter" ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%cycleCoefficient" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%lastUpdate" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%nextCycle" ] } ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%reward" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%start" ] } ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%totalLoyalty" ] } ] } ] } ],
+                                                                    "annots":
+                                                                    [ "%cycles" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -714,43 +714,6 @@
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%lastCircle" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%lastCircleUpdate" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%loyalty" ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%reward" ] } ] } ] } ],
-                                                                    "annots":
-                                                                    [ "%circleLoyalty" ] },
-                                                                    { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat" },
-                                                                    { "prim":
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
@@ -762,11 +725,11 @@
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%circleCoefficient" ] },
+                                                                    [ "%counter" ] },
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%counter" ] } ] },
+                                                                    [ "%cycleCoefficient" ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -777,58 +740,7 @@
                                                                     { "prim":
                                                                     "timestamp",
                                                                     "annots":
-                                                                    [ "%nextCircle" ] } ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%reward" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%start" ] } ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%totalLoyalty" ] } ] } ] } ],
-                                                                    "annots":
-                                                                    [ "%circles" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%circleCoefficient" ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%counter" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%lastUpdate" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%nextCircle" ] } ] } ] },
+                                                                    [ "%nextCycle" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -848,14 +760,102 @@
                                                                     "annots":
                                                                     [ "%totalLoyalty" ] } ] } ],
                                                                     "annots":
-                                                                    [ "%currentCircle" ] },
+                                                                    [ "%currentCycle" ] },
                                                                     { "prim":
                                                                     "option",
                                                                     "args":
                                                                     [ { "prim":
                                                                     "key_hash" } ],
                                                                     "annots":
-                                                                    [ "%currentDelegated" ] } ] } ] },
+                                                                    [ "%currentDelegated" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%lastCycle" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%lastCycleUpdate" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%loyalty" ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%reward" ] } ] } ] } ],
+                                                                    "annots":
+                                                                    [ "%cycleLoyalty" ] },
+                                                                    { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat" },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%counter" ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%cycleCoefficient" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%lastUpdate" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%nextCycle" ] } ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%reward" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%start" ] } ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%totalLoyalty" ] } ] } ] } ],
+                                                                    "annots":
+                                                                    [ "%cycles" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -1006,43 +1006,6 @@
                                                           [ { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%lastCircle" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%lastCircleUpdate" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%loyalty" ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%reward" ] } ] } ] } ],
-                                                                    "annots":
-                                                                    [ "%circleLoyalty" ] },
-                                                                  { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat" },
-                                                                    { "prim":
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
@@ -1054,11 +1017,11 @@
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%circleCoefficient" ] },
+                                                                    [ "%counter" ] },
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%counter" ] } ] },
+                                                                    [ "%cycleCoefficient" ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -1069,57 +1032,7 @@
                                                                     { "prim":
                                                                     "timestamp",
                                                                     "annots":
-                                                                    [ "%nextCircle" ] } ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%reward" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%start" ] } ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%totalLoyalty" ] } ] } ] } ],
-                                                                    "annots":
-                                                                    [ "%circles" ] } ] },
-                                                            { "prim": "pair",
-                                                              "args":
-                                                                [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%circleCoefficient" ] },
-                                                                    { "prim":
-                                                                    "nat",
-                                                                    "annots":
-                                                                    [ "%counter" ] } ] },
-                                                                    { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%lastUpdate" ] },
-                                                                    { "prim":
-                                                                    "timestamp",
-                                                                    "annots":
-                                                                    [ "%nextCircle" ] } ] } ] },
+                                                                    [ "%nextCycle" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -1139,14 +1052,101 @@
                                                                     "annots":
                                                                     [ "%totalLoyalty" ] } ] } ],
                                                                     "annots":
-                                                                    [ "%currentCircle" ] },
+                                                                    [ "%currentCycle" ] },
                                                                   { "prim":
                                                                     "option",
                                                                     "args":
                                                                     [ { "prim":
                                                                     "key_hash" } ],
                                                                     "annots":
-                                                                    [ "%currentDelegated" ] } ] } ] },
+                                                                    [ "%currentDelegated" ] } ] },
+                                                            { "prim": "pair",
+                                                              "args":
+                                                                [ { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%lastCycle" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%lastCycleUpdate" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%loyalty" ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%reward" ] } ] } ] } ],
+                                                                    "annots":
+                                                                    [ "%cycleLoyalty" ] },
+                                                                  { "prim":
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat" },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%counter" ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%cycleCoefficient" ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%lastUpdate" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%nextCycle" ] } ] } ] },
+                                                                    { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "pair",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%reward" ] },
+                                                                    { "prim":
+                                                                    "timestamp",
+                                                                    "annots":
+                                                                    [ "%start" ] } ] },
+                                                                    { "prim":
+                                                                    "nat",
+                                                                    "annots":
+                                                                    [ "%totalLoyalty" ] } ] } ] } ],
+                                                                    "annots":
+                                                                    [ "%cycles" ] } ] } ] },
                                                       { "prim": "pair",
                                                         "args":
                                                           [ { "prim": "pair",

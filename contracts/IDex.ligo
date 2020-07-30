@@ -3,21 +3,21 @@ type vote_info is record
   candidate: option(key_hash);
 end
 
-type user_circle_info is record
+type user_cycle_info is record
   reward: nat;
   loyalty: nat;
-  lastCircle: nat;
-  lastCircleUpdate: timestamp;
+  lastCycle: nat;
+  lastCycleUpdate: timestamp;
 end
 
-type circle_info is record
+type cycle_info is record
   reward: nat;
   counter: nat;
   start: timestamp;
   lastUpdate: timestamp;
   totalLoyalty: nat;
-  nextCircle: timestamp;
-  circleCoefficient: nat;
+  nextCycle: timestamp;
+  cycleCoefficient: nat;
 end
 
 type dex_storage is record 
@@ -37,9 +37,9 @@ type dex_storage is record
   delegated: option(key_hash);
   currentDelegated : option(key_hash);
   totalVotes: nat;
-  currentCircle: circle_info;
-  circles: big_map(nat, circle_info);
-  circleLoyalty: big_map(address, user_circle_info);
+  currentCycle: cycle_info;
+  cycles: big_map(nat, cycle_info);
+  cycleLoyalty: big_map(address, user_cycle_info);
 end
 
 type tezToTokenPaymentArgs is record 

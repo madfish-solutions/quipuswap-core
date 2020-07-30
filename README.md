@@ -98,7 +98,7 @@ After the command is completed, the exchange can be used.
 
 ## Dex
 
-- `default()`: default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation circle.
+- `default()`: default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation cycle.
 - `use(funcIndex: nat, action: dexAction)`: executes the function with index `funcIndex` from `lambdas` with parameters `action`.
 
 Actions have the following parameters (index in the list matches the index in `lambdas`):
@@ -112,7 +112,7 @@ Actions have the following parameters (index in the list matches the index in `l
 6. `setVotesDelegation(deputy: address, isAllowed: bool)`: allows or prohibits `deputy` to vote with sender shares.
 7. `vote(candidate: key_hash, voter: address)`: votes for `candidate` with shares of `voter`.
 8. `veto(voter: address)`: votes against current delegate with shares of `voter`.
-9. `default()`: default entrypoint to receive payments; received XTZ is distributed between liquidity providers at the end of the delegation circle.
+9. `default()`: default entrypoint to receive payments; received XTZ is distributed between liquidity providers at the end of the delegation cycle.
 
 ## Token
 

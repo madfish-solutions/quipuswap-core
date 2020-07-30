@@ -22,20 +22,20 @@
                                             (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver)))
                                         (or (address %veto) (pair %vote (key_hash %candidate) (address %voter)))))
                                 (address %withdrawProfit))
-                            (pair (pair (pair (pair (pair (big_map %circleLoyalty
-                                                             address
-                                                             (pair (pair (nat %lastCircle) (timestamp %lastCircleUpdate))
-                                                                   (pair (nat %loyalty) (nat %reward))))
-                                                          (big_map %circles
-                                                             nat
-                                                             (pair (pair (pair (nat %circleCoefficient) (nat %counter))
-                                                                         (pair (timestamp %lastUpdate) (timestamp %nextCircle)))
-                                                                   (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))))
-                                                    (pair (pair %currentCircle
-                                                             (pair (pair (nat %circleCoefficient) (nat %counter))
-                                                                   (pair (timestamp %lastUpdate) (timestamp %nextCircle)))
+                            (pair (pair (pair (pair (pair (pair %currentCycle
+                                                             (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                                   (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                                              (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
-                                                          (option %currentDelegated key_hash)))
+                                                          (option %currentDelegated key_hash))
+                                                    (pair (big_map %cycleLoyalty
+                                                             address
+                                                             (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
+                                                                   (pair (nat %loyalty) (nat %reward))))
+                                                          (big_map %cycles
+                                                             nat
+                                                             (pair (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                                         (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
+                                                                   (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty))))))
                                               (pair (pair (option %delegated key_hash) (address %factoryAddress))
                                                     (pair (nat %feeRate) (nat %invariant))))
                                         (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
@@ -49,20 +49,20 @@
                                         (big_map %votes key_hash nat))))
                       address)
                 (pair (list operation)
-                      (pair (pair (pair (pair (pair (big_map %circleLoyalty
-                                                       address
-                                                       (pair (pair (nat %lastCircle) (timestamp %lastCircleUpdate))
-                                                             (pair (nat %loyalty) (nat %reward))))
-                                                    (big_map %circles
-                                                       nat
-                                                       (pair (pair (pair (nat %circleCoefficient) (nat %counter))
-                                                                   (pair (timestamp %lastUpdate) (timestamp %nextCircle)))
-                                                             (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))))
-                                              (pair (pair %currentCircle
-                                                       (pair (pair (nat %circleCoefficient) (nat %counter))
-                                                             (pair (timestamp %lastUpdate) (timestamp %nextCircle)))
+                      (pair (pair (pair (pair (pair (pair %currentCycle
+                                                       (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                             (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                                        (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
-                                                    (option %currentDelegated key_hash)))
+                                                    (option %currentDelegated key_hash))
+                                              (pair (big_map %cycleLoyalty
+                                                       address
+                                                       (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
+                                                             (pair (nat %loyalty) (nat %reward))))
+                                                    (big_map %cycles
+                                                       nat
+                                                       (pair (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                                   (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
+                                                             (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty))))))
                                         (pair (pair (option %delegated key_hash) (address %factoryAddress))
                                               (pair (nat %feeRate) (nat %invariant))))
                                   (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
@@ -75,20 +75,20 @@
                                            (pair (set %allowances address) (option %candidate key_hash))))
                                   (big_map %votes key_hash nat))))))
           (pair %storage
-             (pair (pair (pair (pair (big_map %circleLoyalty
-                                        address
-                                        (pair (pair (nat %lastCircle) (timestamp %lastCircleUpdate))
-                                              (pair (nat %loyalty) (nat %reward))))
-                                     (big_map %circles
-                                        nat
-                                        (pair (pair (pair (nat %circleCoefficient) (nat %counter))
-                                                    (pair (timestamp %lastUpdate) (timestamp %nextCircle)))
-                                              (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))))
-                               (pair (pair %currentCircle
-                                        (pair (pair (nat %circleCoefficient) (nat %counter))
-                                              (pair (timestamp %lastUpdate) (timestamp %nextCircle)))
+             (pair (pair (pair (pair (pair %currentCycle
+                                        (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                              (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                         (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
-                                     (option %currentDelegated key_hash)))
+                                     (option %currentDelegated key_hash))
+                               (pair (big_map %cycleLoyalty
+                                        address
+                                        (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
+                                              (pair (nat %loyalty) (nat %reward))))
+                                     (big_map %cycles
+                                        nat
+                                        (pair (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                    (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
+                                              (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty))))))
                          (pair (pair (option %delegated key_hash) (address %factoryAddress))
                                (pair (nat %feeRate) (nat %invariant))))
                    (pair (pair (pair (big_map %shares address nat) (nat %tezPool))

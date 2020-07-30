@@ -2,7 +2,7 @@
 
 // TODO:
 //  - add veto update in invest/divest 
-const circlePeriod : int = 3 // 1474560
+const cyclePeriod : int = 3 // 1474560
 const vetoPeriod : int = 7889229;
 
 type transferContents is record[
@@ -41,8 +41,8 @@ block {
         s.totalShares := 1000n;
         
          // update user loyalty
-        s.currentCircle.lastUpdate := Tezos.now;
-        s.circleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCircle = 0n; lastCircleUpdate = Tezos.now; end;  
+        s.currentCycle.lastUpdate := Tezos.now;
+        s.cycleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
         const t : transferContentsMichelson = Layout.convert_to_right_comb((record [
                   to_ = this; 
                   token_id = s.tokenId;
@@ -320,30 +320,30 @@ block {
   | InvestLiquidity(minShares) -> {
     const sharesPurchased : nat = (Tezos.amount / 1mutez) * s.totalShares / s.tezPool;
     if minShares > 0n and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
-    s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
-    s.currentCircle.lastUpdate := Tezos.now;
+    s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalShares;
+    s.currentCycle.lastUpdate := Tezos.now;
     const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalShares;
     if tokensRequired = 0n then failwith("Dex/dangerous-rate") else {
       const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
       // update user loyalty
-      var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
+      var userCycle : user_cycle_info := case s.cycleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCycle = s.currentCycle.counter; lastCycleUpdate = Tezos.now; end
         | Some(c) -> c
       end;
-      if userCircle.lastCircle =/= s.currentCircle.counter then {
-        var circle : circle_info := get_force(userCircle.lastCircle, s.circles);
-        userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(circle.nextCircle - userCircle.lastCircleUpdate)) / circle.totalLoyalty;
-        userCircle.loyalty := 0n;
-        userCircle.lastCircleUpdate := circle.start;
+      if userCycle.lastCycle =/= s.currentCycle.counter then {
+        var cycle : cycle_info := get_force(userCycle.lastCycle, s.cycles);
+        userCycle.reward := userCycle.reward + cycle.reward * (userCycle.loyalty + share * abs(cycle.nextCycle - userCycle.lastCycleUpdate)) / cycle.totalLoyalty;
+        userCycle.loyalty := 0n;
+        userCycle.lastCycleUpdate := cycle.start;
       } else skip ;
-      if s.currentCircle.counter - userCircle.lastCircle > 1 then {
-        const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
-        const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
-        userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
+      if s.currentCycle.counter - userCycle.lastCycle > 1 then {
+        const lastFullCycle : cycle_info = get_force(abs(s.currentCycle.counter - 1n), s.cycles);
+        const lastUserCycle : cycle_info = get_force(userCycle.lastCycle, s.cycles);
+        userCycle.reward := userCycle.reward + share * abs(lastFullCycle.cycleCoefficient - lastUserCycle.cycleCoefficient);
       } else skip ;
-      userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
-      userCircle.lastCircleUpdate := Tezos.now;
-      userCircle.lastCircle := s.currentCircle.counter;
-      s.circleLoyalty[Tezos.sender] := userCircle;
+      userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
+      userCycle.lastCycleUpdate := Tezos.now;
+      userCycle.lastCycle := s.currentCycle.counter;
+      s.cycleLoyalty[Tezos.sender] := userCycle;
       s.shares[Tezos.sender] := share + sharesPurchased;
       s.tezPool := s.tezPool + Tezos.amount / 1mutez;
       s.tokenPool := s.tokenPool + tokensRequired;
@@ -414,37 +414,37 @@ block {
       if args.shares > 0n and args.shares <= share then {
         s.shares[Tezos.sender] := abs(share - args.shares);
 
-        s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
-        s.currentCircle.lastUpdate := Tezos.now;
+        s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalShares;
+        s.currentCycle.lastUpdate := Tezos.now;
 
         const tezDivested : nat = s.tezPool * args.shares / s.totalShares;
         const tokensDivested : nat = s.tokenPool * args.shares / s.totalShares;
 
         if args.minTez > 0n and args.minTokens > 0n and tezDivested >= args.minTez and tokensDivested >= args.minTokens then {
-          var userCircle : user_circle_info := get_force(Tezos.sender, s.circleLoyalty);
-          if userCircle.lastCircle =/= s.currentCircle.counter then {
-            case s.circles[userCircle.lastCircle] of Some(circle) -> {
-              userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(circle.nextCircle - userCircle.lastCircleUpdate)) / circle.totalLoyalty;
-              userCircle.loyalty := 0n;
-              userCircle.lastCircleUpdate := circle.start;
+          var userCycle : user_cycle_info := get_force(Tezos.sender, s.cycleLoyalty);
+          if userCycle.lastCycle =/= s.currentCycle.counter then {
+            case s.cycles[userCycle.lastCycle] of Some(cycle) -> {
+              userCycle.reward := userCycle.reward + cycle.reward * (userCycle.loyalty + share * abs(cycle.nextCycle - userCycle.lastCycleUpdate)) / cycle.totalLoyalty;
+              userCycle.loyalty := 0n;
+              userCycle.lastCycleUpdate := cycle.start;
             } 
-            | None -> failwith("Dex/no-circle")
+            | None -> failwith("Dex/no-cycle")
             end;
           } else skip ;
 
-          if s.currentCircle.counter - userCircle.lastCircle > 1 then 
-            case s.circles[abs(s.currentCircle.counter - 1n)] of 
-              None -> failwith("Dex/no-full-circle")
-              | Some(lastFullCircle) -> case s.circles[userCircle.lastCircle] of 
-                None -> failwith("Dex/no-full-circle")
-                | Some(lastUserCircle) -> userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient)
+          if s.currentCycle.counter - userCycle.lastCycle > 1 then 
+            case s.cycles[abs(s.currentCycle.counter - 1n)] of 
+              None -> failwith("Dex/no-full-cycle")
+              | Some(lastFullCycle) -> case s.cycles[userCycle.lastCycle] of 
+                None -> failwith("Dex/no-full-cycle")
+                | Some(lastUserCycle) -> userCycle.reward := userCycle.reward + share * abs(lastFullCycle.cycleCoefficient - lastUserCycle.cycleCoefficient)
                 end
               end
              else skip ;
-          userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
-          userCircle.lastCircleUpdate := Tezos.now;
-          userCircle.lastCircle := s.currentCircle.counter;
-          s.circleLoyalty[Tezos.sender] := userCircle;
+          userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
+          userCycle.lastCycleUpdate := Tezos.now;
+          userCycle.lastCycle := s.currentCycle.counter;
+          s.cycleLoyalty[Tezos.sender] := userCycle;
 
           s.totalShares := abs(s.totalShares - args.shares);
           s.tezPool := abs(s.tezPool - tezDivested);
@@ -488,17 +488,17 @@ block {
 
 function receiveReward (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is 
 block {
-  s.currentCircle.reward := s.currentCircle.reward + Tezos.amount / 1mutez;
+  s.currentCycle.reward := s.currentCycle.reward + Tezos.amount / 1mutez;
   var operations : list(operation) := (nil: list(operation)); 
-  if s.currentCircle.nextCircle < Tezos.now then block {
-    s.currentCircle.nextCircle := Tezos.now;
-    s.currentCircle.circleCoefficient := abs(Tezos.now - s.currentCircle.start) * s.currentCircle.reward / s.currentCircle.totalLoyalty + s.currentCircle.circleCoefficient;
-    s.circles[s.currentCircle.counter] := s.currentCircle;
-    s.currentCircle.reward := 0n;
-    s.currentCircle.counter := s.currentCircle.counter + 1n;
-    s.currentCircle.totalLoyalty := 0n;
-    s.currentCircle.start := Tezos.now;
-    s.currentCircle.nextCircle := Tezos.now + circlePeriod;
+  if s.currentCycle.nextCycle < Tezos.now then block {
+    s.currentCycle.nextCycle := Tezos.now;
+    s.currentCycle.cycleCoefficient := abs(Tezos.now - s.currentCycle.start) * s.currentCycle.reward / s.currentCycle.totalLoyalty + s.currentCycle.cycleCoefficient;
+    s.cycles[s.currentCycle.counter] := s.currentCycle;
+    s.currentCycle.reward := 0n;
+    s.currentCycle.counter := s.currentCycle.counter + 1n;
+    s.currentCycle.totalLoyalty := 0n;
+    s.currentCycle.start := Tezos.now;
+    s.currentCycle.nextCycle := Tezos.now + cyclePeriod;
     if case s.delegated of None -> False
       | Some(delegated) ->
         case s.currentDelegated of None -> True
@@ -512,8 +512,8 @@ block {
       s.veto := 0n;
     } else skip ;
   } else skip ;
-  s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
-  s.currentCircle.lastUpdate := Tezos.now;
+  s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalShares;
+  s.currentCycle.lastUpdate := Tezos.now;
 } with (operations, s)
 
 function withdrawProfit (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
@@ -529,25 +529,25 @@ block {
   | Vote(n) -> failwith("00")
   | Veto(voter) -> failwith("00")
   | WithdrawProfit(n) -> {
-    var userCircle : user_circle_info := get_force(Tezos.sender, s.circleLoyalty);
+    var userCycle : user_cycle_info := get_force(Tezos.sender, s.cycleLoyalty);
     var share : nat := get_force(Tezos.sender, s.shares);
-    if userCircle.lastCircle =/= s.currentCircle.counter then {
-      var circle : circle_info := get_force(userCircle.lastCircle, s.circles);
-      userCircle.reward := userCircle.reward + circle.reward * (userCircle.loyalty + share * abs(circle.nextCircle - userCircle.lastCircleUpdate)) / circle.totalLoyalty;
-      userCircle.loyalty := 0n;
-      userCircle.lastCircleUpdate := circle.start;
+    if userCycle.lastCycle =/= s.currentCycle.counter then {
+      var cycle : cycle_info := get_force(userCycle.lastCycle, s.cycles);
+      userCycle.reward := userCycle.reward + cycle.reward * (userCycle.loyalty + share * abs(cycle.nextCycle - userCycle.lastCycleUpdate)) / cycle.totalLoyalty;
+      userCycle.loyalty := 0n;
+      userCycle.lastCycleUpdate := cycle.start;
     } else skip ;
-    if s.currentCircle.counter - userCircle.lastCircle > 1 then {
-      const lastFullCircle : circle_info = get_force(abs(s.currentCircle.counter - 1n), s.circles);
-      const lastUserCircle : circle_info = get_force(userCircle.lastCircle, s.circles);
-      userCircle.reward := userCircle.reward + share * abs(lastFullCircle.circleCoefficient - lastUserCircle.circleCoefficient);
+    if s.currentCycle.counter - userCycle.lastCycle > 1 then {
+      const lastFullCycle : cycle_info = get_force(abs(s.currentCycle.counter - 1n), s.cycles);
+      const lastUserCycle : cycle_info = get_force(userCycle.lastCycle, s.cycles);
+      userCycle.reward := userCycle.reward + share * abs(lastFullCycle.cycleCoefficient - lastUserCycle.cycleCoefficient);
     } else skip ;
-    userCircle.loyalty := userCircle.loyalty + share * abs(Tezos.now-userCircle.lastCircleUpdate);
-    userCircle.lastCircleUpdate := Tezos.now;
-    userCircle.lastCircle := s.currentCircle.counter;
-    share := userCircle.reward;
-    userCircle.reward := 0n;
-    s.circleLoyalty[Tezos.sender] := userCircle;
+    userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
+    userCycle.lastCycleUpdate := Tezos.now;
+    userCycle.lastCycle := s.currentCycle.counter;
+    share := userCycle.reward;
+    userCycle.reward := 0n;
+    s.cycleLoyalty[Tezos.sender] := userCycle;
     operations := transaction(unit, share * 1mutez, (get_contract(n) : contract(unit))) # operations;
   }
   end
@@ -584,18 +584,18 @@ block {
           delegated = (None: option(key_hash));      
           currentDelegated = (None: option(key_hash));      
           totalVotes = 0n;      
-          currentCircle = 
+          currentCycle = 
             record         
               reward = 0n;         
               counter = 0n;         
               start = Tezos.now; 
-              circleCoefficient = 0n;        
+              cycleCoefficient = 0n;        
               lastUpdate = Tezos.now;         
               totalLoyalty = 0n;         
-              nextCircle = Tezos.now;       
+              nextCycle = Tezos.now;       
             end;
-          circles = (big_map end : big_map(nat, circle_info));      
-          circleLoyalty = (big_map end : big_map(address, user_circle_info));   
+          cycles = (big_map end : big_map(nat, cycle_info));      
+          cycleLoyalty = (big_map end : big_map(address, user_cycle_info));   
        end;   
     lambdas = s.lambdas;
     end);
