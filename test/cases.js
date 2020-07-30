@@ -220,7 +220,7 @@ class Test {
     const secondDexContract = await AliceTezos.contract.at(
       await this.getDexAddress(tokenAddressTo)
     );
-    const middleTezAmount = parseInt(minTezOut);
+    const middleTezAmount = 10000;
 
     try {
       await dex.tokenToTokenSwap(
@@ -236,24 +236,17 @@ class Test {
   }
   static async tokenToTokenPaymentToUnexistedToken(dexAddress, tokenAddressTo) {
     let AliceTezos = await setup();
-    let dex = await Dex.init(AliceTezos, dexAddress);
-    let tokensIn = "1000";
-    const tokensOut = 1;
-    const secondDexContract = await AliceTezos.contract.at(
-      await this.getDexAddress(tokenAddressTo)
-    );
-    const middleTezAmount = parseInt(minTezOut);
 
     try {
-      await dex.tokenToTokenSwap(
-        tokensIn,
-        tokensOut,
-        secondDexContract,
-        AliceTezos.format("mutez", "tz", middleTezAmount).toNumber()
+      const secondDexContract = await AliceTezos.contract.at(
+        await this.getDexAddress(tokenAddressTo)
       );
       assert(false, "Adding token pair should fail");
     } catch (e) {
-      assert.equal(e.message, "MAP FIND");
+      assert.equal(
+        e.message,
+        'Http error response: (400) Failed to parsed an argument in path. After "chains/main/blocks/head/context/contracts/undefined", the value "Cannot parse contract id" is not acceptable for type "contract_id"'
+      );
     }
   }
 
@@ -266,11 +259,16 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
     const tokensOut = 1;
+    const secondDexContract = await AliceTezos.contract.at(
+      await this.getDexAddress(tokenAddressTo)
+    );
+    const middleTezAmount = 10000;
 
     let operation = await dex.tokenToTokenPayment(
       tokensIn,
       tokensOut,
-      tokenAddressTo,
+      secondDexContract,
+      AliceTezos.format("mutez", "tz", middleTezAmount).toNumber(),
       receiver
     );
     assert.equal(operation.status, "applied", "Operation was not applied");
@@ -284,7 +282,7 @@ class Test {
     const secondDexContract = await AliceTezos.contract.at(
       await this.getDexAddress(tokenAddressTo)
     );
-    const middleTezAmount = parseInt(minTezOut);
+    const middleTezAmount = 10000;
 
     try {
       await dex.tokenToTokenSwap(
@@ -310,7 +308,7 @@ class Test {
     const secondDexContract = await AliceTezos.contract.at(
       await this.getDexAddress(tokenAddressTo)
     );
-    const middleTezAmount = parseInt(minTezOut);
+    const middleTezAmount = 10000;
 
     try {
       await dex.tokenToTokenSwap(

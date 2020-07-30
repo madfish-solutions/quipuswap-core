@@ -18,8 +18,6 @@ const { Test } = require("./cases");
 
 describe("Correct calls", function () {
   before(async function () {
-    // dexAddress1 = await Test.getDexAddress(tokenAddress1);
-    // dexAddress2 = await Test.getDexAddress(tokenAddress2);
     dexAddress1 = await Test.before(tokenAddress1);
     dexAddress2 = await Test.before(tokenAddress2);
   });
@@ -225,36 +223,36 @@ describe("Incorrect Factory calls", function () {
     });
   });
 
-  // describe("TokenToTokenPayment()", function () {
-  //   it("shouldn't swap token if no token is provided", async function () {
-  //     await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
-  //   });
-  //   it("shouldn't swap token if desirable output is zero", async function () {
-  //     await Test.tokenToTokenPaymentWithoutTokensOut(
-  //       dexAddress1,
-  //       tokenAddress2
-  //     );
-  //   });
-  //   it("shouldn't swap token if token output is too high", async function () {
-  //     await Test.tokenToTokenPaymentWithHighTokensOut(
-  //       dexAddress1,
-  //       tokenAddress2
-  //     );
-  //   });
-  //   it("should swap token even if receiver is explicit account(contract)", async function () {
-  //     await Test.tokenToTokenPaymentWithExplicitReceiver(
-  //       dexAddress1,
-  //       tokenAddress2,
-  //       dexAddress1
-  //     );
-  //   });
-  //   it("shouldn't swap token if token pair doesn't exist", async function () {
-  //     await Test.tokenToTokenPaymentToUnexistedToken(
-  //       dexAddress1,
-  //       factoryAddress
-  //     );
-  //   });
-  // });
+  describe("TokenToTokenPayment()", function () {
+    it("shouldn't swap token if no token is provided", async function () {
+      await Test.tokenToTokenPaymentWithoutTokensIn(dexAddress1, tokenAddress2);
+    });
+    it("shouldn't swap token if desirable output is zero", async function () {
+      await Test.tokenToTokenPaymentWithoutTokensOut(
+        dexAddress1,
+        tokenAddress2
+      );
+    });
+    it("shouldn't swap token if token output is too high", async function () {
+      await Test.tokenToTokenPaymentWithHighTokensOut(
+        dexAddress1,
+        tokenAddress2
+      );
+    });
+    it("should swap token even if receiver is explicit account(contract)", async function () {
+      await Test.tokenToTokenPaymentWithExplicitReceiver(
+        dexAddress1,
+        tokenAddress2,
+        dexAddress1
+      );
+    });
+    it("shouldn't swap token if token pair doesn't exist", async function () {
+      await Test.tokenToTokenPaymentToUnexistedToken(
+        dexAddress1,
+        factoryAddress
+      );
+    });
+  });
 
   describe("InvestLiquidity()", function () {
     it("shouldn't invest token if no tez is provided", async function () {
