@@ -104,16 +104,11 @@ class Dex {
   }
 
   async tezToTokenSwap(minTokens, tezAmount) {
-    const operation = await this.contract.methods
-      .use(
-        1,
-        "tezToTokenPayment",
-        minTokens,
-        await this.tezos.signer.publicKeyHash()
-      )
-      .send({ amount: tezAmount });
-    await operation.confirmation();
-    return operation;
+    return await tezToTokenPayment(
+      minTokens,
+      tezAmount,
+      await this.tezos.signer.publicKeyHash()
+    );
   }
 
   async tezToTokenPayment(minTokens, tezAmount, receiver) {
@@ -125,18 +120,11 @@ class Dex {
   }
 
   async tokenToTezSwap(tokenAmount, minTezOut) {
-    await this.approve(tokenAmount, this.contract.address);
-    const operation = await this.contract.methods
-      .use(
-        2,
-        "tokenToTezPayment",
-        tokenAmount,
-        minTezOut,
-        await this.tezos.signer.publicKeyHash()
-      )
-      .send();
-    await operation.confirmation();
-    return operation;
+    return await tokenToTezPayment(
+      tokenAmount,
+      minTezOut,
+      await this.tezos.signer.publicKeyHash()
+    );
   }
 
   async tokenToTezPayment(tokenAmount, minTezOut, receiver) {

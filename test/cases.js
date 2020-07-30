@@ -847,8 +847,8 @@ class Test {
 
     const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
     const minShares = parseInt(
-      (mutezAmount / initialStorage.storage.tezPool) *
-        initialStorage.storage.totalShares
+      (mutezAmount * initialStorage.storage.totalShares) /
+        initialStorage.storage.tezPool
     );
     const tokenAmount = parseInt(
       (minShares * initialStorage.storage.tokenPool) /
