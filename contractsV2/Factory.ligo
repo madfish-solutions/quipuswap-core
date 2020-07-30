@@ -318,14 +318,12 @@ block {
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
   | InvestLiquidity(minShares) -> {
-    const tezPerShare : nat = s.tezPool / s.totalShares;
-    const sharesPurchased : nat = (Tezos.amount / 1mutez) / tezPerShare;
-    if minShares > 0n and tezPerShare > 0n and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
+    const sharesPurchased : nat = (Tezos.amount / 1mutez) * s.totalShares / s.tezPool;
+    if minShares > 0n and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
     s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
     s.currentCircle.lastUpdate := Tezos.now;
-    const tokensPerShare : nat = s.tokenPool / s.totalShares;
-    const tokensRequired : nat = sharesPurchased * tokensPerShare;
-    if tokensPerShare = 0n then failwith("Dex/dangerous-rate") else {
+    const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalShares;
+    if tokensRequired = 0n then failwith("Dex/dangerous-rate") else {
       const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
       // update user loyalty
       var userCircle : user_circle_info := case s.circleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCircle = s.currentCircle.counter; lastCircleUpdate = Tezos.now; end
@@ -419,10 +417,8 @@ block {
         s.currentCircle.totalLoyalty := s.currentCircle.totalLoyalty + abs(Tezos.now - s.currentCircle.lastUpdate) * s.totalShares;
         s.currentCircle.lastUpdate := Tezos.now;
 
-        const tezPerShare : nat = s.tezPool / s.totalShares;
-        const tokensPerShare : nat = s.tokenPool / s.totalShares;
-        const tezDivested : nat = tezPerShare * args.shares;
-        const tokensDivested : nat = tokensPerShare * args.shares;
+        const tezDivested : nat = s.tezPool * args.shares / s.totalShares;
+        const tokensDivested : nat = s.tokenPool * args.shares / s.totalShares;
 
         if args.minTez > 0n and args.minTokens > 0n and tezDivested >= args.minTez and tokensDivested >= args.minTokens then {
           var userCircle : user_circle_info := get_force(Tezos.sender, s.circleLoyalty);

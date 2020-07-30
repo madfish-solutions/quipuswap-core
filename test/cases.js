@@ -217,9 +217,18 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "0";
     const tokensOut = 1;
+    const secondDexContract = await AliceTezos.contract.at(
+      await this.getDexAddress(tokenAddressTo)
+    );
+    const middleTezAmount = parseInt(minTezOut);
 
     try {
-      await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
+      await dex.tokenToTokenSwap(
+        tokensIn,
+        tokensOut,
+        secondDexContract,
+        AliceTezos.format("mutez", "tz", middleTezAmount).toNumber()
+      );
       assert(false, "Adding token pair should fail");
     } catch (e) {
       assert.equal(e.message, "Dex/wrong-params");
@@ -230,9 +239,18 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     let tokensIn = "1000";
     const tokensOut = 1;
+    const secondDexContract = await AliceTezos.contract.at(
+      await this.getDexAddress(tokenAddressTo)
+    );
+    const middleTezAmount = parseInt(minTezOut);
 
     try {
-      await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
+      await dex.tokenToTokenSwap(
+        tokensIn,
+        tokensOut,
+        secondDexContract,
+        AliceTezos.format("mutez", "tz", middleTezAmount).toNumber()
+      );
       assert(false, "Adding token pair should fail");
     } catch (e) {
       assert.equal(e.message, "MAP FIND");
@@ -263,9 +281,18 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     const tokensIn = "1000";
     const tokensOut = 0;
+    const secondDexContract = await AliceTezos.contract.at(
+      await this.getDexAddress(tokenAddressTo)
+    );
+    const middleTezAmount = parseInt(minTezOut);
 
     try {
-      await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
+      await dex.tokenToTokenSwap(
+        tokensIn,
+        tokensOut,
+        secondDexContract,
+        AliceTezos.format("mutez", "tz", middleTezAmount).toNumber()
+      );
       assert(false, "Adding token pair should fail");
     } catch (e) {
       assert.equal(e.message, "Dex/wrong-params");
@@ -280,9 +307,18 @@ class Test {
     let dex = await Dex.init(AliceTezos, dexAddress);
     const tokensIn = "1000";
     const tokensOut = 1000000000;
+    const secondDexContract = await AliceTezos.contract.at(
+      await this.getDexAddress(tokenAddressTo)
+    );
+    const middleTezAmount = parseInt(minTezOut);
 
     try {
-      await dex.tokenToTokenSwap(tokensIn, tokensOut, tokenAddressTo);
+      await dex.tokenToTokenSwap(
+        tokensIn,
+        tokensOut,
+        secondDexContract,
+        AliceTezos.format("mutez", "tz", middleTezAmount).toNumber()
+      );
       assert(false, "Adding token pair should fail");
     } catch (e) {
       assert.equal(e.message, "Dex/high-min-out");
@@ -932,14 +968,18 @@ class Test {
       initialDexStorage.storage.invariant / tempTokenPool
     );
 
-    const minTezOut = parseInt(
-      parseInt(initialDexStorage.storage.tezPool - newTezPool)
-    );
+    const minTezOut = parseInt(initialDexStorage.storage.tezPool - newTezPool);
     const tokensOut = 1;
+    const secondDexContract = await AliceTezos.contract.at(
+      await this.getDexAddress(tokenAddressTo)
+    );
+    const middleTezAmount = parseInt(minTezOut);
+
     let operation = await dex.tokenToTokenSwap(
       tokensIn,
       tokensOut,
-      tokenAddressTo
+      secondDexContract,
+      AliceTezos.format("mutez", "tz", middleTezAmount).toNumber()
     );
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
@@ -1164,14 +1204,14 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
-    const tezPerShare = parseInt(
-      initialStorage.storage.tezPool / initialStorage.storage.totalShares
+    const minTez = parseInt(
+      (initialStorage.storage.tezPool * sharesBurned) /
+        initialStorage.storage.totalShares
     );
-    const tokensPerShare = parseInt(
-      initialStorage.storage.tokenPool / initialStorage.storage.totalShares
+    const minTokens = parseInt(
+      (initialStorage.storage.tokenPool * sharesBurned) /
+        initialStorage.storage.totalShares
     );
-    const minTez = tezPerShare * sharesBurned;
-    const minTokens = tokensPerShare * sharesBurned;
     let operation = await dex.divestLiquidity(minTokens, minTez, sharesBurned);
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });

@@ -18,6 +18,8 @@ const { Test } = require("./cases");
 
 describe("Correct calls", function () {
   before(async function () {
+    // dexAddress1 = await Test.getDexAddress(tokenAddress1);
+    // dexAddress2 = await Test.getDexAddress(tokenAddress2);
     dexAddress1 = await Test.before(tokenAddress1);
     dexAddress2 = await Test.before(tokenAddress2);
   });
@@ -79,15 +81,15 @@ describe("Correct calls", function () {
     });
   });
 
-  // describe("TokenToTokenSwap()", function () {
-  //   it("should exchange token to token 1", async function () {
-  //     await Test.tokenToTokenSwap(dexAddress1, tokenAddress1, tokenAddress2);
-  //   });
+  describe("TokenToTokenSwap()", function () {
+    it("should exchange token to token 1", async function () {
+      await Test.tokenToTokenSwap(dexAddress1, tokenAddress1, tokenAddress2);
+    });
 
-  //   it("should exchange token to token 2", async function () {
-  //     await Test.tokenToTokenSwap(dexAddress2, tokenAddress2, tokenAddress1);
-  //   });
-  // });
+    it("should exchange token to token 2", async function () {
+      await Test.tokenToTokenSwap(dexAddress2, tokenAddress2, tokenAddress1);
+    });
+  });
 
   describe("DivestLiquidity()", function () {
     it("should divest liquidity 1", async function () {

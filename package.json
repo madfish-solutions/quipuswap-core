@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "config": {
     "network": "http://127.0.0.1:8732",
-    "network2": "https://testnet-tezos.giganode.io",
+    "network1": "https://testnet-tezos.giganode.io",
     "standard": "fa1.2"
   },
   "scripts": {

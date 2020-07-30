@@ -151,50 +151,46 @@ class Dex {
   async tokenToTokenSwap(
     tokenAmount,
     minTokensOut,
-    tezAmount,
-    secondDexContract
+    secondDexContract,
+    middleTezAmount
   ) {
-    await this.approve(tokenAmount, this.contract.address);
-    // const batch = tezos
-    //   .batch([])
-    //   .withTransfer(
-    //     this.contract.methods
-    //       .use(
-    //         2,
-    //         "tokenToTezPayment",
-    //         tokenAmount,
-    //         1,
-    //         await this.tezos.signer.publicKeyHash()
-    //       )
-    //       .toTransferParams()
-    //   )
-    //   .withTransfer(
-    //     secondDexContract.methods
-    //       .use(
-    //         1,
-    //         "tezToTokenPayment",
-    //         minTokensOut,
-    //         await this.tezos.signer.publicKeyHash()
-    //       )
-    //       .toTransferParams({ amount: tezAmount.toNumber() })
-    //   );
-    // const operation = await batch.send();
-    // await operation.confirmation();
-    // return operation;
+    return await this.tokenToTokenPayment(
+      tokenAmount,
+      minTokensOut,
+      secondDexContract,
+      middleTezAmount,
+      await this.tezos.signer.publicKeyHash()
+    );
   }
 
-  async tokenToTokenPayment(tokenAmount, minTokensOut, tokenAddress, receiver) {
+  async tokenToTokenPayment(
+    tokenAmount,
+    minTokensOut,
+    secondDexContract,
+    middleTezAmount,
+    receiver
+  ) {
     await this.approve(tokenAmount, this.contract.address);
-    const operation = await this.contract.methods
-      .use(
-        3,
-        "tokenToTokenPayment",
-        tokenAmount,
-        minTokensOut,
-        tokenAddress,
-        receiver
+    const minTez = parseInt(middleTezAmount * 0.9);
+    const batch = this.tezos
+      .batch([])
+      .withTransfer(
+        this.contract.methods
+          .use(
+            2,
+            "tokenToTezPayment",
+            tokenAmount,
+            minTez ? minTez : 1,
+            await this.tezos.signer.publicKeyHash()
+          )
+          .toTransferParams()
       )
-      .send();
+      .withTransfer(
+        secondDexContract.methods
+          .use(1, "tezToTokenPayment", minTokensOut, receiver)
+          .toTransferParams({ amount: middleTezAmount })
+      );
+    const operation = await batch.send();
     await operation.confirmation();
     return operation;
   }
