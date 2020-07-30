@@ -81,11 +81,21 @@ describe("Correct calls", function () {
 
   describe("TokenToTokenSwap()", function () {
     it("should exchange token to token 1", async function () {
-      await Test.tokenToTokenSwap(dexAddress1, tokenAddress1, tokenAddress2);
+      await Test.tokenToTokenSwap(
+        dexAddress1,
+        tokenAddress1,
+        tokenAddress2,
+        516366
+      );
     });
 
     it("should exchange token to token 2", async function () {
-      await Test.tokenToTokenSwap(dexAddress2, tokenAddress2, tokenAddress1);
+      await Test.tokenToTokenSwap(
+        dexAddress2,
+        tokenAddress2,
+        tokenAddress1,
+        631107
+      );
     });
   });
 

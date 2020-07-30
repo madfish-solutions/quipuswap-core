@@ -104,7 +104,7 @@ class Dex {
   }
 
   async tezToTokenSwap(minTokens, tezAmount) {
-    return await tezToTokenPayment(
+    return await this.tezToTokenPayment(
       minTokens,
       tezAmount,
       await this.tezos.signer.publicKeyHash()
@@ -120,7 +120,7 @@ class Dex {
   }
 
   async tokenToTezSwap(tokenAmount, minTezOut) {
-    return await tokenToTezPayment(
+    return await this.tokenToTezPayment(
       tokenAmount,
       minTezOut,
       await this.tezos.signer.publicKeyHash()

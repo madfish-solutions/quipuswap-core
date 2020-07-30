@@ -846,14 +846,8 @@ class Test {
     let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
 
     const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
-    const minShares = parseInt(
-      (mutezAmount * initialStorage.storage.totalShares) /
-        initialStorage.storage.tezPool
-    );
-    const tokenAmount = parseInt(
-      (minShares * initialStorage.storage.tokenPool) /
-        initialStorage.storage.totalShares
-    );
+    const minShares = 5000;
+    const tokenAmount = 5000;
 
     let operation = await dex.investLiquidity(
       tokenAmount,
@@ -896,18 +890,7 @@ class Test {
       ledger: [alicePkh],
     });
 
-    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
-    const newTokenPool = parseInt(
-      +initialDexStorage.storage.tokenPool + +tokensIn
-    );
-    const tempTokenPool = parseInt(newTokenPool - fee);
-    const newTezPool = parseInt(
-      initialDexStorage.storage.invariant / tempTokenPool
-    );
-
-    const minTezOut = parseInt(
-      parseInt(initialDexStorage.storage.tezPool - newTezPool)
-    );
+    const minTezOut = 857589;
 
     let operation = await dex.tokenToTezSwap(tokensIn, minTezOut);
     assert.equal(operation.status, "applied", "Operation was not applied");
@@ -944,7 +927,12 @@ class Test {
     );
   }
 
-  static async tokenToTokenSwap(dexAddress, tokenAddress, tokenAddressTo) {
+  static async tokenToTokenSwap(
+    dexAddress,
+    tokenAddress,
+    tokenAddressTo,
+    minTezOut
+  ) {
     let AliceTezos = await setup();
     let dex = await Dex.init(AliceTezos, dexAddress);
     let token = await Token.init(AliceTezos, tokenAddress);
@@ -957,27 +945,16 @@ class Test {
       ledger: [alicePkh],
     });
 
-    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
-    const newTokenPool = parseInt(
-      +initialDexStorage.storage.tokenPool + +tokensIn
-    );
-    const tempTokenPool = parseInt(newTokenPool - fee);
-    const newTezPool = parseInt(
-      initialDexStorage.storage.invariant / tempTokenPool
-    );
-
-    const minTezOut = parseInt(initialDexStorage.storage.tezPool - newTezPool);
+    // const minTezOut = 516366;
     const tokensOut = 1;
     const secondDexContract = await AliceTezos.contract.at(
       await this.getDexAddress(tokenAddressTo)
     );
-    const middleTezAmount = parseInt(minTezOut);
-
     let operation = await dex.tokenToTokenSwap(
       tokensIn,
       tokensOut,
       secondDexContract,
-      AliceTezos.format("mutez", "tz", middleTezAmount).toNumber()
+      AliceTezos.format("mutez", "tz", minTezOut).toNumber()
     );
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
@@ -1023,18 +1000,7 @@ class Test {
 
     const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
 
-    const fee = parseInt(mutezAmount / initialDexStorage.storage.feeRate);
-    const newTezPool = parseInt(
-      +initialDexStorage.storage.tezPool + +mutezAmount
-    );
-    const tempTezPool = parseInt(newTezPool - fee);
-    const newTokenPool = parseInt(
-      initialDexStorage.storage.invariant / tempTezPool
-    );
-
-    const minTokens = parseInt(
-      parseInt(initialDexStorage.storage.tokenPool - newTokenPool)
-    );
+    const minTokens = 10;
 
     let operation = await dex.tezToTokenSwap(minTokens, tezAmount);
     assert.equal(operation.status, "applied", "Operation was not applied");
@@ -1086,18 +1052,7 @@ class Test {
 
     const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
 
-    const fee = parseInt(mutezAmount / initialDexStorage.storage.feeRate);
-    const newTezPool = parseInt(
-      +initialDexStorage.storage.tezPool + +mutezAmount
-    );
-    const tempTezPool = parseInt(newTezPool - fee);
-    const newTokenPool = parseInt(
-      initialDexStorage.storage.invariant / tempTezPool
-    );
-
-    const minTokens = parseInt(
-      parseInt(initialDexStorage.storage.tokenPool - newTokenPool)
-    );
+    const minTokens = 133;
 
     let operation = await dex.tezToTokenPayment(minTokens, tezAmount, bobPkh);
     assert.equal(operation.status, "applied", "Operation was not applied");
@@ -1148,19 +1103,7 @@ class Test {
     const initialTokenStorage = await token.getFullStorage({
       ledger: [alicePkh, bobPkh],
     });
-
-    const fee = parseInt(tokensIn / initialDexStorage.storage.feeRate);
-    const newTokenPool = parseInt(
-      +initialDexStorage.storage.tokenPool + +tokensIn
-    );
-    const tempTokenPool = parseInt(newTokenPool - fee);
-    const newTezPool = parseInt(
-      initialDexStorage.storage.invariant / tempTokenPool
-    );
-
-    const minTezOut = parseInt(
-      parseInt(initialDexStorage.storage.tezPool - newTezPool)
-    );
+    const minTezOut = 666750;
     let operation = await dex.tokenToTezPayment(tokensIn, minTezOut, bobPkh);
     assert.equal(operation.status, "applied", "Operation was not applied");
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
