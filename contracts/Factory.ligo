@@ -5,36 +5,135 @@
 const cyclePeriod : int = 3 // 1474560
 const vetoPeriod : int = 7889229;
 
+// types for internal transaction calls
 type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type token_lookup_type is TokenLookupType of (address * address * nat)
 type use_type is UseType of (nat * dexAction) 
 
+// helpers
+function getTokenContract(const tokenAddress : address) : contract(transfer_type) is 
+    case (Tezos.get_entrypoint_opt("%transfer", tokenAddress) : option(contract(transfer_type))) of 
+      Some(contr) -> contr
+      | None -> (failwith("01"):contract(transfer_type))
+    end;
+
+
+// functions
+function initializeExchangeBody (const tokenAmount : nat ; var s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
+block {
+  if s.invariant =/= 0n 
+    or s.totalShares =/= 0n 
+    or Tezos.amount < 1mutez 
+    or tokenAmount < 1n 
+    or Tezos.amount > 500000000tz then failwith("Dex/non-allowed") else skip ; 
+  s.tokenPool := tokenAmount;
+  s.tezPool := Tezos.amount / 1mutez;
+  s.invariant := s.tezPool * s.tokenPool;
+  s.shares[Tezos.sender] := 1000n;
+  s.totalShares := 1000n;
+  
+   // update user loyalty
+  s.currentCycle.lastUpdate := Tezos.now;
+  s.cycleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
+} with (list[ transaction(
+      TransferType(Tezos.sender, (this, tokenAmount)), 
+      0mutez, 
+      getTokenContract(s.tokenAddress)
+    )], s)
+
+function investLiquidityBody (const minShares : nat ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
+block {
+  const sharesPurchased : nat = (Tezos.amount / 1mutez) * s.totalShares / s.tezPool;
+  if minShares > 0n and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
+  s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalShares;
+  s.currentCycle.lastUpdate := Tezos.now;
+  const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalShares;
+  if tokensRequired = 0n then failwith("Dex/dangerous-rate") else {
+    const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
+    // update user loyalty
+    var userCycle : user_cycle_info := case s.cycleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCycle = s.currentCycle.counter; lastCycleUpdate = Tezos.now; end
+      | Some(c) -> c
+    end;
+    if userCycle.lastCycle =/= s.currentCycle.counter then {
+      var cycle : cycle_info := get_force(userCycle.lastCycle, s.cycles);
+      userCycle.reward := userCycle.reward + cycle.reward * (userCycle.loyalty + share * abs(cycle.nextCycle - userCycle.lastCycleUpdate)) / cycle.totalLoyalty;
+      userCycle.loyalty := 0n;
+      userCycle.lastCycleUpdate := cycle.start;
+    } else skip ;
+    if s.currentCycle.counter - userCycle.lastCycle > 1 then {
+      const lastFullCycle : cycle_info = get_force(abs(s.currentCycle.counter - 1n), s.cycles);
+      const lastUserCycle : cycle_info = get_force(userCycle.lastCycle, s.cycles);
+      userCycle.reward := userCycle.reward + share * abs(lastFullCycle.cycleCoefficient - lastUserCycle.cycleCoefficient);
+    } else skip ;
+    userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
+    userCycle.lastCycleUpdate := Tezos.now;
+    userCycle.lastCycle := s.currentCycle.counter;
+    s.cycleLoyalty[Tezos.sender] := userCycle;
+    s.shares[Tezos.sender] := share + sharesPurchased;
+    s.tezPool := s.tezPool + Tezos.amount / 1mutez;
+    s.tokenPool := s.tokenPool + tokensRequired;
+    s.invariant := s.tezPool * s.tokenPool;
+    s.totalShares := s.totalShares + sharesPurchased;
+    case s.voters[Tezos.sender] of None -> skip
+      | Some(v) -> { 
+        case v.candidate of None -> skip 
+        | Some(candidate) -> {
+          case s.vetos[candidate] of None -> skip
+            | Some(c) -> if c > Tezos.now then failwith ("Dex/veto-candidate") else
+              remove candidate from map s.vetos
+          end;
+          if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
+            s.totalVotes := abs(s.totalVotes - share);
+            s.votes[candidate]:= abs(get_force(candidate, s.votes) - share);
+            v.candidate := Some(candidate);
+          } ;
+          s.voters[Tezos.sender]:= v;
+          s.totalVotes := s.totalVotes + share + sharesPurchased;
+          const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share + sharesPurchased;
+          s.votes[candidate]:= newVotes;
+          if case s.delegated of None -> True 
+            | Some(delegated) ->
+              if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then True else False
+            end
+          then {
+            s.delegated := Some(candidate);
+          } else skip ;
+        } end;
+      } end;
+  }; 
+} with (list[transaction(TransferType(Tezos.sender, (this, tokensRequired)), 
+      0mutez, 
+      getTokenContract(s.tokenAddress)
+    )], s)
+
+function tezToTokenBody (const args : tezToTokenPaymentArgs ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
+block {
+  var operations : list(operation) := list[];
+  if Tezos.amount / 1mutez > 0n and args.amount > 0n then {
+    s.tezPool := s.tezPool + Tezos.amount / 1mutez;
+    const newTokenPool : nat = s.invariant / abs(s.tezPool - Tezos.amount / 1mutez / s.feeRate);
+    const tokensOut : nat = abs(s.tokenPool - newTokenPool);
+      if tokensOut >= args.amount then {
+        s.tokenPool := newTokenPool;
+        s.invariant := s.tezPool * newTokenPool;
+        operations := transaction(
+          TransferType(this, (args.receiver, tokensOut)), 
+          0mutez, 
+          getTokenContract(s.tokenAddress)
+        ) # operations;
+    } else failwith("Dex/high-min-out");
+  } else failwith("Dex/wrong-params")
+} with (operations, s)
+
+// wrappers
 function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
 block {
   var operations : list(operation) := list[];
     case p of
     | InitializeExchange(tokenAmount) -> {
-        if s.invariant =/= 0n 
-          or s.totalShares =/= 0n 
-          or Tezos.amount < 1mutez 
-          or tokenAmount < 1n 
-          or Tezos.amount > 500000000tz then failwith("Dex/non-allowed") else skip ; 
-        s.tokenPool := tokenAmount;
-        s.tezPool := Tezos.amount / 1mutez;
-        s.invariant := s.tezPool * s.tokenPool;
-        s.shares[Tezos.sender] := 1000n;
-        s.totalShares := 1000n;
-        
-         // update user loyalty
-        s.currentCycle.lastUpdate := Tezos.now;
-        s.cycleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
-        operations := transaction(
-          TransferType(Tezos.sender, (this, tokenAmount)), 
-          0mutez, 
-          case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-            | None -> (failwith("01"):contract(transfer_type))
-          end
-          ) # operations;
+        const res : (list(operation) * dex_storage) = initializeExchangeBody(tokenAmount, s, this);
+        operations := res.0;
+        s := res.1;
     }
     | TezToTokenPayment(n) -> failwith("00")
     | TokenToTezPayment(n) -> failwith("00")
@@ -202,23 +301,11 @@ block {
   var operations: list(operation) := list[];
   case p of
   | InitializeExchange(tokenAmount) -> failwith("00")
-  | TezToTokenPayment(args) -> 
-    if Tezos.amount / 1mutez > 0n and args.amount > 0n then {
-      s.tezPool := s.tezPool + Tezos.amount / 1mutez;
-      const newTokenPool : nat = s.invariant / abs(s.tezPool - Tezos.amount / 1mutez / s.feeRate);
-      const tokensOut : nat = abs(s.tokenPool - newTokenPool);
-        if tokensOut >= args.amount then {
-          s.tokenPool := newTokenPool;
-          s.invariant := s.tezPool * newTokenPool;
-          operations :=  transaction(
-            TransferType(this, (args.receiver, tokensOut)), 
-            0mutez, 
-            case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-              | None -> (failwith("01"):contract(transfer_type))
-            end
-            ) # operations;
-      } else failwith("Dex/high-min-out");
-    } else failwith("Dex/wrong-params")
+  | TezToTokenPayment(args) -> {
+    const res : (list(operation) * dex_storage) = tezToTokenBody(args, s, this);
+        operations := res.0;
+        s := res.1;
+  }
   | TokenToTezPayment(n) -> failwith("00")
   | InvestLiquidity(n) -> failwith("00")
   | DivestLiquidity(n) -> failwith("00")
@@ -247,9 +334,7 @@ block {
         operations:= list transaction(
           TransferType(Tezos.sender, (this, args.amount)), 
           0mutez, 
-          case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-            | None -> (failwith("01"):contract(transfer_type))
-          end); 
+          getTokenContract(s.tokenAddress)); 
           transaction(unit, args.minOut * 1mutez, (get_contract(args.receiver) : contract(unit))); end;
       } else failwith("Dex/high-min-tez-out");
   
@@ -271,70 +356,9 @@ block {
   | TezToTokenPayment(n) -> failwith("00")
   | TokenToTezPayment(n) -> failwith("00")
   | InvestLiquidity(minShares) -> {
-    const sharesPurchased : nat = (Tezos.amount / 1mutez) * s.totalShares / s.tezPool;
-    if minShares > 0n and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
-    s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalShares;
-    s.currentCycle.lastUpdate := Tezos.now;
-    const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalShares;
-    if tokensRequired = 0n then failwith("Dex/dangerous-rate") else {
-      const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
-      // update user loyalty
-      var userCycle : user_cycle_info := case s.cycleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCycle = s.currentCycle.counter; lastCycleUpdate = Tezos.now; end
-        | Some(c) -> c
-      end;
-      if userCycle.lastCycle =/= s.currentCycle.counter then {
-        var cycle : cycle_info := get_force(userCycle.lastCycle, s.cycles);
-        userCycle.reward := userCycle.reward + cycle.reward * (userCycle.loyalty + share * abs(cycle.nextCycle - userCycle.lastCycleUpdate)) / cycle.totalLoyalty;
-        userCycle.loyalty := 0n;
-        userCycle.lastCycleUpdate := cycle.start;
-      } else skip ;
-      if s.currentCycle.counter - userCycle.lastCycle > 1 then {
-        const lastFullCycle : cycle_info = get_force(abs(s.currentCycle.counter - 1n), s.cycles);
-        const lastUserCycle : cycle_info = get_force(userCycle.lastCycle, s.cycles);
-        userCycle.reward := userCycle.reward + share * abs(lastFullCycle.cycleCoefficient - lastUserCycle.cycleCoefficient);
-      } else skip ;
-      userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
-      userCycle.lastCycleUpdate := Tezos.now;
-      userCycle.lastCycle := s.currentCycle.counter;
-      s.cycleLoyalty[Tezos.sender] := userCycle;
-      s.shares[Tezos.sender] := share + sharesPurchased;
-      s.tezPool := s.tezPool + Tezos.amount / 1mutez;
-      s.tokenPool := s.tokenPool + tokensRequired;
-      s.invariant := s.tezPool * s.tokenPool;
-      s.totalShares := s.totalShares + sharesPurchased;
-      operations := transaction(TransferType(Tezos.sender, (this, tokensRequired)), 
-        0mutez, 
-        case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-          | None -> (failwith("01"):contract(transfer_type))
-        end
-      ) # operations;
-      case s.voters[Tezos.sender] of None -> skip
-        | Some(v) -> { 
-          case v.candidate of None -> skip 
-          | Some(candidate) -> {
-            case s.vetos[candidate] of None -> skip
-              | Some(c) -> if c > Tezos.now then failwith ("Dex/veto-candidate") else
-                remove candidate from map s.vetos
-            end;
-            if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
-              s.totalVotes := abs(s.totalVotes - share);
-              s.votes[candidate]:= abs(get_force(candidate, s.votes) - share);
-              v.candidate := Some(candidate);
-            } ;
-            s.voters[Tezos.sender]:= v;
-            s.totalVotes := s.totalVotes + share + sharesPurchased;
-            const newVotes: nat = (case s.votes[candidate] of  None -> 0n | Some(v) -> v end) + share + sharesPurchased;
-            s.votes[candidate]:= newVotes;
-            if case s.delegated of None -> True 
-              | Some(delegated) ->
-                if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then True else False
-              end
-            then {
-              s.delegated := Some(candidate);
-            } else skip ;
-          } end;
-        } end;
-    }; 
+    const res : (list(operation) * dex_storage) = investLiquidityBody(minShares, s, this);
+    operations := res.0;
+    s := res.1;
   }
   | DivestLiquidity(n) -> failwith("00")
   | SetVotesDelegation(n) -> failwith("00")
@@ -404,9 +428,7 @@ block {
           } end;
           operations := list transaction(TransferType(this, (Tezos.sender, tokensDivested)), 
             0mutez,          
-            case (Tezos.get_entrypoint_opt("%transfer", s.tokenAddress) : option(contract(transfer_type))) of Some(contr) -> contr
-              | None -> (failwith("01"):contract(transfer_type))
-            end
+            getTokenContract(s.tokenAddress)
           ); 
           transaction(unit, tezDivested * 1mutez, (get_contract(Tezos.sender) : contract(unit))); end;
         } else failwith("Dex/wrong-out");
