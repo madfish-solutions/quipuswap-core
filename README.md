@@ -1,7 +1,8 @@
+# Description
 This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens
 to exchange, invest liquidity, and potentially make a profit in a fully decentralized way.
 
-The current implementation supports only [FA1.2 tokens](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md).
+The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
 
 # Architecture
 
@@ -116,7 +117,7 @@ Actions have the following parameters (index in the list matches the index in `l
 
 ## Token
 
-Implements standard [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or Implements standard [FA2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md) or.
+Implements two token interfaces [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
 
 # Testing
 
