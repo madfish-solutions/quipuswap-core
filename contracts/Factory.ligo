@@ -1,7 +1,5 @@
 #include "IFactory.ligo"
 
-// TODO:
-//  - add veto update in invest/divest 
 const cyclePeriod : int = 3 // 1474560
 const vetoPeriod : int = 7889229;
 
@@ -99,6 +97,11 @@ block {
             s.delegated := Some(candidate);
           } else skip ;
         } end;
+      } end;
+    case s.vetoVoters[Tezos.sender] of None -> skip
+      | Some(prevVotes) -> {
+        s.vetoVoters[Tezos.sender] := prevVotes + sharesPurchased;
+        s.veto := s.veto + sharesPurchased;
       } end;
   }; 
 } with (list[transaction(TransferType(Tezos.sender, (this, tokensRequired)), 
@@ -263,6 +266,14 @@ block {
           if prevVotes = args.shares then remove Tezos.sender from map s.voters; else skip ;
         } end;
     } end;
+    case s.vetoVoters[Tezos.sender] of None -> skip
+      | Some(prevVotes) -> {
+          s.veto := abs(s.veto - args.shares);
+          if prevVotes = args.shares then 
+            remove Tezos.sender from map s.vetoVoters; 
+          else
+            s.vetoVoters[Tezos.sender] := abs(prevVotes - args.shares);
+        } end;
     operations := list transaction(TransferType(this, (Tezos.sender, tokensDivested)), 
       0mutez,          
       getTokenContract(s.tokenAddress)
