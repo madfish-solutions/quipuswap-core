@@ -1,7 +1,8 @@
+# Description
 This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens
 to exchange, invest liquidity, and potentially make a profit in a fully decentralized way.
 
-The current implementation supports only [FA1.2 tokens](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md).
+The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
 
 # Architecture
 
@@ -9,9 +10,9 @@ The current implementation supports only [FA1.2 tokens](https://gitlab.com/tzip/
 
 The solution consists of 3 types of contracts:
 
-1. `Factory` singleton used to deploy new exchange pair;
-2. `Dex` contract for TokenX-XTZ pair exchanges;
-3. `Token` FA token implementation.
+1. `Factory` - singleton used to deploy new exchange pair;
+2. `Dex` - contract for TokenX-XTZ pair exchanges;
+3. `Token` - FA token implementation.
 
 # Prerequisites
 
@@ -81,7 +82,7 @@ After performing step new token pairs can be deployed.
 
 ## Exchange Pair Deployment
 
-Each token can have no more than one exchange pair contract (AKA `Dex`). To add a new token pair `Factory.LaunchExchange` method is called and a new empty `Dex` instance is deployed. There's a specific command for that:
+Each token can have only one exchange pair contract (AKA `Dex`). To add a new token pair `Factory.LaunchExchange` method is called and a new empty `Dex` instance is deployed. There's a specific command for that:
 
 ```
 npm run add-tokens
@@ -93,8 +94,8 @@ After the command is completed, the exchange can be used.
 
 ## Factory
 
-- `launchExchange(token: address)`: deploys new empty `Dex` for `token` and stores the address of a new contract;
-- `setFunction(func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)), funcIndex: nat`: add lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
+- `launchExchange(token: address)`: deploys a new empty `Dex` for `token` and stores the address of the new contract;
+- `setFunction(func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)), funcIndex: nat`: adds lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
 
 ## Dex
 
@@ -116,11 +117,11 @@ Actions have the following parameters (index in the list matches the index in `l
 
 ## Token
 
-Implements standard [FA1.2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or Implements standard [FA2 interface](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md) or.
+Implements two token interfaces [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
 
 # Testing
 
-Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `fixtures/key`, `fixtures/key1`, and `fixtures/key2`. `Factory`, `Token` and `Token2` contracts should be deployed before and their addresses should be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Look at `test.sh` for better understanding.
+Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `fixtures/key`, `fixtures/key1`, and `fixtures/key2`. `Factory`, `Token` and `Token2` contracts have to be deployed before and their addresses have to be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Refer to `test.sh` for better understanding.
 
 Run:
 
