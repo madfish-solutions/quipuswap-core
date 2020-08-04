@@ -8,7 +8,12 @@ end
 
 type full_exchange_storage is record
   storage: exchange_storage;
-  lambdas: big_map(nat, (address * address * exchange_storage) -> (list(operation) * exchange_storage));
+  lambdas: big_map(nat, (address * address * nat * exchange_storage) -> (list(operation) * exchange_storage));
+end
+
+type launchExchangeArgs is record
+  token: address;
+  tokenAmount: nat;
 end
 
 type setFunctionArgs is record
@@ -17,5 +22,5 @@ type setFunctionArgs is record
 end
 
 type exchangeAction is
-| LaunchExchange of (address)
+| LaunchExchange of launchExchangeArgs
 | SetFunction of setFunctionArgs

@@ -105,13 +105,11 @@
          SELF ;
          ADDRESS ;
          DIG 2 ;
-         DUP ;
-         DUG 3 ;
          CAR ;
          IF_LEFT
-           { DIG 2 ;
+           { SWAP ;
+             DROP 2 ;
              DUP ;
-             DUG 3 ;
              CAR ;
              PUSH nat 9 ;
              GET ;
@@ -119,9 +117,9 @@
                { PUSH string "Dex/function-not-set" ; FAILWITH }
                { SELF ;
                  ADDRESS ;
-                 DIG 4 ;
+                 DIG 2 ;
                  DUP ;
-                 DUG 5 ;
+                 DUG 3 ;
                  CDR ;
                  PUSH nat 0 ;
                  RIGHT (pair (pair (nat %minTez) (nat %minTokens)) (nat %shares)) ;
@@ -132,42 +130,23 @@
                  LEFT address ;
                  PAIR ;
                  PAIR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 SWAP ;
-                 EXEC ;
-                 DIP { DROP } } ;
-             DIG 3 ;
-             DUP ;
-             DUG 4 ;
-             DIG 1 ;
+                 EXEC } ;
              DUP ;
              DUG 2 ;
              CDR ;
              SWAP ;
              CAR ;
              PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
+             SWAP ;
              CAR ;
-             PAIR ;
-             DIP { DROP 2 } }
+             PAIR }
            { DIG 2 ;
-             DUP ;
-             DUG 3 ;
-             DIG 1 ;
+             SWAP ;
              DUP ;
              DUG 2 ;
              CAR ;
              PAIR ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
+             DUG 2 ;
              CDR ;
              PAIR ;
              PAIR ;
@@ -183,7 +162,7 @@
              CAR ;
              GET ;
              IF_NONE
-               { PUSH string "Dex/function-not-set" ; FAILWITH }
+               { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
                { DIG 2 ;
                  DUP ;
                  DUG 3 ;
@@ -194,33 +173,18 @@
                  DUG 3 ;
                  CDR ;
                  DIG 4 ;
-                 DUP ;
-                 DUG 5 ;
                  CAR ;
                  CAR ;
                  PAIR ;
                  PAIR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 SWAP ;
-                 EXEC ;
-                 DIP { DROP } } ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             DIG 1 ;
+                 EXEC } ;
              DUP ;
              DUG 2 ;
              CDR ;
              SWAP ;
              CAR ;
              PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
+             SWAP ;
              CAR ;
-             PAIR ;
-             DIP { DROP 4 } } ;
-         DIP { DROP 3 } } }
+             PAIR } } }
 
