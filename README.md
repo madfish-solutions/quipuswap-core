@@ -1,4 +1,5 @@
 # Description
+
 This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens
 to exchange, invest liquidity, and potentially make a profit in a fully decentralized way.
 
@@ -94,7 +95,7 @@ After the command is completed, the exchange can be used.
 
 ## Factory
 
-- `launchExchange(token: address)`: deploys a new empty `Dex` for `token` and stores the address of the new contract;
+- `launchExchange(token: address, tokenAmount: nat)`: deploys a new empty `Dex` for `token`, stores the address of the new contract and put initial liquidity; should be called with tezos amount that will be used as intial liquidity.
 - `setFunction(func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)), funcIndex: nat`: adds lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
 
 ## Dex
