@@ -553,7 +553,7 @@ block {
   end
 } with (operations, s)
 
-function launchExchange (const self : address; const token : address; const tokenId : nat; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
+function launchExchange (const self : address; const token : address; const tokenId : nat; const tokenAmount : nat; var s: exchange_storage ) :  (list(operation) * exchange_storage) is
 block {
   if s.tokenList contains (token, tokenId) then failwith("Factory/exchange-launched") else skip ;
     s.tokenList := Set.add ((token, tokenId), s.tokenList);
@@ -564,18 +564,22 @@ block {
                   ;
                         PAIR } |}
                : (option(key_hash) * tez * full_dex_storage) -> (operation * address))];
+
+  if Tezos.amount < 1mutez or tokenAmount < 1n 
+    or Tezos.amount > 500000000tz then failwith("Dex/non-allowed") else skip ; 
+
   const res : (operation * address) = createDex((None : option(key_hash)), 0tz, record 
     storage = 
        record      
           feeRate = 333n;      
-          tezPool = 0n;      
-          tokenPool = 0n;      
-          invariant = 0n;      
-          totalShares = 0n;      
+          tezPool = Tezos.amount / 1mutez;      
+          tokenPool = tokenAmount;      
+          invariant = Tezos.amount / 1mutez * tokenAmount;      
+          totalShares = 1000n;      
           tokenAddress = token;      
           tokenId = tokenId;      
           factoryAddress = self;
-          shares = (big_map end : big_map(address, nat));      
+          shares = big_map[Tezos.sender -> 1000n];      
           voters = (big_map end : big_map(address, vote_info));      
           vetos = (big_map end : big_map(key_hash, timestamp));      
           vetoVoters = (big_map end : big_map(address, nat));      
@@ -595,7 +599,7 @@ block {
               nextCycle = Tezos.now;       
             end;
           cycles = (big_map end : big_map(nat, cycle_info));      
-          cycleLoyalty = (big_map end : big_map(address, user_cycle_info));   
+          cycleLoyalty = big_map[Tezos.sender -> record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end];   
        end;   
     lambdas = s.lambdas;
     end);
@@ -610,10 +614,10 @@ block {
   end;
 } with s
 
-function middle (const token : address ; const tokenId : nat ; var s : full_exchange_storage) :  (list(operation) * full_exchange_storage) is
+function middle (const token : address ; const tokenId : nat ; const tokenAmount: nat; var s : full_exchange_storage) :  (list(operation) * full_exchange_storage) is
 block {
   const res : (list(operation) * exchange_storage) = case s.lambdas[0n] of 
-    Some(f) -> f(Tezos.self_address, token, tokenId, s.storage)
+    Some(f) -> f(Tezos.self_address, token, tokenId, tokenAmount, s.storage)
     | None -> (failwith("Factory/function-not-set"): (list(operation) * exchange_storage)) 
   end;
   s.storage := res.1;
@@ -621,6 +625,6 @@ block {
 
 function main (const p : exchangeAction ; const s : full_exchange_storage) :
   (list(operation) * full_exchange_storage) is case p of
-  LaunchExchange(args) -> middle(args.token, args.id, s)
+  LaunchExchange(args) -> middle(args.token, args.id, args.tokenAmount, s)
   | SetFunction(args) -> ((nil:list(operation)), if args.index > 9n then (failwith("Factory/wrong-index") : full_exchange_storage) else  setFunction(args.index, args.func, s))
  end

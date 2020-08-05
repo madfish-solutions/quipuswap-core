@@ -7,10 +7,32 @@ class Factory extends Factory12 {
   static async init(Tezos) {
     return new Factory(Tezos, await Tezos.contract.at(factoryAddress));
   }
-  async launchExchange(tokenAddress, tokenId = TOKEN_IDX) {
-    const operation = await this.contract.methods
-      .launchExchange(tokenId, tokenAddress)
+
+  async approve(tokenAddress, tokenAmount, address) {
+    let token = await this.tezos.contract.at(tokenAddress);
+    let operation = await token.methods
+      .update_operators([
+        {
+          add_operator: {
+            owner: await this.tezos.signer.publicKeyHash(),
+            operator: address,
+          },
+        },
+      ])
       .send();
+    await operation.confirmation();
+  }
+
+  async launchExchange(
+    tokenAddress,
+    tokenAmount,
+    tezAmount,
+    tokenId = TOKEN_IDX
+  ) {
+    await this.approve(tokenAddress, tokenAmount, this.contract.address);
+    const operation = await this.contract.methods
+      .launchExchange(tokenId, tokenAddress, tokenAmount)
+      .send({ amount: tezAmount });
     await operation.confirmation();
     return operation;
   }

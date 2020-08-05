@@ -48,14 +48,6 @@ class Factory {
     return operation;
   }
 
-  async tokenLookup(token, receiver, minTokensOut) {
-    const operation = await this.contract.methods
-      .tokenLookup(token, receiver, minTokensOut)
-      .send();
-    await operation.confirmation();
-    return operation;
-  }
-
   async getFullStorage(maps = {}) {
     const storage = await this.contract.storage();
     var result = {
