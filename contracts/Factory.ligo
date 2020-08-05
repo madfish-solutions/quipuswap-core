@@ -550,7 +550,7 @@ block {
           totalShares = 1000n;      
           tokenAddress = token;      
           factoryAddress = self;      
-          shares = (big_map[Tezos.sender -> 1000n] : big_map(address, nat));      
+          shares = big_map[Tezos.sender -> 1000n];      
           voters = (big_map end : big_map(address, vote_info));      
           vetos = (big_map end : big_map(key_hash, timestamp));      
           vetoVoters = (big_map end : big_map(address, nat));      
@@ -570,7 +570,7 @@ block {
               nextCycle = Tezos.now;       
             end;
           cycles = (big_map end : big_map(nat, cycle_info));      
-          cycleLoyalty = (big_map[Tezos.sender -> record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end] : big_map(address, user_cycle_info));   
+          cycleLoyalty = big_map[Tezos.sender -> record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end];   
        end;   
     lambdas = s.lambdas;
     end);
