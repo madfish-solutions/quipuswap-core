@@ -1246,7 +1246,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({
-      cycleLoyalty: [bobPkh],
+      loyaltyCycle: [bobPkh],
       shares: [bobPkh],
     });
 
@@ -1257,10 +1257,10 @@ class Test {
 
     operation = await dex.withdrawProfit(bobPkh);
     assert.equal(operation.status, "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ cycleLoyalty: [bobPkh] });
+    let finalStorage = await dex.getFullStorage({ loyaltyCycle: [bobPkh] });
     operation = await dex.sendReward(amount);
     assert.equal(operation.status, "applied", "Operation was not applied");
-    finalStorage = await dex.getFullStorage({ cycleLoyalty: [bobPkh] });
+    finalStorage = await dex.getFullStorage({ loyaltyCycle: [bobPkh] });
   }
 
   static async withdrawProfitWithoutProfit(dexAddress) {

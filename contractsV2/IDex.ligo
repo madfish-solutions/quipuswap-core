@@ -40,7 +40,7 @@ type dex_storage is record
   totalVotes: nat;
   currentCycle: cycle_info;
   cycles: big_map(nat, cycle_info);
-  cycleLoyalty: big_map(address, user_cycle_info);
+  loyaltyCycle: big_map(address, user_cycle_info);
 end
 
 type tezToTokenPaymentArgs is record 

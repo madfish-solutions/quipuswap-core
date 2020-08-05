@@ -27,7 +27,7 @@
                                                                    (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                                              (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
                                                           (option %currentDelegated key_hash))
-                                                    (pair (big_map %cycleLoyalty
+                                                    (pair (big_map %loyaltyCycle
                                                              address
                                                              (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
                                                                    (pair (nat %loyalty) (nat %reward))))
@@ -54,7 +54,7 @@
                                                              (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                                        (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
                                                     (option %currentDelegated key_hash))
-                                              (pair (big_map %cycleLoyalty
+                                              (pair (big_map %loyaltyCycle
                                                        address
                                                        (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
                                                              (pair (nat %loyalty) (nat %reward))))
@@ -80,7 +80,7 @@
                                               (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                         (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
                                      (option %currentDelegated key_hash))
-                               (pair (big_map %cycleLoyalty
+                               (pair (big_map %loyaltyCycle
                                         address
                                         (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
                                               (pair (nat %loyalty) (nat %reward))))

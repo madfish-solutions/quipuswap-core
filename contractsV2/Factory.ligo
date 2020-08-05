@@ -42,7 +42,7 @@ block {
         
          // update user loyalty
         s.currentCycle.lastUpdate := Tezos.now;
-        s.cycleLoyalty[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
+        s.loyaltyCycle[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
         const t : transferContentsMichelson = Layout.convert_to_right_comb((record [
                   to_ = this; 
                   token_id = s.tokenId;
@@ -326,7 +326,7 @@ block {
     if tokensRequired = 0n then failwith("Dex/dangerous-rate") else {
       const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
       // update user loyalty
-      var userCycle : user_cycle_info := case s.cycleLoyalty[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCycle = s.currentCycle.counter; lastCycleUpdate = Tezos.now; end
+      var userCycle : user_cycle_info := case s.loyaltyCycle[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCycle = s.currentCycle.counter; lastCycleUpdate = Tezos.now; end
         | Some(c) -> c
       end;
       if userCycle.lastCycle =/= s.currentCycle.counter then {
@@ -343,7 +343,7 @@ block {
       userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
       userCycle.lastCycleUpdate := Tezos.now;
       userCycle.lastCycle := s.currentCycle.counter;
-      s.cycleLoyalty[Tezos.sender] := userCycle;
+      s.loyaltyCycle[Tezos.sender] := userCycle;
       s.shares[Tezos.sender] := share + sharesPurchased;
       s.tezPool := s.tezPool + Tezos.amount / 1mutez;
       s.tokenPool := s.tokenPool + tokensRequired;
@@ -421,7 +421,7 @@ block {
         const tokensDivested : nat = s.tokenPool * args.shares / s.totalShares;
 
         if args.minTez > 0n and args.minTokens > 0n and tezDivested >= args.minTez and tokensDivested >= args.minTokens then {
-          var userCycle : user_cycle_info := get_force(Tezos.sender, s.cycleLoyalty);
+          var userCycle : user_cycle_info := get_force(Tezos.sender, s.loyaltyCycle);
           if userCycle.lastCycle =/= s.currentCycle.counter then {
             case s.cycles[userCycle.lastCycle] of Some(cycle) -> {
               userCycle.reward := userCycle.reward + cycle.reward * (userCycle.loyalty + share * abs(cycle.nextCycle - userCycle.lastCycleUpdate)) / cycle.totalLoyalty;
@@ -444,7 +444,7 @@ block {
           userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
           userCycle.lastCycleUpdate := Tezos.now;
           userCycle.lastCycle := s.currentCycle.counter;
-          s.cycleLoyalty[Tezos.sender] := userCycle;
+          s.loyaltyCycle[Tezos.sender] := userCycle;
 
           s.totalShares := abs(s.totalShares - args.shares);
           s.tezPool := abs(s.tezPool - tezDivested);
@@ -529,7 +529,7 @@ block {
   | Vote(n) -> failwith("00")
   | Veto(voter) -> failwith("00")
   | WithdrawProfit(n) -> {
-    var userCycle : user_cycle_info := get_force(Tezos.sender, s.cycleLoyalty);
+    var userCycle : user_cycle_info := get_force(Tezos.sender, s.loyaltyCycle);
     var share : nat := get_force(Tezos.sender, s.shares);
     if userCycle.lastCycle =/= s.currentCycle.counter then {
       var cycle : cycle_info := get_force(userCycle.lastCycle, s.cycles);
@@ -547,7 +547,7 @@ block {
     userCycle.lastCycle := s.currentCycle.counter;
     share := userCycle.reward;
     userCycle.reward := 0n;
-    s.cycleLoyalty[Tezos.sender] := userCycle;
+    s.loyaltyCycle[Tezos.sender] := userCycle;
     operations := transaction(unit, share * 1mutez, (get_contract(n) : contract(unit))) # operations;
   }
   end
@@ -599,7 +599,7 @@ block {
               nextCycle = Tezos.now;       
             end;
           cycles = (big_map end : big_map(nat, cycle_info));      
-          cycleLoyalty = big_map[Tezos.sender -> record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end];   
+          loyaltyCycle = big_map[Tezos.sender -> record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end];   
        end;   
     lambdas = s.lambdas;
     end);
