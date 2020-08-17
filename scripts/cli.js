@@ -319,7 +319,9 @@ program
 
 program
   .command("set_functions <num> <function_name> [factory] [contract]")
-  .description("set function <function_name> at index <num> to [factory].")
+  .description(
+    "set function <function_name> at index <num> using factory address from [factory] file and [contract] as contract source."
+  )
   .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
   .option(
     "-i, --input_dir <dir>",
