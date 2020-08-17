@@ -15,6 +15,24 @@ The solution consists of 3 types of contracts:
 2. `Dex` - contract for TokenX-XTZ pair exchanges;
 3. `Token` - FA token implementation.
 
+# Project structure
+
+```
+| contracts/ # contract sources for FA1.2 compatible version
+| contractsV2/ # contract sources for FA2 compatible version
+| test/ # test cases
+| storage/ # initial storage for contract origination
+| scripts/ # scripts for dex/factory actions
+| fixtures/ # deployment & test account keys
+| misc/ # other sources
+| README.md # current file
+| test_cases.md # implemented tests list
+| test.sh # script for quick development
+| .gitignore
+| package.json
+| Architecture.png
+```
+
 # Prerequisites
 
 - Installed NodeJS (tested with NodeJS v12+)
