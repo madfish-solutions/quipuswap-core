@@ -273,7 +273,9 @@ program
 
 program
   .command("compile_storage <contract> <params> [output_name]")
-  .description("build contracts")
+  .description(
+    "compile storage represented by <params>(Ligo) for <contract> and stores output to [output_name]."
+  )
   .option("-o, --output_dir <dir>", "Where store builds", "storage")
   .option("-i, --input_dir <dir>", "Where files are located", "contracts")
   .option("-g, --no-dockerized_ligo", "Switch global ligo")
@@ -292,7 +294,9 @@ program
 
 program
   .command("add_token [token] [factory]")
-  .description("add token")
+  .description(
+    "deploy new dex contract with factory at address stored in [factory] file for token with address stored in [token]"
+  )
   .option(
     "-i, --input_dir <dir>",
     "Where deployed contracts are located",
@@ -314,8 +318,8 @@ program
   });
 
 program
-  .command("set_functions <num> <function_name> [dex] [contract]")
-  .description("build contracts")
+  .command("set_functions <num> <function_name> [factory] [contract]")
+  .description("set function <function_name> at index <num> to [factory].")
   .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
   .option(
     "-i, --input_dir <dir>",
@@ -334,13 +338,13 @@ program
   )
   .option("-g, --no-dockerized_ligo", "Switch global ligo")
   .option("-f, --fa2", "Set function to fa2 version", false)
-  .action(async function (num, functionName, dex, contract, options) {
+  .action(async function (num, functionName, factory, contract, options) {
     await setup(options.key_path, options.provider);
     if (options.fa2) {
       await setFunctionsFA2(
         num,
         functionName,
-        dex,
+        factory,
         contract,
         options.input_dir,
         options.output_dir,
@@ -350,7 +354,7 @@ program
       await setFunctions(
         num,
         functionName,
-        dex,
+        factory,
         contract,
         options.input_dir,
         options.output_dir,
@@ -361,7 +365,9 @@ program
 
 program
   .command("deploy <contract> [output_name] [storage_name]")
-  .description("deploy contracts")
+  .description(
+    "deploy contract in <contract> file using [storage_name] as source file with initial storage and store output address to [output_name]."
+  )
   .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
   .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
   .option(
