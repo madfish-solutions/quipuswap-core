@@ -111,7 +111,13 @@ let deployContract = async (
   console.log(`${contractName} deployed at: ${contract.address}`);
 };
 
-let addToken = async (tokenName, factoryName, inputDir) => {
+let addToken = async (
+  tokenName,
+  factoryName,
+  tezAmount,
+  tokenAmount,
+  inputDir
+) => {
   tokenName = tokenName || "Token";
   factoryName = factoryName || "Factory";
   const { address: tokenAddress } = JSON.parse(
@@ -123,9 +129,14 @@ let addToken = async (tokenName, factoryName, inputDir) => {
 
   const factoryContract = await Tezos.contract.at(factoryAddress);
   try {
-    const operation = await factoryContract.methods
-      .launchExchange(tokenAddress)
+    let token = await Tezos.contract.at(tokenAddress);
+    let operation = await token.methods
+      .approve(factoryAddress, tokenAmount)
       .send();
+    await operation.confirmation();
+    operation = await factoryContract.methods
+      .launchExchange(tokenAddress, tokenAmount)
+      .send({ amount: tezAmount });
     await operation.confirmation();
     console.log(`Dex for ${tokenAddress} deployed!`);
   } catch (E) {
@@ -293,9 +304,9 @@ program
   });
 
 program
-  .command("add_token [token] [factory]")
+  .command("add_token <initial_tez> <initial_tokens> [token] [factory]")
   .description(
-    "deploy new dex contract with factory at address stored in [factory] file for token with address stored in [token]"
+    "deploy new dex contract with factory at address stored in [factory] file for token with address stored in [token]. Provide initial liquidity with <initial_tez> <initial_tokens>"
   )
   .option(
     "-i, --input_dir <dir>",
@@ -312,9 +323,15 @@ program
     "Node to connect",
     "http://127.0.0.1:8732"
   )
-  .action(async function (token, factory, options) {
+  .action(async function (initialTez, initialTokens, token, factory, options) {
     await setup(options.key_path, options.provider);
-    await addToken(token, factory, options.input_dir);
+    await addToken(
+      token,
+      factory,
+      initialTez,
+      initialTokens,
+      options.input_dir
+    );
   });
 
 program

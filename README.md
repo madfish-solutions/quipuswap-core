@@ -102,7 +102,7 @@ After performing step new token pairs can be deployed.
 
 ## Exchange Pair Deployment
 
-Each token can have only one exchange pair contract (AKA `Dex`). To add a new token pair `Factory.LaunchExchange` method is called and a new empty `Dex` instance is deployed. There's a specific command for that:
+Each token can have only one exchange pair contract (AKA `Dex`). To add a new token pair `Factory.LaunchExchange` method is called and a new empty `Dex` instance is deployed, initial liquidity is provided. There's a specific command for that:
 
 ```
 npm run add-tokens

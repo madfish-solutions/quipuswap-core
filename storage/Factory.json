@@ -3,26 +3,19 @@
     [ [ { "prim": "Elt",
           "args":
             [ { "int": "0" },
-              [ { "prim": "DUP" }, { "prim": "CAR" }, { "prim": "CAR" },
-                { "prim": "CDR" }, { "prim": "SWAP" }, { "prim": "DUP" },
+              [ { "prim": "DUP" }, { "prim": "CAR" }, { "prim": "CDR" },
+                { "prim": "SWAP" }, { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "2" } ] },
-                { "prim": "CAR" }, { "prim": "CDR" }, { "prim": "CAR" },
+                { "prim": "CDR" }, { "prim": "CAR" },
                 { "prim": "DIG", "args": [ { "int": "2" } ] },
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "3" } ] },
-                { "prim": "CAR" }, { "prim": "CDR" }, { "prim": "CDR" },
+                { "prim": "CDR" }, { "prim": "CDR" }, { "prim": "DUP" },
+                { "prim": "CAR" }, { "prim": "CDR" },
                 { "prim": "DIG", "args": [ { "int": "3" } ] },
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "4" } ] },
-                { "prim": "CDR" }, { "prim": "DUP" }, { "prim": "CAR" },
-                { "prim": "CDR" },
-                { "prim": "DIG", "args": [ { "int": "3" } ] },
-                { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "4" } ] },
-                { "prim": "DIG", "args": [ { "int": "5" } ] },
-                { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "6" } ] },
-                { "prim": "PAIR" }, { "prim": "MEM" },
+                { "prim": "MEM" },
                 { "prim": "IF",
                   "args":
                     [ [ { "prim": "PUSH",
@@ -37,10 +30,6 @@
                 { "prim": "DIG", "args": [ { "int": "3" } ] },
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "4" } ] },
-                { "prim": "DIG", "args": [ { "int": "5" } ] },
-                { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "6" } ] },
-                { "prim": "PAIR" },
                 { "prim": "PUSH",
                   "args": [ { "prim": "bool" }, { "prim": "True" } ] },
                 { "prim": "SWAP" }, { "prim": "UPDATE" },
@@ -86,29 +75,25 @@
                               "args": [ { "prim": "address" } ] },
                             { "prim": "option",
                               "args": [ { "prim": "key_hash" } ] } ] } ] },
-                { "prim": "PAIR" },
                 { "prim": "EMPTY_BIG_MAP",
                   "args": [ { "prim": "key_hash" }, { "prim": "timestamp" } ] },
+                { "prim": "PAIR" }, { "prim": "PAIR" },
                 { "prim": "EMPTY_BIG_MAP",
                   "args": [ { "prim": "address" }, { "prim": "nat" } ] },
-                { "prim": "PAIR" }, { "prim": "PAIR" },
-                { "prim": "PUSH",
-                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
                 { "prim": "PUSH",
                   "args": [ { "prim": "nat" }, { "int": "0" } ] },
                 { "prim": "PAIR" },
                 { "prim": "PUSH",
+                  "args": [ { "prim": "nat" }, { "int": "0" } ] },
+                { "prim": "PUSH",
                   "args": [ { "prim": "nat" }, { "int": "1000" } ] },
-                { "prim": "DIG", "args": [ { "int": "4" } ] },
-                { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "5" } ] },
                 { "prim": "PAIR" }, { "prim": "PAIR" },
-                { "prim": "DIG", "args": [ { "int": "4" } ] },
+                { "prim": "DIG", "args": [ { "int": "3" } ] },
                 { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "5" } ] },
-                { "prim": "DIG", "args": [ { "int": "6" } ] },
+                { "prim": "DUG", "args": [ { "int": "4" } ] },
+                { "prim": "DIG", "args": [ { "int": "5" } ] },
                 { "prim": "DUP" },
-                { "prim": "DUG", "args": [ { "int": "7" } ] },
+                { "prim": "DUG", "args": [ { "int": "6" } ] },
                 { "prim": "PAIR" },
                 { "prim": "PUSH",
                   "args": [ { "prim": "mutez" }, { "int": "1" } ] },
@@ -149,6 +134,8 @@
                 { "prim": "PAIR" }, { "prim": "PAIR" }, { "prim": "SOME" },
                 { "prim": "SENDER" }, { "prim": "UPDATE" },
                 { "prim": "DIG", "args": [ { "int": "4" } ] },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "5" } ] },
                 { "prim": "PUSH",
                   "args": [ { "prim": "mutez" }, { "int": "1" } ] },
                 { "prim": "AMOUNT" }, { "prim": "EDIV" },
@@ -163,8 +150,8 @@
                 { "prim": "PUSH",
                   "args": [ { "prim": "nat" }, { "int": "333" } ] },
                 { "prim": "DIG", "args": [ { "int": "7" } ] },
-                { "prim": "CAR" }, { "prim": "CAR" }, { "prim": "CAR" },
-                { "prim": "PAIR" }, { "prim": "PAIR" },
+                { "prim": "CAR" }, { "prim": "CAR" }, { "prim": "PAIR" },
+                { "prim": "PAIR" },
                 { "prim": "NONE", "args": [ { "prim": "key_hash" } ] },
                 { "prim": "EMPTY_BIG_MAP",
                   "args":
@@ -680,7 +667,7 @@
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenId" ] } ] } ] },
+                                                                    [ "%tokenPool" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -690,22 +677,27 @@
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenPool" ] },
+                                                                    [ "%totalShares" ] },
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalShares" ] } ] },
+                                                                    [ "%totalVotes" ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalVotes" ] },
+                                                                    [ "%veto" ] },
                                                                     { "prim":
-                                                                    "nat",
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "nat" } ],
                                                                     "annots":
-                                                                    [ "%veto" ] } ] } ] } ] } ] },
+                                                                    [ "%vetoVoters" ] } ] } ] } ] } ] },
                                                                   { "prim":
                                                                     "pair",
                                                                     "args":
@@ -716,24 +708,12 @@
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "nat" } ],
-                                                                    "annots":
-                                                                    [ "%vetoVoters" ] },
-                                                                    { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
                                                                     "key_hash" },
                                                                     { "prim":
                                                                     "timestamp" } ],
                                                                     "annots":
-                                                                    [ "%vetos" ] } ] },
+                                                                    [ "%vetos" ] },
                                                                     { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
@@ -756,7 +736,7 @@
                                                                     "annots":
                                                                     [ "%candidate" ] } ] } ],
                                                                     "annots":
-                                                                    [ "%voters" ] },
+                                                                    [ "%voters" ] } ] },
                                                                     { "prim":
                                                                     "big_map",
                                                                     "args":
@@ -765,7 +745,7 @@
                                                                     { "prim":
                                                                     "nat" } ],
                                                                     "annots":
-                                                                    [ "%votes" ] } ] } ] } ] } ] },
+                                                                    [ "%votes" ] } ] } ] } ] },
                                                       { "prim": "address" } ] },
                                                 { "prim": "pair",
                                                   "args":
@@ -989,7 +969,7 @@
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenId" ] } ] } ] },
+                                                                    [ "%tokenPool" ] } ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
@@ -999,22 +979,27 @@
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenPool" ] },
+                                                                    [ "%totalShares" ] },
                                                                     { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalShares" ] } ] },
+                                                                    [ "%totalVotes" ] } ] },
                                                                     { "prim":
                                                                     "pair",
                                                                     "args":
                                                                     [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalVotes" ] },
+                                                                    [ "%veto" ] },
                                                                     { "prim":
-                                                                    "nat",
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "nat" } ],
                                                                     "annots":
-                                                                    [ "%veto" ] } ] } ] } ] } ] },
+                                                                    [ "%vetoVoters" ] } ] } ] } ] } ] },
                                                             { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
@@ -1024,24 +1009,12 @@
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
-                                                                    "address" },
-                                                                    { "prim":
-                                                                    "nat" } ],
-                                                                    "annots":
-                                                                    [ "%vetoVoters" ] },
-                                                                    { "prim":
-                                                                    "big_map",
-                                                                    "args":
-                                                                    [ { "prim":
                                                                     "key_hash" },
                                                                     { "prim":
                                                                     "timestamp" } ],
                                                                     "annots":
-                                                                    [ "%vetos" ] } ] },
-                                                                  { "prim":
-                                                                    "pair",
-                                                                    "args":
-                                                                    [ { "prim":
+                                                                    [ "%vetos" ] },
+                                                                    { "prim":
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
@@ -1064,8 +1037,8 @@
                                                                     "annots":
                                                                     [ "%candidate" ] } ] } ],
                                                                     "annots":
-                                                                    [ "%voters" ] },
-                                                                    { "prim":
+                                                                    [ "%voters" ] } ] },
+                                                                  { "prim":
                                                                     "big_map",
                                                                     "args":
                                                                     [ { "prim":
@@ -1073,7 +1046,7 @@
                                                                     { "prim":
                                                                     "nat" } ],
                                                                     "annots":
-                                                                    [ "%votes" ] } ] } ] } ] } ] } ] } ],
+                                                                    [ "%votes" ] } ] } ] } ] } ] } ],
                                       "annots": [ "%lambdas" ] },
                                     { "prim": "pair",
                                       "args":
@@ -1280,7 +1253,7 @@
                                                                   { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenId" ] } ] } ] },
+                                                                    [ "%tokenPool" ] } ] } ] },
                                                       { "prim": "pair",
                                                         "args":
                                                           [ { "prim": "pair",
@@ -1288,21 +1261,26 @@
                                                                 [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%tokenPool" ] },
+                                                                    [ "%totalShares" ] },
                                                                   { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalShares" ] } ] },
+                                                                    [ "%totalVotes" ] } ] },
                                                             { "prim": "pair",
                                                               "args":
                                                                 [ { "prim":
                                                                     "nat",
                                                                     "annots":
-                                                                    [ "%totalVotes" ] },
+                                                                    [ "%veto" ] },
                                                                   { "prim":
-                                                                    "nat",
+                                                                    "big_map",
+                                                                    "args":
+                                                                    [ { "prim":
+                                                                    "address" },
+                                                                    { "prim":
+                                                                    "nat" } ],
                                                                     "annots":
-                                                                    [ "%veto" ] } ] } ] } ] } ] },
+                                                                    [ "%vetoVoters" ] } ] } ] } ] } ] },
                                           { "prim": "pair",
                                             "args":
                                               [ { "prim": "pair",
@@ -1310,21 +1288,12 @@
                                                     [ { "prim": "big_map",
                                                         "args":
                                                           [ { "prim":
-                                                                "address" },
-                                                            { "prim": "nat" } ],
-                                                        "annots":
-                                                          [ "%vetoVoters" ] },
-                                                      { "prim": "big_map",
-                                                        "args":
-                                                          [ { "prim":
                                                                 "key_hash" },
                                                             { "prim":
                                                                 "timestamp" } ],
                                                         "annots":
-                                                          [ "%vetos" ] } ] },
-                                                { "prim": "pair",
-                                                  "args":
-                                                    [ { "prim": "big_map",
+                                                          [ "%vetos" ] },
+                                                      { "prim": "big_map",
                                                         "args":
                                                           [ { "prim":
                                                                 "address" },
@@ -1345,14 +1314,12 @@
                                                                     "annots":
                                                                     [ "%candidate" ] } ] } ],
                                                         "annots":
-                                                          [ "%voters" ] },
-                                                      { "prim": "big_map",
-                                                        "args":
-                                                          [ { "prim":
-                                                                "key_hash" },
-                                                            { "prim": "nat" } ],
-                                                        "annots":
-                                                          [ "%votes" ] } ] } ] } ],
+                                                          [ "%voters" ] } ] },
+                                                { "prim": "big_map",
+                                                  "args":
+                                                    [ { "prim": "key_hash" },
+                                                      { "prim": "nat" } ],
+                                                  "annots": [ "%votes" ] } ] } ],
                                       "annots": [ "%storage" ] } ] } ] },
                         { "prim": "code",
                           "args":
@@ -1558,12 +1525,39 @@
                 { "prim": "DUP" },
                 { "prim": "DUG", "args": [ { "int": "3" } ] },
                 { "prim": "CDR" },
-                { "prim": "DIG", "args": [ { "int": "4" } ] },
                 { "prim": "DIG", "args": [ { "int": "5" } ] },
-                { "prim": "PAIR" }, { "prim": "SWAP" }, { "prim": "SOME" },
-                { "prim": "SWAP" }, { "prim": "UPDATE" }, { "prim": "SWAP" },
-                { "prim": "CAR" }, { "prim": "PAIR" },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "6" } ] },
+                { "prim": "SWAP" }, { "prim": "SOME" }, { "prim": "SWAP" },
+                { "prim": "UPDATE" }, { "prim": "SWAP" }, { "prim": "CAR" },
+                { "prim": "PAIR" },
                 { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                { "prim": "DIG", "args": [ { "int": "4" } ] },
+                { "prim": "CONTRACT",
+                  "args":
+                    [ { "prim": "pair",
+                        "args":
+                          [ { "prim": "address", "annots": [ "%from" ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "address", "annots": [ "%to" ] },
+                                  { "prim": "nat", "annots": [ "%value" ] } ] } ] } ],
+                  "annots": [ "%transfer" ] },
+                { "prim": "IF_NONE",
+                  "args":
+                    [ [ { "prim": "PUSH",
+                          "args":
+                            [ { "prim": "string" }, { "string": "01" } ] },
+                        { "prim": "FAILWITH" } ], [] ] },
+                { "prim": "PUSH",
+                  "args": [ { "prim": "mutez" }, { "int": "0" } ] },
+                { "prim": "DIG", "args": [ { "int": "5" } ] },
+                { "prim": "DIG", "args": [ { "int": "5" } ] },
+                { "prim": "DUP" },
+                { "prim": "DUG", "args": [ { "int": "6" } ] },
+                { "prim": "CDR" }, { "prim": "PAIR" }, { "prim": "SENDER" },
+                { "prim": "PAIR" }, { "prim": "TRANSFER_TOKENS" },
+                { "prim": "CONS" },
                 { "prim": "DIG", "args": [ { "int": "2" } ] },
                 { "prim": "CAR" }, { "prim": "CONS" }, { "prim": "PAIR" } ] ] } ],
       { "prim": "Pair",
