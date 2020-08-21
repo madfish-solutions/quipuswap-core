@@ -49,7 +49,8 @@ curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "ne
 cd quipuswap-core && npm i
 ```
 
-- Private keys for signing transactions. The unencrypted private key has to be placed in `key` file in the `fixtures` directory.
+- Private keys for signing transactions. The unencrypted private keys have to be placed in `key`,`key1`, `key2` file in the `fixtures` directory.
+`key` is development key. `key1` and `key2` are used for testing only.
 
 # Usage
 
