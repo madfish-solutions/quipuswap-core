@@ -15,11 +15,17 @@ class Factory {
   static async init(Tezos) {
     return new Factory(Tezos, await Tezos.contract.at(factoryAddress));
   }
+  async approve(tokenAddress, tokenAmount, address) {
+    let token = await this.tezos.contract.at(tokenAddress);
+    let operation = await token.methods.approve(address, tokenAmount).send();
+    await operation.confirmation();
+  }
 
-  async launchExchange(tokenAddress) {
+  async launchExchange(tokenAddress, tokenAmount, tezAmount) {
+    await this.approve(tokenAddress, tokenAmount, this.contract.address);
     const operation = await this.contract.methods
-      .launchExchange(tokenAddress)
-      .send();
+      .launchExchange(tokenAddress, tokenAmount)
+      .send({ amount: tezAmount });
     await operation.confirmation();
     return operation;
   }
@@ -38,14 +44,6 @@ class Factory {
         value: JSON.parse(stdout).args[0],
       },
     });
-    await operation.confirmation();
-    return operation;
-  }
-
-  async tokenLookup(token, receiver, minTokensOut) {
-    const operation = await this.contract.methods
-      .tokenLookup(token, receiver, minTokensOut)
-      .send();
     await operation.confirmation();
     return operation;
   }

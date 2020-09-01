@@ -22,22 +22,23 @@
                                             (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver)))
                                         (or (address %veto) (pair %vote (key_hash %candidate) (address %voter)))))
                                 (address %withdrawProfit))
-                            (pair (pair (pair (pair (pair (big_map %cycleLoyalty
-                                                             address
-                                                             (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
-                                                                   (pair (nat %loyalty) (nat %reward))))
-                                                          (big_map %cycles
-                                                             nat
-                                                             (pair (pair (pair (nat %cycleCoefficient) (nat %counter))
-                                                                         (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
-                                                                   (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))))
-                                                    (pair (pair %currentCycle
-                                                             (pair (pair (nat %cycleCoefficient) (nat %counter))
+                            (pair (pair (pair (pair (pair (pair %currentCycle
+                                                             (pair (pair (nat %counter) (nat %cycleCoefficient))
                                                                    (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                                              (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
-                                                          (option %currentDelegated key_hash)))
-                                              (pair (pair (option %delegated key_hash) (address %factoryAddress))
-                                                    (pair (nat %feeRate) (nat %invariant))))
+                                                          (option %currentDelegated key_hash))
+                                                    (pair (big_map %cycles
+                                                             nat
+                                                             (pair (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                                         (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
+                                                                   (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty))))
+                                                          (option %delegated key_hash)))
+                                              (pair (pair (address %factoryAddress) (nat %feeRate))
+                                                    (pair (nat %invariant)
+                                                          (big_map %loyaltyCycle
+                                                             address
+                                                             (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
+                                                                   (pair (nat %loyalty) (nat %reward)))))))
                                         (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
                                                     (pair (address %tokenAddress) (nat %tokenId)))
                                               (pair (pair (nat %tokenPool) (nat %totalShares)) (pair (nat %totalVotes) (nat %veto)))))
@@ -48,22 +49,23 @@
                                               (big_map %votes key_hash nat)))))
                       address)
                 (pair (list operation)
-                      (pair (pair (pair (pair (pair (big_map %cycleLoyalty
-                                                       address
-                                                       (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
-                                                             (pair (nat %loyalty) (nat %reward))))
-                                                    (big_map %cycles
-                                                       nat
-                                                       (pair (pair (pair (nat %cycleCoefficient) (nat %counter))
-                                                                   (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
-                                                             (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))))
-                                              (pair (pair %currentCycle
-                                                       (pair (pair (nat %cycleCoefficient) (nat %counter))
+                      (pair (pair (pair (pair (pair (pair %currentCycle
+                                                       (pair (pair (nat %counter) (nat %cycleCoefficient))
                                                              (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                                        (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
-                                                    (option %currentDelegated key_hash)))
-                                        (pair (pair (option %delegated key_hash) (address %factoryAddress))
-                                              (pair (nat %feeRate) (nat %invariant))))
+                                                    (option %currentDelegated key_hash))
+                                              (pair (big_map %cycles
+                                                       nat
+                                                       (pair (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                                   (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
+                                                             (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty))))
+                                                    (option %delegated key_hash)))
+                                        (pair (pair (address %factoryAddress) (nat %feeRate))
+                                              (pair (nat %invariant)
+                                                    (big_map %loyaltyCycle
+                                                       address
+                                                       (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
+                                                             (pair (nat %loyalty) (nat %reward)))))))
                                   (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
                                               (pair (address %tokenAddress) (nat %tokenId)))
                                         (pair (pair (nat %tokenPool) (nat %totalShares)) (pair (nat %totalVotes) (nat %veto)))))
@@ -73,22 +75,23 @@
                                            (pair (set %allowances address) (option %candidate key_hash)))
                                         (big_map %votes key_hash nat)))))))
           (pair %storage
-             (pair (pair (pair (pair (big_map %cycleLoyalty
-                                        address
-                                        (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
-                                              (pair (nat %loyalty) (nat %reward))))
-                                     (big_map %cycles
-                                        nat
-                                        (pair (pair (pair (nat %cycleCoefficient) (nat %counter))
-                                                    (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
-                                              (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))))
-                               (pair (pair %currentCycle
-                                        (pair (pair (nat %cycleCoefficient) (nat %counter))
+             (pair (pair (pair (pair (pair %currentCycle
+                                        (pair (pair (nat %counter) (nat %cycleCoefficient))
                                               (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
                                         (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty)))
-                                     (option %currentDelegated key_hash)))
-                         (pair (pair (option %delegated key_hash) (address %factoryAddress))
-                               (pair (nat %feeRate) (nat %invariant))))
+                                     (option %currentDelegated key_hash))
+                               (pair (big_map %cycles
+                                        nat
+                                        (pair (pair (pair (nat %counter) (nat %cycleCoefficient))
+                                                    (pair (timestamp %lastUpdate) (timestamp %nextCycle)))
+                                              (pair (pair (nat %reward) (timestamp %start)) (nat %totalLoyalty))))
+                                     (option %delegated key_hash)))
+                         (pair (pair (address %factoryAddress) (nat %feeRate))
+                               (pair (nat %invariant)
+                                     (big_map %loyaltyCycle
+                                        address
+                                        (pair (pair (nat %lastCycle) (timestamp %lastCycleUpdate))
+                                              (pair (nat %loyalty) (nat %reward)))))))
                    (pair (pair (pair (big_map %shares address nat) (nat %tezPool))
                                (pair (address %tokenAddress) (nat %tokenId)))
                          (pair (pair (nat %tokenPool) (nat %totalShares)) (pair (nat %totalVotes) (nat %veto)))))
@@ -102,13 +105,11 @@
          SELF ;
          ADDRESS ;
          DIG 2 ;
-         DUP ;
-         DUG 3 ;
          CAR ;
          IF_LEFT
-           { DIG 2 ;
+           { SWAP ;
+             DROP 2 ;
              DUP ;
-             DUG 3 ;
              CAR ;
              PUSH nat 9 ;
              GET ;
@@ -116,9 +117,9 @@
                { PUSH string "Dex/function-not-set" ; FAILWITH }
                { SELF ;
                  ADDRESS ;
-                 DIG 4 ;
+                 DIG 2 ;
                  DUP ;
-                 DUG 5 ;
+                 DUG 3 ;
                  CDR ;
                  PUSH nat 0 ;
                  RIGHT (pair (pair (nat %minTez) (nat %minTokens)) (nat %shares)) ;
@@ -129,42 +130,23 @@
                  LEFT address ;
                  PAIR ;
                  PAIR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 SWAP ;
-                 EXEC ;
-                 DIP { DROP } } ;
-             DIG 3 ;
-             DUP ;
-             DUG 4 ;
-             DIG 1 ;
+                 EXEC } ;
              DUP ;
              DUG 2 ;
              CDR ;
              SWAP ;
              CAR ;
              PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
+             SWAP ;
              CAR ;
-             PAIR ;
-             DIP { DROP 2 } }
+             PAIR }
            { DIG 2 ;
-             DUP ;
-             DUG 3 ;
-             DIG 1 ;
+             SWAP ;
              DUP ;
              DUG 2 ;
              CAR ;
              PAIR ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
-             DIG 2 ;
-             DUP ;
-             DUG 3 ;
+             DUG 2 ;
              CDR ;
              PAIR ;
              PAIR ;
@@ -180,7 +162,7 @@
              CAR ;
              GET ;
              IF_NONE
-               { PUSH string "Dex/function-not-set" ; FAILWITH }
+               { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
                { DIG 2 ;
                  DUP ;
                  DUG 3 ;
@@ -191,33 +173,18 @@
                  DUG 3 ;
                  CDR ;
                  DIG 4 ;
-                 DUP ;
-                 DUG 5 ;
                  CAR ;
                  CAR ;
                  PAIR ;
                  PAIR ;
-                 DIG 1 ;
-                 DUP ;
-                 DUG 2 ;
-                 SWAP ;
-                 EXEC ;
-                 DIP { DROP } } ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
-             DIG 1 ;
+                 EXEC } ;
              DUP ;
              DUG 2 ;
              CDR ;
              SWAP ;
              CAR ;
              PAIR ;
-             DIG 1 ;
-             DUP ;
-             DUG 2 ;
+             SWAP ;
              CAR ;
-             PAIR ;
-             DIP { DROP 4 } } ;
-         DIP { DROP 3 } } }
+             PAIR } } }
 

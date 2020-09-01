@@ -28,8 +28,14 @@ class Test {
       await tezos1.signer.publicKeyHash(),
       100000
     );
+    const tokenAmount = "1000";
+    const tezAmount = "1.0";
     let factory = await Factory.init(tezos);
-    operation = await factory.launchExchange(tokenAddress);
+    operation = await factory.launchExchange(
+      tokenAddress,
+      tokenAmount,
+      tezAmount
+    );
     await operation.confirmation();
     assert.equal(operation.status, "applied", "Operation was not applied");
 
@@ -54,18 +60,6 @@ class Test {
     const tokenAmount = "1000";
     const tezAmount = "1.0";
     const alicePkh = await AliceTezos.signer.publicKeyHash();
-    let initialStorage = await dex.getFullStorage({ shares: [alicePkh] });
-    assert.equal(initialStorage.storage.feeRate, 333);
-    assert.equal(initialStorage.storage.invariant, 0);
-    assert.equal(initialStorage.storage.totalShares, 0);
-    assert.equal(initialStorage.storage.tezPool, 0);
-    assert.equal(initialStorage.storage.tokenPool, 0);
-    assert.equal(initialStorage.storage.tokenAddress, tokenAddress);
-    assert.equal(initialStorage.storage.factoryAddress, factoryAddress);
-    assert.equal(initialStorage.sharesExtended[alicePkh], undefined);
-
-    let operation = await dex.initializeExchange(tokenAmount, tezAmount);
-    assert.equal(operation.status, "applied", "Operation was not applied");
 
     let finalStorage = await dex.getFullStorage({ shares: [alicePkh] });
     const mutezAmount = AliceTezos.format("tz", "mutez", tezAmount).toNumber();
@@ -1252,7 +1246,7 @@ class Test {
     const alicePkh = await AliceTezos.signer.publicKeyHash();
     const bobPkh = await BobTezos.signer.publicKeyHash();
     let initialStorage = await dex.getFullStorage({
-      cycleLoyalty: [bobPkh],
+      loyaltyCycle: [bobPkh],
       shares: [bobPkh],
     });
 
@@ -1263,10 +1257,10 @@ class Test {
 
     operation = await dex.withdrawProfit(bobPkh);
     assert.equal(operation.status, "applied", "Operation was not applied");
-    let finalStorage = await dex.getFullStorage({ cycleLoyalty: [bobPkh] });
+    let finalStorage = await dex.getFullStorage({ loyaltyCycle: [bobPkh] });
     operation = await dex.sendReward(amount);
     assert.equal(operation.status, "applied", "Operation was not applied");
-    finalStorage = await dex.getFullStorage({ cycleLoyalty: [bobPkh] });
+    finalStorage = await dex.getFullStorage({ loyaltyCycle: [bobPkh] });
   }
 
   static async withdrawProfitWithoutProfit(dexAddress) {

@@ -111,7 +111,13 @@ let deployContract = async (
   console.log(`${contractName} deployed at: ${contract.address}`);
 };
 
-let addToken = async (tokenName, factoryName, inputDir) => {
+let addToken = async (
+  tokenName,
+  factoryName,
+  tezAmount,
+  tokenAmount,
+  inputDir
+) => {
   tokenName = tokenName || "Token";
   factoryName = factoryName || "Factory";
   const { address: tokenAddress } = JSON.parse(
@@ -123,9 +129,14 @@ let addToken = async (tokenName, factoryName, inputDir) => {
 
   const factoryContract = await Tezos.contract.at(factoryAddress);
   try {
-    const operation = await factoryContract.methods
-      .launchExchange(tokenAddress)
+    let token = await Tezos.contract.at(tokenAddress);
+    let operation = await token.methods
+      .approve(factoryAddress, tokenAmount)
       .send();
+    await operation.confirmation();
+    operation = await factoryContract.methods
+      .launchExchange(tokenAddress, tokenAmount)
+      .send({ amount: tezAmount });
     await operation.confirmation();
     console.log(`Dex for ${tokenAddress} deployed!`);
   } catch (E) {
@@ -273,7 +284,9 @@ program
 
 program
   .command("compile_storage <contract> <params> [output_name]")
-  .description("build contracts")
+  .description(
+    "compile storage represented by <params>(Ligo) for <contract> and stores output to [output_name]."
+  )
   .option("-o, --output_dir <dir>", "Where store builds", "storage")
   .option("-i, --input_dir <dir>", "Where files are located", "contracts")
   .option("-g, --no-dockerized_ligo", "Switch global ligo")
@@ -291,8 +304,10 @@ program
   });
 
 program
-  .command("add_token [token] [factory]")
-  .description("add token")
+  .command("add_token <initial_tez> <initial_tokens> [token] [factory]")
+  .description(
+    "deploy new dex contract with factory at address stored in [factory] file for token with address stored in [token]. Provide initial liquidity with <initial_tez> <initial_tokens>"
+  )
   .option(
     "-i, --input_dir <dir>",
     "Where deployed contracts are located",
@@ -308,14 +323,22 @@ program
     "Node to connect",
     "http://127.0.0.1:8732"
   )
-  .action(async function (token, factory, options) {
+  .action(async function (initialTez, initialTokens, token, factory, options) {
     await setup(options.key_path, options.provider);
-    await addToken(token, factory, options.input_dir);
+    await addToken(
+      token,
+      factory,
+      initialTez,
+      initialTokens,
+      options.input_dir
+    );
   });
 
 program
-  .command("set_functions <num> <function_name> [dex] [contract]")
-  .description("build contracts")
+  .command("set_functions <num> <function_name> [factory] [contract]")
+  .description(
+    "set function <function_name> at index <num> using factory address from [factory] file and [contract] as contract source."
+  )
   .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
   .option(
     "-i, --input_dir <dir>",
@@ -334,13 +357,13 @@ program
   )
   .option("-g, --no-dockerized_ligo", "Switch global ligo")
   .option("-f, --fa2", "Set function to fa2 version", false)
-  .action(async function (num, functionName, dex, contract, options) {
+  .action(async function (num, functionName, factory, contract, options) {
     await setup(options.key_path, options.provider);
     if (options.fa2) {
       await setFunctionsFA2(
         num,
         functionName,
-        dex,
+        factory,
         contract,
         options.input_dir,
         options.output_dir,
@@ -350,7 +373,7 @@ program
       await setFunctions(
         num,
         functionName,
-        dex,
+        factory,
         contract,
         options.input_dir,
         options.output_dir,
@@ -361,7 +384,9 @@ program
 
 program
   .command("deploy <contract> [output_name] [storage_name]")
-  .description("deploy contracts")
+  .description(
+    "deploy contract in <contract> file using [storage_name] as source file with initial storage and store output address to [output_name]."
+  )
   .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
   .option("-i, --input_dir <dir>", "Where built contracts are located", "build")
   .option(

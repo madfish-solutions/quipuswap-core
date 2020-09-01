@@ -4,7 +4,13 @@
   "config": {
     "network": "http://127.0.0.1:8732",
     "network1": "https://testnet-tezos.giganode.io",
-    "standard": "fa1.2"
+    "standard": "fa1.2",
+    "default": {
+      "pool": {
+        "tez": "1.0",
+        "token": "1000"
+      }
+    }
   },
   "scripts": {
     "build": "./scripts/build.sh",
@@ -16,7 +22,7 @@
     "set-functions": "./scripts/set_functions.sh",
     "set-functions-fa1.2": "./scripts/set_functions_fa1.2.sh",
     "set-functions-fa2": "./scripts/set_functions_fa2.sh",
-    "add-tokens": "node scripts/cli.js add_token -p $npm_package_config_network && node scripts/cli.js add_token -p $npm_package_config_network Token2",
+    "add-tokens": "node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network && node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network Token2",
     "test": "mocha --timeout 2000000"
   },
   "dependencies": {
