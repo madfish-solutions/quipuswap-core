@@ -37,7 +37,7 @@ exports.sleep = (ms) => {
 
 exports.setup = async (keyPath = "../fixtures/key") => {
   keyPath = path.join(__dirname, keyPath);
-  const secretKey = fs.readFileSync(keyPath).toString();
+  const secretKey = fs.readFileSync(keyPath).toString().trim();
   let tezos = new TezosToolkit();
   await tezos.setProvider({
     rpc: provider,

@@ -55,7 +55,7 @@ const buildContract = (
 };
 
 const setup = async (keyPath, provider) => {
-  const secretKey = fs.readFileSync(keyPath).toString();
+  const secretKey = fs.readFileSync(keyPath).toString().trim();
   rpcProvider = provider;
   return await Tezos.setProvider({
     rpc: provider,
