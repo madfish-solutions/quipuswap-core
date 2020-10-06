@@ -25,10 +25,11 @@ type dex_storage is record
   tezPool: nat;
   tokenPool: nat;
   invariant: nat;
-  totalShares: nat;
+  totalShares: nat; // << XXX::REMOVE
   tokenAddress: address;
   factoryAddress: address;
-  shares: big_map(address, nat);
+  // << XXX::ADD_SHARE_TOKEN_ADDRESS
+  shares: big_map(address, nat); // << XXX::REMOVE
   voters: big_map(address, vote_info);
   vetos: big_map(key_hash, timestamp);
   vetoVoters: big_map(address, nat);

@@ -19,16 +19,17 @@ function getTokenContract(const tokenAddress : address) : contract(transfer_type
 // functions
 function initializeExchangeBody (const tokenAmount : nat ; var s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
 block {
+  // << XXX::ADD_GET_TOTAL_SUPPLY_CALL -> NEXT_FUNCTION_CALL_WITH_RESPONSE
   if s.invariant =/= 0n 
-    or s.totalShares =/= 0n 
+    or s.totalShares =/= 0n // << XXX::UPDATE
     or Tezos.amount < 1mutez 
     or tokenAmount < 1n 
     or Tezos.amount > 500000000tz then failwith("Dex/non-allowed") else skip ; 
   s.tokenPool := tokenAmount;
   s.tezPool := Tezos.amount / 1mutez;
   s.invariant := s.tezPool * s.tokenPool;
-  s.shares[Tezos.sender] := 1000n;
-  s.totalShares := 1000n;
+  s.shares[Tezos.sender] := 1000n; // << XXX::REMOVE
+  s.totalShares := 1000n; // << XXX::REMOVE
   
    // update user loyalty
   s.currentCycle.lastUpdate := Tezos.now;
@@ -37,16 +38,20 @@ block {
       TransferType(Tezos.sender, (this, tokenAmount)), 
       0mutez, 
       getTokenContract(s.tokenAddress)
-    )], s)
+    )
+    // << XXX::ADD_MINT_ACTION
+    ], s)
 
 function investLiquidityBody (const minShares : nat ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 block {
-  const sharesPurchased : nat = (Tezos.amount / 1mutez) * s.totalShares / s.tezPool;
+  // << XXX::ADD_GET_TOTAL_SUPPLY_CALL -> NEXT_FUNCTION_CALL_WITH_RESPONSE
+  const sharesPurchased : nat = (Tezos.amount / 1mutez) * s.totalShares / s.tezPool; // << XXX::UPDATE
   if minShares > 0n and sharesPurchased >= minShares then skip else failwith("Dex/wrong-params");
-  s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalShares;
+  s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalShares; // << XXX::UPDATE
   s.currentCycle.lastUpdate := Tezos.now;
-  const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalShares;
+  const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalShares; // << XXX::UPDATE
   if tokensRequired = 0n then failwith("Dex/dangerous-rate") else {
+    // << XXX::GET_USER_SHARE -> NEXT_FUNCTION_CALL_WITH_RESPONSE
     const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
     // update user loyalty
     var userCycle : user_cycle_info := case s.loyaltyCycle[Tezos.sender] of None -> record reward = 0n; loyalty = 0n; lastCycle = s.currentCycle.counter; lastCycleUpdate = Tezos.now; end
@@ -71,7 +76,7 @@ block {
     s.tezPool := s.tezPool + Tezos.amount / 1mutez;
     s.tokenPool := s.tokenPool + tokensRequired;
     s.invariant := s.tezPool * s.tokenPool;
-    s.totalShares := s.totalShares + sharesPurchased;
+    s.totalShares := s.totalShares + sharesPurchased; // << XXX::REMOVE
     case s.voters[Tezos.sender] of None -> skip
       | Some(v) -> { 
         case v.candidate of None -> skip 
@@ -107,7 +112,9 @@ block {
 } with (list[transaction(TransferType(Tezos.sender, (this, tokensRequired)), 
       0mutez, 
       getTokenContract(s.tokenAddress)
-    )], s)
+    )]
+    // << XXX::MINT
+    , s)
 
 function tezToTokenBody (const args : tezToTokenPaymentArgs ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 block {
@@ -130,6 +137,8 @@ block {
 
 function voteBody (const args : voteArgs ; const s : dex_storage; const this: address) :  (dex_storage) is
 block {
+  // << XXX::GET_BALANCE -> NEXT_FUNCTION_CALL_WITH_RESPONSE
+  // << XXX::IMP_FREEZE_FOR_VOTED_TOKENS (to prevent double-voting)
   case s.shares[args.voter] of None -> failwith ("Dex/no-shares")
   | Some(share) -> {
     case s.vetos[args.candidate] of None -> skip
@@ -164,11 +173,13 @@ block {
     } else failwith ("Dex/vote-not-permitted");
   }
   end
-} with (s)
+} with (s) // << XXX::FREEZE_OPERATION
 
 function vetoBody (const voter : address ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 block {
   var operations: list(operation) := list[];
+  // << XXX::GET_BALANCE -> NEXT_FUNCTION_CALL_WITH_RESPONSE
+  // << XXX::IMP_FREEZE_FOR_VOTED_TOKENS (to prevent double-veto)
   case s.shares[voter] of None -> failwith ("Dex/no-voter")
   | Some(share) -> {
     const src : vote_info = case s.voters[voter] of None -> record allowances = (set [] : set(address)); candidate = (None: option(key_hash)); end
@@ -192,7 +203,7 @@ block {
           end;
       } else skip ;
       s.vetoVoters[voter] := share;
-    } else failwith ("Dex/vote-not-permitted");
+    } else failwith ("Dex/vote-not-permitted"); // << XXX::FREEZE_ACTION
   }
   end
 } with (operations, s)
@@ -216,6 +227,8 @@ block {
 
 function divestLiquidityBody (const args : divestLiquidityArgs ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 block {
+  // << XXX::GET_BALANCE -> NEXT_FUNCTION_CALL_WITH_RESPONSE
+  // << XXX::ADD_GET_TOTAL_SUPPLY_CALL -> NEXT_FUNCTION_CALL_WITH_RESPONSE
   var operations: list(operation) := list[];
   const share : nat = case s.shares[Tezos.sender] of | None -> 0n | Some(share) -> share end;
   if args.shares > 0n and args.shares <= share then {
@@ -253,11 +266,12 @@ block {
     userCycle.lastCycle := s.currentCycle.counter;
     s.loyaltyCycle[Tezos.sender] := userCycle;
 
-    s.totalShares := abs(s.totalShares - args.shares);
+    s.totalShares := abs(s.totalShares - args.shares); // << XXX::remove
     s.tezPool := abs(s.tezPool - tezDivested);
     s.tokenPool := abs(s.tokenPool - tokensDivested);
     s.invariant := if s.totalShares = 0n then 0n; else s.tezPool * s.tokenPool;
 
+    // << XXX::REMOVE_VOTING_UPDATE, user decide if he frezes new tokens 
     case s.voters[Tezos.sender] of None -> skip
       | Some(v) -> {
         case v.candidate of None -> skip | Some(candidate) -> {
@@ -266,6 +280,7 @@ block {
           if prevVotes = args.shares then remove Tezos.sender from map s.voters; else skip ;
         } end;
     } end;
+    // << XXX::REMOVE_VETO_UPDATE, user decide if he frezes new tokens 
     case s.vetoVoters[Tezos.sender] of None -> skip
       | Some(prevVotes) -> {
           s.veto := abs(s.veto - args.shares);
@@ -278,6 +293,7 @@ block {
       0mutez,          
       getTokenContract(s.tokenAddress)
     ); 
+    // << XXX::BURN 
     transaction(unit, tezDivested * 1mutez, (get_contract(Tezos.sender) : contract(unit))); end;
     } else failwith("Dex/wrong-out");
   } else failwith("Dex/wrong-params");
@@ -285,6 +301,7 @@ block {
 
 function withdrawProfitBody (const receiver : address ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 block {
+  // << XXX::GET_BALANCE -> NEXT_FUNCTION_CALL_WITH_RESPONSE
   var userCycle : user_cycle_info := get_force(Tezos.sender, s.loyaltyCycle);
   var share : nat := get_force(Tezos.sender, s.shares);
   if userCycle.lastCycle =/= s.currentCycle.counter then {
@@ -547,10 +564,11 @@ block {
           tezPool = Tezos.amount / 1mutez;      
           tokenPool = tokenAmount;      
           invariant = Tezos.amount / 1mutez * tokenAmount;      
-          totalShares = 1000n;      
+          totalShares = 1000n; // << XXX::REMOVE
+          // << XXX::ADD_SHARE_TOKEN_ADDRESS
           tokenAddress = token;      
           factoryAddress = self;      
-          shares = big_map[Tezos.sender -> 1000n];      
+          shares = big_map[Tezos.sender -> 1000n]; // << XXX::REMOVE
           voters = (big_map end : big_map(address, vote_info));      
           vetos = (big_map end : big_map(key_hash, timestamp));      
           vetoVoters = (big_map end : big_map(address, nat));      
