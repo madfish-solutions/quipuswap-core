@@ -6,26 +6,24 @@
                 (pair %transfer (address %from) (pair (address %to) (nat %value))))
             (pair %use
                nat
-               (or (or (or (or (pair %divestLiquidity (pair (nat %minTez) (nat %minTokens)) (nat %shares))
-                               (nat %initializeExchange))
-                           (or (nat %investLiquidity)
-                               (pair %setVotesDelegation (address %account) (bool %isAllowed))))
-                       (or (or (pair %tezToTokenPayment (nat %amount) (address %receiver))
-                               (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver)))
-                           (or (address %veto) (pair %vote (key_hash %candidate) (address %voter)))))
-                   (address %withdrawProfit))))) ;
+               (or (or (or (pair %divestLiquidity (pair (nat %minTez) (nat %minTokens)) (nat %shares))
+                           (nat %initializeExchange))
+                       (or (nat %investLiquidity)
+                           (pair %tezToTokenPayment (nat %amount) (address %receiver))))
+                   (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver))
+                           (address %veto))
+                       (or (pair %vote (key_hash %candidate) (address %voter)) (address %withdrawProfit))))))) ;
   storage
     (pair (pair (big_map %dexLambdas
                    nat
                    (lambda
-                      (pair (pair (or (or (or (or (pair %divestLiquidity (pair (nat %minTez) (nat %minTokens)) (nat %shares))
-                                                  (nat %initializeExchange))
-                                              (or (nat %investLiquidity)
-                                                  (pair %setVotesDelegation (address %account) (bool %isAllowed))))
-                                          (or (or (pair %tezToTokenPayment (nat %amount) (address %receiver))
-                                                  (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver)))
-                                              (or (address %veto) (pair %vote (key_hash %candidate) (address %voter)))))
-                                      (address %withdrawProfit))
+                      (pair (pair (or (or (or (pair %divestLiquidity (pair (nat %minTez) (nat %minTokens)) (nat %shares))
+                                              (nat %initializeExchange))
+                                          (or (nat %investLiquidity)
+                                              (pair %tezToTokenPayment (nat %amount) (address %receiver))))
+                                      (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %minOut)) (address %receiver))
+                                              (address %veto))
+                                          (or (pair %vote (key_hash %candidate) (address %voter)) (address %withdrawProfit))))
                                   (pair (pair (pair (pair (pair (option %currentCandidate key_hash) (option %currentDelegated key_hash))
                                                           (pair (address %factoryAddress) (nat %invariant)))
                                                     (pair (pair (big_map %ledger address (pair (map %allowances address nat) (nat %balance)))
@@ -146,10 +144,8 @@
                  (pair (pair (big_map
                                 nat
                                 (lambda
-                                   (pair (pair (or (or (or (or (pair (pair nat nat) nat) nat) (or nat (pair address bool)))
-                                                       (or (or (pair nat address) (pair (pair nat nat) address))
-                                                           (or address (pair key_hash address))))
-                                                   address)
+                                   (pair (pair (or (or (or (pair (pair nat nat) nat) nat) (or nat (pair nat address)))
+                                                   (or (or (pair (pair nat nat) address) address) (or (pair key_hash address) address)))
                                                (pair (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair address nat))
                                                                  (pair (pair (big_map address (pair (map address nat) nat)) (option key_hash))
                                                                        (pair (pair (pair (pair timestamp timestamp) (pair nat nat)) nat) nat)))
@@ -203,10 +199,8 @@
                  (pair (pair (big_map
                                 nat
                                 (lambda
-                                   (pair (pair (or (or (or (or (pair (pair nat nat) nat) nat) (or nat (pair address bool)))
-                                                       (or (or (pair nat address) (pair (pair nat nat) address))
-                                                           (or address (pair key_hash address))))
-                                                   address)
+                                   (pair (pair (or (or (or (pair (pair nat nat) nat) nat) (or nat (pair nat address)))
+                                                   (or (or (pair (pair nat nat) address) address) (or (pair key_hash address) address)))
                                                (pair (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair address nat))
                                                                  (pair (pair (big_map address (pair (map address nat) nat)) (option key_hash))
                                                                        (pair (pair (pair (pair timestamp timestamp) (pair nat nat)) nat) nat)))
@@ -319,10 +313,8 @@
                          CDR ;
                          PUSH nat 0 ;
                          RIGHT (pair (pair nat nat) nat) ;
-                         LEFT (or nat (pair address bool)) ;
-                         LEFT (or (or (pair nat address) (pair (pair nat nat) address))
-                                  (or address (pair key_hash address))) ;
-                         LEFT address ;
+                         LEFT (or nat (pair nat address)) ;
+                         LEFT (or (or (pair (pair nat nat) address) address) (or (pair key_hash address) address)) ;
                          PAIR ;
                          PAIR ;
                          EXEC } ;

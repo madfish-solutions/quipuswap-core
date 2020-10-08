@@ -194,7 +194,7 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
 //   end
 // } with (s) // << XXX::FREEZE_OPERATION
 
-// function vetoBody (const voter : address ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
+// function vetoBody (const voter : address ; const s : dex_storage; const this: address) :  return is
 // block {
 //   var operations: list(operation) := list[];
 //   // << XXX::IMP_FREEZE_FOR_VOTED_TOKENS (to prevent double-veto)
@@ -227,20 +227,6 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
 //   end
 // } with (operations, s)
 
-// function setVotesDelegationBody (const args : setVotesDelegationArgs ; const s : dex_storage ; const this: address) :  (dex_storage) is
-// block {
-//   if Tezos.sender = args.account then skip
-//   else block {
-//      const src: vote_info = case s.voters[Tezos.sender] of None -> record allowances = (set [] : set(address)); candidate = (None:option(key_hash)) end 
-//         | Some(v) -> v 
-//         end ;
-//      if Set.size(src.allowances) >= 5n and args.isAllowed then failwith("Dex/many-voter-delegates") else {
-//         src.allowances := if args.isAllowed then Set.add (args.account, src.allowances) else Set.remove (args.account, src.allowances) ;
-//         s.voters[Tezos.sender] := src;
-//      };
-//   }
-// } with (s)
-
 // wrappers
 function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  return is
   block {
@@ -265,10 +251,6 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
           (* update rewards info *)
           s.rewardInfo.lastUpdateTime := Tezos.now;
           s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
-
-          // (* update user reward info *)
-          // var userRewardInfo : user_reward_info := userRewards(Tezos.sender, s);
-          // s.userRewards[Tezos.sender] := userRewardInfo;
           
           operations := list[ transaction(
             TransferType(Tezos.sender, (this, tokenAmount)), 
@@ -280,36 +262,14 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
         | TokenToTezPayment(n) -> failwith("00")
         | InvestLiquidity(n) -> failwith("00")
         | DivestLiquidity(n) -> failwith("00")
-        | SetVotesDelegation(n) -> failwith("00")
         | Vote(n) -> failwith("00")
         | Veto(n) -> failwith("00")
         | WithdrawProfit(n) -> failwith("00")
       end
   } with (operations, s)
 
-// function setVotesDelegation (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
-// block {
-//   case p of
-//   | InitializeExchange(tokenAmount) -> failwith("00")
-//   | TezToTokenPayment(n) -> failwith("00")
-//   | TokenToTezPayment(n) -> failwith("00")
-//   | InvestLiquidity(n) -> failwith("00")
-//   | DivestLiquidity(n) -> failwith("00")
-//   | SetVotesDelegation(args) -> {
-//     s := setVotesDelegationBody(args, s, this);
-//   }
-//   | Vote(n) -> failwith("00")
-//   | Veto(n) -> failwith("00")
-//   | WithdrawProfit(n) -> failwith("00")
-//   | ITransfer(n) -> failwith("00")
-//   | IApprove(n) -> failwith("00")
-//   | IGetBalance(n) -> failwith("00")
-//   | IGetAllowance(n) -> failwith("00")
-//   | IGetTotalSupply(n) -> failwith("00")
-//   end
-// } with ((nil:list(operation)), s)
 
-// function vote (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
+// function vote (const p : dexAction; const s : dex_storage; const this: address) :  return is
 // block {
 //   case p of
 //   | InitializeExchange(tokenAmount) -> failwith("00")
@@ -317,21 +277,15 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
 //   | TokenToTezPayment(n) -> failwith("00")
 //   | InvestLiquidity(n) -> failwith("00")
 //   | DivestLiquidity(n) -> failwith("00")
-//   | SetVotesDelegation(n) -> failwith("00")
 //   | Vote(args) -> {
 //       s := voteBody(args, s, this);
 //     }
 //   | Veto(n) -> failwith("00")
 //   | WithdrawProfit(n) -> failwith("00")
-//   | ITransfer(n) -> failwith("00")
-//   | IApprove(n) -> failwith("00")
-//   | IGetBalance(n) -> failwith("00")
-//   | IGetAllowance(n) -> failwith("00")
-//   | IGetTotalSupply(n) -> failwith("00")
 //   end
 // } with ((nil:list(operation)), s)
 
-// function veto (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
+// function veto (const p : dexAction; const s : dex_storage; const this: address) :  return is
 // block {
 //   var operations: list(operation) := list[];
 //   case p of
@@ -340,19 +294,13 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
 //   | TokenToTezPayment(n) -> failwith("00")
 //   | InvestLiquidity(n) -> failwith("00")
 //   | DivestLiquidity(n) -> failwith("00")
-//   | SetVotesDelegation(n) -> failwith("00")
 //   | Vote(n) -> failwith("00")
 //   | Veto(voter) -> {
-//       const res : (list(operation) * dex_storage) = vetoBody(voter, s, this);
+//       const res : return = vetoBody(voter, s, this);
 //       operations := res.0;
 //       s := res.1;
 //     }
 //   | WithdrawProfit(n) -> failwith("00")
-//   | ITransfer(n) -> failwith("00")
-//   | IApprove(n) -> failwith("00")
-//   | IGetBalance(n) -> failwith("00")
-//   | IGetAllowance(n) -> failwith("00")
-//   | IGetTotalSupply(n) -> failwith("00")
 //   end
 // } with (operations, s)
 
@@ -380,7 +328,6 @@ function tezToToken (const p : dexAction; const s : dex_storage; const this : ad
       | TokenToTezPayment(n) -> failwith("00")
       | InvestLiquidity(n) -> failwith("00")
       | DivestLiquidity(n) -> failwith("00")
-      | SetVotesDelegation(n) -> failwith("00")
       | Vote(n) -> failwith("00")
       | Veto(voter) -> failwith("00")
       | WithdrawProfit(n) -> failwith("00")
@@ -415,7 +362,6 @@ function tokenToTez (const p : dexAction; const s : dex_storage; const this : ad
       }
       | InvestLiquidity(n) -> failwith("00")
       | DivestLiquidity(n) -> failwith("00")
-      | SetVotesDelegation(n) -> failwith("00")
       | Vote(n) -> failwith("00")
       | Veto(voter) -> failwith("00")
       | WithdrawProfit(n) -> failwith("00")
@@ -442,6 +388,7 @@ function investLiquidity (const p : dexAction; const s : dex_storage; const this
         if Tezos.now > s.rewardInfo.periodFinish then block {
           s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
           s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
+          s.rewardInfo.reward := 0n;
         } else skip;
 
         const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalSupply;
@@ -475,14 +422,13 @@ function investLiquidity (const p : dexAction; const s : dex_storage; const this
         )];
       }
       | DivestLiquidity(n) -> failwith("00")
-      | SetVotesDelegation(n) -> failwith("00")
       | Vote(n) -> failwith("00")
       | Veto(voter) -> failwith("00")
       | WithdrawProfit(n) -> failwith("00")
     end
   } with (operations, s)
 
-function divestLiquidity (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
+function divestLiquidity (const p : dexAction; const s : dex_storage; const this: address) :  return is
   block {
     var operations: list(operation) := list[];
       case p of
@@ -505,6 +451,7 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
           if Tezos.now > s.rewardInfo.periodFinish then block {
             s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
             s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
+            s.rewardInfo.reward := 0n;
           } else skip;
 
           (* update user loyalty *)
@@ -540,42 +487,26 @@ function divestLiquidity (const p : dexAction ; const s : dex_storage; const thi
           ];
         } else failwith("Dex/wrong-params");
       }
-      | SetVotesDelegation(n) -> failwith("00")
       | Vote(n) -> failwith("00")
       | Veto(voter) -> failwith("00")
       | WithdrawProfit(n) -> failwith("00")
     end
   } with (operations, s)
 
-// function receiveReward (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is 
-// block {
-//   s.currentCycle.reward := s.currentCycle.reward + Tezos.amount / 1mutez;
-//   var operations : list(operation) := (nil: list(operation)); 
-//   if s.currentCycle.nextCycle < Tezos.now then block {
-//     s.currentCycle.nextCycle := Tezos.now;
-//     s.currentCycle.cycleCoefficient := abs(Tezos.now - s.currentCycle.start) * s.currentCycle.reward / s.currentCycle.totalLoyalty + s.currentCycle.cycleCoefficient;
-//     s.cycles[s.currentCycle.counter] := s.currentCycle;
-//     s.currentCycle.reward := 0n;
-//     s.currentCycle.counter := s.currentCycle.counter + 1n;
-//     s.currentCycle.totalLoyalty := 0n;
-//     s.currentCycle.start := Tezos.now;
-//     s.currentCycle.nextCycle := Tezos.now + cyclePeriod;
-//     if case s.delegated of None -> False
-//       | Some(delegated) ->
-//         case s.currentDelegated of None -> True
-//           | Some(currentDelegated) -> delegated =/= currentDelegated
-//         end
-//       end
-//     then {
-//        operations := set_delegate(s.delegated) # operations;
-//        s.currentDelegated := s.delegated;
-//        s.vetoVoters := (big_map [] : big_map(address, nat));
-//        s.veto := 0n;
-//     } else skip ;
-//   } else skip ;
-//   s.currentCycle.totalLoyalty := s.currentCycle.totalLoyalty + abs(Tezos.now - s.currentCycle.lastUpdate) * s.totalSupply;
-//   s.currentCycle.lastUpdate := Tezos.now;
-// } with (operations, s)
+function receiveReward (const p : dexAction; const s : dex_storage; const this : address) : return is 
+  block {
+    (* update rewards info *)
+    s.rewardInfo.totalAccomulatedLoyalty := s.rewardInfo.totalAccomulatedLoyalty + abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier / s.totalSupply;
+    s.rewardInfo.lastUpdateTime := Tezos.now;
+  
+    (* check reward update*)
+    if Tezos.now > s.rewardInfo.periodFinish then block {
+      s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
+      s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
+      s.rewardInfo.reward := 0n;
+    } else skip;
+    s.rewardInfo.reward := s.rewardInfo.reward + Tezos.amount / 1mutez;
+  } with ((nil: list(operation)), s)
 
 function withdrawProfit (const p : dexAction; const s : dex_storage; const this : address) : return is
   block {
@@ -586,35 +517,40 @@ function withdrawProfit (const p : dexAction; const s : dex_storage; const this 
       | TokenToTezPayment(n) -> failwith("00")
       | InvestLiquidity(n) -> failwith("00")
       | DivestLiquidity(n) -> failwith("00")
-      | SetVotesDelegation(n) -> failwith("00")
       | Vote(n) -> failwith("00")
       | Veto(voter) -> failwith("00")
       | WithdrawProfit(receiver) -> {
-          skip
-          // var userCycle : user_cycle_info := get_force(Tezos.sender, s.loyaltyCycle);
-          // var account : account_info := getAccount(Tezos.sender, s);
-          // var share : nat := account.balance;
-          // if userCycle.lastCycle =/= s.currentCycle.counter then {
-          //   var cycle : cycle_info := get_force(userCycle.lastCycle, s.cycles);
-          //   userCycle.reward := userCycle.reward + cycle.reward * (userCycle.loyalty + share * abs(cycle.nextCycle - userCycle.lastCycleUpdate)) / cycle.totalLoyalty;
-          //   userCycle.loyalty := 0n;
-          //   userCycle.lastCycleUpdate := cycle.start;
-          // } else skip ;
-          // if s.currentCycle.counter - userCycle.lastCycle > 1 then {
-          //   const lastFullCycle : cycle_info = get_force(abs(s.currentCycle.counter - 1n), s.cycles);
-          //   const lastUserCycle : cycle_info = get_force(userCycle.lastCycle, s.cycles);
-          //   userCycle.reward := userCycle.reward + share * abs(lastFullCycle.cycleCoefficient - lastUserCycle.cycleCoefficient);
-          // } else skip ;
-          // userCycle.loyalty := userCycle.loyalty + share * abs(Tezos.now-userCycle.lastCycleUpdate);
-          // userCycle.lastCycleUpdate := Tezos.now;
-          // userCycle.lastCycle := s.currentCycle.counter;
-          // share := userCycle.reward;
-          // userCycle.reward := 0n;
-          // s.loyaltyCycle[Tezos.sender] := userCycle;
-          // operations := list [transaction(
-          //   unit, 
-          //   share * 1mutez, 
-          //   (get_contract(receiver) : contract(unit)))];
+        var account : account_info := getAccount(Tezos.sender, s);
+        const share : nat = account.balance;
+
+        (* update rewards info *)
+        s.rewardInfo.totalAccomulatedLoyalty := s.rewardInfo.totalAccomulatedLoyalty + abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier / s.totalSupply;
+        s.rewardInfo.lastUpdateTime := Tezos.now;
+
+        (* check reward update*)
+        if Tezos.now > s.rewardInfo.periodFinish then block {
+          s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
+          s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
+          s.rewardInfo.reward := 0n;
+        } else skip;
+
+        (* update user loyalty *)
+        var userRewardInfo : user_reward_info := getUserRewardInfo(Tezos.sender, s);
+        const currentLoyalty : nat = share * s.rewardInfo.totalAccomulatedLoyalty;
+        userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
+        userRewardInfo.loyaltyPaid := currentLoyalty;
+
+        (* update user reward *)
+        const currentReward : nat = s.rewardInfo.totalAccomulatedLoyalty * s.rewardInfo.rewardPerToken;
+        const reward : nat = userRewardInfo.loyalty + abs(currentReward - userRewardInfo.rewardPaid);
+        userRewardInfo.reward := 0n;
+        userRewardInfo.rewardPaid := currentReward;
+        s.userRewards[Tezos.sender] := userRewardInfo;
+        
+        operations := list [transaction(
+          unit, 
+          reward / accurancyMultiplier * 1mutez, 
+          (get_contract(receiver) : contract(unit)))];
       }
     end
   } with (operations, s)
@@ -696,21 +632,10 @@ block {
   end;
 } with s
 
-// function middle (const token : address; const tokenAmount : nat; var s : full_exchange_storage) : full_factory_return is
-// block {
-//   skip
-//   // const res : factory_return = case s.lambdas[0n] of 
-//   //   Some(f) -> f(Tezos.self_address, token, tokenAmount,  s.storage)
-//   //   | None -> (failwith("Factory/function-not-set"): factory_return)
-//   // end;
-//   // s.storage := res.1;
-// // } with (res.0, s)
-// } with ((nil:list(operation)), s)
-
 function main (const p : exchangeAction; const s : full_exchange_storage) : full_factory_return is 
   case p of
     | LaunchExchange(params) -> launchExchange(Tezos.self_address, params.token, params.tokenAmount, s)
-    | SetDexFunction(params) -> ((nil:list(operation)), if params.index > 9n then (failwith("Factory/wrong-index") : full_exchange_storage) else setDexFunction(params.index, params.func, s))
+    | SetDexFunction(params) -> ((nil:list(operation)), if params.index > 8n then (failwith("Factory/wrong-index") : full_exchange_storage) else setDexFunction(params.index, params.func, s))
     | SetTokenFunction(params) -> ((nil:list(operation)), if params.index > 4n then (failwith("Factory/wrong-index") : full_exchange_storage) else setTokenFunction(params.index, params.func, s))
   end
 

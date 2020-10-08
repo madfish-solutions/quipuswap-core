@@ -61,11 +61,6 @@ type divestLiquidityParams is record [
   shares      : nat; 
 ]
 
-type setVotesDelegationParams is record [
-  account     : address;
-  isAllowed   : bool;
-]
-
 type voteParams is record [
   candidate   : key_hash;
   voter       : address; 
@@ -77,7 +72,6 @@ type dexAction is
 | TokenToTezPayment of tokenToTezPaymentParams
 | InvestLiquidity of (nat)
 | DivestLiquidity of divestLiquidityParams
-| SetVotesDelegation of setVotesDelegationParams
 | Vote of voteParams
 | Veto of (address)
 | WithdrawProfit of (address)

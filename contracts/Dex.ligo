@@ -20,7 +20,7 @@ block {
 
 function useDefault (const s : full_dex_storage) : full_return is
 block {
-  const res : return = case s.dexLambdas[9n] of 
+  const res : return = case s.dexLambdas[8n] of 
     Some(f) -> f(InitializeExchange(0n), s.storage, Tezos.self_address)
     | None -> (failwith("Dex/function-not-set") : return) 
   end;
