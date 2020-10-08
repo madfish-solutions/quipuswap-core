@@ -64,6 +64,7 @@ type divestLiquidityParams is record [
 type voteParams is record [
   candidate   : key_hash;
   voter       : address; 
+  value       : nat; 
 ]
 
 type dexAction is

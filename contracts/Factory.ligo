@@ -1,9 +1,7 @@
 #include "IFactory.ligo"
 
-// // types for internal transaction calls
+// types for internal transaction calls
 type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
-// type token_lookup_type is TokenLookupType of (address * address * nat)
-// type use_type is UseType of (nat * dexAction) 
 
 // helpers
 function getTokenContract(const tokenAddress : address) : contract(transfer_type) is 
@@ -12,7 +10,6 @@ function getTokenContract(const tokenAddress : address) : contract(transfer_type
       | None -> (failwith("01"):contract(transfer_type))
     end;
 
-// token actions
 (* Helper function to get account *)
 function getAccount (const addr : address; const s : dex_storage) : account_info is
   block {
@@ -22,6 +19,21 @@ function getAccount (const addr : address; const s : dex_storage) : account_info
         allowances = (map [] : map (address, nat));
       ];
     case s.ledger[addr] of
+      None -> skip
+    | Some(instance) -> acct := instance
+    end;
+  } with acct
+
+(* Helper function to get voter info *)
+function getVoter (const addr : address; const s : dex_storage) : vote_info is
+  block {
+    var acct : vote_info :=
+      record [
+        candidate   = (None : option(key_hash));
+        vote        = 0n;
+        veto        = 0n;
+      ];
+    case s.voters[addr] of
       None -> skip
     | Some(instance) -> acct := instance
     end;
@@ -119,23 +131,6 @@ function getBalance (const p : tokenAction; const s : dex_storage) : return is
     end
   } with (operations, s)
 
-(* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
-function getAllowance (const p : tokenAction; const s : dex_storage) : return is
-  block {
-    var operations : list(operation) := list[];
-    case p of
-    | ITransfer(params) -> failwith("00")
-    | IApprove(params) -> failwith("00")
-    | IGetBalance(params) -> failwith("00")
-    | IGetAllowance(params) -> {
-      const ownerAccount : account_info = getAccount(params.0.0, s);
-      const spenderAllowance : nat = getAllowance(ownerAccount, params.0.1, s);
-      operations := list [transaction(spenderAllowance, 0tz, params.1)];
-    }
-    | IGetTotalSupply(params) -> failwith("00")
-    end
-  } with (operations, s)
-
 // (* View function that forwards the totalSupply to a contract *)
 function getTotalSupply (const p : tokenAction; const s : dex_storage) : return is
   block {
@@ -152,47 +147,6 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
   } with (operations, s)
 
 // functions
-
-
-// function voteBody (const args : voteArgs ; const s : dex_storage; const this: address) :  (dex_storage) is
-// block {
-//   // << XXX::IMP_FREEZE_FOR_VOTED_TOKENS (to prevent double-voting)
-//   case s.ledger[args.voter] of None -> failwith ("Dex/no-shares")
-//   | Some(account) -> {
-//     const share : nat = account.balance;
-//     case s.vetos[args.candidate] of None -> skip
-//       | Some(c) -> if c > Tezos.now then failwith ("Dex/veto-candidate") else remove args.candidate from map s.vetos
-//     end; 
-//     const voterInfo : vote_info = record allowances = (set [] : set(address)); candidate = Some(args.candidate); end;
-//     case s.voters[args.voter] of None -> skip
-//       | Some(v) -> 
-//         case v.candidate of None -> voterInfo := v 
-//           | Some(c) -> {
-//             if s.totalVotes < share then failwith ("Dex/invalid-shares") else {
-//               s.totalVotes := abs(s.totalVotes - share);
-//               s.votes[c]:= abs(get_force(c, s.votes) - share);
-//               voterInfo := v;
-//             };
-//           } end
-//       end;    
-//     if Tezos.sender = args.voter or voterInfo.allowances contains Tezos.sender then {
-//       voterInfo.candidate := Some(args.candidate);
-//       s.voters[args.voter]:= voterInfo;
-//       s.totalVotes := s.totalVotes + share;
-//       const newVotes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + share;
-//       s.votes[args.candidate]:= newVotes;
-//       if case s.delegated of None -> True 
-//         | Some(delegated) ->
-//           if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then False else True
-//         end
-//       then
-//       {
-//          s.delegated := Some(args.candidate);
-//       } else skip ;
-//     } else failwith ("Dex/vote-not-permitted");
-//   }
-//   end
-// } with (s) // << XXX::FREEZE_OPERATION
 
 // function vetoBody (const voter : address ; const s : dex_storage; const this: address) :  return is
 // block {
@@ -268,22 +222,63 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
       end
   } with (operations, s)
 
+function vote (const p : dexAction; const s : dex_storage; const this: address) :  return is
+  block {
+    case p of
+      | InitializeExchange(tokenAmount) -> failwith("00")
+      | TezToTokenPayment(n) -> failwith("00")
+      | TokenToTezPayment(n) -> failwith("00")
+      | InvestLiquidity(n) -> failwith("00")
+      | DivestLiquidity(n) -> failwith("00")
+      | Vote(args) -> {
+        case s.ledger[args.voter] of 
+          | None -> failwith ("Dex/no-shares")
+          | Some(account) -> {
+            const share : nat = account.balance;
+            case s.vetos[args.candidate] of None -> skip
+              | Some(c) -> if c > Tezos.now then 
+                  failwith ("Dex/veto-candidate") 
+                else 
+                  remove args.candidate from map s.vetos
+            end; 
 
-// function vote (const p : dexAction; const s : dex_storage; const this: address) :  return is
-// block {
-//   case p of
-//   | InitializeExchange(tokenAmount) -> failwith("00")
-//   | TezToTokenPayment(n) -> failwith("00")
-//   | TokenToTezPayment(n) -> failwith("00")
-//   | InvestLiquidity(n) -> failwith("00")
-//   | DivestLiquidity(n) -> failwith("00")
-//   | Vote(args) -> {
-//       s := voteBody(args, s, this);
-//     }
-//   | Veto(n) -> failwith("00")
-//   | WithdrawProfit(n) -> failwith("00")
-//   end
-// } with ((nil:list(operation)), s)
+            const voterInfo : vote_info = getVoter(Tezos.sender, s);
+            if account.balance < args.value then
+              failwith("NotEnoughBalance")
+            else skip;
+            if args.voter =/= Tezos.sender then block {
+              const spenderAllowance : nat = getAllowance(account, Tezos.sender, s);
+              if spenderAllowance < args.value then
+                failwith("NotEnoughAllowance")
+              else skip;
+              account.allowances[Tezos.sender] := abs(spenderAllowance - args.value);
+            } else skip;
+
+            account.balance := abs(account.balance - args.value);
+            s.ledger[args.voter] := account;
+            voterInfo.candidate := Some(args.candidate);
+            voterInfo.vote := voterInfo.vote + args.value;
+            s.voters[args.voter] := voterInfo;
+            s.totalVotes := s.totalVotes + share;
+
+            const newVotes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + share;
+            s.votes[args.candidate] := newVotes;
+            if case s.currentCandidate of None -> True 
+              | Some(delegated) ->
+                if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then 
+                  False 
+                else 
+                  True
+              end then 
+                s.currentCandidate := Some(args.candidate);
+            else skip;
+        }
+        end
+      }
+      | Veto(n) -> failwith("00")
+      | WithdrawProfit(n) -> failwith("00")
+    end
+  } with ((nil:list(operation)), s)
 
 // function veto (const p : dexAction; const s : dex_storage; const this: address) :  return is
 // block {
@@ -490,6 +485,23 @@ function divestLiquidity (const p : dexAction; const s : dex_storage; const this
       | Vote(n) -> failwith("00")
       | Veto(voter) -> failwith("00")
       | WithdrawProfit(n) -> failwith("00")
+    end
+  } with (operations, s)
+
+(* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
+function getAllowance (const p : tokenAction; const s : dex_storage) : return is
+  block {
+    var operations : list(operation) := list[];
+    case p of
+    | ITransfer(params) -> failwith("00")
+    | IApprove(params) -> failwith("00")
+    | IGetBalance(params) -> failwith("00")
+    | IGetAllowance(params) -> {
+      const ownerAccount : account_info = getAccount(params.0.0, s);
+      const spenderAllowance : nat = getAllowance(ownerAccount, params.0.1, s);
+      operations := list [transaction(spenderAllowance, 0tz, params.1)];
+    }
+    | IGetTotalSupply(params) -> failwith("00")
     end
   } with (operations, s)
 
