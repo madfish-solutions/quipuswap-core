@@ -1,26 +1,37 @@
 #include "IDex.ligo"
 
-type exchange_storage is record 
-   tokenList: set (address);
-   tokenToExchange: big_map(address, address);
-   lambdas: big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage));
-end
+type exchange_storage is record [
+  tokenList         : set (address);
+  tokenToExchange   : big_map(address, address);
+  dexLambdas        : big_map(nat, dexFunc);
+  tokenLambdas      : big_map(nat, tokenFunc);
+]
 
-type full_exchange_storage is record
-  storage: exchange_storage;
-  lambdas: big_map(nat, (address * address * nat * exchange_storage) -> (list(operation) * exchange_storage));
-end
+type createDexFunc is (option(key_hash) * tez * full_dex_storage) -> (operation * address)
+type factory_return is list(operation) * exchange_storage
 
-type launchExchangeArgs is record
-  token: address;
-  tokenAmount: nat;
-end
+type full_exchange_storage is exchange_storage
+// record [
+//   storage   : exchange_storage;
+//   // lambdas   : big_map(nat, (address * address * nat * exchange_storage) -> factory_return);
+// ]
 
-type setFunctionArgs is record
-  func: ((dexAction * dex_storage * address) -> (list(operation) * dex_storage));
-  index: nat;
-end
+type full_factory_return is list(operation) * full_exchange_storage
+
+type launchExchangeParams is record [
+  token         : address;
+  tokenAmount   : nat;
+]
+
+type setFunctionParams is record [
+  func    : (dexFunc);
+  index   : nat;
+]
 
 type exchangeAction is
-| LaunchExchange of launchExchangeArgs
-| SetFunction of setFunctionArgs
+| LaunchExchange of launchExchangeParams
+| SetFunction of setFunctionParams
+
+const votingPeriod : int = 3; // 1474560
+const vetoPeriod : int = 7889229;
+const feeRate : nat = 333n;

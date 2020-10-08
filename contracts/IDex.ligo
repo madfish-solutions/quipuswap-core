@@ -37,7 +37,8 @@ type dex_storage is record [
   votes             : big_map(key_hash, nat);
   veto              : nat;
   currentDelegated  : option(key_hash);
-  nextDelegated     : option(key_hash);
+  currentCandidate  : option(key_hash);
+  nextCandidate     : option(key_hash);
   totalVotes        : nat;
   rewardInfo        : reward_info;
   userRewards       : big_map(address, user_reward_info);
@@ -106,11 +107,13 @@ type fullAction is
 | GetTotalSupply of totalSupplyParams
 
 type return is list (operation) * dex_storage
+type dexFunc is (dexAction * dex_storage * address) -> return
+type tokenFunc is (tokenAction * dex_storage) -> return
 
 type full_dex_storage is record
   storage       : dex_storage;
-  dexLambdas    : big_map(nat, (dexAction * dex_storage * address) -> return);
-  tokenLambdas  : big_map(nat, (tokenAction * dex_storage) -> return);
+  dexLambdas    : big_map(nat, dexFunc);
+  tokenLambdas  : big_map(nat, tokenFunc);
 end
 
 type full_return is list (operation) * full_dex_storage

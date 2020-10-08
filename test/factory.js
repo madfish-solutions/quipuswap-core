@@ -59,7 +59,7 @@ class Factory {
           let entry;
 
           try {
-            entry = await storage.storage[key].get(current);
+            entry = await storage[key].get(current);
           } catch (ex) {}
 
           return {

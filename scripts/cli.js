@@ -38,7 +38,7 @@ const buildContract = (
     `${ligo} compile-contract ${
       jsonFormat ? "--michelson-format=json" : ""
     } $PWD/${inputDir}/${contractName}.ligo main`,
-    { maxBuffer: 1024 * 1000 },
+    { maxBuffer: 1024 * 10000 },
     (err, stdout, stderr) => {
       if (err) {
         console.log(`Error during ${contractName} built`);
