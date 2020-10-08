@@ -13,119 +13,127 @@ function getTokenContract(const tokenAddress : address) : contract(transfer_type
     end;
 
 // token actions
+(* Helper function to get account *)
+function getAccount (const addr : address; const s : dex_storage) : account_info is
+  block {
+    var acct : account_info :=
+      record [
+        balance    = 0n;
+        allowances = (map [] : map (address, nat));
+      ];
+    case s.ledger[addr] of
+      None -> skip
+    | Some(instance) -> acct := instance
+    end;
+  } with acct
 
-// (* Helper function to get account *)
-// function getAccount (const addr : address; const s : dex_storage) : account_info is
-//   block {
-//     var acct : account_info :=
-//       record [
-//         balance    = 0n;
-//         allowances = (map [] : map (address, nat));
-//       ];
-//     case s.ledger[addr] of
-//       None -> skip
-//     | Some(instance) -> acct := instance
-//     end;
-//   } with acct
+(* Helper function to get allowance for an account *)
+function getAllowance (const ownerAccount : account_info; const spender : address; const s : dex_storage) : nat is
+  case ownerAccount.allowances[spender] of
+    Some (nat) -> nat
+  | None -> 0n
+  end;
 
-// (* Helper function to get allowance for an account *)
-// function getAllowance (const ownerAccount : account_info; const spender : address; const s : dex_storage) : nat is
-//   case ownerAccount.allowances[spender] of
-//     Some (nat) -> nat
-//   | None -> 0n
-//   end;
+(* Transfer token to another account *)
+function transfer (const p : tokenAction; const s : dex_storage) : return is
+  block {
+    case p of
+    | ITransfer(params) -> {
+      const value : nat = params.1.1;
+      if params.0 = params.1.0 then
+        failwith("InvalidSelfToSelfTransfer")
+      else skip;
+      const senderAccount : account_info = getAccount(params.0, s);
+      if senderAccount.balance < value then
+        failwith("NotEnoughBalance")
+      else skip;
+      if params.0 =/= Tezos.sender then block {
+        const spenderAllowance : nat = getAllowance(senderAccount, Tezos.sender, s);
+        if spenderAllowance < value then
+          failwith("NotEnoughAllowance")
+        else skip;
+        senderAccount.allowances[Tezos.sender] := abs(spenderAllowance - value);
+      } else skip;
+      senderAccount.balance := abs(senderAccount.balance - value);
+      s.ledger[params.0] := senderAccount;
+      var destAccount : account_info := getAccount(params.1.0, s);
+      destAccount.balance := destAccount.balance + value;
+      s.ledger[params.1.0] := destAccount;
+    }
+    | IApprove(params) -> failwith("00")
+    | IGetBalance(params) -> failwith("00")
+    | IGetAllowance(params) -> failwith("00")
+    | IGetTotalSupply(params) -> failwith("00")
+    end
+  } with ((nil  : list(operation)), s)
 
-// (* Transfer token to another account *)
-// function transfer (const from_ : address; const to_ : address; const value : nat; var s : dex_storage) : return is
-//   block {
-//     (* Sending to yourself? *)
-//     if from_ = to_ then
-//       failwith("InvalidSelfToSelfTransfer")
-//     else skip;
+(* Approve an nat to be spent by another address in the name of the sender *)
+function approve (const p : tokenAction; const s : dex_storage) : return is
+  block {
+    case p of
+    | ITransfer(params) -> failwith("00")
+    | IApprove(params) -> {
+      if params.0 = Tezos.sender then
+        failwith("InvalidSelfToSelfApproval")
+      else skip;
+      var senderAccount : account_info := getAccount(Tezos.sender, s);
+      const spenderAllowance : nat = getAllowance(senderAccount, params.0, s);
+      senderAccount.allowances[params.0] := params.1;
+      s.ledger[Tezos.sender] := senderAccount;
+    }
+    | IGetBalance(params) -> failwith("00")
+    | IGetAllowance(params) -> failwith("00")
+    | IGetTotalSupply(params) -> failwith("00")
+    end
+  } with ((nil  : list(operation)), s)
 
-//     (* Retrieve sender account from storage *)
-//     const senderAccount : account_info = getAccount(from_, s);
+(* View function that forwards the balance of source to a contract *)
+function getBalance (const p : tokenAction; const s : dex_storage) : return is
+  block {
+    var operations : list(operation) := list[];
+    case p of
+    | ITransfer(params) -> failwith("00")
+    | IApprove(params) -> failwith("00")
+    | IGetBalance(params) -> {
+      const ownerAccount : account_info = getAccount(params.0, s);
+      operations := list [transaction(ownerAccount.balance, 0tz, params.1)];
+    }
+    | IGetAllowance(params) -> failwith("00")
+    | IGetTotalSupply(params) -> failwith("00")
+    end
+  } with (operations, s)
 
-//     (* Balance check *)
-//     if senderAccount.balance < value then
-//       failwith("NotEnoughBalance")
-//     else skip;
-
-//     (* Check this address can spend the tokens *)
-//     if from_ =/= Tezos.sender then block {
-//       const spenderAllowance : nat = getAllowance(senderAccount, Tezos.sender, s);
-
-//       if spenderAllowance < value then
-//         failwith("NotEnoughAllowance")
-//       else skip;
-
-//       (* Decrease any allowances *)
-//       senderAccount.allowances[Tezos.sender] := abs(spenderAllowance - value);
-//     } else skip;
-
-//     (* Update sender balance *)
-//     senderAccount.balance := abs(senderAccount.balance - value);
-
-//     (* Update storage *)
-//     s.ledger[from_] := senderAccount;
-
-//     (* Create or get destination account *)
-//     var destAccount : account_info := getAccount(to_, s);
-
-//     (* Update destination balance *)
-//     destAccount.balance := destAccount.balance + value;
-
-//     (* Update storage *)
-//     s.ledger[to_] := destAccount;
-
-//   } with (noOperations, s)
-
-// (* Approve an nat to be spent by another address in the name of the sender *)
-// function approve (const spender : address; const value : nat; var s : dex_storage) : return is
-//   block {
-//     if spender = Tezos.sender then
-//       failwith("InvalidSelfToSelfApproval")
-//     else skip;
-
-//     (* Create or get sender account *)
-//     var senderAccount : account_info := getAccount(Tezos.sender, s);
-
-//     (* Get current spender allowance *)
-//     const spenderAllowance : nat = getAllowance(senderAccount, spender, s);
-
-//     (* Prevent a corresponding attack vector *)
-//     // if spenderAllowance > 0n and value > 0n then
-//     //   failwith("UnsafeAllowanceChange")
-//     // else skip;
-
-//     (* Set spender allowance *)
-//     senderAccount.allowances[spender] := value;
-
-//     (* Update storage *)
-//     s.ledger[Tezos.sender] := senderAccount;
-
-//   } with (noOperations, s)
-
-// (* View function that forwards the balance of source to a contract *)
-// function getBalance (const owner : address; const contr : contract(nat); var s : dex_storage) : return is
-//   block {
-//     const ownerAccount : account_info = getAccount(owner, s);
-//   } with (list [transaction(ownerAccount.balance, 0tz, contr)], s)
-
-// (* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
-// function getAllowance (const owner : address; const spender : address; const contr : contract(nat); var s : dex_storage) : return is
-//   block {
-//     const ownerAccount : account_info = getAccount(owner, s);
-//     const spenderAllowance : nat = getAllowance(ownerAccount, spender, s);
-//   } with (list [transaction(spenderAllowance, 0tz, contr)], s)
+(* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
+function getAllowance (const p : tokenAction; const s : dex_storage) : return is
+  block {
+    var operations : list(operation) := list[];
+    case p of
+    | ITransfer(params) -> failwith("00")
+    | IApprove(params) -> failwith("00")
+    | IGetBalance(params) -> failwith("00")
+    | IGetAllowance(params) -> {
+      const ownerAccount : account_info = getAccount(params.0.0, s);
+      const spenderAllowance : nat = getAllowance(ownerAccount, params.0.1, s);
+      operations := list [transaction(spenderAllowance, 0tz, params.1)];
+    }
+    | IGetTotalSupply(params) -> failwith("00")
+    end
+  } with (operations, s)
 
 // (* View function that forwards the totalSupply to a contract *)
-// function getTotalSupply (const contr : contract(nat); var s : dex_storage) : return is
-//   block {
-//     skip
-//   } with (list [transaction(s.totalSupply, 0tz, contr)], s)
-
-
+function getTotalSupply (const p : tokenAction; const s : dex_storage) : return is
+  block {
+    var operations : list(operation) := list[];
+    case p of
+    | ITransfer(params) -> failwith("00")
+    | IApprove(params) -> failwith("00")
+    | IGetBalance(params) -> failwith("00")
+    | IGetAllowance(params) -> failwith("00")
+    | IGetTotalSupply(params) -> {
+      operations := list [transaction(s.totalSupply, 0tz, params.1)];
+    }
+    end
+  } with (operations, s)
 
 // // functions
 // function initializeExchangeBody (const tokenAmount : nat ; var s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
@@ -760,11 +768,18 @@ function launchExchange (const self : address; const token : address; const toke
     )
   ], s)
 
-function setFunction (const idx : nat; const f : dexFunc; const s : full_exchange_storage) : full_exchange_storage is
+function setDexFunction (const idx : nat; const f : dexFunc; const s : full_exchange_storage) : full_exchange_storage is
 block {
   case s.dexLambdas[idx] of 
     Some(n) -> failwith("Factory/function-set") 
     | None -> s.dexLambdas[idx] := f 
+  end;
+} with s
+function setTokenFunction (const idx : nat; const f : tokenFunc; const s : full_exchange_storage) : full_exchange_storage is
+block {
+  case s.tokenLambdas[idx] of 
+    Some(n) -> failwith("Factory/function-set") 
+    | None -> s.tokenLambdas[idx] := f 
   end;
 } with s
 
@@ -782,7 +797,22 @@ block {
 function main (const p : exchangeAction; const s : full_exchange_storage) : full_factory_return is 
   case p of
     | LaunchExchange(params) -> launchExchange(Tezos.self_address, params.token, params.tokenAmount, s)
-    | SetFunction(params) -> ((nil:list(operation)), if params.index > 9n then (failwith("Factory/wrong-index") : full_exchange_storage) else setFunction(params.index, params.func, s))
+    | SetDexFunction(params) -> ((nil:list(operation)), if params.index > 9n then (failwith("Factory/wrong-index") : full_exchange_storage) else setDexFunction(params.index, params.func, s))
+    | SetTokenFunction(params) -> ((nil:list(operation)), if params.index > 4n then (failwith("Factory/wrong-index") : full_exchange_storage) else setTokenFunction(params.index, params.func, s))
   end
 
-// record [  tokenList = (set[] : set(address));        tokenToExchange = (big_map[] :big_map(address, address));        dexLambdas = (big_map[] : big_map(nat, dexFunc));  tokenLambdas = (big_map[] : big_map(nat, tokenFunc));]
+// record [  tokenList = (set[] : set(address));        
+//   tokenToExchange = (big_map[] :big_map(address, address));        
+//   dexLambdas = (big_map[] : big_map(nat, dexFunc));  
+//   tokenLambdas = (big_map[] : big_map(nat, tokenFunc));]
+// record [  tokenList = (set[] : set(address));        tokenToExchange = (big_map[] :big_map(address, address));        dexLambdas = (big_map[] : big_map(nat, dexFunc));  tokenLambdas = big_map[  0n -> transfer;   1n -> approve;   2n -> getBalance;   3n -> getAllowance;   4n -> getTotalSupply; ];]
+// record [  tokenList = (set[] : set(address));        
+//   tokenToExchange = (big_map[] :big_map(address, address));        
+//   dexLambdas = (big_map[] : big_map(nat, dexFunc));  
+//   tokenLambdas = big_map[
+//     0n -> transfer; 
+//     1n -> approve; 
+//     2n -> getBalance; 
+//     3n -> getAllowance; 
+//     4n -> getTotalSupply; 
+//   ];]

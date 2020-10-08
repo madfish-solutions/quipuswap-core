@@ -144,7 +144,7 @@ let addToken = async (
   }
 };
 
-let setFunctions = async (
+let setDexFunctions = async (
   num,
   functionName,
   dexName,
@@ -160,7 +160,7 @@ let setFunctions = async (
   );
   let ligo = getLigo(isDockerizedLigo);
   exec(
-    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetFunction(record index =${num}n; func = ${functionName}; end)'`,
+    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetDexFunction(record index =${num}n; func = ${functionName}; end)'`,
     { maxBuffer: 1024 * 500 },
     async (err, stdout, stderr) => {
       if (err) {
@@ -172,7 +172,49 @@ let setFunctions = async (
             to: dexAddress,
             amount: 0,
             parameter: {
-              entrypoint: "setFunction",
+              entrypoint: "setDexFunction",
+              value: JSON.parse(stdout).args[0],
+            },
+          });
+          await operation.confirmation();
+          console.log(`Function ${functionName} added`);
+        } catch (E) {
+          console.log(E);
+        }
+      }
+    }
+  );
+};
+
+let setTokenFunctions = async (
+  num,
+  functionName,
+  dexName,
+  contractName,
+  inputDir,
+  outputDir,
+  isDockerizedLigo
+) => {
+  dexName = dexName || "Factory";
+  contractName = contractName || "Factory";
+  const { address: dexAddress } = JSON.parse(
+    fs.readFileSync(`./${outputDir}/${dexName}.json`).toString()
+  );
+  let ligo = getLigo(isDockerizedLigo);
+  exec(
+    `${ligo} compile-parameter --michelson-format=json $PWD/${inputDir}/${contractName}.ligo main 'SetTokenFunction(record index =${num}n; func = ${functionName}; end)'`,
+    { maxBuffer: 1024 * 500 },
+    async (err, stdout, stderr) => {
+      if (err) {
+        console.log(`Error during ${contractName} built`);
+        console.log(err);
+      } else {
+        try {
+          const operation = await Tezos.contract.transfer({
+            to: dexAddress,
+            amount: 0,
+            parameter: {
+              entrypoint: "setTokenFunction",
               value: JSON.parse(stdout).args[0],
             },
           });
@@ -335,7 +377,7 @@ program
   });
 
 program
-  .command("set_functions <num> <function_name> [factory] [contract]")
+  .command("set_token_functions <num> <function_name> [factory] [contract]")
   .description(
     "set function <function_name> at index <num> using factory address from [factory] file and [contract] as contract source."
   )
@@ -370,7 +412,55 @@ program
         options.dockerized_ligo
       );
     } else {
-      await setFunctions(
+      await setTokenFunctions(
+        num,
+        functionName,
+        factory,
+        contract,
+        options.input_dir,
+        options.output_dir,
+        options.dockerized_ligo
+      );
+    }
+  });
+
+program
+  .command("set_dex_functions <num> <function_name> [factory] [contract]")
+  .description(
+    "set function <function_name> at index <num> using factory address from [factory] file and [contract] as contract source."
+  )
+  .option("-o, --output_dir <dir>", "Where store deployed contracts", "deploy")
+  .option(
+    "-i, --input_dir <dir>",
+    "Where built contracts are located",
+    "contracts"
+  )
+  .option(
+    "-k, --key_path <file>",
+    "Where private key is located",
+    "fixtures/key"
+  )
+  .option(
+    "-p, --provider <provider>",
+    "Node to connect",
+    "http://127.0.0.1:8732"
+  )
+  .option("-g, --no-dockerized_ligo", "Switch global ligo")
+  .option("-f, --fa2", "Set function to fa2 version", false)
+  .action(async function (num, functionName, factory, contract, options) {
+    await setup(options.key_path, options.provider);
+    if (options.fa2) {
+      await setFunctionsFA2(
+        num,
+        functionName,
+        factory,
+        contract,
+        options.input_dir,
+        options.output_dir,
+        options.dockerized_ligo
+      );
+    } else {
+      await setDexFunctions(
         num,
         functionName,
         factory,

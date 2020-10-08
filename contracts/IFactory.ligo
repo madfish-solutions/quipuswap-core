@@ -23,14 +23,19 @@ type launchExchangeParams is record [
   tokenAmount   : nat;
 ]
 
-type setFunctionParams is record [
-  func    : (dexFunc);
+type setTokenFunctionParams is record [
+  func    : tokenFunc;
+  index   : nat;
+]
+type setDexFunctionParams is record [
+  func    : dexFunc;
   index   : nat;
 ]
 
 type exchangeAction is
 | LaunchExchange of launchExchangeParams
-| SetFunction of setFunctionParams
+| SetDexFunction of setDexFunctionParams
+| SetTokenFunction of setTokenFunctionParams
 
 const votingPeriod : int = 3; // 1474560
 const vetoPeriod : int = 7889229;
