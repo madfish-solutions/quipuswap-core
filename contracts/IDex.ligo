@@ -1,91 +1,116 @@
-type vote_info is record
-  allowances: set(address);
-  candidate: option(key_hash);
-end
+type account_info is record [
+  balance     : nat;
+  allowances  : map (address, nat);
+]
 
-type user_cycle_info is record
-  reward: nat;
-  loyalty: nat;
-  lastCycle: nat;
-  lastCycleUpdate: timestamp;
-end
+type vote_info is record [
+  candidate   : option(key_hash);
+  vote        : nat; 
+  veto        : nat; 
+] 
 
-type cycle_info is record
-  reward: nat;
-  counter: nat;
-  start: timestamp;
-  lastUpdate: timestamp;
-  totalLoyalty: nat;
-  nextCycle: timestamp;
-  cycleCoefficient: nat;
-end
+type user_reward_info is record [
+  reward        : nat;
+  rewardPaid    : nat;
+  loyalty       : nat;
+  loyaltyPaid   : nat;
+]
 
-type dex_storage is record 
-  feeRate: nat;
-  tezPool: nat;
-  tokenPool: nat;
-  invariant: nat;
-  totalShares: nat; // << XXX::REMOVE
-  tokenAddress: address;
-  factoryAddress: address;
-  // << XXX::ADD_SHARE_TOKEN_ADDRESS
-  shares: big_map(address, nat); // << XXX::REMOVE
-  voters: big_map(address, vote_info);
-  vetos: big_map(key_hash, timestamp);
-  vetoVoters: big_map(address, nat);
-  votes: big_map(key_hash, nat);
-  veto: nat;
-  delegated: option(key_hash);
-  currentDelegated : option(key_hash);
-  totalVotes: nat;
-  currentCycle: cycle_info;
-  cycles: big_map(nat, cycle_info);
-  loyaltyCycle: big_map(address, user_cycle_info);
-end
+type reward_info is record [
+  reward                    : nat;
+  totalAccomulatedLoyalty   : nat;
+  lastUpdateTime            : timestamp;
+  periodFinish              : timestamp;
+  rewardPerToken            : nat;
+]
 
-type tezToTokenPaymentArgs is record 
-  amount : nat; 
-  receiver : address; 
-end
+type dex_storage is record [
+  tezPool           : nat;
+  tokenPool         : nat;
+  invariant         : nat;
+  tokenAddress      : address;
+  factoryAddress    : address;
+  totalSupply       : nat;
+  ledger            : big_map (address, account_info);
+  voters            : big_map(address, vote_info);
+  vetos             : big_map(key_hash, timestamp);
+  votes             : big_map(key_hash, nat);
+  veto              : nat;
+  currentDelegated  : option(key_hash);
+  nextDelegated     : option(key_hash);
+  totalVotes        : nat;
+  rewardInfo        : reward_info;
+  userRewards       : big_map(address, user_reward_info);
+]
 
-type tokenToTezPaymentArgs is record 
-  amount : nat; 
-  minOut : nat; 
-  receiver : address;
-end
+type tezToTokenPaymentParams is record [
+  amount    : nat; 
+  receiver  : address; 
+]
 
-type divestLiquidityArgs is record 
-  minTez : nat; 
-  minTokens : nat;
-  shares : nat; 
-end
+type tokenToTezPaymentParams is record [
+  amount      : nat; 
+  minOut      : nat; 
+  receiver    : address;
+]
 
-type setVotesDelegationArgs is record 
-  account : address;
-  isAllowed : bool;
-end
+type divestLiquidityParams is record [
+  minTez      : nat; 
+  minTokens   : nat;
+  shares      : nat; 
+]
 
-type voteArgs is record 
-  candidate : key_hash;
-  voter : address; 
-end
+type setVotesDelegationParams is record [
+  account     : address;
+  isAllowed   : bool;
+]
+
+type voteParams is record [
+  candidate   : key_hash;
+  voter       : address; 
+]
 
 type dexAction is
 | InitializeExchange of (nat)
-| TezToTokenPayment of tezToTokenPaymentArgs
-| TokenToTezPayment of tokenToTezPaymentArgs
+| TezToTokenPayment of tezToTokenPaymentParams
+| TokenToTezPayment of tokenToTezPaymentParams
 | InvestLiquidity of (nat)
-| DivestLiquidity of divestLiquidityArgs
-| SetVotesDelegation of setVotesDelegationArgs
-| Vote of voteArgs
+| DivestLiquidity of divestLiquidityParams
+| SetVotesDelegation of setVotesDelegationParams
+| Vote of voteParams
 | Veto of (address)
 | WithdrawProfit of (address)
 
+type defaultParams is unit
+type useParams is (nat * dexAction)
+type transferParams is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
+type approveParams is michelson_pair(address, "spender", nat, "value")
+type balanceParams is michelson_pair(address, "owner", contract(nat), "")
+type allowanceParams is michelson_pair(michelson_pair(address, "owner", address, "spender"), "", contract(nat), "")
+type totalSupplyParams is (unit * contract(nat))
+
+type tokenAction is
+| ITransfer of transferParams
+| IApprove of approveParams
+| IGetBalance of balanceParams
+| IGetAllowance of allowanceParams
+| IGetTotalSupply of totalSupplyParams
+
 type fullAction is
-| Use of (nat * dexAction)
-| Default of unit
+| Use of useParams
+| Default of defaultParams
+| Transfer of transferParams
+| Approve of approveParams
+| GetBalance of balanceParams
+| GetAllowance of allowanceParams
+| GetTotalSupply of totalSupplyParams
+
+type return is list (operation) * dex_storage
 
 type full_dex_storage is record
-  storage: dex_storage;
-  lambdas: big_map(nat, (dexAction * dex_storage * address) -> (list(operation) * dex_storage));
+  storage       : dex_storage;
+  dexLambdas    : big_map(nat, (dexAction * dex_storage * address) -> return);
+  tokenLambdas  : big_map(nat, (tokenAction * dex_storage) -> return);
 end
+
+type full_return is list (operation) * full_dex_storage
