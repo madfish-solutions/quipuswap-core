@@ -135,32 +135,7 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
     end
   } with (operations, s)
 
-// // functions
-// function initializeExchangeBody (const tokenAmount : nat ; var s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
-// block {
-//   if s.invariant =/= 0n 
-//     or s.totalSupply =/= 0n 
-//     or Tezos.amount < 1mutez 
-//     or tokenAmount < 1n 
-//     or Tezos.amount > 500000000tz then failwith("Dex/non-allowed") else skip ; 
-//   s.tokenPool := tokenAmount;
-//   s.tezPool := Tezos.amount / 1mutez;
-//   s.invariant := s.tezPool * s.tokenPool;
-//   s.ledger[Tezos.sender] := record [
-//       balance    = 1000n;
-//       allowances = (map [] : map (address, nat));
-//     ];
-//   s.totalSupply := 1000n; 
-  
-//    // update user loyalty
-//   s.currentCycle.lastUpdate := Tezos.now;
-//   s.loyaltyCycle[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
-// } with (list[ transaction(
-//       TransferType(Tezos.sender, (this, tokenAmount)), 
-//       0mutez, 
-//       getTokenContract(s.tokenAddress)
-//     )
-//     ], s)
+// functions
 
 // function investLiquidityBody (const minShares : nat ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 // block {
@@ -234,24 +209,6 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
 //       getTokenContract(s.tokenAddress)
 //     )], s)
 
-// function tezToTokenBody (const args : tezToTokenPaymentArgs ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
-// block {
-//   var operations : list(operation) := list[];
-//   if Tezos.amount / 1mutez > 0n and args.amount > 0n then {
-//     s.tezPool := s.tezPool + Tezos.amount / 1mutez;
-//     const newTokenPool : nat = s.invariant / abs(s.tezPool - Tezos.amount / 1mutez / s.feeRate);
-//     const tokensOut : nat = abs(s.tokenPool - newTokenPool);
-//       if tokensOut >= args.amount then {
-//         s.tokenPool := newTokenPool;
-//         s.invariant := s.tezPool * newTokenPool;
-//         operations := transaction(
-//           TransferType(this, (args.receiver, tokensOut)), 
-//           0mutez, 
-//           getTokenContract(s.tokenAddress)
-//         ) # operations;
-//     } else failwith("Dex/high-min-out");
-//   } else failwith("Dex/wrong-params")
-// } with (operations, s)
 
 // function voteBody (const args : voteArgs ; const s : dex_storage; const this: address) :  (dex_storage) is
 // block {
@@ -455,31 +412,73 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
 //   }
 // } with (s)
 
-// // wrappers
-// function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
+// function initializeExchangeBody (const tokenAmount : nat ; var s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
 // block {
-//   var operations : list(operation) := list[];
-//     case p of
-//     | InitializeExchange(tokenAmount) -> {
-//         const res : (list(operation) * dex_storage) = initializeExchangeBody(tokenAmount, s, this);
-//         operations := res.0;
-//         s := res.1;
-//     }
-//     | TezToTokenPayment(n) -> failwith("00")
-//     | TokenToTezPayment(n) -> failwith("00")
-//     | InvestLiquidity(n) -> failwith("00")
-//     | DivestLiquidity(n) -> failwith("00")
-//     | SetVotesDelegation(n) -> failwith("00")
-//     | Vote(n) -> failwith("00")
-//     | Veto(n) -> failwith("00")
-//     | WithdrawProfit(n) -> failwith("00")
-//     | ITransfer(n) -> failwith("00")
-//     | IApprove(n) -> failwith("00")
-//     | IGetBalance(n) -> failwith("00")
-//     | IGetAllowance(n) -> failwith("00")
-//     | IGetTotalSupply(n) -> failwith("00")
-//     end
-// } with (operations, s)
+//   if s.invariant =/= 0n 
+//     or s.totalSupply =/= 0n 
+//     or Tezos.amount < 1mutez 
+//     or tokenAmount < 1n 
+//     or Tezos.amount > 500000000tz then failwith("Dex/non-allowed") else skip ; 
+//   s.tokenPool := tokenAmount;
+//   s.tezPool := Tezos.amount / 1mutez;
+//   s.invariant := s.tezPool * s.tokenPool;
+//   s.ledger[Tezos.sender] := record [
+//       balance    = 1000n;
+//       allowances = (map [] : map (address, nat));
+//     ];
+//   s.totalSupply := 1000n; 
+  
+//    // update user loyalty
+//   s.currentCycle.lastUpdate := Tezos.now;
+//   s.loyaltyCycle[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
+// } with (list[ transaction(
+//       TransferType(Tezos.sender, (this, tokenAmount)), 
+//       0mutez, 
+//       getTokenContract(s.tokenAddress)
+//     )
+//     ], s)
+
+// wrappers
+function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  return is
+  block {
+    var operations : list(operation) := list[];
+      case p of
+        | InitializeExchange(tokenAmount) -> {
+          if s.invariant =/= 0n 
+            or s.totalSupply =/= 0n 
+            or Tezos.amount < 1mutez 
+            or tokenAmount < 1n then 
+            failwith("Dex/not-allowed")
+          else skip; 
+          s.tokenPool := tokenAmount;
+          s.tezPool := Tezos.amount / 1mutez;
+          s.invariant := s.tezPool * s.tokenPool;
+          s.ledger[Tezos.sender] := record [
+              balance    = 1000n;
+              allowances = (map [] : map (address, nat));
+            ];
+          s.totalSupply := 1000n; 
+
+          // XXX::updateRewards info
+          // s.rewardInfo.lastUpdate := Tezos.now;
+          // s.userRewards[Tezos.sender] := record reward = 0n; loyalty = 0n; lastCycle = 0n; lastCycleUpdate = Tezos.now; end;  
+
+          operations := list[ transaction(
+            TransferType(Tezos.sender, (this, tokenAmount)), 
+            0mutez, 
+            getTokenContract(s.tokenAddress)
+          )];
+        }
+        | TezToTokenPayment(n) -> failwith("00")
+        | TokenToTezPayment(n) -> failwith("00")
+        | InvestLiquidity(n) -> failwith("00")
+        | DivestLiquidity(n) -> failwith("00")
+        | SetVotesDelegation(n) -> failwith("00")
+        | Vote(n) -> failwith("00")
+        | Veto(n) -> failwith("00")
+        | WithdrawProfit(n) -> failwith("00")
+      end
+  } with (operations, s)
 
 // function setVotesDelegation (const p : dexAction ; const s : dex_storage ; const this: address) :  (list(operation) * dex_storage) is
 // block {
@@ -550,30 +549,55 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
 //   end
 // } with (operations, s)
 
-// function tezToToken (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
+// function tezToTokenBody (const args : tezToTokenPaymentArgs ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 // block {
-//   var operations: list(operation) := list[];
-//   case p of
-//   | InitializeExchange(tokenAmount) -> failwith("00")
-//   | TezToTokenPayment(args) -> {
-//     const res : (list(operation) * dex_storage) = tezToTokenBody(args, s, this);
-//         operations := res.0;
-//         s := res.1;
-//   }
-//   | TokenToTezPayment(n) -> failwith("00")
-//   | InvestLiquidity(n) -> failwith("00")
-//   | DivestLiquidity(n) -> failwith("00")
-//   | SetVotesDelegation(n) -> failwith("00")
-//   | Vote(n) -> failwith("00")
-//   | Veto(voter) -> failwith("00")
-//   | WithdrawProfit(n) -> failwith("00")
-//   | ITransfer(n) -> failwith("00")
-//   | IApprove(n) -> failwith("00")
-//   | IGetBalance(n) -> failwith("00")
-//   | IGetAllowance(n) -> failwith("00")
-//   | IGetTotalSupply(n) -> failwith("00")
-//   end
+//   var operations : list(operation) := list[];
+//   if Tezos.amount / 1mutez > 0n and args.amount > 0n then {
+//     s.tezPool := s.tezPool + Tezos.amount / 1mutez;
+//     const newTokenPool : nat = s.invariant / abs(s.tezPool - Tezos.amount / 1mutez / s.feeRate);
+//     const tokensOut : nat = abs(s.tokenPool - newTokenPool);
+//       if tokensOut >= args.amount then {
+//         s.tokenPool := newTokenPool;
+//         s.invariant := s.tezPool * newTokenPool;
+//         operations := transaction(
+//           TransferType(this, (args.receiver, tokensOut)), 
+//           0mutez, 
+//           getTokenContract(s.tokenAddress)
+//         ) # operations;
+//     } else failwith("Dex/high-min-out");
+//   } else failwith("Dex/wrong-params")
 // } with (operations, s)
+
+function tezToToken (const p : dexAction; const s : dex_storage; const this: address) :  return is
+  block {
+    var operations: list(operation) := list[];
+    case p of
+      | InitializeExchange(n) -> failwith("00")
+      | TezToTokenPayment(args) -> {
+        if Tezos.amount / 1mutez > 0n and args.amount > 0n then block {
+          s.tezPool := s.tezPool + Tezos.amount / 1mutez;
+          const newTokenPool : nat = s.invariant / abs(s.tezPool - Tezos.amount / 1mutez / feeRate);
+          const tokensOut : nat = abs(s.tokenPool - newTokenPool);
+            if tokensOut >= args.amount then {
+              s.tokenPool := newTokenPool;
+              s.invariant := s.tezPool * newTokenPool;
+              operations := transaction(
+                TransferType(this, (args.receiver, tokensOut)), 
+                0mutez, 
+                getTokenContract(s.tokenAddress)
+              ) # operations;
+          } else failwith("Dex/high-min-out");
+        } else failwith("Dex/wrong-params")
+      }
+      | TokenToTezPayment(n) -> failwith("00")
+      | InvestLiquidity(n) -> failwith("00")
+      | DivestLiquidity(n) -> failwith("00")
+      | SetVotesDelegation(n) -> failwith("00")
+      | Vote(n) -> failwith("00")
+      | Veto(voter) -> failwith("00")
+      | WithdrawProfit(n) -> failwith("00")
+    end
+  } with (operations, s)
 
 // function tokenToTez (const p : dexAction ; const s : dex_storage; const this: address) :  (list(operation) * dex_storage) is
 // block {

@@ -173,7 +173,7 @@ let setDexFunctions = async (
             amount: 0,
             parameter: {
               entrypoint: "setDexFunction",
-              value: JSON.parse(stdout).args[0],
+              value: JSON.parse(stdout).args[0].args[0],
             },
           });
           await operation.confirmation();
