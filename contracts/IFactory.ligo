@@ -38,5 +38,6 @@ type exchangeAction is
 | SetTokenFunction of setTokenFunctionParams
 
 const votingPeriod : int = 3; // 1474560
+const accurancyMultiplier : nat = 1000000000000000n;
 const vetoPeriod : int = 7889229;
 const feeRate : nat = 333n;
