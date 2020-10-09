@@ -1,6 +1,7 @@
 type account_info is record [
-  balance     : nat;
-  allowances  : map (address, nat);
+  balance           : nat;
+  frozenBalance     : nat;
+  allowances        : map (address, nat);
 ]
 
 type vote_info is record [
@@ -38,7 +39,6 @@ type dex_storage is record [
   veto              : nat;
   currentDelegated  : option(key_hash);
   currentCandidate  : option(key_hash);
-  nextCandidate     : option(key_hash);
   totalVotes        : nat;
   rewardInfo        : reward_info;
   userRewards       : big_map(address, user_reward_info);
@@ -67,6 +67,11 @@ type voteParams is record [
   value       : nat; 
 ]
 
+type vetoParams is record [
+  voter       : address; 
+  value       : nat; 
+]
+
 type dexAction is
 | InitializeExchange of (nat)
 | TezToTokenPayment of tezToTokenPaymentParams
@@ -74,7 +79,7 @@ type dexAction is
 | InvestLiquidity of (nat)
 | DivestLiquidity of divestLiquidityParams
 | Vote of voteParams
-| Veto of (address)
+| Veto of vetoParams
 | WithdrawProfit of (address)
 
 type defaultParams is unit

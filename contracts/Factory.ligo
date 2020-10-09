@@ -15,8 +15,9 @@ function getAccount (const addr : address; const s : dex_storage) : account_info
   block {
     var acct : account_info :=
       record [
-        balance    = 0n;
-        allowances = (map [] : map (address, nat));
+        balance         = 0n;
+        frozenBalance   = 0n;
+        allowances      = (map [] : map (address, nat));
       ];
     case s.ledger[addr] of
       None -> skip
@@ -146,41 +147,6 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
     end
   } with (operations, s)
 
-// functions
-
-// function vetoBody (const voter : address ; const s : dex_storage; const this: address) :  return is
-// block {
-//   var operations: list(operation) := list[];
-//   // << XXX::IMP_FREEZE_FOR_VOTED_TOKENS (to prevent double-veto)
-//   case s.ledger[voter] of None -> failwith ("Dex/no-voter")
-//   | Some(account) -> {
-//     const share : nat = account.balance;
-//     const src : vote_info = case s.voters[voter] of None -> record allowances = (set [] : set(address)); candidate = (None: option(key_hash)); end
-//     | Some(src) -> src
-//     end;
-//     if Tezos.sender = voter or src.allowances contains Tezos.sender then {
-//       var newShare: nat := case s.vetoVoters[voter] of None -> share
-//         | Some(prev) ->
-//           if share > prev then abs(share - prev) else (failwith ("Dex/old-shares") : nat)
-//         end;
-//       s.veto := s.veto + newShare;
-//       if s.veto > s.totalVotes / 2n then {
-//           s.veto := 0n;
-//           case s.currentDelegated of None -> failwith ("Dex/no-delegated")
-//           | Some(c) -> {
-//             s.vetos[c] := Tezos.now + vetoPeriod;
-//             s.currentDelegated := (None: option(key_hash));
-//             operations := set_delegate(s.currentDelegated) # operations;
-//             s.vetoVoters := (big_map [] : big_map(address, nat));
-//           }
-//           end;
-//       } else skip ;
-//       s.vetoVoters[voter] := share;
-//     } else failwith ("Dex/vote-not-permitted"); // << XXX::FREEZE_ACTION
-//   }
-//   end
-// } with (operations, s)
-
 // wrappers
 function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  return is
   block {
@@ -198,6 +164,7 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
           s.invariant := s.tezPool * s.tokenPool;
           s.ledger[Tezos.sender] := record [
               balance    = 1000n;
+              frozenBalance    = 0n;
               allowances = (map [] : map (address, nat));
             ];
           s.totalSupply := 1000n; 
@@ -242,8 +209,8 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
                   remove args.candidate from map s.vetos
             end; 
 
-            const voterInfo : vote_info = getVoter(Tezos.sender, s);
-            if account.balance < args.value then
+            const voterInfo : vote_info = getVoter(args.voter, s);
+            if account.balance + voterInfo.vote < args.value then
               failwith("NotEnoughBalance")
             else skip;
             if args.voter =/= Tezos.sender then block {
@@ -253,13 +220,27 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
               else skip;
               account.allowances[Tezos.sender] := abs(spenderAllowance - args.value);
             } else skip;
+            
+            (* XXX::add None support*)
+            
+            (* remove prev *)
+            case s.currentCandidate of 
+              | None -> skip
+              | Some(candidate) -> 
+                case s.votes[candidate] of 
+                  | None -> failwith("Dex/no-votes") 
+                  | Some(v) -> 
+                    s.votes[candidate] := abs(v - voterInfo.vote)
+                end
+            end;
 
-            account.balance := abs(account.balance - args.value);
+            account.balance := abs(account.balance + voterInfo.vote - args.value);
+            account.frozenBalance := abs(account.frozenBalance - voterInfo.vote + args.value);
             s.ledger[args.voter] := account;
+            s.totalVotes := abs(s.totalVotes + args.value - voterInfo.vote);
             voterInfo.candidate := Some(args.candidate);
-            voterInfo.vote := voterInfo.vote + args.value;
+            voterInfo.vote := args.value;
             s.voters[args.voter] := voterInfo;
-            s.totalVotes := s.totalVotes + share;
 
             const newVotes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + share;
             s.votes[args.candidate] := newVotes;
@@ -280,24 +261,73 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
     end
   } with ((nil:list(operation)), s)
 
-// function veto (const p : dexAction; const s : dex_storage; const this: address) :  return is
-// block {
-//   var operations: list(operation) := list[];
-//   case p of
-//   | InitializeExchange(tokenAmount) -> failwith("00")
-//   | TezToTokenPayment(n) -> failwith("00")
-//   | TokenToTezPayment(n) -> failwith("00")
-//   | InvestLiquidity(n) -> failwith("00")
-//   | DivestLiquidity(n) -> failwith("00")
-//   | Vote(n) -> failwith("00")
-//   | Veto(voter) -> {
-//       const res : return = vetoBody(voter, s, this);
-//       operations := res.0;
-//       s := res.1;
-//     }
-//   | WithdrawProfit(n) -> failwith("00")
-//   end
-// } with (operations, s)
+//       if s.veto > s.totalVotes / 2n then {
+//           s.veto := 0n;
+//           case s.currentDelegated of None -> failwith ("Dex/no-delegated")
+//           | Some(c) -> {
+//             s.vetos[c] := Tezos.now + vetoPeriod;
+//             s.currentDelegated := (None: option(key_hash));
+//             operations := set_delegate(s.currentDelegated) # operations;
+//             s.vetoVoters := (big_map [] : big_map(address, nat));
+//           }
+//           end;
+//       } else skip ;
+
+function veto (const p : dexAction; const s : dex_storage; const this: address) : return is
+  block {
+    var operations: list(operation) := list[];
+    case p of
+      | InitializeExchange(tokenAmount) -> failwith("00")
+      | TezToTokenPayment(n) -> failwith("00")
+      | TokenToTezPayment(n) -> failwith("00")
+      | InvestLiquidity(n) -> failwith("00")
+      | DivestLiquidity(n) -> failwith("00")
+      | Vote(n) -> failwith("00")
+      | Veto(args) -> {
+        case s.ledger[args.voter] of 
+          | None -> failwith ("Dex/no-shares")
+          | Some(account) -> {
+            const share : nat = account.balance;
+
+            const voterInfo : vote_info = getVoter(args.voter, s);
+            if account.balance + voterInfo.veto < args.value then
+              failwith("NotEnoughBalance")
+            else skip;
+            if args.voter =/= Tezos.sender then block {
+              const spenderAllowance : nat = getAllowance(account, Tezos.sender, s);
+              if spenderAllowance < args.value then
+                failwith("NotEnoughAllowance")
+              else skip;
+              account.allowances[Tezos.sender] := abs(spenderAllowance - args.value);
+            } else skip;
+
+            account.balance := abs(account.balance + voterInfo.veto - args.value);
+            account.frozenBalance := abs(account.frozenBalance - voterInfo.veto + args.value);
+            s.ledger[args.voter] := account;
+            s.veto := abs(s.veto + args.value - voterInfo.veto);
+            voterInfo.veto := args.value;
+            s.voters[args.voter] := voterInfo;
+
+            if s.veto > s.totalVotes / 2n then {
+                s.veto := 0n;
+                case s.currentDelegated of None -> skip
+                | Some(c) -> {
+                  s.vetos[c] := Tezos.now + vetoPeriod;
+                  s.currentDelegated := s.currentCandidate;
+                  // if s.currentDelegated = s.currentCandidate then
+                  //   (None: option(key_hash))
+                  // else s.currentCandidate;
+                  operations := set_delegate(s.currentDelegated) # operations;
+                }
+                end;
+            } else skip ;
+
+          }
+        end
+      }
+      | WithdrawProfit(n) -> failwith("00")
+    end
+  } with (operations, s)
 
 function tezToToken (const p : dexAction; const s : dex_storage; const this : address) : return is
   block {
@@ -596,6 +626,7 @@ function launchExchange (const self : address; const token : address; const toke
             factoryAddress = self;      
             ledger = big_map[Tezos.sender -> record [
                 balance = 1000n;
+                frozenBalance = 0n;
                 allowances = (map [] : map(address, nat));
               ]
             ];
@@ -605,7 +636,6 @@ function launchExchange (const self : address; const token : address; const toke
             veto = 0n;      
             currentDelegated = (None: option(key_hash));      
             currentCandidate = (None: option(key_hash));      
-            nextCandidate = (None: option(key_hash));      
             totalVotes = 0n;      
             rewardInfo = 
               record [
