@@ -261,18 +261,6 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
     end
   } with ((nil:list(operation)), s)
 
-//       if s.veto > s.totalVotes / 2n then {
-//           s.veto := 0n;
-//           case s.currentDelegated of None -> failwith ("Dex/no-delegated")
-//           | Some(c) -> {
-//             s.vetos[c] := Tezos.now + vetoPeriod;
-//             s.currentDelegated := (None: option(key_hash));
-//             operations := set_delegate(s.currentDelegated) # operations;
-//             s.vetoVoters := (big_map [] : big_map(address, nat));
-//           }
-//           end;
-//       } else skip ;
-
 function veto (const p : dexAction; const s : dex_storage; const this: address) : return is
   block {
     var operations: list(operation) := list[];
@@ -320,8 +308,7 @@ function veto (const p : dexAction; const s : dex_storage; const this: address) 
                   operations := set_delegate(s.currentDelegated) # operations;
                 }
                 end;
-            } else skip ;
-
+            } else skip;
           }
         end
       }
@@ -423,7 +410,7 @@ function investLiquidity (const p : dexAction; const s : dex_storage; const this
 
           (* update user loyalty *)
           var userRewardInfo : user_reward_info := getUserRewardInfo(Tezos.sender, s);
-          const currentLoyalty : nat = share * s.rewardInfo.totalAccomulatedLoyalty;
+          const currentLoyalty : nat = (share + account.frozenBalance) * s.rewardInfo.totalAccomulatedLoyalty;
           userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
           userRewardInfo.loyaltyPaid := currentLoyalty;
 
@@ -481,7 +468,7 @@ function divestLiquidity (const p : dexAction; const s : dex_storage; const this
 
           (* update user loyalty *)
           var userRewardInfo : user_reward_info := getUserRewardInfo(Tezos.sender, s);
-          const currentLoyalty : nat = share * s.rewardInfo.totalAccomulatedLoyalty;
+          const currentLoyalty : nat = (share + account.frozenBalance) * s.rewardInfo.totalAccomulatedLoyalty;
           userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
           userRewardInfo.loyaltyPaid := currentLoyalty;
 
@@ -537,6 +524,7 @@ function getAllowance (const p : tokenAction; const s : dex_storage) : return is
 
 function receiveReward (const p : dexAction; const s : dex_storage; const this : address) : return is 
   block {
+    var operations : list(operation) := list[];
     (* update rewards info *)
     s.rewardInfo.totalAccomulatedLoyalty := s.rewardInfo.totalAccomulatedLoyalty + abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier / s.totalSupply;
     s.rewardInfo.lastUpdateTime := Tezos.now;
@@ -546,9 +534,22 @@ function receiveReward (const p : dexAction; const s : dex_storage; const this :
       s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
       s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
       s.rewardInfo.reward := 0n;
+      if case s.currentDelegated of
+        | None -> case s.currentCandidate of
+          | None -> False
+          | Some(c) -> True
+          end
+        | Some(current) -> case s.currentCandidate of
+          | None -> True
+          | Some(next) -> current =/= next
+          end
+      end then {
+        s.currentDelegated := s.currentCandidate;
+        operations := set_delegate(s.currentDelegated) # operations;
+      } else skip;
     } else skip;
     s.rewardInfo.reward := s.rewardInfo.reward + Tezos.amount / 1mutez;
-  } with ((nil: list(operation)), s)
+  } with (operations, s)
 
 function withdrawProfit (const p : dexAction; const s : dex_storage; const this : address) : return is
   block {
@@ -578,7 +579,7 @@ function withdrawProfit (const p : dexAction; const s : dex_storage; const this 
 
         (* update user loyalty *)
         var userRewardInfo : user_reward_info := getUserRewardInfo(Tezos.sender, s);
-        const currentLoyalty : nat = share * s.rewardInfo.totalAccomulatedLoyalty;
+        const currentLoyalty : nat = (share + account.frozenBalance) * s.rewardInfo.totalAccomulatedLoyalty;
         userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
         userRewardInfo.loyaltyPaid := currentLoyalty;
 
