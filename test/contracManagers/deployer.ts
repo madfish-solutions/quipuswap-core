@@ -4,8 +4,8 @@ import {
   ContractProvider,
 } from "@taquito/taquito";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
-import fs from "fs";
-import path from "path";
+import fs = require("fs");
+import path = require("path");
 import { execSync } from "child_process";
 
 export class Deployer {

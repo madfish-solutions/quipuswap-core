@@ -3,8 +3,8 @@ import {
   ContractAbstraction,
   ContractProvider,
 } from "@taquito/taquito";
-import fs from "fs";
-import path from "path";
+import fs = require("fs");
+import path = require("path");
 import { execSync } from "child_process";
 import { InMemorySigner } from "@taquito/signer";
 

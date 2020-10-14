@@ -2,8 +2,10 @@
   "name": "quipuswap",
   "version": "0.0.1",
   "config": {
-    "network": "http://127.0.0.1:8732",
-    "network1": "https://testnet-tezos.giganode.io",
+    "network1": "http://127.0.0.1:8732",
+    "network": "https://testnet-tezos.giganode.io",
+    "storagedir": "storage",
+    "inputdir": "build",
     "standard": "fa1.2",
     "default": {
       "pool": {
@@ -13,6 +15,7 @@
     }
   },
   "scripts": {
+    "compile": "tsc --declaration",
     "build": "./scripts/build.sh",
     "build_fa1.2": "./scripts/build_fa1.2.sh",
     "build-fa2": "./scripts/build_fa2.sh",
@@ -20,18 +23,22 @@
     "deploy-fa1.2": "./scripts/deploy_fa1.2.sh",
     "deploy-fa2": "./scripts/deploy_fa2.sh",
     "set-functions": "./scripts/set_functions.sh",
-    "set-functions-fa1.2": "./scripts/set_functions_fa1.2.sh",
+    "set-dex-functions-fa1.2": "./scripts/set_dex_functions_fa1.2.sh",
+    "set-token-functions-fa1.2": "./scripts/set_token_functions_fa1.2.sh",
     "set-functions-fa2": "./scripts/set_functions_fa2.sh",
     "add-tokens": "node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network && node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network Token2",
-    "test": "mocha --timeout 2000000"
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha "
   },
   "dependencies": {
     "@taquito/taquito": "^6.3.4-beta.0",
+    "bignumber.js": "^9.0.0",
     "commander": "^5.1.0",
     "dotenv": "^8.2.0",
-    "bignumber.js": "^9.0.0"
-  },
-  "devDependencies": {
+    "typescript": "^4.0.3",
     "mocha": "^7.2.0"
-  }
+  },
+  "directories": {
+    "test": "./test"
+  },
+  "type": "module"
 }

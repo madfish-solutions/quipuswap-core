@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "rootDir": "test/contracManagers"
+  },
+  "include": ["test/contracManagers/*"],
+
+  "exclude": ["node_modules"]
+}
