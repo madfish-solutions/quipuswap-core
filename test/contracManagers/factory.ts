@@ -34,7 +34,6 @@ export class Factory {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      ...this.storage,
       tokenList: storage.tokenList,
       tokenToExchange: {},
       dexLambdas: {},

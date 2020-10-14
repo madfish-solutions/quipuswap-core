@@ -35,21 +35,21 @@ export class Dex extends TokenFA12 {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      tezPool: storage.tezPool,
-      tokenPool: storage.tokenPool,
-      invariant: storage.invariant,
-      tokenAddress: storage.tokenAddress,
-      factoryAddress: storage.factoryAddress,
-      totalSupply: storage.totalSupply,
+      tezPool: storage.storage.tezPool,
+      tokenPool: storage.storage.tokenPool,
+      invariant: storage.storage.invariant,
+      tokenAddress: storage.storage.tokenAddress,
+      factoryAddress: storage.storage.factoryAddress,
+      totalSupply: storage.storage.totalSupply,
       ledger: {},
       voters: {},
       vetos: {},
       votes: {},
-      veto: storage.veto,
-      currentDelegated: storage.currentDelegated,
-      currentCandidate: storage.currentCandidate,
-      totalVotes: storage.totalVotes,
-      rewardInfo: storage.rewardInfo,
+      veto: storage.storage.veto,
+      currentDelegated: storage.storage.currentDelegated,
+      currentCandidate: storage.storage.currentCandidate,
+      totalVotes: storage.storage.totalVotes,
+      rewardInfo: storage.storage.rewardInfo,
       userRewards: {},
     };
     for (let key in maps) {
@@ -57,7 +57,7 @@ export class Dex extends TokenFA12 {
         try {
           return {
             ...(await prev),
-            [current]: await storage[key].get(current),
+            [current]: await storage.storage[key].get(current),
           };
         } catch (ex) {
           console.error(ex);

@@ -2,12 +2,13 @@
   "name": "quipuswap",
   "version": "0.0.1",
   "config": {
-    "network1": "http://127.0.0.1:8732",
-    "network": "https://testnet-tezos.giganode.io",
-    "storagedir": "storage",
-    "inputdir": "build",
+    "network": "http://127.0.0.1:8732",
+    "network1": "https://testnet-tezos.giganode.io",
     "standard": "fa1.2",
     "default": {
+      "key": "../../fixtures/key",
+      "storagedir": "./storage",
+      "inputdir": "./build",
       "pool": {
         "tez": "1.0",
         "token": "1000"
@@ -39,7 +40,6 @@
   "directories": {
     "test": "./test"
   },
-  "type": "module",
   "devDependencies": {
     "@types/chai": "^4.2.13",
     "@types/mocha": "^8.0.3",
