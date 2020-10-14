@@ -7,6 +7,7 @@ import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-ope
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { TokenFA12 } from "./tokenFA12";
 import { DexStorage } from "./types";
+import { tezPrecision } from "./utils";
 
 export class Dex extends TokenFA12 {
   public tezos: TezosToolkit;
@@ -75,7 +76,7 @@ export class Dex extends TokenFA12 {
     await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use(0, "initializeExchange", tokenAmount)
-      .send({ amount: tezAmount });
+      .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     return operation;
   }
@@ -87,7 +88,7 @@ export class Dex extends TokenFA12 {
   ): Promise<TransactionOperation> {
     const operation = await this.contract.methods
       .use(1, "tezToTokenPayment", minTokens, receiver)
-      .send({ amount: tezAmount });
+      .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     return operation;
   }
@@ -152,7 +153,7 @@ export class Dex extends TokenFA12 {
       .withTransfer(
         secondDexContract.methods
           .use(1, "tezToTokenPayment", minTokensOut, receiver)
-          .toTransferParams({ amount: middleTezAmount })
+          .toTransferParams({ amount: middleTezAmount / tezPrecision })
       );
     const operation = await batch.send();
     await operation.confirmation();
@@ -182,7 +183,7 @@ export class Dex extends TokenFA12 {
     await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use(4, "investLiquidity", minShares)
-      .send({ amount: tezAmount });
+      .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     return operation;
   }
@@ -231,7 +232,7 @@ export class Dex extends TokenFA12 {
   async sendReward(amount: number): Promise<TransactionOperation> {
     const operation = await this.tezos.contract.transfer({
       to: this.contract.address,
-      amount,
+      amount: amount / tezPrecision,
     });
     await operation.confirmation();
     return operation;

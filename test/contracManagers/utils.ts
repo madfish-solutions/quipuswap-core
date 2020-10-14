@@ -8,7 +8,8 @@ import path = require("path");
 import { execSync } from "child_process";
 import { InMemorySigner } from "@taquito/signer";
 
-const provider = process.env.npm_package_config_network;
+export const provider = process.env.npm_package_config_network;
+export const tezPrecision = 1e6;
 
 export function getLigo(isDockerizedLigo: boolean): string {
   let path = "ligo";

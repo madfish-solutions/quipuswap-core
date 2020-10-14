@@ -616,7 +616,7 @@ function launchExchange (const self : address; const token : address; const toke
     else skip; 
     s.tokenList := Set.add (token, s.tokenList);
 
-    const res : (operation * address) = createDex((None : option(key_hash)), 0tz, record [
+    const res : (operation * address) = createDex((None : option(key_hash)), Tezos.amount, record [
       storage = 
         record [
             tezPool = Tezos.amount / 1mutez;      

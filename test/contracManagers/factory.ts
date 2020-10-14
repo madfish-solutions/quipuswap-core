@@ -6,7 +6,7 @@ import {
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { FactoryStorage } from "./types";
 import { execSync } from "child_process";
-import { getLigo } from "./utils";
+import { getLigo, tezPrecision } from "./utils";
 
 export class Factory {
   public tezos: TezosToolkit;
@@ -65,7 +65,7 @@ export class Factory {
     await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, tokenAmount)
-      .send({ amount: tezAmount });
+      .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     await this.updateStorage({ tokenToExchange: [tokenAddress] });
     return operation;

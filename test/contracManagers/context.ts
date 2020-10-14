@@ -77,4 +77,55 @@ export class Context {
       token.tezos = tezos;
     }
   }
+
+  async createToken(): Promise<string> {
+    let tokenAddress = await this.deployer.deploy("Token", false, "0");
+    this.tokens.push(await TokenFA12.init(this.tezos, tokenAddress));
+    return tokenAddress;
+  }
+
+  async createPair(
+    pairConfig: {
+      tezAmount: number;
+      tokenAmount: number;
+      tokenAddress: string | null;
+    } = {
+      tezAmount: 10000,
+      tokenAmount: 1000000,
+      tokenAddress: null,
+    }
+  ): Promise<string> {
+    pairConfig.tokenAddress =
+      pairConfig.tokenAddress || (await this.createToken());
+    await this.factory.launchExchange(
+      pairConfig.tokenAddress,
+      pairConfig.tokenAmount,
+      pairConfig.tezAmount
+    );
+    this.pairs.push(
+      await Dex.init(
+        this.tezos,
+        this.factory.storage.tokenToExchange[pairConfig.tokenAddress]
+      )
+    );
+    return this.factory.storage.tokenToExchange[pairConfig.tokenAddress];
+  }
+
+  async createPairs(
+    pairConfigs: {
+      tezAmount: number;
+      tokenAmount: number;
+      tokenAddress: string | null;
+    }[] = [
+      {
+        tezAmount: 10000,
+        tokenAmount: 1000000,
+        tokenAddress: null,
+      },
+    ]
+  ): Promise<void> {
+    for (let pairConfig of pairConfigs) {
+      this.createPair(pairConfig);
+    }
+  }
 }
