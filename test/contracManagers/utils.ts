@@ -34,7 +34,7 @@ export function getLigo(isDockerizedLigo: boolean): string {
 }
 
 export async function setup(
-  keyPath: string = "../fixtures/key"
+  keyPath: string = process.env.npm_package_config_default_key
 ): Promise<TezosToolkit> {
   keyPath = path.join(__dirname, keyPath);
   const secretKey = fs.readFileSync(keyPath).toString().trim();

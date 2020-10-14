@@ -37,7 +37,7 @@ export class Context {
       { tezAmount: 10000, tokenAmount: 1000000 },
       { tezAmount: 10000, tokenAmount: 1000000 },
     ],
-    keyPath: string = "../fixtures/key"
+    keyPath: string = process.env.npm_package_config_default_key
   ): Promise<Context> {
     let tezos = await setup(keyPath);
     let deployer = new Deployer(tezos);
@@ -50,7 +50,7 @@ export class Context {
     for (const pairsConfig of pairsConfigs) {
       let tokenAddress = await deployer.deploy("Token", false, "0");
       tokens.push(await TokenFA12.init(tezos, tokenAddress));
-      let operation = await factory.launchExchange(
+      await factory.launchExchange(
         tokenAddress,
         pairsConfig.tokenAmount,
         pairsConfig.tezAmount
@@ -62,7 +62,9 @@ export class Context {
     return new Context(tezos, deployer, factory, pairs, tokens);
   }
 
-  async updateActor(keyPath: string = "../fixtures/key"): Promise<void> {
+  async updateActor(
+    keyPath: string = process.env.npm_package_config_default_key
+  ): Promise<void> {
     let tezos = await setup(keyPath);
 
     this.tezos = tezos;

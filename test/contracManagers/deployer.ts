@@ -21,24 +21,24 @@ export class Deployer {
     balance: string
   ): Promise<string> {
     let operation;
-    let inputDir = process.env.npm_package_config_inputdir;
-    let storageDir = process.env.npm_package_config_storagedir;
+    let inputDir = process.env.npm_package_config_default_inputdir;
+    let storageDir = process.env.npm_package_config_default_storagedir;
     if (withInit) {
       operation = await this.tezos.contract.originate({
         code: JSON.parse(
-          fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()
+          fs.readFileSync(`${inputDir}/${contractName}.json`).toString()
         ),
         init: JSON.parse(
-          fs.readFileSync(`./${storageDir}/${contractName}.json`).toString()
+          fs.readFileSync(`${storageDir}/${contractName}.json`).toString()
         ),
         balance: balance,
       });
     } else {
       operation = await this.tezos.contract.originate({
         code: JSON.parse(
-          fs.readFileSync(`./${inputDir}/${contractName}.json`).toString()
+          fs.readFileSync(`${inputDir}/${contractName}.json`).toString()
         ),
-        storage: require(`../${storageDir}/${contractName}.js`),
+        storage: require(`../../${storageDir}/${contractName}.js`),
         balance: balance,
       });
     }

@@ -67,7 +67,7 @@ export class Factory {
       .launchExchange(tokenAddress, tokenAmount)
       .send({ amount: tezAmount });
     await operation.confirmation();
-    this.updateStorage({ tokenToExchange: [tokenAddress] });
+    await this.updateStorage({ tokenToExchange: [tokenAddress] });
     return operation;
   }
 
