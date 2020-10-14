@@ -32,7 +32,7 @@ type dex_storage is record [
   tokenAddress      : address;
   factoryAddress    : address;
   totalSupply       : nat;
-  ledger            : big_map (address, account_info);
+  ledger            : big_map(address, account_info);
   voters            : big_map(address, vote_info);
   vetos             : big_map(key_hash, timestamp);
   votes             : big_map(key_hash, nat);
