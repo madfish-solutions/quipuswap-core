@@ -1,8 +1,15 @@
 {
   "compilerOptions": {
-    "rootDir": "test/contracManagers"
+    "outDir": "./dist/",
+    "module": "commonjs",
+    "target": "es2015",
+    "lib": ["es2017"],
+    "declaration": false,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "inlineSourceMap": true,
+    "moduleResolution": "node"
   },
-  "include": ["test/contracManagers/*"],
-
+  "include": ["test/**/*.ts", "src"],
   "exclude": ["node_modules"]
 }
