@@ -9,7 +9,7 @@ import { TokenFA12 } from "./tokenFA12";
 import { DexStorage } from "./types";
 
 export class Dex extends TokenFA12 {
-  readonly tezos: TezosToolkit;
+  public tezos: TezosToolkit;
   readonly contract: ContractAbstraction<ContractProvider>;
   public storage: DexStorage;
 

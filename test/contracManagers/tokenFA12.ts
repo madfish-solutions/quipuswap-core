@@ -7,7 +7,7 @@ import { TransactionOperation } from "@taquito/taquito/dist/types/operations/tra
 import { TokenStorage } from "./types";
 
 export class TokenFA12 {
-  readonly tezos: TezosToolkit;
+  public tezos: TezosToolkit;
   readonly contract: ContractAbstraction<ContractProvider>;
   public storage: TokenStorage;
 

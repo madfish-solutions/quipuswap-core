@@ -9,7 +9,7 @@ import { execSync } from "child_process";
 import { getLigo } from "./utils";
 
 export class Factory {
-  readonly tezos: TezosToolkit;
+  public tezos: TezosToolkit;
   readonly contract: ContractAbstraction<ContractProvider>;
   public storage: FactoryStorage;
 
@@ -34,6 +34,7 @@ export class Factory {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
+      ...this.storage,
       tokenList: storage.tokenList,
       tokenToExchange: {},
       dexLambdas: {},
@@ -66,6 +67,7 @@ export class Factory {
       .launchExchange(tokenAddress, tokenAmount)
       .send({ amount: tezAmount });
     await operation.confirmation();
+    this.updateStorage({ tokenToExchange: [tokenAddress] });
     return operation;
   }
 
