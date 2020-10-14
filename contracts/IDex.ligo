@@ -63,13 +63,13 @@ type divestLiquidityParams is record [
 
 type voteParams is record [
   candidate   : key_hash;
-  voter       : address; 
   value       : nat; 
+  voter       : address; 
 ]
 
 type vetoParams is record [
-  voter       : address; 
   value       : nat; 
+  voter       : address; 
 ]
 
 type dexAction is

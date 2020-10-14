@@ -3,6 +3,8 @@ import {
   ContractAbstraction,
   ContractProvider,
 } from "@taquito/taquito";
+import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
+import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { DexStorage } from "./types";
 
 export class Dex {
@@ -18,38 +20,9 @@ export class Dex {
     this.contract = contract;
   }
 
-  static async init(tezos: TezosToolkit, dexAddress: string) {
+  static async init(tezos: TezosToolkit, dexAddress: string): Promise<Dex> {
     return new Dex(tezos, await tezos.contract.at(dexAddress));
   }
-
-  // async getFullStorage(
-  //   maps = { shares: [], voters: [], vetos: [], vetoVoters: [], votes: [] }
-  // ) {
-  //   const storage = await this.contract.storage();
-  //   var result = {
-  //     ...storage,
-  //   };
-  //   for (let key in maps) {
-  //     result[key + "Extended"] = await maps[key].reduce(
-  //       async (prev, current) => {
-  //         let entry;
-
-  //         try {
-  //           entry = await storage[key].get(current);
-  //         } catch (ex) {
-  //           console.error(ex);
-  //         }
-
-  //         return {
-  //           ...(await prev),
-  //           [current]: entry,
-  //         };
-  //       },
-  //       Promise.resolve({})
-  //     );
-  //   }
-  //   return result;
-  // }
 
   async updateStorage(
     maps: {
@@ -58,7 +31,7 @@ export class Dex {
       vetos?: string[];
       votes?: string[];
     } = {}
-  ) {
+  ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
       ...this.storage,
@@ -81,171 +54,194 @@ export class Dex {
     };
     for (let key in maps) {
       this.storage[key] = await maps[key].reduce(async (prev, current) => {
-        let entry;
-
         try {
-          entry = await storage[key].get(current);
+          return {
+            ...(await prev),
+            [current]: await storage[key].get(current),
+          };
         } catch (ex) {
           console.error(ex);
+          return {
+            ...(await prev),
+          };
         }
-
-        return {
-          ...(await prev),
-          [current]: entry,
-        };
       }, Promise.resolve({}));
     }
   }
-  // async initializeExchange(tokenAmount, tezAmount) {
-  //   await this.approve(tokenAmount, this.contract.address);
-  //   const operation = await this.contract.methods
-  //     .use(0, "initializeExchange", tokenAmount)
-  //     .send({ amount: tezAmount });
-  //   await operation.confirmation();
-  //   return operation;
-  // }
 
-  // async veto(voter) {
-  //   const operation = await this.contract.methods.use(8, "veto", voter).send();
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async initializeExchange(
+    tokenAmount: number,
+    tezAmount: number
+  ): Promise<TransactionOperation> {
+    await this.approve(tokenAmount, this.contract.address);
+    const operation = await this.contract.methods
+      .use(0, "initializeExchange", tokenAmount)
+      .send({ amount: tezAmount });
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async sendReward(amount) {
-  //   const operation = await this.tezos.contract.transfer({
-  //     to: this.contract.address,
-  //     amount,
-  //   });
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async tezToTokenPayment(
+    minTokens: number,
+    tezAmount: number,
+    receiver: string
+  ): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(1, "tezToTokenPayment", minTokens, receiver)
+      .send({ amount: tezAmount });
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async vote(voter, delegate) {
-  //   const operation = await this.contract.methods
-  //     .use(7, "vote", delegate, voter)
-  //     .send();
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async tezToTokenSwap(
+    minTokens: number,
+    tezAmount: number
+  ): Promise<TransactionOperation> {
+    return await this.tezToTokenPayment(
+      minTokens,
+      tezAmount,
+      await this.tezos.signer.publicKeyHash()
+    );
+  }
 
-  // async withdrawProfit(receiver) {
-  //   const operation = await this.contract.methods
-  //     .use(3, "withdrawProfit", receiver)
-  //     .send();
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async tokenToTezPayment(
+    tokenAmount: number,
+    minTezOut: number,
+    receiver: string
+  ): Promise<TransactionOperation> {
+    await this.approve(tokenAmount, this.contract.address);
+    const operation = await this.contract.methods
+      .use(2, "tokenToTezPayment", tokenAmount, minTezOut, receiver)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async setVotesDelegation(voter, allowance) {
-  //   const operation = await this.contract.methods
-  //     .use(6, "setVotesDelegation", voter, allowance)
-  //     .send();
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async tokenToTezSwap(
+    tokenAmount: number,
+    minTezOut: number
+  ): Promise<TransactionOperation> {
+    return await this.tokenToTezPayment(
+      tokenAmount,
+      minTezOut,
+      await this.tezos.signer.publicKeyHash()
+    );
+  }
 
-  // async investLiquidity(tokenAmount, tezAmount, minShares) {
-  //   await this.approve(tokenAmount, this.contract.address);
-  //   const operation = await this.contract.methods
-  //     .use(4, "investLiquidity", minShares)
-  //     .send({ amount: tezAmount });
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async tokenToTokenPayment(
+    tokenAmount: number,
+    minTokensOut: number,
+    secondDexContract: ContractAbstraction<ContractProvider>,
+    middleTezAmount: number,
+    receiver: string
+  ): Promise<BatchOperation> {
+    await this.approve(tokenAmount, this.contract.address);
+    const minTez = Math.floor(middleTezAmount * 0.9);
+    const batch = this.tezos
+      .batch([])
+      .withTransfer(
+        this.contract.methods
+          .use(
+            2,
+            "tokenToTezPayment",
+            tokenAmount,
+            minTez ? minTez : 1,
+            await this.tezos.signer.publicKeyHash()
+          )
+          .toTransferParams()
+      )
+      .withTransfer(
+        secondDexContract.methods
+          .use(1, "tezToTokenPayment", minTokensOut, receiver)
+          .toTransferParams({ amount: middleTezAmount })
+      );
+    const operation = await batch.send();
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async divestLiquidity(tokenAmount, tezAmount, sharesBurned) {
-  //   await this.approve(tokenAmount, this.contract.address);
-  //   const operation = await this.contract.methods
-  //     .use(5, "divestLiquidity", tezAmount, tokenAmount, sharesBurned)
-  //     .send();
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async tokenToTokenSwap(
+    tokenAmount: number,
+    minTokensOut: number,
+    secondDexContract: ContractAbstraction<ContractProvider>,
+    middleTezAmount: number
+  ): Promise<BatchOperation> {
+    return await this.tokenToTokenPayment(
+      tokenAmount,
+      minTokensOut,
+      secondDexContract,
+      middleTezAmount,
+      await this.tezos.signer.publicKeyHash()
+    );
+  }
 
-  // async tezToTokenSwap(minTokens, tezAmount) {
-  //   return await this.tezToTokenPayment(
-  //     minTokens,
-  //     tezAmount,
-  //     await this.tezos.signer.publicKeyHash()
-  //   );
-  // }
+  async investLiquidity(
+    tokenAmount: number,
+    tezAmount: number,
+    minShares: number
+  ): Promise<TransactionOperation> {
+    await this.approve(tokenAmount, this.contract.address);
+    const operation = await this.contract.methods
+      .use(4, "investLiquidity", minShares)
+      .send({ amount: tezAmount });
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async tezToTokenPayment(minTokens, tezAmount, receiver) {
-  //   const operation = await this.contract.methods
-  //     .use(1, "tezToTokenPayment", minTokens, receiver)
-  //     .send({ amount: tezAmount });
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async divestLiquidity(
+    tokenAmount: number,
+    tezAmount: number,
+    sharesBurned: number
+  ): Promise<TransactionOperation> {
+    await this.approve(tokenAmount, this.contract.address);
+    const operation = await this.contract.methods
+      .use(5, "divestLiquidity", tezAmount, tokenAmount, sharesBurned)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async tokenToTezSwap(tokenAmount, minTezOut) {
-  //   return await this.tokenToTezPayment(
-  //     tokenAmount,
-  //     minTezOut,
-  //     await this.tezos.signer.publicKeyHash()
-  //   );
-  // }
+  async vote(
+    voter: string,
+    delegate: string,
+    value: number
+  ): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(6, "vote", delegate, value, voter)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async tokenToTezPayment(tokenAmount, minTezOut, receiver) {
-  //   await this.approve(tokenAmount, this.contract.address);
-  //   const operation = await this.contract.methods
-  //     .use(2, "tokenToTezPayment", tokenAmount, minTezOut, receiver)
-  //     .send();
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async veto(voter: string, value: number): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(7, "veto", value, voter)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async tokenToTokenSwap(
-  //   tokenAmount,
-  //   minTokensOut,
-  //   secondDexContract,
-  //   middleTezAmount
-  // ) {
-  //   return await this.tokenToTokenPayment(
-  //     tokenAmount,
-  //     minTokensOut,
-  //     secondDexContract,
-  //     middleTezAmount,
-  //     await this.tezos.signer.publicKeyHash()
-  //   );
-  // }
+  async withdrawProfit(receiver: number): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(3, "withdrawProfit", receiver)
+      .send();
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async tokenToTokenPayment(
-  //   tokenAmount,
-  //   minTokensOut,
-  //   secondDexContract,
-  //   middleTezAmount,
-  //   receiver
-  // ) {
-  //   await this.approve(tokenAmount, this.contract.address);
-  //   const minTez = parseInt(middleTezAmount * 0.9);
-  //   const batch = this.tezos
-  //     .batch([])
-  //     .withTransfer(
-  //       this.contract.methods
-  //         .use(
-  //           2,
-  //           "tokenToTezPayment",
-  //           tokenAmount,
-  //           minTez ? minTez : 1,
-  //           await this.tezos.signer.publicKeyHash()
-  //         )
-  //         .toTransferParams()
-  //     )
-  //     .withTransfer(
-  //       secondDexContract.methods
-  //         .use(1, "tezToTokenPayment", minTokensOut, receiver)
-  //         .toTransferParams({ amount: middleTezAmount })
-  //     );
-  //   const operation = await batch.send();
-  //   await operation.confirmation();
-  //   return operation;
-  // }
+  async sendReward(amount: number): Promise<TransactionOperation> {
+    const operation = await this.tezos.contract.transfer({
+      to: this.contract.address,
+      amount,
+    });
+    await operation.confirmation();
+    return operation;
+  }
 
-  // async approve(tokenAmount, address) {
-  //   let storage = await this.getFullStorage();
-  //   let token = await this.tezos.contract.at(storage.storage.tokenAddress);
-  //   let operation = await token.methods.approve(address, tokenAmount).send();
-  //   await operation.confirmation();
-  // }
+  async approve(tokenAmount: number, address: string): Promise<void> {
+    await this.updateStorage();
+    let token = await this.tezos.contract.at(this.storage.tokenAddress);
+    let operation = await token.methods.approve(address, tokenAmount).send();
+    await operation.confirmation();
+  }
 }
