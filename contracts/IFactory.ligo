@@ -8,15 +8,10 @@ type exchange_storage is record [
 ]
 
 type createDexFunc is (option(key_hash) * tez * full_dex_storage) -> (operation * address)
+
 type factory_return is list(operation) * exchange_storage
 
-type full_exchange_storage is exchange_storage
-// record [
-//   storage   : exchange_storage;
-//   // lambdas   : big_map(nat, (address * address * nat * exchange_storage) -> factory_return);
-// ]
-
-type full_factory_return is list(operation) * full_exchange_storage
+type full_factory_return is list(operation) * exchange_storage
 
 type launchExchangeParams is record [
   token         : address;

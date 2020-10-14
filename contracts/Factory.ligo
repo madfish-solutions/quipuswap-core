@@ -606,7 +606,7 @@ const createDex : createDexFunc =
                     PAIR } |}
            : createDexFunc)];
   
-function launchExchange (const self : address; const token : address; const tokenAmount : nat; var s : full_exchange_storage) :  full_factory_return is
+function launchExchange (const self : address; const token : address; const tokenAmount : nat; var s : exchange_storage) :  full_factory_return is
   block {
     if s.tokenList contains token then 
       failwith("Factory/exchange-launched") 
@@ -660,14 +660,14 @@ function launchExchange (const self : address; const token : address; const toke
     )
   ], s)
 
-function setDexFunction (const idx : nat; const f : dexFunc; const s : full_exchange_storage) : full_exchange_storage is
+function setDexFunction (const idx : nat; const f : dexFunc; const s : exchange_storage) : exchange_storage is
 block {
   case s.dexLambdas[idx] of 
     Some(n) -> failwith("Factory/function-set") 
     | None -> s.dexLambdas[idx] := f 
   end;
 } with s
-function setTokenFunction (const idx : nat; const f : tokenFunc; const s : full_exchange_storage) : full_exchange_storage is
+function setTokenFunction (const idx : nat; const f : tokenFunc; const s : exchange_storage) : exchange_storage is
 block {
   case s.tokenLambdas[idx] of 
     Some(n) -> failwith("Factory/function-set") 
@@ -675,11 +675,11 @@ block {
   end;
 } with s
 
-function main (const p : exchangeAction; const s : full_exchange_storage) : full_factory_return is 
+function main (const p : exchangeAction; const s : exchange_storage) : full_factory_return is 
   case p of
     | LaunchExchange(params) -> launchExchange(Tezos.self_address, params.token, params.tokenAmount, s)
-    | SetDexFunction(params) -> ((nil:list(operation)), if params.index > 8n then (failwith("Factory/wrong-index") : full_exchange_storage) else setDexFunction(params.index, params.func, s))
-    | SetTokenFunction(params) -> ((nil:list(operation)), if params.index > 4n then (failwith("Factory/wrong-index") : full_exchange_storage) else setTokenFunction(params.index, params.func, s))
+    | SetDexFunction(params) -> ((nil:list(operation)), if params.index > 8n then (failwith("Factory/wrong-index") : exchange_storage) else setDexFunction(params.index, params.func, s))
+    | SetTokenFunction(params) -> ((nil:list(operation)), if params.index > 4n then (failwith("Factory/wrong-index") : exchange_storage) else setTokenFunction(params.index, params.func, s))
   end
 
 // record [  tokenList = (set[] : set(address));        

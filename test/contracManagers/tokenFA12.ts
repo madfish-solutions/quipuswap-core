@@ -3,7 +3,6 @@ import {
   ContractAbstraction,
   ContractProvider,
 } from "@taquito/taquito";
-import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { TokenStorage } from "./types";
 

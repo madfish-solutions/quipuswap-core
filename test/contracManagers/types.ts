@@ -38,6 +38,11 @@ export declare type AccountInfo = {
   allowances: { [key: string]: number };
 };
 
+export declare type AccountTokenInfo = {
+  balance: number;
+  allowances: { [key: string]: number };
+};
+
 export declare type VoteInfo = {
   candidate: string | null | undefined;
   vote: number;
@@ -46,5 +51,12 @@ export declare type VoteInfo = {
 
 export declare type TokenStorage = {
   totalSupply: number;
-  ledger: { [key: string]: AccountInfo };
+  ledger: { [key: string]: AccountTokenInfo };
+};
+
+export declare type FactoryStorage = {
+  tokenList: string[];
+  tokenToExchange: { [key: string]: string };
+  dexLambdas: { [key: number]: any };
+  tokenLambdas: { [key: number]: any };
 };
