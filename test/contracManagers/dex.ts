@@ -5,9 +5,10 @@ import {
 } from "@taquito/taquito";
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
+import { TokenFA12 } from "./tokenFA12";
 import { DexStorage } from "./types";
 
-export class Dex {
+export class Dex extends TokenFA12 {
   readonly tezos: TezosToolkit;
   readonly contract: ContractAbstraction<ContractProvider>;
   public storage: DexStorage;
@@ -16,8 +17,7 @@ export class Dex {
     tezos: TezosToolkit,
     contract: ContractAbstraction<ContractProvider>
   ) {
-    this.tezos = tezos;
-    this.contract = contract;
+    super(tezos, contract);
   }
 
   static async init(tezos: TezosToolkit, dexAddress: string): Promise<Dex> {
@@ -34,7 +34,6 @@ export class Dex {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      ...this.storage,
       tezPool: storage.tezPool,
       tokenPool: storage.tokenPool,
       invariant: storage.invariant,
@@ -73,7 +72,7 @@ export class Dex {
     tokenAmount: number,
     tezAmount: number
   ): Promise<TransactionOperation> {
-    await this.approve(tokenAmount, this.contract.address);
+    await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use(0, "initializeExchange", tokenAmount)
       .send({ amount: tezAmount });
@@ -109,7 +108,7 @@ export class Dex {
     minTezOut: number,
     receiver: string
   ): Promise<TransactionOperation> {
-    await this.approve(tokenAmount, this.contract.address);
+    await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use(2, "tokenToTezPayment", tokenAmount, minTezOut, receiver)
       .send();
@@ -135,7 +134,7 @@ export class Dex {
     middleTezAmount: number,
     receiver: string
   ): Promise<BatchOperation> {
-    await this.approve(tokenAmount, this.contract.address);
+    await this.approveToken(tokenAmount, this.contract.address);
     const minTez = Math.floor(middleTezAmount * 0.9);
     const batch = this.tezos
       .batch([])
@@ -180,7 +179,7 @@ export class Dex {
     tezAmount: number,
     minShares: number
   ): Promise<TransactionOperation> {
-    await this.approve(tokenAmount, this.contract.address);
+    await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use(4, "investLiquidity", minShares)
       .send({ amount: tezAmount });
@@ -193,7 +192,7 @@ export class Dex {
     tezAmount: number,
     sharesBurned: number
   ): Promise<TransactionOperation> {
-    await this.approve(tokenAmount, this.contract.address);
+    await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use(5, "divestLiquidity", tezAmount, tokenAmount, sharesBurned)
       .send();
@@ -238,7 +237,7 @@ export class Dex {
     return operation;
   }
 
-  async approve(tokenAmount: number, address: string): Promise<void> {
+  async approveToken(tokenAmount: number, address: string): Promise<void> {
     await this.updateStorage();
     let token = await this.tezos.contract.at(this.storage.tokenAddress);
     let operation = await token.methods.approve(address, tokenAmount).send();

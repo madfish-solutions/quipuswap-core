@@ -43,3 +43,8 @@ export declare type VoteInfo = {
   vote: number;
   veto: number;
 };
+
+export declare type TokenStorage = {
+  totalSupply: number;
+  ledger: { [key: string]: AccountInfo };
+};
