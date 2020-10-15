@@ -219,8 +219,7 @@ describe("Initialization calls", function () {
 
       // ensure attempt to add the pair again fails Factory/exchange-launched
       let tokenAddress = context.factory.storage.tokenList[0];
-
-      rejects(
+      await rejects(
         context.createPair({
           tokenAddress,
           tezAmount,
