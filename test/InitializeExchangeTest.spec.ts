@@ -203,7 +203,7 @@ describe("Initialization calls", function () {
       // 3. new pair state
     });
 
-    it("should fail initialization & deployment if exchange pair exist", async function () {
+    it.skip("should fail initialization & deployment if exchange pair exist", async function () {
       let tezAmount = 10000;
       let tokenAmount = 1000000;
 
@@ -235,35 +235,58 @@ describe("Initialization calls", function () {
           return true;
         },
         "Adding Dex should fail"
-      ).catch((e) => console.log(e));
+      );
     });
 
-    it("should fail initialization & deployment if no tokens are sent", async function () {
+    it.skip("should fail initialization & deployment if no tokens are sent", async function () {
       // create context without exchanges
-      // let context = await Context.init([]);
-      // ensure empty factory
+      let context = await Context.init([]);
+
+      // create token
+      let tokenAddress = await context.createToken();
+      let tezAmount = 10000;
+      let tokenAmount = 0;
+
       // add new exchange pair
-      // check:
-      // 1. tokens/tez withdrawn
-      // 2. factory state
-      // 3. new pair state
+      await rejects(
+        context.createPair({
+          tokenAddress,
+          tezAmount,
+          tokenAmount,
+        }),
+        (err) => {
+          strictEqual(err.message, "Dex/non-allowed", "Error message mismatch");
+          return true;
+        },
+        "Adding Dex should fail"
+      );
     });
 
     it.skip("should fail initialization & deployment if no tez are sent", async function () {
       // create context without exchanges
       let context = await Context.init([]);
 
-      // ensure empty factory
+      // create token
+      let tokenAddress = await context.createToken();
+      let tezAmount = 0;
+      let tokenAmount = 1000000;
 
       // add new exchange pair
-
-      // check:
-      // 1. tokens/tez withdrawn
-      // 2. factory state
-      // 3. new pair state
+      await rejects(
+        context.createPair({
+          tokenAddress,
+          tezAmount,
+          tokenAmount,
+        }),
+        (err) => {
+          strictEqual(err.message, "Dex/non-allowed", "Error message mismatch");
+          return true;
+        },
+        "Adding Dex should fail"
+      );
     });
 
-    it.skip("should fail initialization  if no tokens are sent", async function () {
+    it.skip("should fail initialization if no tokens are sent", async function () {
       // create context without exchanges
       let context = await Context.init([]);
 
