@@ -28,8 +28,8 @@ export class Factory {
   async updateStorage(
     maps: {
       tokenToExchange?: string[];
-      dexLambdas?: string[];
-      tokenLambdas?: string[];
+      dexLambdas?: number[];
+      tokenLambdas?: number[];
     } = {}
   ): Promise<void> {
     const storage: any = await this.contract.storage();
@@ -47,7 +47,6 @@ export class Factory {
             [current]: await storage[key].get(current),
           };
         } catch (ex) {
-          console.error(ex);
           return {
             ...(await prev),
           };

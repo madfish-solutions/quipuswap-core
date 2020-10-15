@@ -37,6 +37,7 @@ export class Context {
       { tezAmount: 10000, tokenAmount: 1000000 },
       { tezAmount: 10000, tokenAmount: 1000000 },
     ],
+    setFactoryFunctions: boolean = true,
     keyPath: string = process.env.npm_package_config_default_key
   ): Promise<Context> {
     let tezos = await setup(keyPath);
@@ -59,7 +60,11 @@ export class Context {
         await Dex.init(tezos, factory.storage.tokenToExchange[tokenAddress])
       );
     }
-    return new Context(tezos, deployer, factory, pairs, tokens);
+    let context = new Context(tezos, deployer, factory, pairs, tokens);
+    if (setFactoryFunctions) {
+      await context.setAllFactoryFunctions();
+    }
+    return context;
   }
 
   async updateActor(
@@ -82,6 +87,88 @@ export class Context {
     let tokenAddress = await this.deployer.deploy("Token", false, "0");
     this.tokens.push(await TokenFA12.init(this.tezos, tokenAddress));
     return tokenAddress;
+  }
+
+  async setAllFactoryFunctions(): Promise<void> {
+    let dexFunctions = [
+      {
+        index: 0,
+        name: "initializeExchange",
+      },
+      {
+        index: 1,
+        name: "tezToToken",
+      },
+      {
+        index: 2,
+        name: "tokenToTez",
+      },
+      {
+        index: 3,
+        name: "withdrawProfit",
+      },
+      {
+        index: 4,
+        name: "investLiquidity",
+      },
+      {
+        index: 5,
+        name: "divestLiquidity",
+      },
+      {
+        index: 6,
+        name: "vote",
+      },
+      {
+        index: 7,
+        name: "veto",
+      },
+      {
+        index: 8,
+        name: "receiveReward",
+      },
+    ];
+
+    let tokenFunctions = [
+      {
+        index: 0,
+        name: "transfer",
+      },
+      {
+        index: 1,
+        name: "approve",
+      },
+      {
+        index: 2,
+        name: "getBalance",
+      },
+      {
+        index: 3,
+        name: "getAllowance",
+      },
+      {
+        index: 4,
+        name: "getTotalSupply",
+      },
+    ];
+
+    for (let dexFunction of dexFunctions) {
+      console.log(dexFunction.name);
+      await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
+    }
+
+    for (let tokenFunction of tokenFunctions) {
+      console.log(tokenFunction.name);
+      await this.factory.setTokenFunction(
+        tokenFunction.index,
+        tokenFunction.name
+      );
+    }
+
+    await this.factory.updateStorage({
+      dexLambdas: [...Array(9).keys()],
+      tokenLambdas: [...Array(5).keys()],
+    });
   }
 
   async createPair(
