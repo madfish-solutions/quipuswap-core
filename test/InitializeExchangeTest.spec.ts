@@ -1,6 +1,7 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
+import { TezosOperationError } from "@taquito/taquito";
 
 describe("Initialization calls", function () {
   before(async function () {});
@@ -225,9 +226,16 @@ describe("Initialization calls", function () {
           tezAmount,
           tokenAmount,
         }),
-        new Error("Factory/exchange-launched"),
+        (err) => {
+          strictEqual(
+            err.message,
+            "Factory/exchange-launched",
+            "Error message mismatch"
+          );
+          return true;
+        },
         "Adding Dex should fail"
-      );
+      ).catch((e) => console.log(e));
     });
 
     it("should fail initialization & deployment if no tokens are sent", async function () {
