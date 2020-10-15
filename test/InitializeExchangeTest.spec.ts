@@ -1,12 +1,12 @@
 import { Context } from "./contracManagers/context";
-import { strictEqual, ok, notStrictEqual } from "assert";
+import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 
 describe("Initialization calls", function () {
   before(async function () {});
 
   describe("InitializeExchange()", function () {
-    it("should initialize & deploy 1 exchange and set initial stage", async function () {
+    it.skip("should initialize & deploy 1 exchange and set initial stage", async function () {
       // create context without exchanges
       let context = await Context.init([]);
 
@@ -23,7 +23,7 @@ describe("Initialization calls", function () {
       let tezAmount = 10000;
       let tokenAmount = 1000000;
 
-      // store user prev balances
+      // store user & pair prev balances
       let aliceAddress = await context.tezos.signer.publicKeyHash();
       let aliceInitTezBalance = await context.tezos.tz.getBalance(aliceAddress);
       await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
@@ -31,7 +31,7 @@ describe("Initialization calls", function () {
         aliceAddress
       ].balance;
 
-      // add new exchnge pair
+      // add new exchange pair
       let pairAddress = await context.createPair({
         tokenAddress,
         tezAmount,
@@ -90,7 +90,6 @@ describe("Initialization calls", function () {
 
       // 3. new pair state
       await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-      console.log(context.pairs[0].storage);
       strictEqual(
         context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
         1000,
@@ -123,27 +122,77 @@ describe("Initialization calls", function () {
       );
     });
 
-    it.skip("should initialize & deploy a 100 of exchanges and set initial state", async function () {
-      // create context without exchanges
-      let context = await Context.init([]);
+    it.skip("should initialize & deploy a 10 of exchanges and set initial state", async function () {
+      // generate configs
+      let exchangeCount = 10;
+      let configs = [];
+      for (let i = 0; i < exchangeCount; i++) {
+        configs.push({
+          tezAmount: 20 * (exchangeCount - i),
+          tokenAmount: 30000 * (i + 1),
+        });
+      }
 
-      // ensure empty factory
+      // create context with 10 exchanges
+      let context = await Context.init(configs);
 
-      // add new exchnge pair
+      // ensure factory registered 10 exchanges
+      await context.factory.updateStorage({
+        tokenToExchange: context.factory.storage.tokenList,
+      });
+      strictEqual(
+        context.factory.storage.tokenList.length,
+        exchangeCount,
+        "Factory tokenList should be empty"
+      );
 
-      // check:
-      // 1. tokens/tez withdrawn
-      // 2. factory state
-      // 3. new pair state
+      let aliceAddress = await context.tezos.signer.publicKeyHash();
+
+      // check each exchange pair state
+      for (let i = 0; i < exchangeCount; i++) {
+        await context.pairs[i].updateStorage({ ledger: [aliceAddress] });
+        strictEqual(
+          context.pairs[i].storage.ledger[aliceAddress].balance.toNumber(),
+          1000,
+          "Alice should receive 1000 shares"
+        );
+        strictEqual(
+          context.pairs[i].storage.totalSupply.toNumber(),
+          1000,
+          "Alice tokens should be all supply"
+        );
+        strictEqual(
+          context.pairs[i].storage.tezPool.toNumber(),
+          configs[i].tezAmount,
+          "Tez pool should be fully funded by sent amount"
+        );
+        strictEqual(
+          context.pairs[i].storage.tokenPool.toNumber(),
+          configs[i].tokenAmount,
+          "Token pool should be fully funded by sent amount"
+        );
+        strictEqual(
+          context.pairs[i].storage.invariant.toNumber(),
+          configs[i].tokenAmount * configs[i].tezAmount,
+          "Inveriant should be calculated properly"
+        );
+      }
     });
 
     it.skip("should initialize existing pair if there are no shares", async function () {
-      // create context without exchanges
-      let context = await Context.init([]);
+      let tezAmount = 10000;
+      let tokenAmount = 1000000;
 
-      // ensure empty factory
+      // create context with 1 exchange pair
+      let context = await Context.init([{ tezAmount, tokenAmount }]);
 
-      // add new exchnge pair
+      // ensure pair added
+      await context.factory.updateStorage();
+      strictEqual(
+        context.factory.storage.tokenList.length,
+        1,
+        "Factory tokenList should contain 1 exchange"
+      );
 
       // check:
       // 1. tokens/tez withdrawn
@@ -152,17 +201,30 @@ describe("Initialization calls", function () {
     });
 
     it.skip("should fail initialization & deployment if exchange pair exist", async function () {
-      // create context without exchanges
-      let context = await Context.init([]);
+      let tezAmount = 10000;
+      let tokenAmount = 1000000;
 
-      // ensure empty factory
+      // create context with 1 exchange pair
+      let context = await Context.init([{ tezAmount, tokenAmount }]);
 
-      // add new exchnge pair
+      // ensure pair added
+      await context.factory.updateStorage();
+      strictEqual(
+        context.factory.storage.tokenList.length,
+        1,
+        "Factory tokenList should contain 1 exchange"
+      );
 
-      // check:
-      // 1. tokens/tez withdrawn
-      // 2. factory state
-      // 3. new pair state
+      // ensure attempt to add the pair again fails
+      let tokenAddress = context.factory.storage.tokenList[0];
+      rejects(
+        context.createPair({
+          tokenAddress,
+          tezAmount,
+          tokenAmount,
+        }),
+        "Adding Dex should fail"
+      );
     });
 
     it.skip("should fail initialization & deployment if no tokens are sent", async function () {
@@ -171,7 +233,7 @@ describe("Initialization calls", function () {
 
       // ensure empty factory
 
-      // add new exchnge pair
+      // add new exchange pair
 
       // check:
       // 1. tokens/tez withdrawn
@@ -185,7 +247,7 @@ describe("Initialization calls", function () {
 
       // ensure empty factory
 
-      // add new exchnge pair
+      // add new exchange pair
 
       // check:
       // 1. tokens/tez withdrawn
@@ -199,7 +261,7 @@ describe("Initialization calls", function () {
 
       // ensure empty factory
 
-      // add new exchnge pair
+      // add new exchange pair
 
       // check:
       // 1. tokens/tez withdrawn
@@ -213,7 +275,7 @@ describe("Initialization calls", function () {
 
       // ensure empty factory
 
-      // add new exchnge pair
+      // add new exchange pair
 
       // check:
       // 1. tokens/tez withdrawn
