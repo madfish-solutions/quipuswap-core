@@ -18,7 +18,6 @@ export function getLigo(isDockerizedLigo: boolean): string {
     try {
       execSync(`${path}  --help`);
     } catch (err) {
-      console.log("Trying to use global version...");
       path = "ligo";
       execSync(`${path}  --help`);
     }
@@ -26,7 +25,6 @@ export function getLigo(isDockerizedLigo: boolean): string {
     try {
       execSync(`${path}  --help`);
     } catch (err) {
-      console.log("Trying to use Dockerized version...");
       path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
       execSync(`${path}  --help`);
     }

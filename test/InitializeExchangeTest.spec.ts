@@ -123,6 +123,8 @@ describe("Initialization calls", function () {
     });
 
     it.skip("should initialize & deploy a 10 of exchanges and set initial state", async function () {
+      this.timeout(500000);
+
       // generate configs
       let exchangeCount = 10;
       let configs = [];
@@ -200,7 +202,7 @@ describe("Initialization calls", function () {
       // 3. new pair state
     });
 
-    it.skip("should fail initialization & deployment if exchange pair exist", async function () {
+    it("should fail initialization & deployment if exchange pair exist", async function () {
       let tezAmount = 10000;
       let tokenAmount = 1000000;
 
@@ -215,26 +217,25 @@ describe("Initialization calls", function () {
         "Factory tokenList should contain 1 exchange"
       );
 
-      // ensure attempt to add the pair again fails
+      // ensure attempt to add the pair again fails Factory/exchange-launched
       let tokenAddress = context.factory.storage.tokenList[0];
+
       rejects(
         context.createPair({
           tokenAddress,
           tezAmount,
           tokenAmount,
         }),
+        new Error("Factory/exchange-launched"),
         "Adding Dex should fail"
       );
     });
 
-    it.skip("should fail initialization & deployment if no tokens are sent", async function () {
+    it("should fail initialization & deployment if no tokens are sent", async function () {
       // create context without exchanges
-      let context = await Context.init([]);
-
+      // let context = await Context.init([]);
       // ensure empty factory
-
       // add new exchange pair
-
       // check:
       // 1. tokens/tez withdrawn
       // 2. factory state
