@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 
 describe("InitializeExchange()", function () {
-  it.skip("should initialize & deploy 1 exchange and set initial stage", async function () {
+  it("should initialize & deploy 1 exchange and set initial stage", async function () {
     // create context without exchanges
     let context = await Context.init([]);
 
@@ -118,7 +118,7 @@ describe("InitializeExchange()", function () {
     );
   });
 
-  it.skip("should initialize & deploy a 10 of exchanges and set initial state", async function () {
+  it("should initialize & deploy a 10 of exchanges and set initial state", async function () {
     this.timeout(500000);
 
     // generate configs
@@ -132,7 +132,7 @@ describe("InitializeExchange()", function () {
     }
 
     // create context with 10 exchanges
-    let context = await Context.init(configs);
+    let context = await Context.init(configs, false);
 
     // ensure factory registered 10 exchanges
     await context.factory.updateStorage({
@@ -177,33 +177,30 @@ describe("InitializeExchange()", function () {
     }
   });
 
-  it.skip("should initialize existing pair if there are no shares", async function () {
-    let tezAmount = 10000;
-    let tokenAmount = 1000000;
-
-    // create context with 1 exchange pair
-    let context = await Context.init([{ tezAmount, tokenAmount }]);
-
-    // ensure pair added
-    await context.factory.updateStorage();
-    strictEqual(
-      context.factory.storage.tokenList.length,
-      1,
-      "Factory tokenList should contain 1 exchange"
-    );
-
-    // check:
-    // 1. tokens/tez withdrawn
-    // 2. factory state
-    // 3. new pair state
+  it("should initialize existing pair if there are no shares", async function () {
+    // let tezAmount = 10000;
+    // let tokenAmount = 1000000;
+    // // create context with 1 exchange pair
+    // let context = await Context.init([{ tezAmount, tokenAmount }]);
+    // // ensure pair added
+    // await context.factory.updateStorage();
+    // strictEqual(
+    //   context.factory.storage.tokenList.length,
+    //   1,
+    //   "Factory tokenList should contain 1 exchange"
+    // );
+    // // check:
+    // // 1. tokens/tez withdrawn
+    // // 2. factory state
+    // // 3. new pair state
   });
 
-  it.skip("should fail initialization & deployment if exchange pair exist", async function () {
+  it("should fail initialization & deployment if exchange pair exist", async function () {
     let tezAmount = 10000;
     let tokenAmount = 1000000;
 
     // create context with 1 exchange pair
-    let context = await Context.init([{ tezAmount, tokenAmount }]);
+    let context = await Context.init([{ tezAmount, tokenAmount }], false);
 
     // ensure pair added
     await context.factory.updateStorage();
@@ -233,9 +230,9 @@ describe("InitializeExchange()", function () {
     );
   });
 
-  it.skip("should fail initialization & deployment if no tokens are sent", async function () {
+  it("should fail initialization & deployment if no tokens are sent", async function () {
     // create context without exchanges
-    let context = await Context.init([]);
+    let context = await Context.init([], false);
 
     // create token
     let tokenAddress = await context.createToken();
@@ -281,28 +278,22 @@ describe("InitializeExchange()", function () {
     );
   });
 
-  it.skip("should fail initialization if no tokens are sent", async function () {
+  it("should fail initialization if no tokens are sent", async function () {
     // create context without exchanges
-    let context = await Context.init([]);
-
+    // let context = await Context.init([]);
     // ensure empty factory
-
     // add new exchange pair
-
     // check:
     // 1. tokens/tez withdrawn
     // 2. factory state
     // 3. new pair state
   });
 
-  it.skip("should fail initialization if no tez are sent", async function () {
+  it("should fail initialization if no tez are sent", async function () {
     // create context without exchanges
-    let context = await Context.init([]);
-
+    // let context = await Context.init([]);
     // ensure empty factory
-
     // add new exchange pair
-
     // check:
     // 1. tokens/tez withdrawn
     // 2. factory state

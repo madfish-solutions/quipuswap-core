@@ -60,7 +60,6 @@ export class Dex extends TokenFA12 {
             [current]: await storage.storage[key].get(current),
           };
         } catch (ex) {
-          console.error(ex);
           return {
             ...(await prev),
           };

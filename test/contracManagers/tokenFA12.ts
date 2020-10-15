@@ -44,7 +44,6 @@ export class TokenFA12 {
             [current]: await storage[key].get(current),
           };
         } catch (ex) {
-          console.error(ex);
           return {
             ...(await prev),
           };

@@ -89,7 +89,7 @@ export class Context {
     return tokenAddress;
   }
 
-  async setAllFactoryFunctions(): Promise<void> {
+  async setDexFactoryFunctions(): Promise<void> {
     let dexFunctions = [
       {
         index: 0,
@@ -128,7 +128,15 @@ export class Context {
         name: "receiveReward",
       },
     ];
+    for (let dexFunction of dexFunctions) {
+      await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
+    }
+    await this.factory.updateStorage({
+      dexLambdas: [...Array(9).keys()],
+    });
+  }
 
+  async setTokenFactoryFunctions(): Promise<void> {
     let tokenFunctions = [
       {
         index: 0,
@@ -151,20 +159,20 @@ export class Context {
         name: "getTotalSupply",
       },
     ];
-
-    for (let dexFunction of dexFunctions) {
-      console.log(dexFunction.name);
-      await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
-    }
-
     for (let tokenFunction of tokenFunctions) {
-      console.log(tokenFunction.name);
       await this.factory.setTokenFunction(
         tokenFunction.index,
         tokenFunction.name
       );
     }
+    await this.factory.updateStorage({
+      tokenLambdas: [...Array(5).keys()],
+    });
+  }
 
+  async setAllFactoryFunctions(): Promise<void> {
+    await this.setDexFactoryFunctions();
+    await this.setTokenFactoryFunctions();
     await this.factory.updateStorage({
       dexLambdas: [...Array(9).keys()],
       tokenLambdas: [...Array(5).keys()],
