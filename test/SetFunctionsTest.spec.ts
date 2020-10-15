@@ -9,6 +9,7 @@ describe("SetXFunctions()", function () {
     let context = await Context.init([], false);
 
     // ensure no functions are stored
+    await context.factory.updateStorage();
     Object.values(context.factory.storage.dexLambdas).forEach((value) => {
       strictEqual(value, null, "Dex function set");
     });
@@ -27,6 +28,7 @@ describe("SetXFunctions()", function () {
     let context = await Context.init([], false);
 
     // ensure no functions are stored
+    await context.factory.updateStorage();
     Object.values(context.factory.storage.tokenLambdas).forEach((value) => {
       strictEqual(value, null, "Token function set");
     });
@@ -60,7 +62,7 @@ describe("SetXFunctions()", function () {
         );
         return true;
       },
-      "Replacemt of dex function should fail"
+      "Replacement of dex function should fail"
     );
   });
 
