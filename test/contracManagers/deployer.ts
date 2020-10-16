@@ -42,7 +42,7 @@ export class Deployer {
         balance: balance,
       });
     }
-    let contract = await operation.contract();
-    return contract.address;
+    await operation.confirmation();
+    return operation.contractAddress;
   }
 }

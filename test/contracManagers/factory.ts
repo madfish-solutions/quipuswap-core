@@ -61,6 +61,7 @@ export class Factory {
     tezAmount: number
   ): Promise<TransactionOperation> {
     await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
+    console.log(tezAmount / tezPrecision);
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, tokenAmount)
       .send({ amount: tezAmount / tezPrecision });

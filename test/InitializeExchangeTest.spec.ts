@@ -118,7 +118,7 @@ describe("InitializeExchange()", function () {
     );
   });
 
-  it("should initialize & deploy a 10 of exchanges and set initial state", async function () {
+  it.skip("should initialize & deploy a 10 of exchanges and set initial state", async function () {
     this.timeout(500000);
 
     // generate configs

@@ -4,9 +4,11 @@ import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 
 describe("InvestLiquidity()", function () {
-  it("should invest liquidity and distribute new shares by current provider", async function () {
+  it.only("should invest liquidity and distribute new shares by current provider", async function () {
+    this.timeout(5000000);
     // create context with exchange
     let context = await Context.init();
+
     let tezAmount = 1000;
     let tokenAmount = 100000;
     let newShares = 100;
@@ -21,7 +23,7 @@ describe("InvestLiquidity()", function () {
     ].balance;
 
     // invest liquidity
-    await context.pairs[0].investLiquidity(tezAmount, tokenAmount, newShares);
+    await context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares);
 
     // checks
     let aliceFinalTezBalance = await context.tezos.tz.getBalance(aliceAddress);
@@ -51,10 +53,14 @@ describe("InvestLiquidity()", function () {
     // 2. tokens/tez send to token pair
     strictEqual(
       pairTokenBalance.toNumber(),
-      tokenAmount,
+      1000000 + tokenAmount,
       "Tokens not received"
     );
-    strictEqual(pairTezBalance.toNumber(), tezAmount, "Tez not received");
+    strictEqual(
+      pairTezBalance.toNumber(),
+      10000 + tezAmount,
+      "Tez not received"
+    );
 
     // 3. new pair state
     await context.pairs[0].updateStorage({ ledger: [aliceAddress] });

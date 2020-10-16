@@ -5,6 +5,7 @@ import {
 } from "@taquito/taquito";
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
+import { parseJsonSourceFileConfigFileContent } from "typescript";
 import { Deployer } from "./deployer";
 import { Dex } from "./dex";
 import { Factory } from "./factory";
@@ -50,8 +51,7 @@ export class Context {
     if (setFactoryFunctions) {
       await context.setAllFactoryFunctions();
     }
-    await context.createTokensAndPairs(pairsConfigs);
-
+    await context.createPairs(pairsConfigs);
     return context;
   }
 
@@ -171,11 +171,10 @@ export class Context {
     pairConfig: {
       tezAmount: number;
       tokenAmount: number;
-      tokenAddress: string | null;
+      tokenAddress?: string | null;
     } = {
       tezAmount: 10000,
       tokenAmount: 1000000,
-      tokenAddress: null,
     }
   ): Promise<string> {
     pairConfig.tokenAddress =
@@ -198,24 +197,7 @@ export class Context {
     pairConfigs: {
       tezAmount: number;
       tokenAmount: number;
-      tokenAddress: string | null;
-    }[] = [
-      {
-        tezAmount: 10000,
-        tokenAmount: 1000000,
-        tokenAddress: null,
-      },
-    ]
-  ): Promise<void> {
-    for (let pairConfig of pairConfigs) {
-      this.createPair(pairConfig);
-    }
-  }
-
-  async createTokensAndPairs(
-    pairConfigs: {
-      tezAmount: number;
-      tokenAmount: number;
+      tokenAddress?: string | null;
     }[] = [
       {
         tezAmount: 10000,
@@ -224,8 +206,7 @@ export class Context {
     ]
   ): Promise<void> {
     for (let pairConfig of pairConfigs) {
-      let tokenAddress = await this.createToken();
-      await this.createPair({ ...pairConfig, tokenAddress });
+      await this.createPair(pairConfig);
     }
   }
 }
