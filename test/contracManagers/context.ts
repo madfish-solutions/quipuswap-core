@@ -46,24 +46,12 @@ export class Context {
       tezos,
       await deployer.deploy("Factory", true, "0")
     );
-    let tokens = [];
-    let pairs = [];
-    for (const pairsConfig of pairsConfigs) {
-      let tokenAddress = await deployer.deploy("Token", false, "0");
-      tokens.push(await TokenFA12.init(tezos, tokenAddress));
-      await factory.launchExchange(
-        tokenAddress,
-        pairsConfig.tokenAmount,
-        pairsConfig.tezAmount
-      );
-      pairs.push(
-        await Dex.init(tezos, factory.storage.tokenToExchange[tokenAddress])
-      );
-    }
-    let context = new Context(tezos, deployer, factory, pairs, tokens);
+    let context = new Context(tezos, deployer, factory, [], []);
     if (setFactoryFunctions) {
       await context.setAllFactoryFunctions();
     }
+    await context.createTokensAndPairs(pairsConfigs);
+
     return context;
   }
 
@@ -221,6 +209,23 @@ export class Context {
   ): Promise<void> {
     for (let pairConfig of pairConfigs) {
       this.createPair(pairConfig);
+    }
+  }
+
+  async createTokensAndPairs(
+    pairConfigs: {
+      tezAmount: number;
+      tokenAmount: number;
+    }[] = [
+      {
+        tezAmount: 10000,
+        tokenAmount: 1000000,
+      },
+    ]
+  ): Promise<void> {
+    for (let pairConfig of pairConfigs) {
+      let tokenAddress = await this.createToken();
+      await this.createPair({ ...pairConfig, tokenAddress });
     }
   }
 }
