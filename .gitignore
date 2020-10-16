@@ -8,3 +8,4 @@ deploy
 *d.ts
 test/contracManagers/*.js
 test/*.js
+dist/

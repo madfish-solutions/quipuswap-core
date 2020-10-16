@@ -210,7 +210,6 @@ describe("InitializeExchange()", function () {
 
     // checks:
 
-    // 1.1 tokens/tez withdrawn
     let aliceFinalTezBalance = await context.tezos.tz.getBalance(aliceAddress);
     await context.tokens[0].updateStorage({
       ledger: [aliceAddress, pairAddress],
@@ -223,6 +222,7 @@ describe("InitializeExchange()", function () {
       .balance;
     let pairTezBalance = await context.tezos.tz.getBalance(pairAddress);
 
+    // 1.1 tokens/tez withdrawn
     strictEqual(
       aliceInitTokenBalance.toNumber() - tokenAmount,
       aliceFinalTokenBalance.toNumber(),
@@ -342,7 +342,7 @@ describe("InitializeExchange()", function () {
         tokenAmount,
       }),
       (err) => {
-        strictEqual(err.message, "Dex/non-allowed", "Error message mismatch");
+        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
         return true;
       },
       "Adding Dex should fail"
@@ -366,7 +366,7 @@ describe("InitializeExchange()", function () {
         tokenAmount,
       }),
       (err) => {
-        strictEqual(err.message, "Dex/non-allowed", "Error message mismatch");
+        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
         return true;
       },
       "Adding Dex should fail"
@@ -395,7 +395,7 @@ describe("InitializeExchange()", function () {
     await rejects(
       context.pairs[0].initializeExchange(0, tezAmount),
       (err) => {
-        strictEqual(err.message, "Dex/non-allowed", "Error message mismatch");
+        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
         return true;
       },
       "Initializing Dex should fail"
@@ -424,7 +424,7 @@ describe("InitializeExchange()", function () {
     await rejects(
       context.pairs[0].initializeExchange(tokenAmount, 0),
       (err) => {
-        strictEqual(err.message, "Dex/non-allowed", "Error message mismatch");
+        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
         return true;
       },
       "Initializing Dex should fail"

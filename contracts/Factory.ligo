@@ -612,7 +612,7 @@ function launchExchange (const self : address; const token : address; const toke
       failwith("Factory/exchange-launched") 
     else skip;
     if Tezos.amount < 1mutez or tokenAmount < 1n then 
-      failwith("Dex/non-allowed") 
+      failwith("Dex/not-allowed") 
     else skip; 
     s.tokenList := Set.add (token, s.tokenList);
 
