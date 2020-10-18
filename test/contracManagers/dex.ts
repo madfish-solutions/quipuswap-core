@@ -11,7 +11,7 @@ import { tezPrecision } from "./utils";
 
 export class Dex extends TokenFA12 {
   public tezos: TezosToolkit;
-  readonly contract: ContractAbstraction<ContractProvider>;
+  public contract: ContractAbstraction<ContractProvider>;
   public storage: DexStorage;
 
   constructor(
@@ -23,6 +23,11 @@ export class Dex extends TokenFA12 {
 
   static async init(tezos: TezosToolkit, dexAddress: string): Promise<Dex> {
     return new Dex(tezos, await tezos.contract.at(dexAddress));
+  }
+
+  async updateProvider(tezos: TezosToolkit): Promise<void> {
+    this.tezos = tezos;
+    this.contract = await tezos.contract.at(this.contract.address);
   }
 
   async updateStorage(
@@ -180,7 +185,6 @@ export class Dex extends TokenFA12 {
     minShares: number
   ): Promise<TransactionOperation> {
     await this.approveToken(tokenAmount, this.contract.address);
-    console.log(tezAmount / tezPrecision);
     const operation = await this.contract.methods
       .use(4, "investLiquidity", minShares)
       .send({ amount: tezAmount / tezPrecision });

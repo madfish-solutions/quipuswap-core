@@ -10,7 +10,7 @@ import { getLigo, tezPrecision } from "./utils";
 
 export class Factory {
   public tezos: TezosToolkit;
-  readonly contract: ContractAbstraction<ContractProvider>;
+  public contract: ContractAbstraction<ContractProvider>;
   public storage: FactoryStorage;
 
   constructor(
@@ -25,6 +25,10 @@ export class Factory {
     return new Factory(tezos, await tezos.contract.at(dexAddress));
   }
 
+  async updateProvider(tezos: TezosToolkit): Promise<void> {
+    this.tezos = tezos;
+    this.contract = await tezos.contract.at(this.contract.address);
+  }
   async updateStorage(
     maps: {
       tokenToExchange?: string[];
@@ -61,7 +65,6 @@ export class Factory {
     tezAmount: number
   ): Promise<TransactionOperation> {
     await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
-    console.log(tezAmount / tezPrecision);
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, tokenAmount)
       .send({ amount: tezAmount / tezPrecision });

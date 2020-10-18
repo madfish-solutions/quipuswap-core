@@ -8,7 +8,7 @@ import { TokenStorage } from "./types";
 
 export class TokenFA12 {
   public tezos: TezosToolkit;
-  readonly contract: ContractAbstraction<ContractProvider>;
+  public contract: ContractAbstraction<ContractProvider>;
   public storage: TokenStorage;
 
   constructor(
@@ -24,6 +24,11 @@ export class TokenFA12 {
     dexAddress: string
   ): Promise<TokenFA12> {
     return new TokenFA12(tezos, await tezos.contract.at(dexAddress));
+  }
+
+  async updateProvider(tezos: TezosToolkit): Promise<void> {
+    this.tezos = tezos;
+    this.contract = await tezos.contract.at(this.contract.address);
   }
 
   async updateStorage(

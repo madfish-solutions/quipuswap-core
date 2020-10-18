@@ -61,13 +61,13 @@ export class Context {
     let tezos = await setup(keyPath);
 
     this.tezos = tezos;
-    this.factory.tezos = tezos;
+    await this.factory.updateProvider(tezos);
 
     for (let pair of this.pairs) {
-      pair.tezos = tezos;
+      await pair.updateProvider(tezos);
     }
     for (let token of this.tokens) {
-      token.tezos = tezos;
+      await token.updateProvider(tezos);
     }
   }
 
