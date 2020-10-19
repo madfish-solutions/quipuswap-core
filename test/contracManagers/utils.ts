@@ -8,6 +8,7 @@ import path = require("path");
 import { execSync } from "child_process";
 import { InMemorySigner } from "@taquito/signer";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
+import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 
 export const provider = process.env.npm_package_config_network;
 export const tezPrecision = 1e6;

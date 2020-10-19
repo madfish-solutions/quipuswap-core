@@ -141,11 +141,17 @@ export class Dex extends TokenFA12 {
     secondDexContract: ContractAbstraction<ContractProvider>,
     middleTezAmount: number,
     receiver: string
-  ): Promise<BatchOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
+  ): Promise<BatchOperation[]> {
+    await this.updateStorage();
+    let token = await this.tezos.contract.at(this.storage.tokenAddress);
     const minTez = Math.floor(middleTezAmount * 0.9);
     const batch = this.tezos
       .batch([])
+      .withTransfer(
+        token.methods
+          .approve(this.contract.address, tokenAmount)
+          .toTransferParams()
+      )
       .withTransfer(
         this.contract.methods
           .use(
@@ -164,7 +170,7 @@ export class Dex extends TokenFA12 {
       );
     const operation = await batch.send();
     await operation.confirmation();
-    return operation;
+    return [operation];
   }
 
   async tokenToTokenSwap(
@@ -172,7 +178,7 @@ export class Dex extends TokenFA12 {
     minTokensOut: number,
     secondDexContract: ContractAbstraction<ContractProvider>,
     middleTezAmount: number
-  ): Promise<BatchOperation> {
+  ): Promise<BatchOperation[]> {
     return await this.tokenToTokenPayment(
       tokenAmount,
       minTokensOut,

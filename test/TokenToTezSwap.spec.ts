@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 import { calculateFee } from "./contracManagers/utils";
 
-describe("TokenToTezPayment()", function () {
+describe("TokenToTezSwap()", function () {
   it("should exchnge token to tez and update dex state", async function () {
     this.timeout(5000000);
     // create context with exchange
@@ -171,21 +171,5 @@ describe("TokenToTezPayment()", function () {
       },
       "Swap Dex should fail"
     );
-  });
-
-  it("should fail if no tokens are sent", async function () {
-    // create context with exchange
-    // let context = await Context.init();
-    // let tokenAmount = 0;
-    // let minTezOut = 1000;
-    // // attempt to exchange tokens
-    // await rejects(
-    //   context.pairs[0].tokenToTezSwap(tokenAmount, minTezOut),
-    //   (err) => {
-    //     strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
-    //     return true;
-    //   },
-    //   "Swap Dex should fail"
-    // );
   });
 });
