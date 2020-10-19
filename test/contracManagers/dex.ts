@@ -112,19 +112,22 @@ export class Dex extends TokenFA12 {
     tokenAmount: number,
     minTezOut: number,
     receiver: string
-  ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
+  ): Promise<TransactionOperation[]> {
+    const tokensOperation = await this.approveToken(
+      tokenAmount,
+      this.contract.address
+    );
     const operation = await this.contract.methods
       .use(2, "tokenToTezPayment", tokenAmount, minTezOut, receiver)
       .send();
     await operation.confirmation();
-    return operation;
+    return [tokensOperation, operation];
   }
 
   async tokenToTezSwap(
     tokenAmount: number,
     minTezOut: number
-  ): Promise<TransactionOperation> {
+  ): Promise<TransactionOperation[]> {
     return await this.tokenToTezPayment(
       tokenAmount,
       minTezOut,
@@ -242,10 +245,14 @@ export class Dex extends TokenFA12 {
     return operation;
   }
 
-  async approveToken(tokenAmount: number, address: string): Promise<void> {
+  async approveToken(
+    tokenAmount: number,
+    address: string
+  ): Promise<TransactionOperation> {
     await this.updateStorage();
     let token = await this.tezos.contract.at(this.storage.tokenAddress);
     let operation = await token.methods.approve(address, tokenAmount).send();
     await operation.confirmation();
+    return operation;
   }
 }

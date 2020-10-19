@@ -7,6 +7,7 @@ import fs = require("fs");
 import path = require("path");
 import { execSync } from "child_process";
 import { InMemorySigner } from "@taquito/signer";
+import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 
 export const provider = process.env.npm_package_config_network;
 export const tezPrecision = 1e6;
@@ -46,4 +47,31 @@ export async function setup(
     },
   });
   return tezos;
+}
+
+export function calculateFee(
+  operations: TransactionOperation[],
+  address: string
+): number {
+  return operations.reduce((prev, current) => {
+    let trxFee = current.fee;
+    let internalFees = current.operationResults.reduce((prev, current) => {
+      let balanceUpdates = current.metadata.operation_result.balance_updates;
+      if (balanceUpdates) {
+        return (
+          prev +
+          balanceUpdates.reduce(
+            (prev, current) =>
+              prev -
+              (current.kind === "contract" && current.contract === address
+                ? parseInt(current.change)
+                : 0),
+            0
+          )
+        );
+      }
+      return prev;
+    }, 0);
+    return prev + trxFee + internalFees;
+  }, 0);
 }

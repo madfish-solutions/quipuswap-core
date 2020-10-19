@@ -36,7 +36,6 @@ export class Context {
   static async init(
     pairsConfigs: { tezAmount: number; tokenAmount: number }[] = [
       { tezAmount: 10000, tokenAmount: 1000000 },
-      { tezAmount: 10000, tokenAmount: 1000000 },
     ],
     setFactoryFunctions: boolean = true,
     keyPath: string = process.env.npm_package_config_default_key
@@ -120,6 +119,7 @@ export class Context {
       },
     ];
     for (let dexFunction of dexFunctions) {
+      console.log(dexFunction);
       await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
     }
     await this.factory.updateStorage({
@@ -151,6 +151,7 @@ export class Context {
       },
     ];
     for (let tokenFunction of tokenFunctions) {
+      console.log(tokenFunction);
       await this.factory.setTokenFunction(
         tokenFunction.index,
         tokenFunction.name

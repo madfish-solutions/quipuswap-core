@@ -98,15 +98,13 @@ describe("DivestLiquidity()", function () {
   it("should divest liquidity and burn shares transfered from another user", async function () {
     this.timeout(5000000);
     // create context with exchange
-    let context = await Context.init([
-      { tezAmount: 10000, tokenAmount: 1000000 },
-    ]);
+    let context = await Context.init([]);
 
     let tezAmount = 1000;
     let tokenAmount = 100000;
     let sharesBurned = 100;
 
-    // store prev balances
+    // get alice address
     let pairAddress = context.pairs[0].contract.address;
     let aliceAddress = await context.tezos.signer.publicKeyHash();
 
@@ -198,6 +196,7 @@ describe("DivestLiquidity()", function () {
       "Inveriant should be calculated properly"
     );
   });
+
   it("should fail divestment if not enough shares to burn", async function () {
     this.timeout(5000000);
     // create context with exchange
