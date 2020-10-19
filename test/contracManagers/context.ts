@@ -43,14 +43,17 @@ export class Context {
   ): Promise<Context> {
     let tezos = await setup(keyPath);
     let deployer = new Deployer(tezos);
+    console.log("Deploying factory");
     let factory = await Factory.init(
       tezos,
       await deployer.deploy("Factory", true, "0")
     );
     let context = new Context(tezos, deployer, factory, [], []);
     if (setFactoryFunctions) {
+      console.log("Setting functions");
       await context.setAllFactoryFunctions();
     }
+    console.log("Creating pairs");
     await context.createPairs(pairsConfigs);
     return context;
   }

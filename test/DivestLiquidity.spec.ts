@@ -95,10 +95,12 @@ describe("DivestLiquidity()", function () {
     );
   });
 
-  it.only("should divest liquidity and burn shares transfered from another user", async function () {
+  it("should divest liquidity and burn shares transfered from another user", async function () {
     this.timeout(5000000);
     // create context with exchange
-    let context = await Context.init();
+    let context = await Context.init([
+      { tezAmount: 10000, tokenAmount: 1000000 },
+    ]);
 
     let tezAmount = 1000;
     let tokenAmount = 100000;
@@ -120,8 +122,10 @@ describe("DivestLiquidity()", function () {
     // store prev balances
     let bobInitTezBalance = await context.tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({ ledger: [bobAddress] });
-    let bobInitTokenBalance = await context.tokens[0].storage.ledger[bobAddress]
-      .balance;
+    let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
+    let bobInitTokenBalance = bobInitTokenLedger
+      ? bobInitTokenLedger.balance
+      : new BigNumber(0);
 
     // divest liquidity
     await context.pairs[0].divestLiquidity(

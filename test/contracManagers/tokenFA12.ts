@@ -51,6 +51,7 @@ export class TokenFA12 {
         } catch (ex) {
           return {
             ...(await prev),
+            [current]: 0,
           };
         }
       }, Promise.resolve({}));
