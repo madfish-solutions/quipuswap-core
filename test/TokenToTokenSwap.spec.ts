@@ -15,7 +15,7 @@ describe("TokenToTokenSwap()", function () {
 
     let tokenAmount = 1000;
     let middleTezAmount = 10;
-    let minTokensOut = 4;
+    let minTokensOut = 5;
 
     let firstDexContract = context.pairs[0].contract;
     let secondDexContract = context.pairs[1].contract;
@@ -58,10 +58,10 @@ describe("TokenToTokenSwap()", function () {
     // checks
     let bobFinalTezBalance = await context.tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({
-      ledger: [bobAddress, secondDexContract.address],
+      ledger: [bobAddress, firstDexContract.address],
     });
     await context.tokens[1].updateStorage({
-      ledger: [bobAddress, firstDexContract.address],
+      ledger: [bobAddress, secondDexContract.address],
     });
     let bobFinalFirstTokenBalance = await context.tokens[0].storage.ledger[
       bobAddress
@@ -70,13 +70,13 @@ describe("TokenToTokenSwap()", function () {
       bobAddress
     ].balance;
 
-    let firstPairTokenBalance = await context.tokens[1].storage.ledger[
+    let firstPairTokenBalance = await context.tokens[0].storage.ledger[
       firstDexContract.address
     ].balance;
     let firstPairTezBalance = await context.tezos.tz.getBalance(
       firstDexContract.address
     );
-    let secondPairTokenBalance = await context.tokens[0].storage.ledger[
+    let secondPairTokenBalance = await context.tokens[1].storage.ledger[
       secondDexContract.address
     ].balance;
     let secondPairTezBalance = await context.tezos.tz.getBalance(
@@ -85,7 +85,7 @@ describe("TokenToTokenSwap()", function () {
 
     // 1. check tez balances
     ok(
-      bobInitTezBalance.toNumber() < bobFinalTezBalance.toNumber(),
+      bobInitTezBalance.toNumber() > bobFinalTezBalance.toNumber(),
       "Tez should be spent to fee"
     );
     strictEqual(

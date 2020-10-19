@@ -158,7 +158,7 @@ export class Dex extends TokenFA12 {
             2,
             "tokenToTezPayment",
             tokenAmount,
-            minTez ? minTez : 1,
+            middleTezAmount ? middleTezAmount : 1,
             await this.tezos.signer.publicKeyHash()
           )
           .toTransferParams()
