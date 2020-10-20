@@ -2,24 +2,34 @@ import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
+import { calculateFee } from "./contracManagers/utils";
 
-describe("TezToTokenPayment()", function () {
-  it("should exchnge tez to token and update dex state", async function () {
+describe("TokenToTezPayment()", function () {
+  it.only("should exchnge token to tez and update dex state", async function () {
     this.timeout(5000000);
     // create context with exchange
     let context = await Context.init();
 
-    let tezAmount = 1000;
-    let minTokens = 90662;
-    // let fee = 3;
+    let tokenAmount = 1000;
+    let minTezOut = 10;
 
-    // store prev balances
+    let pairAddress = context.pairs[0].contract.address;
+    let aliceAddress = await context.tezos.signer.publicKeyHash();
+
+    // update keys
+    await context.updateActor("../../fixtures/key1");
+    let bobAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    // send tokens to bob
+    await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
     await context.updateActor("../../fixtures/key2");
     let carolAddress = await context.tezos.signer.publicKeyHash();
     await context.updateActor("../../fixtures/key1");
-    let bobAddress = await context.tezos.signer.publicKeyHash();
-    let pairAddress = context.pairs[0].contract.address;
+
+    // check initial balance
     let bobInitTezBalance = await context.tezos.tz.getBalance(bobAddress);
+    let carolInitTezBalance = await context.tezos.tz.getBalance(carolAddress);
     await context.tokens[0].updateStorage({
       ledger: [bobAddress, carolAddress],
     });
@@ -27,19 +37,14 @@ describe("TezToTokenPayment()", function () {
     let bobInitTokenBalance = bobInitTokenLedger
       ? bobInitTokenLedger.balance
       : new BigNumber(0);
-    let carolInitTokenLedger = await context.tokens[0].storage.ledger[
-      carolAddress
-    ];
-    let carolInitTokenBalance = carolInitTokenLedger
-      ? carolInitTokenLedger.balance
-      : new BigNumber(0);
 
     // swap tokens liquidity
-    await context.pairs[0].tezToTokenPayment(
-      minTokens,
-      tezAmount,
+    let operations = await context.pairs[0].tokenToTezPayment(
+      tokenAmount,
+      minTezOut,
       carolAddress
     );
+    let fees = calculateFee(operations, bobAddress);
 
     // checks
     let bobFinalTezBalance = await context.tezos.tz.getBalance(bobAddress);
@@ -52,72 +57,67 @@ describe("TezToTokenPayment()", function () {
     let bobFinalTokenBalance = bobFinalTokenLedger
       ? bobFinalTokenLedger.balance
       : new BigNumber(0);
-    let carolFinalTokenBalance = await context.tokens[0].storage.ledger[
-      carolAddress
-    ].balance;
+    let carolFinalTezBalance = await context.tezos.tz.getBalance(carolAddress);
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
     let pairTezBalance = await context.tezos.tz.getBalance(pairAddress);
 
-    // 1. tokens sent to Carol and not Bob
+    // 1. tez sent to user
+    // strictEqual(
+    //   bobInitTezBalance.toNumber() - fees,
+    //   bobFinalTezBalance.toNumber(),
+    //   "Tez not received"
+    // );
     strictEqual(
-      carolInitTokenBalance.toNumber() + minTokens,
-      carolFinalTokenBalance.toNumber(),
-      "Tokens not received"
+      carolInitTezBalance.toNumber() + minTezOut,
+      carolFinalTezBalance.toNumber(),
+      "Tez not received"
     );
+    strictEqual(pairTezBalance.toNumber(), 10000 - minTezOut, "Tez not sent");
+
+    // 2. tokens withdrawn and sent to pair contracts
     strictEqual(
-      bobInitTokenBalance.toNumber(),
+      bobInitTokenBalance.toNumber() - tokenAmount,
       bobFinalTokenBalance.toNumber(),
-      "Sender token balance should stay the same"
+      "Tokens not sent"
     );
     strictEqual(
       pairTokenBalance.toNumber(),
-      1000000 - minTokens,
-      "Tokens not sent"
-    );
-
-    // 2. tez withdrawn and sent to pair contracts
-    ok(
-      bobInitTezBalance.toNumber() + tezAmount >= bobFinalTezBalance.toNumber(),
-      "Tez not sent"
-    );
-    strictEqual(
-      pairTezBalance.toNumber(),
-      10000 + tezAmount,
-      "Tez not received"
+      1000000 + tokenAmount,
+      "Tokens not received"
     );
 
     // 3. new pair state
     await context.pairs[0].updateStorage();
     strictEqual(
       context.pairs[0].storage.tezPool.toNumber(),
-      10000 + tezAmount,
-      "Tez pool should increment by sent amount"
+      10000 - minTezOut,
+      "Tez pool should decrement by sent amount"
     );
     strictEqual(
       context.pairs[0].storage.tokenPool.toNumber(),
-      1000000 - minTokens,
+      1000000 + tokenAmount,
       "Token pool should decrement by withdrawn amount"
     );
     strictEqual(
       context.pairs[0].storage.invariant.toNumber(),
-      (1000000 - minTokens) * (10000 + tezAmount),
+      (1000000 + tokenAmount) * (10000 - minTezOut),
       "Inveriant should be calculated properly"
     );
   });
 
-  it("should fail if min tokens amount is too low", async function () {
+  it("should fail if min tez amount is too low", async function () {
     // create context with exchange
     let context = await Context.init();
     let aliceAddress = await context.tezos.signer.publicKeyHash();
     await context.updateActor("../../fixtures/key1");
-    let tezAmount = 1000;
-    let minTokens = 0;
+    let tokenAmount = 1000;
+    let minTezOut = 0;
 
     // attempt to exchange tokens
     await rejects(
-      context.pairs[0].tezToTokenPayment(minTokens, tezAmount, aliceAddress),
+      context.pairs[0].tokenToTezPayment(tokenAmount, minTezOut, aliceAddress),
       (err) => {
         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
         return true;
@@ -126,36 +126,68 @@ describe("TezToTokenPayment()", function () {
     );
   });
 
-  it("should fail if min tokens amount is too high", async function () {
+  it("should fail if min tez amount is too high", async function () {
     // create context with exchange
     let context = await Context.init();
     let aliceAddress = await context.tezos.signer.publicKeyHash();
     await context.updateActor("../../fixtures/key1");
-    let tezAmount = 1000;
-    let minTokens = 90663;
+    let tokenAmount = 1000;
+    let minTezOut = 1000;
 
     // attempt to exchange tokens
     await rejects(
-      context.pairs[0].tezToTokenPayment(minTokens, tezAmount, aliceAddress),
+      context.pairs[0].tokenToTezPayment(tokenAmount, minTezOut, aliceAddress),
       (err) => {
-        strictEqual(err.message, "Dex/high-min-out", "Error message mismatch");
+        strictEqual(
+          err.message,
+          "Dex/high-min-tez-out",
+          "Error message mismatch"
+        );
         return true;
       },
       "Swap Dex should fail"
     );
   });
 
-  it("should fail if tez amount is too low", async function () {
+  it("should fail if not enough tokens are approved", async function () {
+    // create context with exchange
+    let context = await Context.init();
+    let tokenAmount = 1000;
+    let minTezOut = 10;
+
+    // get alice address
+    await context.updateActor("../../fixtures/key1");
+    let bobAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    // attempt to exchange tokens
+    await rejects(
+      context.pairs[0].contract.methods
+        .use(2, "tokenToTezPayment", tokenAmount, minTezOut, bobAddress)
+        .send(),
+      (err) => {
+        strictEqual(
+          err.message,
+          "NotEnoughAllowance",
+          "Error message mismatch"
+        );
+        return true;
+      },
+      "Swap Dex should fail"
+    );
+  });
+
+  it("should fail if tokens amount is too low", async function () {
     // create context with exchange
     let context = await Context.init();
     let aliceAddress = await context.tezos.signer.publicKeyHash();
     await context.updateActor("../../fixtures/key1");
-    let tezAmount = 0;
-    let minTokens = 1000;
+    let tokenAmount = 0;
+    let minTezOut = 1000;
 
     // attempt to exchange tokens
     await rejects(
-      context.pairs[0].tezToTokenPayment(minTokens, tezAmount, aliceAddress),
+      context.pairs[0].tokenToTezPayment(tokenAmount, minTezOut, aliceAddress),
       (err) => {
         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
         return true;
