@@ -242,7 +242,7 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
             voterInfo.vote := args.value;
             s.voters[args.voter] := voterInfo;
 
-            const newVotes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + share;
+            const newVotes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + args.value;
             s.votes[args.candidate] := newVotes;
             if case s.currentCandidate of None -> True 
               | Some(delegated) ->
