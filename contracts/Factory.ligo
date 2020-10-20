@@ -70,16 +70,16 @@ function transfer (const p : tokenAction; const s : dex_storage) : return is
     | ITransfer(params) -> {
       const value : nat = params.1.1;
       if params.0 = params.1.0 then
-        failwith("InvalidSelfToSelfTransfer")
+        failwith("Dex/selt-transfer")
       else skip;
       const senderAccount : account_info = getAccount(params.0, s);
       if senderAccount.balance < value then
-        failwith("NotEnoughBalance")
+        failwith("Dex/not-enough-balance")
       else skip;
       if params.0 =/= Tezos.sender then block {
         const spenderAllowance : nat = getAllowance(senderAccount, Tezos.sender, s);
         if spenderAllowance < value then
-          failwith("NotEnoughAllowance")
+          failwith("Dex/not-enough-allowance")
         else skip;
         senderAccount.allowances[Tezos.sender] := abs(spenderAllowance - value);
       } else skip;
@@ -103,7 +103,7 @@ function approve (const p : tokenAction; const s : dex_storage) : return is
     | ITransfer(params) -> failwith("00")
     | IApprove(params) -> {
       if params.0 = Tezos.sender then
-        failwith("InvalidSelfToSelfApproval")
+        failwith("Dex/selt-approval")
       else skip;
       var senderAccount : account_info := getAccount(Tezos.sender, s);
       const spenderAllowance : nat = getAllowance(senderAccount, params.0, s);
@@ -211,12 +211,12 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
 
             const voterInfo : vote_info = getVoter(args.voter, s);
             if account.balance + voterInfo.vote < args.value then
-              failwith("NotEnoughBalance")
+              failwith("Dex/not-enough-balance")
             else skip;
             if args.voter =/= Tezos.sender then block {
               const spenderAllowance : nat = getAllowance(account, Tezos.sender, s);
               if spenderAllowance < args.value then
-                failwith("NotEnoughAllowance")
+                failwith("Dex/not-enough-allowance")
               else skip;
               account.allowances[Tezos.sender] := abs(spenderAllowance - args.value);
             } else skip;
@@ -224,7 +224,7 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
             (* XXX::add None support*)
             
             (* remove prev *)
-            case s.currentCandidate of 
+            case voterInfo.candidate of 
               | None -> skip
               | Some(candidate) -> 
                 case s.votes[candidate] of 
@@ -279,12 +279,12 @@ function veto (const p : dexAction; const s : dex_storage; const this: address) 
 
             const voterInfo : vote_info = getVoter(args.voter, s);
             if account.balance + voterInfo.veto < args.value then
-              failwith("NotEnoughBalance")
+              failwith("Dex/not-enough-balance")
             else skip;
             if args.voter =/= Tezos.sender then block {
               const spenderAllowance : nat = getAllowance(account, Tezos.sender, s);
               if spenderAllowance < args.value then
-                failwith("NotEnoughAllowance")
+                failwith("Dex/not-enough-allowance")
               else skip;
               account.allowances[Tezos.sender] := abs(spenderAllowance - args.value);
             } else skip;
