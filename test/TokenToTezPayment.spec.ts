@@ -5,7 +5,7 @@ import { TezosOperationError } from "@taquito/taquito";
 import { calculateFee } from "./contracManagers/utils";
 
 describe("TokenToTezPayment()", function () {
-  it.only("should exchnge token to tez and update dex state", async function () {
+  it("should exchnge token to tez and update dex state", async function () {
     this.timeout(5000000);
     // create context with exchange
     let context = await Context.init();
