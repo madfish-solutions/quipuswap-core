@@ -211,7 +211,7 @@ describe("Vote()", function () {
     strictEqual(finalCurrentCandidate, delegate, "Candidate wasn't updated");
   });
 
-  it.only("should vote for the same candidate", async function () {
+  it("should vote for the same candidate", async function () {
     this.timeout(5000000);
     // create context with exchange
     let context = await Context.init();
@@ -527,8 +527,175 @@ describe("Vote()", function () {
     strictEqual(finalCurrentCandidate, delegate, "Candidate wasn't updated");
   });
 
-  it("should update current candidate", async function () {});
-  it("should not update current candidate", async function () {});
+  it.only("should update current candidate", async function () {
+    this.timeout(5000000);
+    // create context with exchange
+    let context = await Context.init();
+
+    // get addresses
+    let aliceAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor("../../fixtures/key2");
+    let carolAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor("../../fixtures/key1");
+    let bobAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 500;
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    let aliceDelegate = carolAddress;
+    let bobDelegate = bobAddress;
+    value = 200;
+
+    // store prev balances
+    await context.pairs[0].updateStorage({
+      votes: [aliceDelegate, bobDelegate],
+    });
+    let aliceInitCandidateVotes =
+      context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
+    let bobInitCandidateVotes =
+      context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
+    let initVotes = context.pairs[0].storage.totalVotes;
+
+    // vote
+    await context.pairs[0].vote(aliceAddress, aliceDelegate, value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      votes: [aliceDelegate, bobDelegate],
+    });
+
+    let aliceFinalCandidateVotes =
+      context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
+    let finalVotes = context.pairs[0].storage.totalVotes;
+    let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
+
+    // check global state
+    strictEqual(
+      aliceInitCandidateVotes.toNumber() + value,
+      aliceFinalCandidateVotes.toNumber(),
+      "Tokens not voted"
+    );
+    strictEqual(initCurrentCandidate, aliceDelegate, "Candidate not updated");
+    strictEqual(
+      initVotes.toNumber() + value,
+      finalVotes.toNumber(),
+      "Total votes weren't updated"
+    );
+    initVotes = finalVotes;
+
+    // vote from Bob
+    value = 500;
+    await context.updateActor("../../fixtures/key1");
+    await context.pairs[0].vote(bobAddress, bobDelegate, value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      votes: [aliceDelegate, bobDelegate],
+    });
+    let bobFinalCandidateVotes =
+      context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
+    finalVotes = context.pairs[0].storage.totalVotes;
+    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+
+    // check global state
+    strictEqual(
+      bobInitCandidateVotes.toNumber() + value,
+      bobFinalCandidateVotes.toNumber(),
+      "Tokens not voted"
+    );
+    strictEqual(finalCurrentCandidate, bobDelegate, "Candidate not updated");
+    strictEqual(
+      initVotes.toNumber() + value,
+      finalVotes.toNumber(),
+      "Total votes weren't updated"
+    );
+  });
+
+  it.only("should not update current candidate", async function () {
+    this.timeout(5000000);
+    // create context with exchange
+    let context = await Context.init();
+
+    // get addresses
+    let aliceAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor("../../fixtures/key2");
+    let carolAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor("../../fixtures/key1");
+    let bobAddress = await context.tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 500;
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    let aliceDelegate = carolAddress;
+    let bobDelegate = bobAddress;
+    value = 200;
+
+    // store prev balances
+    await context.pairs[0].updateStorage({
+      votes: [aliceDelegate, bobDelegate],
+    });
+    let aliceInitCandidateVotes =
+      context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
+    let bobInitCandidateVotes =
+      context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
+    let initVotes = context.pairs[0].storage.totalVotes;
+
+    // vote
+    await context.pairs[0].vote(aliceAddress, aliceDelegate, value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      votes: [aliceDelegate, bobDelegate],
+    });
+
+    let aliceFinalCandidateVotes =
+      context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
+    let finalVotes = context.pairs[0].storage.totalVotes;
+    let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
+
+    // check global state
+    strictEqual(
+      aliceInitCandidateVotes.toNumber() + value,
+      aliceFinalCandidateVotes.toNumber(),
+      "Tokens not voted"
+    );
+    strictEqual(initCurrentCandidate, aliceDelegate, "Candidate not updated");
+    strictEqual(
+      initVotes.toNumber() + value,
+      finalVotes.toNumber(),
+      "Total votes weren't updated"
+    );
+    initVotes = finalVotes;
+
+    // vote from Bob
+    value = 100;
+    await context.updateActor("../../fixtures/key1");
+    await context.pairs[0].vote(bobAddress, bobDelegate, value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      votes: [aliceDelegate, bobDelegate],
+    });
+    let bobFinalCandidateVotes =
+      context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
+    finalVotes = context.pairs[0].storage.totalVotes;
+    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+
+    // check global state
+    strictEqual(
+      bobInitCandidateVotes.toNumber() + value,
+      bobFinalCandidateVotes.toNumber(),
+      "Tokens not voted"
+    );
+    strictEqual(finalCurrentCandidate, aliceDelegate, "Candidate not updated");
+    strictEqual(
+      initVotes.toNumber() + value,
+      finalVotes.toNumber(),
+      "Total votes weren't updated"
+    );
+  });
 
   it("should fail voting without shares", async function () {
     // create context with exchange
