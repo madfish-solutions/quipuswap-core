@@ -15,8 +15,11 @@
       }
     }
   },
+
   "scripts": {
-    "compile": "tsc --declaration",
+    "clean": "rm -rf ./build",
+    "compile": "truffle compile",
+    "start-sandbox": "ganache-cli --flavor tezos --seed alice",
     "build": "./scripts/build.sh",
     "build_fa1.2": "./scripts/build_fa1.2.sh",
     "build-fa2": "./scripts/build_fa2.sh",
@@ -35,12 +38,14 @@
     "bignumber.js": "^9.0.0",
     "commander": "^5.1.0",
     "dotenv": "^8.2.0",
+    "ganache-cli": "^6.10.0-tezos.1",
     "typescript": "^4.0.3"
   },
   "directories": {
     "test": "./test"
   },
   "devDependencies": {
+    "ganache-cli": "^6.10.0-tezos.1",
     "@types/chai": "^4.2.13",
     "@types/mocha": "^8.0.3",
     "chai": "^4.2.0",

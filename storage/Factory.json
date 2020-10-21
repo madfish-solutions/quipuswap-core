@@ -1,5 +1,0 @@
-{ "prim": "Pair",
-  "args":
-    [ { "prim": "Pair", "args": [ [], [] ] },
-      { "prim": "Pair", "args": [ [], [] ] } ] }
-
