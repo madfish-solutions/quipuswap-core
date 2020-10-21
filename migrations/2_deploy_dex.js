@@ -33,7 +33,7 @@ module.exports = async deployer => {
 
   console.log(`Factory address: ${factoryInstance.address}`)
   console.log(`Token 1 address: ${token0Instance.address}`)
-  console.log(`Token 1 address: ${token1Instance.address}`)
+  console.log(`Token 2 address: ${token1Instance.address}`)
 
   let ligo = getLigo(true);
   console.log("Setting dex functions")
@@ -70,5 +70,16 @@ module.exports = async deployer => {
     });
     await operation.confirmation();
     console.log(`${tokenFunction.name} function set`)
+
+    let tezAmount = 10000;
+    let tokenAmount = 1000000;
+  
+    console.log("Approve tokens")
+    await token0Instance.approve(factoryInstance.address.toString(), tokenAmount)
+    await token1Instance.approve(factoryInstance.address.toString(), tokenAmount)  
+
+    console.log("Launch exchanges")
+    await factoryInstance.launchExchange(token0Instance.address, tezAmount, tokenAmount);
+    await factoryInstance.launchExchange(token1Instance.address, tezAmount, tokenAmount);
   }
 };

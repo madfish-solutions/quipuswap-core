@@ -16,6 +16,7 @@ module.exports = {
       host: "https://carthagenet.smartpy.io",
       port: 443,
       network_id: "*",
+      secretKey: alice.sk,
       type: "tezos"
     },
     mainnet: {
