@@ -59,6 +59,6 @@ export declare type TokenStorage = {
 export declare type FactoryStorage = {
   tokenList: string[];
   tokenToExchange: { [key: string]: string };
-  dexLambdas: { [key: BigNumber]: any };
-  tokenLambdas: { [key: BigNumber]: any };
+  dexLambdas: { [key: number]: any };
+  tokenLambdas: { [key: number]: any };
 };

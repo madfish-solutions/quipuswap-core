@@ -3,7 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 
-describe("InitializeExchange()", function () {
+contract("InitializeExchange()", function () {
   it("should initialize & deploy 1 exchange and set initial stage", async function () {
     // create context without exchanges
     let context = await Context.init([]);

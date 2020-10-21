@@ -15,7 +15,6 @@
       }
     }
   },
-
   "scripts": {
     "clean": "rm -rf ./build",
     "compile": "truffle compile",
@@ -28,7 +27,7 @@
     "set-token-functions-fa1.2": "./scripts/set_token_functions_fa1.2.sh",
     "set-functions-fa2": "./scripts/set_functions_fa2.sh",
     "add-tokens": "node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network && node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network Token2",
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register './test/*.spec.ts'"
+    "test": "tsc && truffle test"
   },
   "dependencies": {
     "@taquito/taquito": "^6.3.4-beta.0",
@@ -36,7 +35,8 @@
     "commander": "^5.1.0",
     "dotenv": "^8.2.0",
     "ganache-cli": "^6.10.0-tezos.1",
-    "typescript": "^4.0.3"
+    "typescript": "^4.0.3",
+    "truffle": "^5.5.0-tezos.4"
   },
   "directories": {
     "test": "./test"

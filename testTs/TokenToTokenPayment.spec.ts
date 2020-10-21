@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 import { calculateFee } from "./contracManagers/utils";
 
-describe("TokenToTokenSwap()", function () {
+contract("TokenToTokenPayment()", function () {
   it("should exchnge token to token and update dex state", async function () {
     this.timeout(5000000);
     // create context with exchange
@@ -22,6 +22,8 @@ describe("TokenToTokenSwap()", function () {
     let aliceAddress = await context.tezos.signer.publicKeyHash();
 
     // update keys
+    await context.updateActor("../../fixtures/key2");
+    let carolAddress = await context.tezos.signer.publicKeyHash();
     await context.updateActor("../../fixtures/key1");
     let bobAddress = await context.tezos.signer.publicKeyHash();
     await context.updateActor();
@@ -33,7 +35,9 @@ describe("TokenToTokenSwap()", function () {
     // check initial balance
     let bobInitTezBalance = await context.tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({ ledger: [bobAddress] });
-    await context.tokens[1].updateStorage({ ledger: [bobAddress] });
+    await context.tokens[1].updateStorage({
+      ledger: [bobAddress, carolAddress],
+    });
     let bobInitFirstTokenLedger = await context.tokens[0].storage.ledger[
       bobAddress
     ];
@@ -46,13 +50,20 @@ describe("TokenToTokenSwap()", function () {
     let bobInitSecondTokenBalance = bobInitSecondTokenLedger
       ? bobInitSecondTokenLedger.balance
       : new BigNumber(0);
+    let carolInitSecondTokenLedger = await context.tokens[1].storage.ledger[
+      carolAddress
+    ];
+    let carolInitSecondTokenBalance = carolInitSecondTokenLedger
+      ? carolInitSecondTokenLedger.balance
+      : new BigNumber(0);
 
     // swap tokens liquidity
-    await context.pairs[0].tokenToTokenSwap(
+    await context.pairs[0].tokenToTokenPayment(
       tokenAmount,
       minTokensOut,
       secondDexContract,
-      middleTezAmount
+      middleTezAmount,
+      carolAddress
     );
 
     // checks
@@ -61,13 +72,20 @@ describe("TokenToTokenSwap()", function () {
       ledger: [bobAddress, firstDexContract.address],
     });
     await context.tokens[1].updateStorage({
-      ledger: [bobAddress, secondDexContract.address],
+      ledger: [bobAddress, carolAddress, secondDexContract.address],
     });
     let bobFinalFirstTokenBalance = await context.tokens[0].storage.ledger[
       bobAddress
     ].balance;
-    let bobFinalSecondTokenBalance = await context.tokens[1].storage.ledger[
+    let bobFinalSecondTokenLedger = await context.tokens[1].storage.ledger[
       bobAddress
+    ];
+    let bobFinalSecondTokenBalance = bobFinalSecondTokenLedger
+      ? bobFinalSecondTokenLedger.balance
+      : new BigNumber(0);
+
+    let carolFinalSecondTokenBalance = await context.tokens[1].storage.ledger[
+      carolAddress
     ].balance;
 
     let firstPairTokenBalance = await context.tokens[0].storage.ledger[
@@ -106,8 +124,13 @@ describe("TokenToTokenSwap()", function () {
       "Tokens not sent"
     );
     strictEqual(
-      bobInitSecondTokenBalance.toNumber() + minTokensOut,
+      bobInitSecondTokenBalance.toNumber(),
       bobFinalSecondTokenBalance.toNumber(),
+      "Sender tokens should stay the same"
+    );
+    strictEqual(
+      carolInitSecondTokenBalance.toNumber() + minTokensOut,
+      carolFinalSecondTokenBalance.toNumber(),
       "Tokens not sent"
     );
     strictEqual(

@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 import { calculateFee } from "./contracManagers/utils";
 
-describe("TokenToTezPayment()", function () {
+contract("TokenToTezPayment()", function () {
   it("should exchnge token to tez and update dex state", async function () {
     this.timeout(5000000);
     // create context with exchange

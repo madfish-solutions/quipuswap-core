@@ -1,13 +1,7 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
-    "module": "commonjs",
-    "target": "es2015",
-    "lib": ["es2017"],
-    "declaration": false,
-    "moduleResolution": "node",
-    "esModuleInterop": true
-  },
-  "include": ["test/*.ts"],
-  "exclude": ["node_modules"]
+    "noImplicitAny": false,
+    "downlevelIteration": true,
+    "outDir": "./test/",
+  }
 }

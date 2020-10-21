@@ -3,7 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 
-describe("TezToTokenPayment()", function () {
+contract("TezToTokenPayment()", function () {
   it("should exchnge tez to token and update dex state", async function () {
     this.timeout(5000000);
     // create context with exchange

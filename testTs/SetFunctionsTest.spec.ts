@@ -3,7 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { TezosOperationError } from "@taquito/taquito";
 
-describe("SetXFunctions()", function () {
+contract("SetXFunctions()", function () {
   it("should set all Dex functions to Factory", async function () {
     // create Factory
     let context = await Context.init([], false);
