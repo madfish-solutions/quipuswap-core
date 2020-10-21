@@ -70,16 +70,18 @@ module.exports = async deployer => {
     });
     await operation.confirmation();
     console.log(`${tokenFunction.name} function set`)
-
-    let tezAmount = 10000;
-    let tokenAmount = 1000000;
-  
-    console.log("Approve tokens")
-    await token0Instance.approve(factoryInstance.address.toString(), tokenAmount)
-    await token1Instance.approve(factoryInstance.address.toString(), tokenAmount)  
-
-    console.log("Launch exchanges")
-    await factoryInstance.launchExchange(token0Instance.address, tezAmount, tokenAmount);
-    await factoryInstance.launchExchange(token1Instance.address, tezAmount, tokenAmount);
   }
+  
+      let tezAmount = 10000;
+      let tokenAmount = 1000000;
+    
+      console.log("Approve token 0")
+      await token0Instance.approve(factoryInstance.address.toString(), tokenAmount)
+      console.log("Approve token 1")
+      await token1Instance.approve(factoryInstance.address.toString(), tokenAmount)  
+  
+      console.log("Launch exchange 0")
+      await factoryInstance.launchExchange(token0Instance.address.toString(), tokenAmount, {amount: tezAmount});
+      console.log("Launch exchange 1")
+      await factoryInstance.launchExchange(token1Instance.address.toString(), tokenAmount, {amount: tezAmount});
 };
