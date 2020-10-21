@@ -1,4 +1,4 @@
-#include "IToken.ligo"
+#include "../partials/IToken.ligo"
 
 (* Helper function to get account *)
 function getAccount (const addr : address; const s : storage) : account is

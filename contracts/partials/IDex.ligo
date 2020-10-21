@@ -8,6 +8,7 @@ type vote_info is record [
   candidate   : option(key_hash);
   vote        : nat; 
   veto        : nat; 
+  lastVeto    : timestamp; 
 ] 
 
 type user_reward_info is record [
@@ -37,6 +38,7 @@ type dex_storage is record [
   vetos             : big_map(key_hash, timestamp);
   votes             : big_map(key_hash, nat);
   veto              : nat;
+  lastVeto          : timestamp;
   currentDelegated  : option(key_hash);
   currentCandidate  : option(key_hash);
   totalVotes        : nat;

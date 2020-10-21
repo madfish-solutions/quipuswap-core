@@ -1,4 +1,4 @@
-#include "IFactory.ligo"
+#include "../partials/IFactory.ligo"
 
 // types for internal transaction calls
 type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
@@ -33,6 +33,7 @@ function getVoter (const addr : address; const s : dex_storage) : vote_info is
         candidate   = (None : option(key_hash));
         vote        = 0n;
         veto        = 0n;
+        lastVeto    = Tezos.now;
       ];
     case s.voters[addr] of
       None -> skip
@@ -601,7 +602,7 @@ function withdrawProfit (const p : dexAction; const s : dex_storage; const this 
 const createDex : createDexFunc =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT 
-#include "Dex.tz"
+#include "CompiledDex.tz"
                   ;
                     PAIR } |}
            : createDexFunc)];
@@ -635,6 +636,7 @@ function launchExchange (const self : address; const token : address; const toke
             vetos = (big_map [] : big_map(key_hash, timestamp));      
             votes = (big_map [] : big_map(key_hash, nat));      
             veto = 0n;      
+            lastVeto = Tezos.now;
             currentDelegated = (None: option(key_hash));      
             currentCandidate = (None: option(key_hash));      
             totalVotes = 0n;      

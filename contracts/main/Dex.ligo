@@ -1,4 +1,4 @@
-#include "IDex.ligo"
+#include "../partials/IDex.ligo"
 
 function middleDex (const p : dexAction; const this : address; const idx : nat; const s : full_dex_storage) :  full_return is
 block {

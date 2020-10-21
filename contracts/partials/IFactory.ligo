@@ -1,4 +1,4 @@
-#include "IDex.ligo"
+#include "./IDex.ligo"
 
 type exchange_storage is record [
   tokenList         : set (address);

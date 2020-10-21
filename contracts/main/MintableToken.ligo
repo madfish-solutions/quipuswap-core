@@ -1,4 +1,4 @@
-#include "IMintableToken.ligo"
+#include "../partials/IMintableToken.ligo"
 
 (* Helper function to get account *)
 function getAccount (const addr : address; const s : storage) : account is
