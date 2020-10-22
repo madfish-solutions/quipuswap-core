@@ -17,16 +17,10 @@
   },
   "scripts": {
     "clean": "rm -rf ./build",
+    "migrate": "truffle migrate",
+    "migrate-carthagenet": "truffle migrate --network carthagenet",
     "compile": "truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",
-    "deploy": "./scripts/deploy.sh",
-    "deploy-fa1.2": "./scripts/deploy_fa1.2.sh",
-    "deploy-fa2": "./scripts/deploy_fa2.sh",
-    "set-functions": "./scripts/set_functions.sh",
-    "set-dex-functions-fa1.2": "./scripts/set_dex_functions_fa1.2.sh",
-    "set-token-functions-fa1.2": "./scripts/set_token_functions_fa1.2.sh",
-    "set-functions-fa2": "./scripts/set_functions_fa2.sh",
-    "add-tokens": "node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network && node scripts/cli.js add_token $npm_package_config_default_pool_tez $npm_package_config_default_pool_token -p $npm_package_config_network Token2",
     "test": "tsc && rm -rf ./build && truffle test"
   },
   "dependencies": {
