@@ -38,6 +38,7 @@ export class Dex extends TokenFA12 {
       tokenAddress: storage.storage.tokenAddress,
       factoryAddress: storage.storage.factoryAddress,
       totalSupply: storage.storage.totalSupply,
+      lastVeto: storage.storage.lastVeto,
       ledger: {},
       voters: {},
       vetos: {},

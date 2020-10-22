@@ -17,6 +17,7 @@ export declare type DexStorage = {
   totalVotes: BigNumber;
   rewardInfo: RewardInfo;
   userRewards: { [key: string]: UserRewardInfo };
+  lastVeto: number;
 };
 
 export declare type RewardInfo = {
@@ -49,6 +50,7 @@ export declare type VoteInfo = {
   candidate: string | null | undefined;
   vote: BigNumber;
   veto: BigNumber;
+  lastVeto: number;
 };
 
 export declare type TokenStorage = {
