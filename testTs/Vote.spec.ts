@@ -451,11 +451,11 @@ contract("Vote()", function () {
     await context.updateActor();
 
     // approve tokens
-    await context.pairs[0].approve(bobAddress, 500);
+    let value = 500;
+    await context.pairs[0].approve(bobAddress, value);
     await context.updateActor("../../fixtures/key1");
 
     let delegate = bobAddress;
-    let value = 500;
 
     // store prev balances
     await context.pairs[0].updateStorage({
