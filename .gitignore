@@ -6,4 +6,4 @@ package-lock.json
 faucet*
 deploy
 test/contracManagers/*.js
-dist/
+test/
