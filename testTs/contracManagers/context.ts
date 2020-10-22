@@ -1,4 +1,5 @@
 import {
+  Tezos,
   TezosToolkit,
   ContractAbstraction,
   ContractProvider,
@@ -6,28 +7,24 @@ import {
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { parseJsonSourceFileConfigFileContent } from "typescript";
-import { Deployer } from "./deployer";
 import { Dex } from "./dex";
 import { Factory } from "./factory";
 import { TokenFA12 } from "./tokenFA12";
-import { setup } from "./utils";
+import { prepareProviderOptions, setup } from "./utils";
+import tokenStorage from "../storage/Token";
+import factoryStorage from "../storage/Factory";
+import { dexFunctions, tokenFunctions } from "../storage/Functions";
+
+const CDex = artifacts.require("Dex");
+const Token = artifacts.require("Token");
+const CFactory = artifacts.require("Factory");
 
 export class Context {
-  public tezos: TezosToolkit;
   public factory: Factory;
   public pairs: Dex[];
   public tokens: TokenFA12[];
-  readonly deployer: Deployer;
 
-  constructor(
-    tezos: TezosToolkit,
-    deployer: Deployer,
-    factory: Factory,
-    pairs: Dex[],
-    tokens: TokenFA12[]
-  ) {
-    this.tezos = tezos;
-    this.deployer = deployer;
+  constructor(factory: Factory, pairs: Dex[], tokens: TokenFA12[]) {
     this.factory = factory;
     this.pairs = pairs;
     this.tokens = tokens;
@@ -40,18 +37,20 @@ export class Context {
     setFactoryFunctions: boolean = true,
     keyPath: string = process.env.npm_package_config_default_key
   ): Promise<Context> {
-    let tezos = await setup(keyPath);
-    let deployer = new Deployer(tezos);
+    console.log("Setuping Tezos");
+    let config = await prepareProviderOptions(keyPath);
+    Tezos.setProvider(config);
+
     console.log("Deploying factory");
-    let factory = await Factory.init(
-      tezos,
-      await deployer.deploy("Factory", true, "0")
-    );
-    let context = new Context(tezos, deployer, factory, [], []);
+    let factoryInstance = await CFactory.new(factoryStorage);
+    let factory = await Factory.init(factoryInstance.address.toString());
+
+    let context = new Context(factory, [], []);
     if (setFactoryFunctions) {
       console.log("Setting functions");
       await context.setAllFactoryFunctions();
     }
+
     console.log("Creating pairs");
     await context.createPairs(pairsConfigs);
     return context;
@@ -60,22 +59,20 @@ export class Context {
   async updateActor(
     keyPath: string = process.env.npm_package_config_default_key
   ): Promise<void> {
-    let tezos = await setup(keyPath);
-
-    this.tezos = tezos;
-    await this.factory.updateProvider(tezos);
+    await this.factory.updateProvider(keyPath);
 
     for (let pair of this.pairs) {
-      await pair.updateProvider(tezos);
+      await pair.updateProvider(keyPath);
     }
     for (let token of this.tokens) {
-      await token.updateProvider(tezos);
+      await token.updateProvider(keyPath);
     }
   }
 
   async createToken(): Promise<string> {
-    let tokenAddress = await this.deployer.deploy("Token", false, "0");
-    this.tokens.push(await TokenFA12.init(this.tezos, tokenAddress));
+    let tokenInstance = await Token.new(tokenStorage);
+    let tokenAddress = tokenInstance.address.toString();
+    this.tokens.push(await TokenFA12.init(tokenAddress));
     return tokenAddress;
   }
 
@@ -190,7 +187,6 @@ export class Context {
     );
     this.pairs.push(
       await Dex.init(
-        this.tezos,
         this.factory.storage.tokenToExchange[pairConfig.tokenAddress]
       )
     );

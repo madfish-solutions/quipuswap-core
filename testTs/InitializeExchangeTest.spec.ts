@@ -1,13 +1,16 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { TezosOperationError } from "@taquito/taquito";
+import { Tezos, TezosOperationError } from "@taquito/taquito";
 
 contract("InitializeExchange()", function () {
-  it("should initialize & deploy 1 exchange and set initial stage", async function () {
-    // create context without exchanges
-    let context = await Context.init([]);
+  let context;
 
+  before(async () => {
+    context = await Context.init([]);
+  });
+
+  it.only("should initialize & deploy 1 exchange and set initial stage", async function () {
     // ensure no token pairs added
     await context.factory.updateStorage();
     strictEqual(
@@ -22,8 +25,8 @@ contract("InitializeExchange()", function () {
     let tokenAmount = 1000000;
 
     // store user & pair prev balances
-    let aliceAddress = await context.tezos.signer.publicKeyHash();
-    let aliceInitTezBalance = await context.tezos.tz.getBalance(aliceAddress);
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceInitTezBalance = await Tezos.tz.getBalance(aliceAddress);
     await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
     let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
       aliceAddress
@@ -39,7 +42,7 @@ contract("InitializeExchange()", function () {
     // checks:
 
     // 1.1 tokens/tez withdrawn
-    let aliceFinalTezBalance = await context.tezos.tz.getBalance(aliceAddress);
+    let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
     await context.tokens[0].updateStorage({
       ledger: [aliceAddress, pairAddress],
     });
@@ -49,7 +52,7 @@ contract("InitializeExchange()", function () {
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
-    let pairTezBalance = await context.tezos.tz.getBalance(pairAddress);
+    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
 
     strictEqual(
       aliceInitTokenBalance.toNumber() - tokenAmount,
@@ -144,7 +147,7 @@ contract("InitializeExchange()", function () {
       "Factory tokenList should be empty"
     );
 
-    let aliceAddress = await context.tezos.signer.publicKeyHash();
+    let aliceAddress = await Tezos.signer.publicKeyHash();
 
     // check each exchange pair state
     for (let i = 0; i < exchangeCount; i++) {
@@ -181,9 +184,6 @@ contract("InitializeExchange()", function () {
     let tezAmount = 10000;
     let tokenAmount = 1000000;
 
-    // create context with 1 exchange pair
-    let context = await Context.init([{ tezAmount, tokenAmount }]);
-
     // ensure pair added
     await context.factory.updateStorage();
     strictEqual(
@@ -198,8 +198,8 @@ contract("InitializeExchange()", function () {
     // store user & pair prev balances
     let tokenAddress = context.tokens[0].contract.address;
     let pairAddress = context.pairs[0].contract.address;
-    let aliceAddress = await context.tezos.signer.publicKeyHash();
-    let aliceInitTezBalance = await context.tezos.tz.getBalance(aliceAddress);
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceInitTezBalance = await Tezos.tz.getBalance(aliceAddress);
     await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
     let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
       aliceAddress
@@ -210,7 +210,7 @@ contract("InitializeExchange()", function () {
 
     // checks:
 
-    let aliceFinalTezBalance = await context.tezos.tz.getBalance(aliceAddress);
+    let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
     await context.tokens[0].updateStorage({
       ledger: [aliceAddress, pairAddress],
     });
@@ -220,7 +220,7 @@ contract("InitializeExchange()", function () {
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
-    let pairTezBalance = await context.tezos.tz.getBalance(pairAddress);
+    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
 
     // 1.1 tokens/tez withdrawn
     strictEqual(
@@ -294,9 +294,6 @@ contract("InitializeExchange()", function () {
     let tezAmount = 10000;
     let tokenAmount = 1000000;
 
-    // create context with 1 exchange pair
-    let context = await Context.init([{ tezAmount, tokenAmount }], false);
-
     // ensure pair added
     await context.factory.updateStorage();
     strictEqual(
@@ -326,9 +323,6 @@ contract("InitializeExchange()", function () {
   });
 
   it("should fail initialization & deployment if no tokens are sent", async function () {
-    // create context without exchanges
-    let context = await Context.init([], false);
-
     // create token
     let tokenAddress = await context.createToken();
     let tezAmount = 10000;
@@ -350,9 +344,6 @@ contract("InitializeExchange()", function () {
   });
 
   it("should fail initialization & deployment if no tez are sent", async function () {
-    // create context without exchanges
-    let context = await Context.init([], false);
-
     // create token
     let tokenAddress = await context.createToken();
     let tezAmount = 0;
@@ -376,9 +367,6 @@ contract("InitializeExchange()", function () {
   it("should fail initialization if no tokens are sent", async function () {
     let tezAmount = 10000;
     let tokenAmount = 1000000;
-
-    // create context with 1 exchange pair
-    let context = await Context.init([{ tezAmount, tokenAmount }]);
 
     // ensure pair added
     await context.factory.updateStorage();
@@ -405,9 +393,6 @@ contract("InitializeExchange()", function () {
   it("should fail initialization if no tez are sent", async function () {
     let tezAmount = 10000;
     let tokenAmount = 1000000;
-
-    // create context with 1 exchange pair
-    let context = await Context.init([{ tezAmount, tokenAmount }]);
 
     // ensure pair added
     await context.factory.updateStorage();

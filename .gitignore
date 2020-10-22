@@ -5,6 +5,5 @@ build/
 package-lock.json
 faucet*
 deploy
-*d.ts
 test/contracManagers/*.js
 dist/

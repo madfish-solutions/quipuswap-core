@@ -50,6 +50,21 @@ export async function setup(
   return tezos;
 }
 
+export async function prepareProviderOptions(
+  keyPath: string = process.env.npm_package_config_default_key
+): Promise<{ rpc: string; signer: InMemorySigner; config: object }> {
+  keyPath = path.join(__dirname, keyPath);
+  const secretKey = fs.readFileSync(keyPath).toString().trim();
+  let tezos = new TezosToolkit();
+  return {
+    rpc: provider,
+    signer: await InMemorySigner.fromSecretKey(secretKey),
+    config: {
+      confirmationPollingTimeoutSecond: 10000,
+    },
+  };
+}
+
 export function calculateFee(
   operations: TransactionOperation[],
   address: string

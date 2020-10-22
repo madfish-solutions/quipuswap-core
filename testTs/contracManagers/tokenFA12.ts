@@ -1,34 +1,29 @@
 import {
+  Tezos,
   TezosToolkit,
   ContractAbstraction,
   ContractProvider,
 } from "@taquito/taquito";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { TokenStorage } from "./types";
+import { prepareProviderOptions } from "./utils";
+const Token = artifacts.require("Token");
 
 export class TokenFA12 {
-  public tezos: TezosToolkit;
-  public contract: ContractAbstraction<ContractProvider>;
+  public contract: any;
   public storage: TokenStorage;
 
-  constructor(
-    tezos: TezosToolkit,
-    contract: ContractAbstraction<ContractProvider>
-  ) {
-    this.tezos = tezos;
+  constructor(contract: any) {
     this.contract = contract;
   }
 
-  static async init(
-    tezos: TezosToolkit,
-    dexAddress: string
-  ): Promise<TokenFA12> {
-    return new TokenFA12(tezos, await tezos.contract.at(dexAddress));
+  static async init(tokenAddress: string): Promise<TokenFA12> {
+    return new TokenFA12(await Token.at(tokenAddress));
   }
 
-  async updateProvider(tezos: TezosToolkit): Promise<void> {
-    this.tezos = tezos;
-    this.contract = await tezos.contract.at(this.contract.address);
+  async updateProvider(keyPath: string): Promise<void> {
+    let config = await prepareProviderOptions(keyPath);
+    Tezos.setProvider(config);
   }
 
   async updateStorage(
@@ -58,52 +53,27 @@ export class TokenFA12 {
     }
   }
 
-  async transfer(
-    from: string,
-    to: string,
-    amount: number
-  ): Promise<TransactionOperation> {
-    let operation = await this.contract.methods
-      .transfer(from, to, amount)
-      .send();
-    await operation.confirmation();
-    return operation;
+  async transfer(from: string, to: string, amount: number): Promise<void> {
+    await this.contract.transfer(from, to, amount);
   }
 
-  async approve(to: string, amount: number): Promise<TransactionOperation> {
-    let operation = await this.contract.methods.approve(to, amount).send();
-    await operation.confirmation();
-    return operation;
+  async approve(to: string, amount: number): Promise<void> {
+    await this.contract.methods.approve(to, amount);
   }
 
-  async getBalance(
-    owner: string,
-    contract: number
-  ): Promise<TransactionOperation> {
-    let operation = await this.contract.methods
-      .getBalance(owner, contract)
-      .send();
-    await operation.confirmation();
-    return operation;
+  async getBalance(owner: string, contract: number): Promise<void> {
+    await this.contract.methods.getBalance(owner, contract);
   }
 
   async getAllowance(
     owner: string,
     trusted: string,
     contract: number
-  ): Promise<TransactionOperation> {
-    let operation = await this.contract.methods
-      .getAllowance(owner, trusted, contract)
-      .send();
-    await operation.confirmation();
-    return operation;
+  ): Promise<void> {
+    await this.contract.methods.getAllowance(owner, trusted, contract);
   }
 
-  async getTotalSupply(contract: number): Promise<TransactionOperation> {
-    let operation = await this.contract.methods
-      .getTotalSupply(null, contract)
-      .send();
-    await operation.confirmation();
-    return operation;
+  async getTotalSupply(contract: number): Promise<void> {
+    await this.contract.methods.getTotalSupply(null, contract);
   }
 }
