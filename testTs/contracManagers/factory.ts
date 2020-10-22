@@ -12,21 +12,22 @@ const CFactory = artifacts.require("Factory");
 const Token = artifacts.require("Token");
 
 export class Factory {
-  public contract: any;
+  public contract: ContractAbstraction<ContractProvider>;
   public storage: FactoryStorage;
 
-  constructor(contract: any) {
+  constructor(contract: ContractAbstraction<ContractProvider>) {
     this.contract = contract;
   }
 
   static async init(factoryAddress: string): Promise<Factory> {
-    return new Factory(await CFactory.at(factoryAddress));
+    return new Factory(await Tezos.contract.at(factoryAddress));
   }
 
   async updateProvider(keyPath: string): Promise<void> {
     let config = await prepareProviderOptions(keyPath);
     Tezos.setProvider(config);
   }
+
   async updateStorage(
     maps: {
       tokenToExchange?: string[];
@@ -61,12 +62,21 @@ export class Factory {
     tokenAddress: string,
     tokenAmount: number,
     tezAmount: number
-  ): Promise<void> {
+  ): Promise<TransactionOperation> {
     await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
-    await this.contract.launchExchange(tokenAddress, tokenAmount, {
-      amount: tezAmount / tezPrecision,
-    });
+    console.log(
+      await Tezos.estimate.transfer(
+        this.contract.methods
+          .launchExchange(tokenAddress, tokenAmount)
+          .toTransferParams({ amount: tezAmount / tezPrecision })
+      )
+    );
+    const operation = await this.contract.methods
+      .launchExchange(tokenAddress, tokenAmount)
+      .send({ amount: tezAmount / tezPrecision });
+    await operation.confirmation();
     await this.updateStorage({ tokenToExchange: [tokenAddress] });
+    return operation;
   }
 
   async setDexFunction(index: number, lambdaName: string): Promise<void> {
@@ -108,8 +118,8 @@ export class Factory {
     tokenAmount: number,
     address: string
   ): Promise<void> {
-    let token = await Token.at(tokenAddress);
-    let operation = await token.approve(address, tokenAmount);
+    let token = await Tezos.contract.at(tokenAddress);
+    let operation = await token.methods.approve(address, tokenAmount).send();
     await operation.confirmation();
   }
 }

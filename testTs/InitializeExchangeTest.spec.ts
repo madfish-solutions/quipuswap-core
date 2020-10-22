@@ -364,7 +364,7 @@ contract("InitializeExchange()", function () {
     );
   });
 
-  it("should fail initialization if no tokens are sent", async function () {
+  it.only("should fail initialization if no tokens are sent", async function () {
     let tezAmount = 10000;
     let tokenAmount = 1000000;
 
@@ -403,7 +403,7 @@ contract("InitializeExchange()", function () {
     );
 
     // withdraw all liquidity
-    await context.pairs[0].divestLiquidity(1, 1, 1000);
+    // await context.pairs[0].divestLiquidity(1, 1, 1000);
 
     // attempt to initialize exchange
     await rejects(

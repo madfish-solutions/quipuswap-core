@@ -61,12 +61,12 @@ export class Context {
   ): Promise<void> {
     await this.factory.updateProvider(keyPath);
 
-    for (let pair of this.pairs) {
-      await pair.updateProvider(keyPath);
-    }
-    for (let token of this.tokens) {
-      await token.updateProvider(keyPath);
-    }
+    // for (let pair of this.pairs) {
+    //   await pair.updateProvider(keyPath);
+    // }
+    // for (let token of this.tokens) {
+    //   await token.updateProvider(keyPath);
+    // }
   }
 
   async createToken(): Promise<string> {

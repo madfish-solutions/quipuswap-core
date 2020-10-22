@@ -55,7 +55,6 @@ export async function prepareProviderOptions(
 ): Promise<{ rpc: string; signer: InMemorySigner; config: object }> {
   keyPath = path.join(__dirname, keyPath);
   const secretKey = fs.readFileSync(keyPath).toString().trim();
-  let tezos = new TezosToolkit();
   return {
     rpc: provider,
     signer: await InMemorySigner.fromSecretKey(secretKey),

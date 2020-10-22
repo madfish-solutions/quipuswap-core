@@ -9,19 +9,17 @@ import { TransactionOperation } from "@taquito/taquito/dist/types/operations/tra
 import { TokenFA12 } from "./tokenFA12";
 import { DexStorage } from "./types";
 import { tezPrecision } from "./utils";
-const CDex = artifacts.require("Dex");
-const Token = artifacts.require("Token");
 
 export class Dex extends TokenFA12 {
-  public contract: any;
+  public contract: ContractAbstraction<ContractProvider>;
   public storage: DexStorage;
 
-  constructor(contract: any) {
+  constructor(contract: ContractAbstraction<ContractProvider>) {
     super(contract);
   }
 
   static async init(dexAddress: string): Promise<Dex> {
-    return new Dex(await CDex.at(dexAddress));
+    return new Dex(await Tezos.contract.at(dexAddress));
   }
 
   async updateStorage(
@@ -66,28 +64,37 @@ export class Dex extends TokenFA12 {
       }, Promise.resolve({}));
     }
   }
-
   async initializeExchange(
     tokenAmount: number,
     tezAmount: number
-  ): Promise<void> {
+  ): Promise<TransactionOperation> {
     await this.approveToken(tokenAmount, this.contract.address);
-    await this.contract.use(0, "initializeExchange", tokenAmount, {
-      amount: tezAmount / tezPrecision,
-    });
+    console.log(
+      this.contract.methods.use(0, "initializeExchange", tokenAmount)
+    );
+    const operation = await this.contract.methods
+      .use(0, "initializeExchange", tokenAmount)
+      .send({ amount: tezAmount / tezPrecision });
+    await operation.confirmation();
+    return operation;
   }
 
   async tezToTokenPayment(
     minTokens: number,
     tezAmount: number,
     receiver: string
-  ): Promise<void> {
-    await this.contract.use(1, "tezToTokenPayment", minTokens, receiver, {
-      amount: tezAmount / tezPrecision,
-    });
+  ): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(1, "tezToTokenPayment", minTokens, receiver)
+      .send({ amount: tezAmount / tezPrecision });
+    await operation.confirmation();
+    return operation;
   }
 
-  async tezToTokenSwap(minTokens: number, tezAmount: number): Promise<void> {
+  async tezToTokenSwap(
+    minTokens: number,
+    tezAmount: number
+  ): Promise<TransactionOperation> {
     return await this.tezToTokenPayment(
       minTokens,
       tezAmount,
@@ -104,13 +111,9 @@ export class Dex extends TokenFA12 {
       tokenAmount,
       this.contract.address
     );
-    const operation = await this.contract.use(
-      2,
-      "tokenToTezPayment",
-      tokenAmount,
-      minTezOut,
-      receiver
-    );
+    const operation = await this.contract.methods
+      .use(2, "tokenToTezPayment", tokenAmount, minTezOut, receiver)
+      .send();
     await operation.confirmation();
     return [tokensOperation, operation];
   }
@@ -135,6 +138,7 @@ export class Dex extends TokenFA12 {
   ): Promise<BatchOperation[]> {
     await this.updateStorage();
     let token = await Tezos.contract.at(this.storage.tokenAddress);
+    const minTez = Math.floor(middleTezAmount * 0.9);
     const batch = Tezos.batch([])
       .withTransfer(
         token.methods
@@ -158,6 +162,7 @@ export class Dex extends TokenFA12 {
           .toTransferParams({ amount: middleTezAmount / tezPrecision })
       );
     const operation = await batch.send();
+    await operation.confirmation();
     return [operation];
   }
 
@@ -180,45 +185,63 @@ export class Dex extends TokenFA12 {
     tokenAmount: number,
     tezAmount: number,
     minShares: number
-  ): Promise<void> {
+  ): Promise<TransactionOperation> {
     await this.approveToken(tokenAmount, this.contract.address);
-    await this.contract.methods
+    const operation = await this.contract.methods
       .use(4, "investLiquidity", minShares)
       .send({ amount: tezAmount / tezPrecision });
+    await operation.confirmation();
+    return operation;
   }
 
   async divestLiquidity(
     tokenAmount: number,
     tezAmount: number,
     sharesBurned: number
-  ): Promise<void> {
+  ): Promise<TransactionOperation> {
     await this.approveToken(tokenAmount, this.contract.address);
-    await this.contract.methods.use(
-      5,
-      "divestLiquidity",
-      tezAmount,
-      tokenAmount,
-      sharesBurned
-    );
+    const operation = await this.contract.methods
+      .use(5, "divestLiquidity", tezAmount, tokenAmount, sharesBurned)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 
-  async vote(voter: string, delegate: string, value: number): Promise<void> {
-    await this.contract.methods.use(6, "vote", delegate, value, voter);
+  async vote(
+    voter: string,
+    delegate: string,
+    value: number
+  ): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(6, "vote", delegate, value, voter)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 
-  async veto(voter: string, value: number): Promise<void> {
-    await this.contract.methods.use(7, "veto", value, voter);
+  async veto(voter: string, value: number): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(7, "veto", value, voter)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 
-  async withdrawProfit(receiver: number): Promise<void> {
-    await this.contract.use(3, "withdrawProfit", receiver);
+  async withdrawProfit(receiver: number): Promise<TransactionOperation> {
+    const operation = await this.contract.methods
+      .use(3, "withdrawProfit", receiver)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 
-  async sendReward(amount: number): Promise<void> {
-    await Tezos.contract.transfer({
+  async sendReward(amount: number): Promise<TransactionOperation> {
+    const operation = await Tezos.contract.transfer({
       to: this.contract.address,
       amount: amount / tezPrecision,
     });
+    await operation.confirmation();
+    return operation;
   }
 
   async approveToken(
@@ -226,8 +249,9 @@ export class Dex extends TokenFA12 {
     address: string
   ): Promise<TransactionOperation> {
     await this.updateStorage();
-    let token = await Token.at(this.storage.tokenAddress);
-    let operation = await token.approve(address, tokenAmount);
+    let token = await Tezos.contract.at(this.storage.tokenAddress);
+    let operation = await token.methods.approve(address, tokenAmount).send();
+    await operation.confirmation();
     return operation;
   }
 }

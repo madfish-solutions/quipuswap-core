@@ -10,15 +10,15 @@ import { prepareProviderOptions } from "./utils";
 const Token = artifacts.require("Token");
 
 export class TokenFA12 {
-  public contract: any;
+  public contract: ContractAbstraction<ContractProvider>;
   public storage: TokenStorage;
 
-  constructor(contract: any) {
+  constructor(contract: ContractAbstraction<ContractProvider>) {
     this.contract = contract;
   }
 
   static async init(tokenAddress: string): Promise<TokenFA12> {
-    return new TokenFA12(await Token.at(tokenAddress));
+    return new TokenFA12(await Tezos.contract.at(tokenAddress));
   }
 
   async updateProvider(keyPath: string): Promise<void> {
@@ -53,27 +53,52 @@ export class TokenFA12 {
     }
   }
 
-  async transfer(from: string, to: string, amount: number): Promise<void> {
-    await this.contract.transfer(from, to, amount);
+  async transfer(
+    from: string,
+    to: string,
+    amount: number
+  ): Promise<TransactionOperation> {
+    let operation = await this.contract.methods
+      .transfer(from, to, amount)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 
-  async approve(to: string, amount: number): Promise<void> {
-    await this.contract.methods.approve(to, amount);
+  async approve(to: string, amount: number): Promise<TransactionOperation> {
+    let operation = await this.contract.methods.approve(to, amount).send();
+    await operation.confirmation();
+    return operation;
   }
 
-  async getBalance(owner: string, contract: number): Promise<void> {
-    await this.contract.methods.getBalance(owner, contract);
+  async getBalance(
+    owner: string,
+    contract: number
+  ): Promise<TransactionOperation> {
+    let operation = await this.contract.methods
+      .getBalance(owner, contract)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 
   async getAllowance(
     owner: string,
     trusted: string,
     contract: number
-  ): Promise<void> {
-    await this.contract.methods.getAllowance(owner, trusted, contract);
+  ): Promise<TransactionOperation> {
+    let operation = await this.contract.methods
+      .getAllowance(owner, trusted, contract)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 
-  async getTotalSupply(contract: number): Promise<void> {
-    await this.contract.methods.getTotalSupply(null, contract);
+  async getTotalSupply(contract: number): Promise<TransactionOperation> {
+    let operation = await this.contract.methods
+      .getTotalSupply(null, contract)
+      .send();
+    await operation.confirmation();
+    return operation;
   }
 }
