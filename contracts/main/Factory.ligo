@@ -293,19 +293,29 @@ function veto (const p : dexAction; const s : dex_storage; const this: address) 
             account.balance := abs(account.balance + voterInfo.veto - args.value);
             account.frozenBalance := abs(account.frozenBalance - voterInfo.veto + args.value);
             s.ledger[args.voter] := account;
+
+            if s.lastVeto > voterInfo.lastVeto then 
+              voterInfo.veto := 0n
+            else skip;
+            
             s.veto := abs(s.veto + args.value - voterInfo.veto);
             voterInfo.veto := args.value;
+            voterInfo.lastVeto := Tezos.now;
             s.voters[args.voter] := voterInfo;
 
             if s.veto > s.totalVotes / 2n then {
                 s.veto := 0n;
+                s.lastVeto := Tezos.now;
                 case s.currentDelegated of None -> skip
-                | Some(c) -> {
-                  s.vetos[c] := Tezos.now + vetoPeriod;
-                  s.currentDelegated := s.currentCandidate;
-                  // if s.currentDelegated = s.currentCandidate then
-                  //   (None: option(key_hash))
-                  // else s.currentCandidate;
+                | Some(d) -> {
+                  s.vetos[d] := Tezos.now + vetoPeriod;
+                  case s.currentCandidate of None -> skip
+                  | Some(c) -> {
+                     s.currentDelegated := if d = c then
+                      (None: option(key_hash))
+                    else s.currentCandidate;
+                  }
+                  end;
                   operations := set_delegate(s.currentDelegated) # operations;
                 }
                 end;
