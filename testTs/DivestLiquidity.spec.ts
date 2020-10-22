@@ -1,239 +1,245 @@
-// import { Context } from "./contracManagers/context";
-// import { strictEqual, ok, notStrictEqual, rejects } from "assert";
-// import BigNumber from "bignumber.js";
-// import { TezosOperationError } from "@taquito/taquito";
+import { Context } from "./contracManagers/context";
+import { strictEqual, ok, notStrictEqual, rejects } from "assert";
+import BigNumber from "bignumber.js";
+import { Tezos, TezosOperationError } from "@taquito/taquito";
 
-// contract("DivestLiquidity()", function () {
-//   it("should divest liquidity and burn shares by current provider", async function () {
-//     this.timeout(5000000);
-//     // create context with exchange
-//     let context = await Context.init();
+contract("DivestLiquidity()", function () {
+  let context: Context;
 
-//     let tezAmount = 1000;
-//     let tokenAmount = 100000;
-//     let sharesBurned = 100;
+  before(async () => {
+    context = await Context.init([]);
+  });
 
-//     // store prev balances
-//     let pairAddress = context.pairs[0].contract.address;
-//     let aliceAddress = await context.tezos.signer.publicKeyHash();
-//     let aliceInitTezBalance = await context.tezos.tz.getBalance(aliceAddress);
-//     await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
-//     let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
-//       aliceAddress
-//     ].balance;
+  it("should divest liquidity and burn shares by current provider", async function () {
+    this.timeout(5000000);
 
-//     // dinest liquidity
-//     await context.pairs[0].divestLiquidity(
-//       tokenAmount,
-//       tezAmount,
-//       sharesBurned
-//     );
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
 
-//     // checks
-//     let aliceFinalTezBalance = await context.tezos.tz.getBalance(aliceAddress);
-//     await context.tokens[0].updateStorage({
-//       ledger: [aliceAddress, pairAddress],
-//     });
-//     let aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
-//       aliceAddress
-//     ].balance;
+    let tezAmount = 1000;
+    let tokenAmount = 100000;
+    let sharesBurned = 100;
 
-//     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
-//       .balance;
-//     let pairTezBalance = await context.tezos.tz.getBalance(pairAddress);
+    // store prev balances
+    let pairAddress = context.pairs[0].contract.address;
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceInitTezBalance = await Tezos.tz.getBalance(aliceAddress);
+    await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
+    let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
+      aliceAddress
+    ].balance;
 
-//     // 1. tokens/tez sent to user
-//     strictEqual(
-//       aliceInitTokenBalance.toNumber() + tokenAmount,
-//       aliceFinalTokenBalance.toNumber(),
-//       "Tokens not sent"
-//     );
-//     ok(
-//       aliceInitTezBalance.toNumber() + tezAmount >=
-//         aliceFinalTezBalance.toNumber(),
-//       "Tez not sent"
-//     );
+    // dinest liquidity
+    await context.pairs[0].divestLiquidity(
+      tokenAmount,
+      tezAmount,
+      sharesBurned
+    );
 
-//     // 2. tokens/tez withdrawn
-//     strictEqual(
-//       pairTokenBalance.toNumber(),
-//       1000000 - tokenAmount,
-//       "Tokens not received"
-//     );
-//     strictEqual(
-//       pairTezBalance.toNumber(),
-//       10000 - tezAmount,
-//       "Tez not received"
-//     );
+    // checks
+    let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
+    await context.tokens[0].updateStorage({
+      ledger: [aliceAddress, pairAddress],
+    });
+    let aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
+      aliceAddress
+    ].balance;
 
-//     // 3. new pair state
-//     await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-//     strictEqual(
-//       context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-//       1000 - sharesBurned,
-//       "Alice should receive 1000 shares"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.totalSupply.toNumber(),
-//       1000 - sharesBurned,
-//       "Alice tokens should be all supply"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.tezPool.toNumber(),
-//       10000 - tezAmount,
-//       "Tez pool should be fully funded by sent amount"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.tokenPool.toNumber(),
-//       1000000 - tokenAmount,
-//       "Token pool should be fully funded by sent amount"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.invariant.toNumber(),
-//       (1000000 - tokenAmount) * (10000 - tezAmount),
-//       "Inveriant should be calculated properly"
-//     );
-//   });
+    let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
+      .balance;
+    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
 
-//   it("should divest liquidity and burn shares transfered from another user", async function () {
-//     this.timeout(5000000);
-//     // create context with exchange
-//     let context = await Context.init([]);
+    // 1. tokens/tez sent to user
+    strictEqual(
+      aliceInitTokenBalance.toNumber() + tokenAmount,
+      aliceFinalTokenBalance.toNumber(),
+      "Tokens not sent"
+    );
+    ok(
+      aliceInitTezBalance.toNumber() + tezAmount >=
+        aliceFinalTezBalance.toNumber(),
+      "Tez not sent"
+    );
 
-//     let tezAmount = 1000;
-//     let tokenAmount = 100000;
-//     let sharesBurned = 100;
+    // 2. tokens/tez withdrawn
+    strictEqual(
+      pairTokenBalance.toNumber(),
+      1000000 - tokenAmount,
+      "Tokens not received"
+    );
+    strictEqual(
+      pairTezBalance.toNumber(),
+      10000 - tezAmount,
+      "Tez not received"
+    );
 
-//     // get alice address
-//     let pairAddress = context.pairs[0].contract.address;
-//     let aliceAddress = await context.tezos.signer.publicKeyHash();
+    // 3. new pair state
+    await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
+    strictEqual(
+      context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
+      1000 - sharesBurned,
+      "Alice should receive 1000 shares"
+    );
+    strictEqual(
+      context.pairs[0].storage.totalSupply.toNumber(),
+      1000 - sharesBurned,
+      "Alice tokens should be all supply"
+    );
+    strictEqual(
+      context.pairs[0].storage.tezPool.toNumber(),
+      10000 - tezAmount,
+      "Tez pool should be fully funded by sent amount"
+    );
+    strictEqual(
+      context.pairs[0].storage.tokenPool.toNumber(),
+      1000000 - tokenAmount,
+      "Token pool should be fully funded by sent amount"
+    );
+    strictEqual(
+      context.pairs[0].storage.invariant.toNumber(),
+      (1000000 - tokenAmount) * (10000 - tezAmount),
+      "Inveriant should be calculated properly"
+    );
+  });
 
-//     // update keys
-//     await context.updateActor("../../fixtures/key1");
-//     let bobAddress = await context.tezos.signer.publicKeyHash();
-//     await context.updateActor();
+  it("should divest liquidity and burn shares transfered from another user", async function () {
+    this.timeout(5000000);
 
-//     // send tokens to bob
-//     await context.pairs[0].transfer(aliceAddress, bobAddress, 1000);
-//     await context.updateActor("../../fixtures/key1");
+    let tezAmount = 1000;
+    let tokenAmount = 100000;
+    let sharesBurned = 100;
 
-//     // store prev balances
-//     let bobInitTezBalance = await context.tezos.tz.getBalance(bobAddress);
-//     await context.tokens[0].updateStorage({ ledger: [bobAddress] });
-//     let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
-//     let bobInitTokenBalance = bobInitTokenLedger
-//       ? bobInitTokenLedger.balance
-//       : new BigNumber(0);
+    // create new pairs
+    await context.flushPairs();
+    await context.createPairs();
 
-//     // divest liquidity
-//     await context.pairs[0].divestLiquidity(
-//       tokenAmount,
-//       tezAmount,
-//       sharesBurned
-//     );
+    // get alice address
+    let pairAddress = context.pairs[0].contract.address;
+    let aliceAddress = await Tezos.signer.publicKeyHash();
 
-//     // checks
-//     let bobFinalTezBalance = await context.tezos.tz.getBalance(bobAddress);
-//     await context.tokens[0].updateStorage({
-//       ledger: [bobAddress, pairAddress],
-//     });
-//     let bobFinalTokenBalance = await context.tokens[0].storage.ledger[
-//       bobAddress
-//     ].balance;
+    // update keys
+    await context.updateActor("../../fixtures/key1");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
 
-//     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
-//       .balance;
-//     let pairTezBalance = await context.tezos.tz.getBalance(pairAddress);
+    // send tokens to bob
+    await context.pairs[0].transfer(aliceAddress, bobAddress, 1000);
+    await context.updateActor("../../fixtures/key1");
 
-//     // 1. tokens/tez sent to user
-//     strictEqual(
-//       bobInitTokenBalance.toNumber() + tokenAmount,
-//       bobFinalTokenBalance.toNumber(),
-//       "Tokens not sent"
-//     );
-//     ok(
-//       bobInitTezBalance.toNumber() + tezAmount >= bobFinalTezBalance.toNumber(),
-//       "Tez not sent"
-//     );
+    // store prev balances
+    let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
+    await context.tokens[0].updateStorage({ ledger: [bobAddress] });
+    let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
+    let bobInitTokenBalance = bobInitTokenLedger
+      ? bobInitTokenLedger.balance
+      : new BigNumber(0);
 
-//     // 2. tokens/tez withdrawn
-//     strictEqual(
-//       pairTokenBalance.toNumber(),
-//       1000000 - tokenAmount,
-//       "Tokens not received"
-//     );
-//     strictEqual(
-//       pairTezBalance.toNumber(),
-//       10000 - tezAmount,
-//       "Tez not received"
-//     );
+    // divest liquidity
+    await context.pairs[0].divestLiquidity(
+      tokenAmount,
+      tezAmount,
+      sharesBurned
+    );
 
-//     // 3. new pair state
-//     await context.pairs[0].updateStorage({ ledger: [bobAddress] });
-//     strictEqual(
-//       context.pairs[0].storage.ledger[bobAddress].balance.toNumber(),
-//       1000 - sharesBurned,
-//       "Alice should receive 1000 shares"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.totalSupply.toNumber(),
-//       1000 - sharesBurned,
-//       "Alice tokens should be all supply"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.tezPool.toNumber(),
-//       10000 - tezAmount,
-//       "Tez pool should be fully funded by sent amount"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.tokenPool.toNumber(),
-//       1000000 - tokenAmount,
-//       "Token pool should be fully funded by sent amount"
-//     );
-//     strictEqual(
-//       context.pairs[0].storage.invariant.toNumber(),
-//       (1000000 - tokenAmount) * (10000 - tezAmount),
-//       "Inveriant should be calculated properly"
-//     );
-//   });
+    // checks
+    let bobFinalTezBalance = await Tezos.tz.getBalance(bobAddress);
+    await context.tokens[0].updateStorage({
+      ledger: [bobAddress, pairAddress],
+    });
+    let bobFinalTokenBalance = await context.tokens[0].storage.ledger[
+      bobAddress
+    ].balance;
 
-//   it("should fail divestment if not enough shares to burn", async function () {
-//     this.timeout(5000000);
-//     // create context with exchange
-//     let context = await Context.init();
+    let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
+      .balance;
+    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
 
-//     let tezAmount = 10000;
-//     let tokenAmount = 1000000;
-//     let sharesBurned = 10001;
+    // 1. tokens/tez sent to user
+    strictEqual(
+      bobInitTokenBalance.toNumber() + tokenAmount,
+      bobFinalTokenBalance.toNumber(),
+      "Tokens not sent"
+    );
+    ok(
+      bobInitTezBalance.toNumber() + tezAmount >= bobFinalTezBalance.toNumber(),
+      "Tez not sent"
+    );
 
-//     // attempt to invest liquidity
-//     await rejects(
-//       context.pairs[0].divestLiquidity(tokenAmount, tezAmount, sharesBurned),
-//       (err) => {
-//         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
-//         return true;
-//       },
-//       "Investment to Dex should fail"
-//     );
-//   });
+    // 2. tokens/tez withdrawn
+    strictEqual(
+      pairTokenBalance.toNumber(),
+      1000000 - tokenAmount,
+      "Tokens not received"
+    );
+    strictEqual(
+      pairTezBalance.toNumber(),
+      10000 - tezAmount,
+      "Tez not received"
+    );
 
-//   it("should fail divestment if required shares to burn is zero", async function () {
-//     this.timeout(5000000);
-//     // create context with exchange
-//     let context = await Context.init();
+    // 3. new pair state
+    await context.pairs[0].updateStorage({ ledger: [bobAddress] });
+    strictEqual(
+      context.pairs[0].storage.ledger[bobAddress].balance.toNumber(),
+      1000 - sharesBurned,
+      "Alice should receive 1000 shares"
+    );
+    strictEqual(
+      context.pairs[0].storage.totalSupply.toNumber(),
+      1000 - sharesBurned,
+      "Alice tokens should be all supply"
+    );
+    strictEqual(
+      context.pairs[0].storage.tezPool.toNumber(),
+      10000 - tezAmount,
+      "Tez pool should be fully funded by sent amount"
+    );
+    strictEqual(
+      context.pairs[0].storage.tokenPool.toNumber(),
+      1000000 - tokenAmount,
+      "Token pool should be fully funded by sent amount"
+    );
+    strictEqual(
+      context.pairs[0].storage.invariant.toNumber(),
+      (1000000 - tokenAmount) * (10000 - tezAmount),
+      "Inveriant should be calculated properly"
+    );
+  });
 
-//     let tezAmount = 1000;
-//     let tokenAmount = 100000;
-//     let sharesBurned = 0;
+  it("should fail divestment if not enough shares to burn", async function () {
+    this.timeout(5000000);
 
-//     // attempt to invest liquidity
-//     await rejects(
-//       context.pairs[0].divestLiquidity(tokenAmount, tezAmount, sharesBurned),
-//       (err) => {
-//         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
-//         return true;
-//       },
-//       "Investment to Dex should fail"
-//     );
-//   });
-// });
+    let tezAmount = 10000;
+    let tokenAmount = 1000000;
+    let sharesBurned = 10001;
+
+    // attempt to invest liquidity
+    await rejects(
+      context.pairs[0].divestLiquidity(tokenAmount, tezAmount, sharesBurned),
+      (err) => {
+        strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
+        return true;
+      },
+      "Investment to Dex should fail"
+    );
+  });
+
+  it("should fail divestment if required shares to burn is zero", async function () {
+    this.timeout(5000000);
+
+    let tezAmount = 1000;
+    let tokenAmount = 100000;
+    let sharesBurned = 0;
+
+    // attempt to invest liquidity
+    await rejects(
+      context.pairs[0].divestLiquidity(tokenAmount, tezAmount, sharesBurned),
+      (err) => {
+        strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
+        return true;
+      },
+      "Investment to Dex should fail"
+    );
+  });
+});

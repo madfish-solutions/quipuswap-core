@@ -1,5 +1,13 @@
 declare type _contractTest = (accounts: string[]) => void;
-declare function contract(name: string, test: _contractTest): void;
+declare let contract: ContractFunction;
+
+interface ContractFunction {
+  (title: string, fn: (this: any) => void): any;
+  (title: string): any;
+  only: any;
+  skip: any;
+}
+
 declare interface TransactionMeta {
   from: string;
 }

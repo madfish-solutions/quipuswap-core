@@ -4,13 +4,13 @@ import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 
 contract("InitializeExchange()", function () {
-  let context;
+  let context: Context;
 
   before(async () => {
     context = await Context.init([]);
   });
 
-  it.only("should initialize & deploy 1 exchange and set initial stage", async function () {
+  it("should initialize & deploy 1 exchange and set initial stage", async function () {
     // ensure no token pairs added
     await context.factory.updateStorage();
     strictEqual(
@@ -181,6 +181,10 @@ contract("InitializeExchange()", function () {
   });
 
   it("should initialize existing pair if there are no shares", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
     let tezAmount = 10000;
     let tokenAmount = 1000000;
 
@@ -344,6 +348,10 @@ contract("InitializeExchange()", function () {
   });
 
   it("should fail initialization & deployment if no tez are sent", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
     // create token
     let tokenAddress = await context.createToken();
     let tezAmount = 0;
@@ -364,7 +372,11 @@ contract("InitializeExchange()", function () {
     );
   });
 
-  it.only("should fail initialization if no tokens are sent", async function () {
+  it("should fail initialization if no tokens are sent", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
     let tezAmount = 10000;
     let tokenAmount = 1000000;
 
@@ -391,6 +403,10 @@ contract("InitializeExchange()", function () {
   });
 
   it("should fail initialization if no tez are sent", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
     let tezAmount = 10000;
     let tokenAmount = 1000000;
 
@@ -403,7 +419,7 @@ contract("InitializeExchange()", function () {
     );
 
     // withdraw all liquidity
-    // await context.pairs[0].divestLiquidity(1, 1, 1000);
+    await context.pairs[0].divestLiquidity(1, 1, 1000);
 
     // attempt to initialize exchange
     await rejects(

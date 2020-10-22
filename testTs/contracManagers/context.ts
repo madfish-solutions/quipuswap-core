@@ -34,15 +34,18 @@ export class Context {
     pairsConfigs: { tezAmount: number; tokenAmount: number }[] = [
       { tezAmount: 10000, tokenAmount: 1000000 },
     ],
-    setFactoryFunctions: boolean = true,
-    keyPath: string = process.env.npm_package_config_default_key
+    setFactoryFunctions: boolean = false,
+    keyPath: string = process.env.npm_package_config_default_key,
+    useDeployedFactory: boolean = true
   ): Promise<Context> {
     console.log("Setuping Tezos");
     let config = await prepareProviderOptions(keyPath);
     Tezos.setProvider(config);
 
     console.log("Deploying factory");
-    let factoryInstance = await CFactory.new(factoryStorage);
+    let factoryInstance = useDeployedFactory
+      ? await CFactory.deployed()
+      : await CFactory.new(factoryStorage);
     let factory = await Factory.init(factoryInstance.address.toString());
 
     let context = new Context(factory, [], []);
@@ -67,6 +70,12 @@ export class Context {
     // for (let token of this.tokens) {
     //   await token.updateProvider(keyPath);
     // }
+  }
+
+  async flushPairs(): Promise<void> {
+    this.tokens = [];
+    this.pairs = [];
+    await this.updateActor();
   }
 
   async createToken(): Promise<string> {
