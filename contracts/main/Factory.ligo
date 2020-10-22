@@ -69,6 +69,17 @@ function transfer (const p : tokenAction; const s : dex_storage) : return is
   block {
     case p of
     | ITransfer(params) -> {
+      (* update rewards info *)
+      s.rewardInfo.totalAccomulatedLoyalty := s.rewardInfo.totalAccomulatedLoyalty + abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier / s.totalSupply;
+      s.rewardInfo.lastUpdateTime := Tezos.now;
+
+      (* check reward update*)
+      if Tezos.now > s.rewardInfo.periodFinish then block {
+        s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
+        s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
+        s.rewardInfo.reward := 0n;
+      } else skip;
+
       const value : nat = params.1.1;
       if params.0 = params.1.0 then
         failwith("Dex/selt-transfer")
@@ -84,9 +95,37 @@ function transfer (const p : tokenAction; const s : dex_storage) : return is
         else skip;
         senderAccount.allowances[Tezos.sender] := abs(spenderAllowance - value);
       } else skip;
+
+      (* update user loyalty *)
+      var userRewardInfo : user_reward_info := getUserRewardInfo(params.0, s);
+      const currentLoyalty : nat = (senderAccount.balance + senderAccount.frozenBalance) * s.rewardInfo.totalAccomulatedLoyalty;
+      userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
+      userRewardInfo.loyaltyPaid := currentLoyalty;
+
+      (* update user reward *)
+      const currentReward : nat = s.rewardInfo.totalAccomulatedLoyalty * s.rewardInfo.rewardPerToken;
+      userRewardInfo.reward := userRewardInfo.loyalty + abs(currentReward - userRewardInfo.rewardPaid);
+      userRewardInfo.rewardPaid := currentReward;
+
+      s.userRewards[params.0] := userRewardInfo;
+
       senderAccount.balance := abs(senderAccount.balance - value);
       s.ledger[params.0] := senderAccount;
+
       var destAccount : account_info := getAccount(params.1.0, s);
+
+      (* update user loyalty *)
+      var userRewardInfo : user_reward_info := getUserRewardInfo(params.1.0, s);
+      const currentLoyalty : nat = (destAccount.balance + destAccount.frozenBalance) * s.rewardInfo.totalAccomulatedLoyalty;
+      userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
+      userRewardInfo.loyaltyPaid := currentLoyalty;
+
+      (* update user reward *)
+      const currentReward : nat = s.rewardInfo.totalAccomulatedLoyalty * s.rewardInfo.rewardPerToken;
+      userRewardInfo.reward := userRewardInfo.loyalty + abs(currentReward - userRewardInfo.rewardPaid);
+      userRewardInfo.rewardPaid := currentReward;
+
+      s.userRewards[params.1.0] := userRewardInfo;
       destAccount.balance := destAccount.balance + value;
       s.ledger[params.1.0] := destAccount;
     }
@@ -221,8 +260,6 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
               else skip;
               account.allowances[Tezos.sender] := abs(spenderAllowance - args.value);
             } else skip;
-            
-            (* XXX::add None support*)
             
             (* remove prev *)
             case voterInfo.candidate of 
