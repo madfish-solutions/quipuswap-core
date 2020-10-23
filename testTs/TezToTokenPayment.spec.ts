@@ -22,9 +22,9 @@ contract("TezToTokenPayment()", function () {
     // let fee = 3;
 
     // store prev balances
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     let pairAddress = context.pairs[0].contract.address;
     let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
@@ -121,7 +121,7 @@ contract("TezToTokenPayment()", function () {
     await context.createPairs();
 
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let tezAmount = 1000;
     let minTokens = 0;
 
@@ -138,7 +138,7 @@ contract("TezToTokenPayment()", function () {
 
   it("should fail if min tokens amount is too high", async function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let tezAmount = 1000;
     let minTokens = 90663;
 
@@ -155,7 +155,7 @@ contract("TezToTokenPayment()", function () {
 
   it("should fail if tez amount is too low", async function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let tezAmount = 0;
     let minTokens = 1000;
 

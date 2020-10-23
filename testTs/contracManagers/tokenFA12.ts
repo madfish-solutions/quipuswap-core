@@ -21,8 +21,8 @@ export class TokenFA12 {
     return new TokenFA12(await Tezos.contract.at(tokenAddress));
   }
 
-  async updateProvider(keyPath: string): Promise<void> {
-    let config = await prepareProviderOptions(keyPath);
+  async updateProvider(accountName: string): Promise<void> {
+    let config = await prepareProviderOptions(accountName);
     Tezos.setProvider(config);
   }
 

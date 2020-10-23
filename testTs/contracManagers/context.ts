@@ -4,16 +4,12 @@ import {
   ContractAbstraction,
   ContractProvider,
 } from "@taquito/taquito";
-import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
-import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
-import { parseJsonSourceFileConfigFileContent } from "typescript";
 import { Dex } from "./dex";
 import { Factory } from "./factory";
 import { TokenFA12 } from "./tokenFA12";
-import { prepareProviderOptions, setup } from "./utils";
+import { prepareProviderOptions } from "./utils";
 import tokenStorage from "../storage/Token";
 import factoryStorage from "../storage/Factory";
-import { dexFunctions, tokenFunctions } from "../storage/Functions";
 
 const CDex = artifacts.require("Dex");
 const Token = artifacts.require("Token");
@@ -35,11 +31,11 @@ export class Context {
       { tezAmount: 10000, tokenAmount: 1000000 },
     ],
     setFactoryFunctions: boolean = false,
-    keyPath: string = process.env.npm_package_config_default_key,
+    accountName: string = "alice",
     useDeployedFactory: boolean = true
   ): Promise<Context> {
     console.log("Setuping Tezos");
-    let config = await prepareProviderOptions(keyPath);
+    let config = await prepareProviderOptions(accountName);
     Tezos.setProvider(config);
 
     console.log("Deploying factory");
@@ -59,17 +55,8 @@ export class Context {
     return context;
   }
 
-  async updateActor(
-    keyPath: string = process.env.npm_package_config_default_key
-  ): Promise<void> {
-    await this.factory.updateProvider(keyPath);
-
-    // for (let pair of this.pairs) {
-    //   await pair.updateProvider(keyPath);
-    // }
-    // for (let token of this.tokens) {
-    //   await token.updateProvider(keyPath);
-    // }
+  async updateActor(accountName: string = "alice"): Promise<void> {
+    await this.factory.updateProvider(accountName);
   }
 
   async flushPairs(): Promise<void> {

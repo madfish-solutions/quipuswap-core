@@ -119,13 +119,13 @@ contract("DivestLiquidity()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
 
     // update keys
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
     await context.pairs[0].transfer(aliceAddress, bobAddress, 1000);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // store prev balances
     let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);

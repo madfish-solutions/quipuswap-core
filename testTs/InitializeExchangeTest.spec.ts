@@ -7,12 +7,7 @@ contract("InitializeExchange()", function () {
   let context: Context;
 
   before(async () => {
-    context = await Context.init(
-      [],
-      true,
-      process.env.npm_package_config_default_key,
-      false
-    );
+    context = await Context.init([], true, "alice", false);
   });
 
   it("should initialize & deploy 1 exchange and set initial stage", async function () {

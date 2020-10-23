@@ -7,12 +7,7 @@ contract("SetXFunctions()", function () {
   let context: Context;
 
   before(async () => {
-    context = await Context.init(
-      [],
-      false,
-      process.env.npm_package_config_default_key,
-      false
-    );
+    context = await Context.init([], false, "alice", false);
   });
 
   it("should set all Dex functions to Factory", async function () {

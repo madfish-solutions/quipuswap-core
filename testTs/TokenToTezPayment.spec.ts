@@ -25,15 +25,15 @@ contract("TokenToTezPayment()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
 
     // update keys
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
     await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // check initial balance
     let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
@@ -117,7 +117,7 @@ contract("TokenToTezPayment()", function () {
 
   it("should fail if min tez amount is too low", async function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let tokenAmount = 1000;
     let minTezOut = 0;
 
@@ -134,7 +134,7 @@ contract("TokenToTezPayment()", function () {
 
   it("should fail if min tez amount is too high", async function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let tokenAmount = 1000;
     let minTezOut = 1000;
 
@@ -158,7 +158,7 @@ contract("TokenToTezPayment()", function () {
     let minTezOut = 10;
 
     // get alice address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
@@ -181,7 +181,7 @@ contract("TokenToTezPayment()", function () {
 
   it("should fail if tokens amount is too low", async function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let tokenAmount = 0;
     let minTezOut = 1000;
 

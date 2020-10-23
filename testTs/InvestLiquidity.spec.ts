@@ -3,7 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 
-contract("InvestLiquidity()", function () {
+contract.only("InvestLiquidity()", function () {
   let context: Context;
 
   before(async () => {
@@ -114,13 +114,13 @@ contract("InvestLiquidity()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
 
     // update keys
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
     await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // store prev balances
     let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);

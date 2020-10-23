@@ -9,7 +9,7 @@ import { execSync } from "child_process";
 import { InMemorySigner } from "@taquito/signer";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
-
+import accounts from "../accounts/accounts";
 export const provider = process.env.npm_package_config_network;
 export const tezPrecision = 1e6;
 
@@ -34,27 +34,10 @@ export function getLigo(isDockerizedLigo: boolean): string {
   return path;
 }
 
-export async function setup(
-  keyPath: string = process.env.npm_package_config_default_key
-): Promise<TezosToolkit> {
-  keyPath = path.join(__dirname, keyPath);
-  const secretKey = fs.readFileSync(keyPath).toString().trim();
-  let tezos = new TezosToolkit();
-  await tezos.setProvider({
-    rpc: provider,
-    signer: await InMemorySigner.fromSecretKey(secretKey),
-    config: {
-      confirmationPollingTimeoutSecond: 10000,
-    },
-  });
-  return tezos;
-}
-
 export async function prepareProviderOptions(
-  keyPath: string = process.env.npm_package_config_default_key
+  name: string = "alice"
 ): Promise<{ rpc: string; signer: InMemorySigner; config: object }> {
-  keyPath = path.join(__dirname, keyPath);
-  const secretKey = fs.readFileSync(keyPath).toString().trim();
+  const secretKey = accounts[name].sk.trim();
   return {
     rpc: provider,
     signer: await InMemorySigner.fromSecretKey(secretKey),

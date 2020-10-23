@@ -21,7 +21,7 @@ contract("TezToTokenSwap()", function () {
     // let fee = 3;
 
     // store prev balances
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     let pairAddress = context.pairs[0].contract.address;
     let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);

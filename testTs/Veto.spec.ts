@@ -17,7 +17,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -119,7 +119,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -144,11 +144,11 @@ contract("Veto()", function () {
     );
 
     // approve tokens
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     await context.pairs[0].approve(bobAddress, value);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // store prev balances
     let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
@@ -227,7 +227,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -342,7 +342,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -367,11 +367,11 @@ contract("Veto()", function () {
     );
 
     // approve tokens
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     await context.pairs[0].approve(bobAddress, value);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // store prev balances
     let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
@@ -450,7 +450,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -569,7 +569,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -594,11 +594,11 @@ contract("Veto()", function () {
     );
 
     // approve tokens
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     await context.pairs[0].approve(bobAddress, value);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // store prev balances
     let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
@@ -677,7 +677,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -702,11 +702,11 @@ contract("Veto()", function () {
     );
 
     // approve tokens
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     await context.pairs[0].approve(bobAddress, value);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // veto
     await context.pairs[0].veto(aliceAddress, value);
@@ -730,7 +730,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -777,7 +777,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -816,13 +816,13 @@ contract("Veto()", function () {
     strictEqual(finalCurrentCandidate, null, "Candidate wasn't updated");
   });
 
-  it.only("should set delegator to next candidate if candidate and delegator are different", async function () {
+  it("should set delegator to next candidate if candidate and delegator are different", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -881,7 +881,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -996,7 +996,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // change actor
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let value = 500;
     let bobAddress = await Tezos.signer.publicKeyHash();
 
@@ -1018,7 +1018,7 @@ contract("Veto()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let delegate = carolAddress;
@@ -1064,11 +1064,11 @@ contract("Veto()", function () {
     await context.createPairs();
 
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let value = 200;
 
     // veto
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     await rejects(
       context.pairs[0].veto(aliceAddress, value),
       (err) => {

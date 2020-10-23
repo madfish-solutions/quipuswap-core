@@ -18,7 +18,7 @@ contract("Vote()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
@@ -120,9 +120,9 @@ contract("Vote()", function () {
     await context.createPairs();
 
     // get addresses
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
     let aliceAddress = await Tezos.signer.publicKeyHash();
@@ -228,7 +228,7 @@ contract("Vote()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
@@ -335,7 +335,7 @@ contract("Vote()", function () {
     await context.createPairs();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let carolAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
@@ -446,14 +446,14 @@ contract("Vote()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
 
     // get gelegate address
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // approve tokens
     let value = 500;
     await context.pairs[0].approve(bobAddress, value);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     let delegate = bobAddress;
 
@@ -552,9 +552,9 @@ contract("Vote()", function () {
 
     // get addresses
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
@@ -604,7 +604,7 @@ contract("Vote()", function () {
 
     // vote from Bob
     value = 500;
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     await context.pairs[0].vote(bobAddress, bobDelegate, value);
 
     // checks
@@ -639,9 +639,9 @@ contract("Vote()", function () {
 
     // get addresses
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
@@ -691,7 +691,7 @@ contract("Vote()", function () {
 
     // vote from Bob
     value = 100;
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     await context.pairs[0].vote(bobAddress, bobDelegate, value);
 
     // checks
@@ -724,7 +724,7 @@ contract("Vote()", function () {
 
     // get gelegate address
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
     let carolAddress = await Tezos.signer.publicKeyHash();
 
     let delegate = aliceAddress;
@@ -805,7 +805,7 @@ contract("Vote()", function () {
 
     // get gelegate address
     let aliceAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor("../../fixtures/key2");
+    await context.updateActor("carol");
 
     let delegate = aliceAddress;
     let value = 500;

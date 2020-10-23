@@ -23,8 +23,8 @@ export class Factory {
     return new Factory(await Tezos.contract.at(factoryAddress));
   }
 
-  async updateProvider(keyPath: string): Promise<void> {
-    let config = await prepareProviderOptions(keyPath);
+  async updateProvider(accountName: string): Promise<void> {
+    let config = await prepareProviderOptions(accountName);
     Tezos.setProvider(config);
   }
 

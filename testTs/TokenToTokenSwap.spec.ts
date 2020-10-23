@@ -30,13 +30,13 @@ contract("TokenToTokenSwap()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
 
     // update keys
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
     let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
     await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
-    await context.updateActor("../../fixtures/key1");
+    await context.updateActor("bob");
 
     // check initial balance
     let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);

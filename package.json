@@ -6,7 +6,7 @@
     "network1": "https://testnet-tezos.giganode.io",
     "standard": "fa1.2",
     "default": {
-      "key": "../../fixtures/key",
+      "key": "../../scripts/sandbox/accounts",
       "storagedir": "./storage",
       "inputdir": "./build",
       "pool": {
