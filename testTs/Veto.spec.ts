@@ -771,7 +771,108 @@ contract("Veto()", function () {
     strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
   });
 
-  it("should set delegator to None if candidate and delegator are the same", async function () {});
+  it("should set delegator to None if candidate and delegator are the same", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get gelegate address
+    await context.updateActor("../../fixtures/key2");
+    let carolAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+    let delegate = carolAddress;
+    let value = 500;
+    let reward = 1000;
+
+    // vote for the candidate
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].vote(aliceAddress, delegate, value);
+
+    // update delegator
+    await context.pairs[0].sendReward(reward);
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      voters: [aliceAddress],
+      vetos: [delegate],
+    });
+    strictEqual(
+      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.currentCandidate,
+      "Delegator and candidate doesn't match"
+    );
+
+    // veto
+    await context.pairs[0].veto(aliceAddress, value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      voters: [aliceAddress],
+      vetos: [delegate],
+    });
+    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
+    strictEqual(finalCurrentCandidate, null, "Candidate wasn't updated");
+  });
+
+  it.only("should set delegator to next candidate if candidate and delegator are different", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get gelegate address
+    await context.updateActor("../../fixtures/key2");
+    let carolAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+    let delegate = carolAddress;
+    let value = 100;
+    let reward = 1000;
+
+    // vote for the candidate
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].vote(aliceAddress, delegate, value);
+
+    // update delegator
+    await context.pairs[0].sendReward(reward);
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      voters: [aliceAddress],
+      vetos: [delegate],
+    });
+    strictEqual(
+      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.currentCandidate,
+      "Delegator and candidate doesn't match"
+    );
+
+    // update candidate
+    await context.pairs[0].vote(aliceAddress, aliceAddress, 2 * value);
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      voters: [aliceAddress],
+      vetos: [delegate],
+    });
+    notStrictEqual(
+      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.currentCandidate,
+      "Delegator and candidate doesn't match"
+    );
+
+    // veto
+    await context.pairs[0].veto(aliceAddress, value + 1);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      voters: [aliceAddress],
+      vetos: [delegate],
+    });
+    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    strictEqual(finalCurrentDelegate, aliceAddress, "Delegate wasn't updated");
+    strictEqual(finalCurrentCandidate, aliceAddress, "Candidate was updated");
+  });
 
   it("should withdraw veto if delegator was removed by veto", async function () {
     this.timeout(5000000);

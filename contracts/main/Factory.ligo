@@ -348,9 +348,11 @@ function veto (const p : dexAction; const s : dex_storage; const this: address) 
                   s.vetos[d] := Tezos.now + vetoPeriod;
                   case s.currentCandidate of None -> skip
                   | Some(c) -> {
-                     s.currentDelegated := if d = c then
-                      (None: option(key_hash))
-                    else s.currentCandidate;
+                    if d = c then block {
+                      s.currentDelegated := (None: option(key_hash));
+                      s.currentCandidate := (None: option(key_hash));
+                    }
+                    else s.currentDelegated := s.currentCandidate;
                   }
                   end;
                   operations := set_delegate(s.currentDelegated) # operations;
