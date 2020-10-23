@@ -21,7 +21,7 @@
     "migrate-carthagenet": "truffle migrate --network carthagenet",
     "compile": "truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",
-    "test": "tsc && rm -rf ./build && truffle test"
+    "test": "tsc && truffle compile && rm -rf ./build && truffle test"
   },
   "dependencies": {
     "@taquito/taquito": "^6.3.4-beta.0",
