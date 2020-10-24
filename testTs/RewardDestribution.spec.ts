@@ -3,14 +3,14 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 
-contract("RewardDestribution()", function () {
+contract.only("RewardDestribution()", function () {
   let context: Context;
 
   before(async () => {
     context = await Context.init([]);
   });
 
-  it.only("should distribute loyalty during the one epoch", async function () {
+  it("should distribute loyalty during the one epoch", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -92,7 +92,7 @@ contract("RewardDestribution()", function () {
   it("should distribute loyalty during the one epoch to many users", async function () {});
   it("should distribute loyalty during the few epoches", async function () {});
   it("should distribute loyalty during the few epoches to many users", async function () {});
-  it.only("should update loyalty during transfer", async function () {
+  it("should update loyalty during transfer", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();

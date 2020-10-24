@@ -89,12 +89,12 @@ function updateUserReward (const addr : address; const account: account_info; co
     const currentReward : nat = s.rewardInfo.loyaltyPerShare * s.rewardInfo.rewardPerToken;
     userRewardInfo.reward := userRewardInfo.reward + abs(currentReward - userRewardInfo.rewardPaid);
     userRewardInfo.rewardPaid := currentReward;
-    s.userRewards[addr] := userRewardInfo;
 
     (* update user loyalty *)
     const currentLoyalty : nat = (account.balance + account.frozenBalance) * s.rewardInfo.loyaltyPerShare;
     userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
     userRewardInfo.loyaltyPaid := newBalance * s.rewardInfo.loyaltyPerShare;
+    s.userRewards[addr] := userRewardInfo;
   } with s
 
 (* Transfer token to another account *)
