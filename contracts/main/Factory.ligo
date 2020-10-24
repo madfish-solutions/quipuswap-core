@@ -78,13 +78,13 @@ function updateReward (const s : dex_storage) : dex_storage is
     } else skip;
   } with s
 
-function updateUserReward (const addr : address; const account: account_info; const s : dex_storage) : dex_storage is
+function updateUserReward (const addr : address; const account: account_info; const newBalance: nat; const s : dex_storage) : dex_storage is
   block {
     (* update user loyalty *)
     var userRewardInfo : user_reward_info := getUserRewardInfo(addr, s);
     const currentLoyalty : nat = (account.balance + account.frozenBalance) * s.rewardInfo.totalAccomulatedLoyalty;
     userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
-    userRewardInfo.loyaltyPaid := currentLoyalty;
+    userRewardInfo.loyaltyPaid := newBalance * s.rewardInfo.totalAccomulatedLoyalty;
 
     (* update user reward *)
     const currentReward : nat = s.rewardInfo.totalAccomulatedLoyalty * s.rewardInfo.rewardPerToken;
@@ -116,14 +116,14 @@ function transfer (const p : tokenAction; const s : dex_storage) : return is
         senderAccount.allowances[Tezos.sender] := abs(spenderAllowance - value);
       } else skip;
 
-      s := updateUserReward(params.0, senderAccount, s);
+      s := updateUserReward(params.0, senderAccount, abs(senderAccount.balance - value) + senderAccount.frozenBalance,  s);
 
       senderAccount.balance := abs(senderAccount.balance - value);
       s.ledger[params.0] := senderAccount;
 
       var destAccount : account_info := getAccount(params.1.0, s);
 
-      s := updateUserReward(params.1.0, destAccount, s);
+      s := updateUserReward(params.1.0, destAccount, destAccount.balance + value + destAccount.frozenBalance, s);
 
       destAccount.balance := destAccount.balance + value;
       s.ledger[params.1.0] := destAccount;
@@ -448,7 +448,7 @@ function investLiquidity (const p : dexAction; const s : dex_storage; const this
           var account : account_info := getAccount(Tezos.sender, s);
           const share : nat = account.balance;
 
-          s := updateUserReward(Tezos.sender, account, s);
+          s := updateUserReward(Tezos.sender, account, share + sharesPurchased + account.frozenBalance, s);
 
           account.balance := share + sharesPurchased;
           s.ledger[Tezos.sender] := account;
@@ -481,12 +481,12 @@ function divestLiquidity (const p : dexAction; const s : dex_storage; const this
         var account : account_info := getAccount(Tezos.sender, s);
         const share : nat = account.balance;
         if args.shares > 0n and args.shares <= share then block {
-          account.balance := abs(share - args.shares);
-          s.ledger[Tezos.sender] := account;
-
           s := updateReward(s);
 
-          s := updateUserReward(Tezos.sender, account, s);
+          s := updateUserReward(Tezos.sender, account, abs(share - args.shares) + account.frozenBalance,s);
+
+          account.balance := abs(share - args.shares);
+          s.ledger[Tezos.sender] := account;
 
           const tezDivested : nat = s.tezPool * args.shares / s.totalSupply;
           const tokensDivested : nat = s.tokenPool * args.shares / s.totalSupply;
@@ -576,7 +576,7 @@ function withdrawProfit (const p : dexAction; const s : dex_storage; const this 
 
         s := updateReward(s);
 
-        s := updateUserReward(Tezos.sender, account, s);
+        s := updateUserReward(Tezos.sender, account, account.balance + account.frozenBalance, s);
 
         var userRewardInfo : user_reward_info := getUserRewardInfo(Tezos.sender, s);
         const currentReward : nat = s.rewardInfo.totalAccomulatedLoyalty * s.rewardInfo.rewardPerToken;

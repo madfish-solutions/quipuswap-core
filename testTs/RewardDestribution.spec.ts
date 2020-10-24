@@ -10,7 +10,7 @@ contract("RewardDestribution()", function () {
     context = await Context.init([]);
   });
 
-  it("should distribute loyalty during the one epoch", async function () {
+  it.only("should distribute loyalty during the one epoch", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -76,6 +76,8 @@ contract("RewardDestribution()", function () {
         aliceFinalRewardsInfo.loyalty.toNumber(),
         "Total and Alice loyalty mismatch"
       );
+      console.log(aliceFinalRewardsInfo.loyaltyPaid.toNumber());
+      console.log(finalRewardInfo.totalAccomulatedLoyalty.toNumber());
       strictEqual(
         aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
         finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
@@ -129,10 +131,10 @@ contract("RewardDestribution()", function () {
       loyaltyPaid: new BigNumber(0),
     };
     let initRewardInfo = context.pairs[0].storage.rewardInfo;
-    let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
+    let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
       aliceAddress
     ].balance;
-    let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
+    let bobInitTokenLedger = await context.pairs[0].storage.ledger[bobAddress];
     let bobInitTokenBalance = bobInitTokenLedger
       ? bobInitTokenLedger.balance
       : new BigNumber(0);
@@ -162,12 +164,11 @@ contract("RewardDestribution()", function () {
       loyaltyPaid: new BigNumber(0),
     };
     let finalRewardInfo = context.pairs[0].storage.rewardInfo;
-    let aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
+    let aliceFinalTokenBalance = await context.pairs[0].storage.ledger[
       aliceAddress
     ].balance;
-    let bobFinalTokenBalance = await context.tokens[0].storage.ledger[
-      bobAddress
-    ].balance;
+    let bobFinalTokenBalance = await context.pairs[0].storage.ledger[bobAddress]
+      .balance;
 
     // checks
     strictEqual(
@@ -179,17 +180,20 @@ contract("RewardDestribution()", function () {
     );
     strictEqual(
       aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
-      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      aliceFinalTokenBalance.toNumber() *
+        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
       "Alice paid loyalty should be updated"
     );
     strictEqual(
       bobFinalRewardsInfo.loyaltyPaid.toNumber(),
-      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      bobFinalTokenBalance.toNumber() *
+        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
       "Bob paid loyalty should be updated"
     );
     strictEqual(
       aliceFinalRewardsInfo.loyalty.toNumber(),
-      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      aliceInitTokenBalance.toNumber() *
+        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
       "Paid loyalty should be updated"
     );
     strictEqual(
