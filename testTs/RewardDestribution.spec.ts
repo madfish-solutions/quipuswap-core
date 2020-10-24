@@ -10,7 +10,7 @@ contract("RewardDestribution()", function () {
     context = await Context.init([]);
   });
 
-  it.only("should distribute loyalty during the one epoch", async function () {
+  it("should distribute loyalty during the one epoch", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -58,8 +58,7 @@ contract("RewardDestribution()", function () {
       // checks
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
-        voters: [aliceAddress],
-        votes: [delegate],
+        userRewards: [aliceAddress],
       });
       let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
         aliceAddress
@@ -75,7 +74,7 @@ contract("RewardDestribution()", function () {
       strictEqual(
         finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
         aliceFinalRewardsInfo.loyalty.toNumber(),
-        "loyaltyPaid"
+        "Total and Alice loyalty mismatch"
       );
       strictEqual(
         aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
@@ -95,7 +94,114 @@ contract("RewardDestribution()", function () {
   it("should distribute loyalty during the one epoch to many users", async function () {});
   it("should distribute loyalty during the few epoches", async function () {});
   it("should distribute loyalty during the few epoches to many users", async function () {});
-  it("should update loyalty during transfer", async function () {});
+  it.only("should update loyalty during transfer", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get gelegate address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 500;
+
+    // store prev balances
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress, bobAddress],
+      userRewards: [aliceAddress, bobAddress],
+    });
+    let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let bobInitRewardsInfo = context.pairs[0].storage.userRewards[
+      bobAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
+    let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
+      aliceAddress
+    ].balance;
+    let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
+    let bobInitTokenBalance = bobInitTokenLedger
+      ? bobInitTokenLedger.balance
+      : new BigNumber(0);
+
+    // vote
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress, bobAddress],
+      userRewards: [aliceAddress, bobAddress],
+    });
+    let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let bobFinalRewardsInfo = context.pairs[0].storage.userRewards[
+      bobAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+    let aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
+      aliceAddress
+    ].balance;
+    let bobFinalTokenBalance = await context.tokens[0].storage.ledger[
+      bobAddress
+    ].balance;
+
+    // checks
+    strictEqual(
+      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      aliceFinalRewardsInfo.loyalty.toNumber() /
+        aliceInitTokenBalance.toNumber() +
+        bobFinalRewardsInfo.loyalty.toNumber(),
+      "Total and Alice+Bob loyalty mismatch"
+    );
+    strictEqual(
+      aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
+      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      "Alice paid loyalty should be updated"
+    );
+    strictEqual(
+      bobFinalRewardsInfo.loyaltyPaid.toNumber(),
+      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      "Bob paid loyalty should be updated"
+    );
+    strictEqual(
+      aliceFinalRewardsInfo.loyalty.toNumber(),
+      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      "Paid loyalty should be updated"
+    );
+    strictEqual(
+      bobFinalRewardsInfo.loyalty.toNumber(),
+      0,
+      "Paid loyalty should be updated"
+    );
+    aliceInitRewardsInfo = aliceFinalRewardsInfo;
+    bobInitRewardsInfo = aliceFinalRewardsInfo;
+    initRewardInfo = finalRewardInfo;
+  });
+
   it("should update loyalty including frozen amount", async function () {});
   it("should finish period properly", async function () {});
   it("should update loyalty during receiving reward", async function () {});
