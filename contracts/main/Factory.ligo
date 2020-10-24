@@ -67,30 +67,34 @@ function getAllowance (const ownerAccount : account_info; const spender : addres
 function updateReward (const s : dex_storage) : dex_storage is
   block {
     (* update rewards info *)
-    s.rewardInfo.totalAccomulatedLoyalty := s.rewardInfo.totalAccomulatedLoyalty + abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier / s.totalSupply;
+    const newLoyalty : nat = abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier;
+    s.rewardInfo.loyaltyPerShare := s.rewardInfo.loyaltyPerShare + newLoyalty / s.totalSupply;
+    s.rewardInfo.totalAccomulatedLoyalty :=  s.rewardInfo.totalAccomulatedLoyalty + newLoyalty; 
     s.rewardInfo.lastUpdateTime := Tezos.now;
 
     (* check reward update*)
-    if Tezos.now > s.rewardInfo.periodFinish then block {
-      s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
+    if Tezos.now > s.rewardInfo.periodFinish and s.rewardInfo.prevAccomulatedLoyalty =/= s.rewardInfo.totalAccomulatedLoyalty then block {
+      s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / abs(s.rewardInfo.totalAccomulatedLoyalty - s.rewardInfo.prevAccomulatedLoyalty);
       s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
       s.rewardInfo.reward := 0n;
+      s.rewardInfo.prevAccomulatedLoyalty := s.rewardInfo.totalAccomulatedLoyalty;
     } else skip;
   } with s
 
 function updateUserReward (const addr : address; const account: account_info; const newBalance: nat; const s : dex_storage) : dex_storage is
   block {
-    (* update user loyalty *)
     var userRewardInfo : user_reward_info := getUserRewardInfo(addr, s);
-    const currentLoyalty : nat = (account.balance + account.frozenBalance) * s.rewardInfo.totalAccomulatedLoyalty;
-    userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
-    userRewardInfo.loyaltyPaid := newBalance * s.rewardInfo.totalAccomulatedLoyalty;
 
     (* update user reward *)
-    const currentReward : nat = s.rewardInfo.totalAccomulatedLoyalty * s.rewardInfo.rewardPerToken;
-    userRewardInfo.reward := userRewardInfo.loyalty + abs(currentReward - userRewardInfo.rewardPaid);
+    const currentReward : nat = s.rewardInfo.loyaltyPerShare * s.rewardInfo.rewardPerToken;
+    userRewardInfo.reward := userRewardInfo.reward + abs(currentReward - userRewardInfo.rewardPaid);
     userRewardInfo.rewardPaid := currentReward;
     s.userRewards[addr] := userRewardInfo;
+
+    (* update user loyalty *)
+    const currentLoyalty : nat = (account.balance + account.frozenBalance) * s.rewardInfo.loyaltyPerShare;
+    userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
+    userRewardInfo.loyaltyPaid := newBalance * s.rewardInfo.loyaltyPerShare;
   } with s
 
 (* Transfer token to another account *)
@@ -209,6 +213,10 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
           s.totalSupply := 1000n; 
 
           (* update rewards info *)
+          s.rewardInfo.loyaltyPerShare := 0n;
+          s.rewardInfo.totalAccomulatedLoyalty := 0n;
+          s.rewardInfo.prevAccomulatedLoyalty := 0n;
+          s.rewardInfo.rewardPerToken := 0n;
           s.rewardInfo.lastUpdateTime := Tezos.now;
           s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
           
@@ -539,7 +547,7 @@ function receiveReward (const p : dexAction; const s : dex_storage; const this :
   
     (* check reward update*)
     if Tezos.now > s.rewardInfo.periodFinish then block {
-      s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.totalAccomulatedLoyalty;
+      s.rewardInfo.rewardPerToken := s.rewardInfo.rewardPerToken + s.rewardInfo.reward * accurancyMultiplier * accurancyMultiplier / s.rewardInfo.loyaltyPerShare;
       s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
       s.rewardInfo.reward := 0n;
       if case s.currentDelegated of
@@ -579,7 +587,7 @@ function withdrawProfit (const p : dexAction; const s : dex_storage; const this 
         s := updateUserReward(Tezos.sender, account, account.balance + account.frozenBalance, s);
 
         var userRewardInfo : user_reward_info := getUserRewardInfo(Tezos.sender, s);
-        const currentReward : nat = s.rewardInfo.totalAccomulatedLoyalty * s.rewardInfo.rewardPerToken;
+        const currentReward : nat = s.rewardInfo.loyaltyPerShare * s.rewardInfo.rewardPerToken;
         const reward : nat = userRewardInfo.loyalty + abs(currentReward - userRewardInfo.rewardPaid);
         userRewardInfo.reward := 0n;
         userRewardInfo.rewardPaid := currentReward;
@@ -596,7 +604,7 @@ function withdrawProfit (const p : dexAction; const s : dex_storage; const this 
 const createDex : createDexFunc =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT 
-#include "CompiledDex.tz"
+#include "Dex.tz"
                   ;
                     PAIR } |}
            : createDexFunc)];
@@ -637,9 +645,11 @@ function launchExchange (const self : address; const token : address; const toke
             rewardInfo = 
               record [
                 reward = 0n;
-                totalAccomulatedLoyalty = 0n;
+                loyaltyPerShare = 0n;
                 lastUpdateTime = Tezos.now;
                 periodFinish = Tezos.now;
+                totalAccomulatedLoyalty = 0n;
+                prevAccomulatedLoyalty = 0n;
                 rewardPerToken = 0n;    
               ];
             userRewards = (big_map [] : big_map(address, user_reward_info));      

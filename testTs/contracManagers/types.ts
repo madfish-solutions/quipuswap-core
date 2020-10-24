@@ -22,7 +22,7 @@ export declare type DexStorage = {
 
 export declare type RewardInfo = {
   reward: BigNumber;
-  totalAccomulatedLoyalty: BigNumber;
+  loyaltyPerShare: BigNumber;
   lastUpdateTime: number;
   periodFinish: number;
   rewardPerToken: BigNumber;

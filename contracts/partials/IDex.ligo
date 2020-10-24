@@ -20,7 +20,9 @@ type user_reward_info is record [
 
 type reward_info is record [
   reward                    : nat;
+  loyaltyPerShare           : nat;
   totalAccomulatedLoyalty   : nat;
+  prevAccomulatedLoyalty    : nat;
   lastUpdateTime            : timestamp;
   periodFinish              : timestamp;
   rewardPerToken            : nat;

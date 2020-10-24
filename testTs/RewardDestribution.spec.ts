@@ -17,12 +17,10 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let carolAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await Tezos.signer.publicKeyHash();
     await context.updateActor();
 
-    let delegate = carolAddress;
-    let value = 50;
-
+    let value = 0;
     // store prev balances
     let aliceAddress = await Tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
@@ -38,10 +36,13 @@ contract("RewardDestribution()", function () {
       loyaltyPaid: new BigNumber(0),
     };
     let initRewardInfo = context.pairs[0].storage.rewardInfo;
+    let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
+      aliceAddress
+    ].balance;
 
     // check initial state
     strictEqual(
-      initRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      initRewardInfo.loyaltyPerShare.toNumber(),
       aliceInitRewardsInfo.loyalty.toNumber(),
       "User and total loyalty mismatch"
     );
@@ -53,7 +54,7 @@ contract("RewardDestribution()", function () {
 
     for (let i = 0; i < 10; i++) {
       // vote
-      await context.pairs[0].vote(aliceAddress, delegate, value);
+      await context.pairs[0].transfer(aliceAddress, bobAddress, value);
 
       // checks
       await context.pairs[0].updateStorage({
@@ -72,20 +73,15 @@ contract("RewardDestribution()", function () {
 
       // checks
       strictEqual(
-        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
-        aliceFinalRewardsInfo.loyalty.toNumber(),
+        finalRewardInfo.loyaltyPerShare.toNumber(),
+        aliceFinalRewardsInfo.loyalty.toNumber() /
+          aliceInitTokenBalance.toNumber(),
         "Total and Alice loyalty mismatch"
       );
-      console.log(aliceFinalRewardsInfo.loyaltyPaid.toNumber());
-      console.log(finalRewardInfo.totalAccomulatedLoyalty.toNumber());
       strictEqual(
         aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
-        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
-        "Paid loyalty should be updated"
-      );
-      strictEqual(
-        aliceFinalRewardsInfo.loyalty.toNumber(),
-        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+        aliceInitTokenBalance.toNumber() *
+          finalRewardInfo.loyaltyPerShare.toNumber(),
         "Paid loyalty should be updated"
       );
       aliceInitRewardsInfo = aliceFinalRewardsInfo;
@@ -172,7 +168,7 @@ contract("RewardDestribution()", function () {
 
     // checks
     strictEqual(
-      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      finalRewardInfo.loyaltyPerShare.toNumber(),
       aliceFinalRewardsInfo.loyalty.toNumber() /
         aliceInitTokenBalance.toNumber() +
         bobFinalRewardsInfo.loyalty.toNumber(),
@@ -181,19 +177,19 @@ contract("RewardDestribution()", function () {
     strictEqual(
       aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
       aliceFinalTokenBalance.toNumber() *
-        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+        finalRewardInfo.loyaltyPerShare.toNumber(),
       "Alice paid loyalty should be updated"
     );
     strictEqual(
       bobFinalRewardsInfo.loyaltyPaid.toNumber(),
       bobFinalTokenBalance.toNumber() *
-        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+        finalRewardInfo.loyaltyPerShare.toNumber(),
       "Bob paid loyalty should be updated"
     );
     strictEqual(
       aliceFinalRewardsInfo.loyalty.toNumber(),
       aliceInitTokenBalance.toNumber() *
-        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+        finalRewardInfo.loyaltyPerShare.toNumber(),
       "Paid loyalty should be updated"
     );
     strictEqual(
