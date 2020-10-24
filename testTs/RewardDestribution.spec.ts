@@ -10,7 +10,7 @@ contract("RewardDestribution()", function () {
     context = await Context.init([]);
   });
 
-  it("should distribute loyalty during the one epoch", async function () {
+  it.only("should distribute loyalty during the one epoch", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -21,96 +21,80 @@ contract("RewardDestribution()", function () {
     await context.updateActor();
 
     let delegate = carolAddress;
-    let value = 500;
+    let value = 50;
 
     // store prev balances
     let aliceAddress = await Tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      voters: [aliceAddress],
-      votes: [delegate],
+      userRewards: [aliceAddress],
     });
-    let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-    };
-    let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
-      balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceInitCandidateVotes =
-      context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
-
-    // vote
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      votes: [delegate],
-    });
-    let aliceFinalVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-    };
-    let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
+    let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
       aliceAddress
     ] || {
-      balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
-      allowances: {},
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
     };
-    let aliceFinalCandidateVotes =
-      context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
 
-    // 1. tokens frozen
+    // check initial state
     strictEqual(
-      aliceFinalSharesInfo.balance.toNumber(),
-      aliceInitSharesInfo.balance.toNumber() - value,
-      "Tokens not removed"
+      initRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      aliceInitRewardsInfo.loyalty.toNumber(),
+      "User and total loyalty mismatch"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() + value,
-      "Tokens not frozen"
+      aliceInitRewardsInfo.loyaltyPaid.toNumber(),
+      0,
+      "Paid loyalty shouldn't appear before update"
     );
 
-    // 2. voter info updated
-    strictEqual(
-      aliceFinalVoteInfo.candidate,
-      delegate,
-      "User candidate wasn't updated"
-    );
-    strictEqual(
-      aliceFinalVoteInfo.vote.toNumber(),
-      value,
-      "User vote wasn't updated"
-    );
+    for (let i = 0; i < 10; i++) {
+      // vote
+      await context.pairs[0].vote(aliceAddress, delegate, value);
 
-    // 3. votes added
-    strictEqual(
-      aliceFinalCandidateVotes.toNumber(),
-      aliceInitCandidateVotes.toNumber() + value,
-      "Candidate didn't receive tokens"
-    );
+      // checks
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress],
+        voters: [aliceAddress],
+        votes: [delegate],
+      });
+      let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+        aliceAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+      let finalRewardInfo = context.pairs[0].storage.rewardInfo;
 
-    // 4. global state updated
-    strictEqual(
-      initVotes.toNumber() + value,
-      finalVotes.toNumber(),
-      "Total votes weren't updated"
-    );
-    strictEqual(finalCurrentCandidate, delegate, "Candidate wasn't updated");
+      // checks
+      strictEqual(
+        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+        aliceFinalRewardsInfo.loyalty.toNumber(),
+        "loyaltyPaid"
+      );
+      strictEqual(
+        aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
+        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+        "Paid loyalty should be updated"
+      );
+      strictEqual(
+        aliceFinalRewardsInfo.loyalty.toNumber(),
+        finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+        "Paid loyalty should be updated"
+      );
+      aliceInitRewardsInfo = aliceFinalRewardsInfo;
+      initRewardInfo = finalRewardInfo;
+    }
   });
 
+  it("should distribute loyalty during the one epoch to many users", async function () {});
   it("should distribute loyalty during the few epoches", async function () {});
+  it("should distribute loyalty during the few epoches to many users", async function () {});
   it("should update loyalty during transfer", async function () {});
   it("should update loyalty including frozen amount", async function () {});
   it("should finish period properly", async function () {});

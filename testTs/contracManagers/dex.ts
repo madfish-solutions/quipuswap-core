@@ -28,6 +28,7 @@ export class Dex extends TokenFA12 {
       voters?: string[];
       vetos?: string[];
       votes?: string[];
+      userRewards?: string[];
     } = {}
   ): Promise<void> {
     const storage: any = await this.contract.storage();
