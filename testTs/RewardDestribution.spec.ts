@@ -10,7 +10,7 @@ contract("RewardDestribution()", function () {
     context = await Context.init([]);
   });
 
-  it("should distribute loyalty during the one epoch", async function () {
+  it("should distribute loyalty to one user", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -85,7 +85,7 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it.only("should distribute loyalty during the one epoch to many users", async function () {
+  it("should distribute loyalty to many users", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -207,30 +207,99 @@ contract("RewardDestribution()", function () {
 
     let rewardInfoAfterA2BTransfer = context.pairs[0].storage.rewardInfo;
 
-    // check total loyalty
+    let accomulatedLoyaltyAfterCarolInvestment = new BigNumber(
+      1e15
+    ).multipliedBy(
+      Math.floor(
+        (Date.parse(rewardInfoAfterA2BTransfer.lastUpdateTime) -
+          Date.parse(rewardInfoAfterCarolInvestment.lastUpdateTime)) /
+          1000
+      )
+    );
+
+    // check loyalty per share
     ok(
       rewardInfoAfterA2BTransfer.loyaltyPerShare
         .minus(rewardInfoAfterCarolInvestment.loyaltyPerShare)
         .eq(
-          new BigNumber(1e15)
-            .multipliedBy(
-              Math.floor(
-                (Date.parse(rewardInfoAfterA2BTransfer.lastUpdateTime) -
-                  Date.parse(rewardInfoAfterCarolInvestment.lastUpdateTime)) /
-                  1000
-              )
-            )
+          accomulatedLoyaltyAfterCarolInvestment
             .div(context.pairs[0].storage.totalSupply)
             .integerValue(BigNumber.ROUND_DOWN)
         ),
-      "Total and Alice loyalty mismatch"
+      "Loyalty per share after Carol investment is wrong"
+    );
+    // check accomulated loyalty
+    ok(
+      rewardInfoAfterA2BTransfer.totalAccomulatedLoyalty
+        .minus(rewardInfoAfterCarolInvestment.totalAccomulatedLoyalty)
+        .eq(accomulatedLoyaltyAfterCarolInvestment),
+      "Total accomulated loyalty mismatch"
     );
 
-    // check loyalty per share
     // check alice loyalty
+    ok(
+      aliceFinalRewardsInfo.loyalty.eq(
+        aliceInitTokenBalance.multipliedBy(
+          rewardInfoAfterA2BTransfer.loyaltyPerShare
+        )
+      ),
+      "Alice loyalty is wrong"
+    );
+    ok(
+      aliceFinalRewardsInfo.loyalty.gt(
+        aliceInitTokenBalance.multipliedBy(
+          rewardInfoAfterBobInvestment.loyaltyPerShare
+        )
+      ),
+      "Alice loyalty is too small"
+    );
+    ok(
+      aliceFinalRewardsInfo.loyalty.gt(
+        aliceInitTokenBalance.multipliedBy(
+          rewardInfoAfterCarolInvestment.loyaltyPerShare
+        )
+      ),
+      "Alice loyalty is too small"
+    );
+
     // check bob loyalty
+
+    ok(
+      bobRewardsInfoAfterA2BTransfer.loyalty.eq(
+        bobInitTokenBalance
+          .multipliedBy(rewardInfoAfterA2BTransfer.loyaltyPerShare)
+          .minus(bobInitRewardsInfo.loyaltyPaid)
+      ),
+      "Bob loyalty is wrong"
+    );
+    ok(
+      bobRewardsInfoAfterA2BTransfer.loyalty.gt(
+        bobInitTokenBalance
+          .multipliedBy(rewardInfoAfterCarolInvestment.loyaltyPerShare)
+          .minus(bobInitRewardsInfo.loyaltyPaid)
+      ),
+      "Bob loyalty is too small"
+    );
+
     // check alice loyalty paid
+    ok(
+      aliceFinalRewardsInfo.loyaltyPaid.eq(
+        aliceInitTokenBalance.multipliedBy(
+          rewardInfoAfterA2BTransfer.loyaltyPerShare
+        )
+      ),
+      "Alice loyalty paid is wrong"
+    );
+
     // check bob loyalty paid
+    ok(
+      bobRewardsInfoAfterA2BTransfer.loyaltyPaid.eq(
+        bobInitTokenBalance.multipliedBy(
+          rewardInfoAfterA2BTransfer.loyaltyPerShare
+        )
+      ),
+      "Bob loyalty paid is wrong"
+    );
 
     // update Bob and Carol loyalty
     await context.updateActor("bob");
@@ -263,34 +332,83 @@ contract("RewardDestribution()", function () {
 
     let rewardInfoAfterB2CTransfer = context.pairs[0].storage.rewardInfo;
 
-    // // check initial state
-    // strictEqual(
-    //   initRewardInfo.loyaltyPerShare.toNumber(),
-    //   aliceInitRewardsInfo.loyalty.toNumber(),
-    //   "User and total loyalty mismatch"
-    // );
-    // strictEqual(
-    //   aliceInitRewardsInfo.loyaltyPaid.toNumber(),
-    //   0,
-    //   "Paid loyalty shouldn't appear before update"
-    // );
+    // check loyalty per share
+    ok(
+      rewardInfoAfterB2CTransfer.loyaltyPerShare
+        .minus(rewardInfoAfterA2BTransfer.loyaltyPerShare)
+        .eq(
+          accomulatedLoyaltyAfterCarolInvestment
+            .div(context.pairs[0].storage.totalSupply)
+            .integerValue(BigNumber.ROUND_DOWN)
+        ),
+      "Loyalty per share after Carol investment is wrong"
+    );
+    // check accomulated loyalty
+    ok(
+      rewardInfoAfterB2CTransfer.totalAccomulatedLoyalty
+        .minus(rewardInfoAfterA2BTransfer.totalAccomulatedLoyalty)
+        .eq(accomulatedLoyaltyAfterCarolInvestment),
+      "Total accomulated loyalty mismatch"
+    );
 
-    // // checks
-    // strictEqual(
-    //   finalRewardInfo.loyaltyPerShare.toNumber(),
-    //   aliceFinalRewardsInfo.loyalty.toNumber() /
-    //     aliceInitTokenBalance.toNumber(),
-    //   "Total and Alice loyalty mismatch"
-    // );
-    // strictEqual(
-    //   aliceFinalRewardsInfo.loyaltyPaid.toNumber(),
-    //   aliceInitTokenBalance.toNumber() *
-    //     finalRewardInfo.loyaltyPerShare.toNumber(),
-    //   "Paid loyalty should be updated"
-    // );
+    // check Carol loyalty
+    ok(
+      carolFinalRewardsInfo.loyalty.eq(
+        carolInitTokenBalance
+          .multipliedBy(rewardInfoAfterB2CTransfer.loyaltyPerShare)
+          .minus(carolInitRewardsInfo.loyaltyPaid)
+      ),
+      "Carol loyalty is wrong"
+    );
+    ok(
+      carolFinalRewardsInfo.loyalty.gt(
+        carolInitTokenBalance
+          .multipliedBy(rewardInfoAfterA2BTransfer.loyaltyPerShare)
+          .minus(carolInitRewardsInfo.loyaltyPaid)
+      ),
+      "Carol loyalty is too small"
+    );
+
+    // check Bob loyalty
+    ok(
+      bobFinalRewardsInfo.loyalty.eq(
+        bobInitTokenBalance
+          .multipliedBy(rewardInfoAfterB2CTransfer.loyaltyPerShare)
+          .minus(bobInitRewardsInfo.loyaltyPaid)
+      ),
+      "Bob loyalty is wrong"
+    );
+    ok(
+      bobFinalRewardsInfo.loyalty.gt(
+        bobInitTokenBalance
+          .multipliedBy(rewardInfoAfterCarolInvestment.loyaltyPerShare)
+          .minus(bobInitRewardsInfo.loyaltyPaid)
+      ),
+      "Bob loyalty is too small"
+    );
+
+    // check carol loyalty paid
+    ok(
+      carolFinalRewardsInfo.loyaltyPaid.eq(
+        carolInitTokenBalance.multipliedBy(
+          rewardInfoAfterB2CTransfer.loyaltyPerShare
+        )
+      ),
+      "Carol loyalty paid is wrong"
+    );
+
+    // check bob loyalty paid
+    ok(
+      bobFinalRewardsInfo.loyaltyPaid.eq(
+        bobInitTokenBalance.multipliedBy(
+          rewardInfoAfterB2CTransfer.loyaltyPerShare
+        )
+      ),
+      "Bob loyalty paid is wrong"
+    );
   });
 
-  it("should distribute loyalty during the few epoches", async function () {
+  it.only("should distribute loyalty during the few epoches", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -323,7 +441,8 @@ contract("RewardDestribution()", function () {
       ].balance;
       let timeLeft =
         Date.parse(initRewardInfo.periodFinish) -
-        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp);
+        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        1;
       if (timeLeft > 0) {
         await new Promise((r) => setTimeout(r, timeLeft));
       }
@@ -353,7 +472,7 @@ contract("RewardDestribution()", function () {
           aliceInitTokenBalance.toNumber(),
         "Total and Alice loyalty mismatch"
       );
-      strictEqual(
+      notStrictEqual(
         finalRewardInfo.periodFinish,
         initRewardInfo.periodFinish,
         "The period is the same"
@@ -366,8 +485,6 @@ contract("RewardDestribution()", function () {
       );
     }
   });
-
-  it("should distribute loyalty during the few epoches to many users", async function () {});
 
   it("should update loyalty during transfer", async function () {
     // reset pairs
@@ -479,9 +596,181 @@ contract("RewardDestribution()", function () {
     initRewardInfo = finalRewardInfo;
   });
 
-  it("should update loyalty including frozen amount", async function () {});
+  it("should update loyalty including frozen amount", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get gelegate address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 100;
+    // store prev balances
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
+    let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
+      aliceAddress
+    ].balance;
+
+    // check initial state
+    strictEqual(
+      initRewardInfo.loyaltyPerShare.toNumber(),
+      aliceInitRewardsInfo.loyalty.toNumber(),
+      "User and total loyalty mismatch"
+    );
+    strictEqual(
+      aliceInitRewardsInfo.loyaltyPaid.toNumber(),
+      0,
+      "Paid loyalty shouldn't appear before update"
+    );
+
+    // vote
+    await context.pairs[0].vote(aliceAddress, bobAddress, value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // check loyalty per share
+    let accomulatedLoyaltyAfterVoting = new BigNumber(1e15).multipliedBy(
+      Math.floor(
+        (Date.parse(finalRewardInfo.lastUpdateTime) -
+          Date.parse(initRewardInfo.lastUpdateTime)) /
+          1000
+      )
+    );
+    ok(
+      finalRewardInfo.loyaltyPerShare
+        .minus(initRewardInfo.loyaltyPerShare)
+        .eq(
+          accomulatedLoyaltyAfterVoting
+            .div(context.pairs[0].storage.totalSupply)
+            .integerValue(BigNumber.ROUND_DOWN)
+        ),
+      "Loyalty per share after voting is wrong"
+    );
+    // check accomulated loyalty
+    ok(
+      finalRewardInfo.totalAccomulatedLoyalty
+        .minus(initRewardInfo.totalAccomulatedLoyalty)
+        .eq(accomulatedLoyaltyAfterVoting),
+      "Total accomulated loyalty mismatch"
+    );
+
+    // check alice loyalty
+    ok(
+      aliceFinalRewardsInfo.loyalty.eq(
+        aliceInitTokenBalance.multipliedBy(finalRewardInfo.loyaltyPerShare)
+      ),
+      "Alice loyalty is wrong"
+    );
+
+    // check alice loyalty paid
+    ok(
+      aliceFinalRewardsInfo.loyaltyPaid.eq(
+        aliceInitTokenBalance.multipliedBy(finalRewardInfo.loyaltyPerShare)
+      ),
+      "Alice loyalty paid is wrong"
+    );
+  });
+
+  it.only("should update loyalty during receiving reward", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    let value = 1000;
+    // store prev balances
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
+    let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
+      aliceAddress
+    ].balance;
+
+    // trnsfer
+    await context.pairs[0].sendReward(value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+    let accomulatedLoyalty = new BigNumber(1e15).multipliedBy(
+      Math.floor(
+        (Date.parse(finalRewardInfo.lastUpdateTime) -
+          Date.parse(initRewardInfo.lastUpdateTime)) /
+          1000
+      )
+    );
+
+    // checks
+    strictEqual(
+      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      accomulatedLoyalty.toNumber(),
+      "Total accomulated loyalty is wrong"
+    );
+    strictEqual(
+      finalRewardInfo.reward.toNumber(),
+      value,
+      "Total accomulated loyalty is wrong"
+    );
+    strictEqual(
+      finalRewardInfo.loyaltyPerShare.toNumber(),
+      accomulatedLoyalty.toNumber() /
+        context.pairs[0].storage.totalSupply.toNumber(),
+      "Loyalty per share isn't calculated properly"
+    );
+  });
+
   it("should finish period properly", async function () {});
-  it("should update loyalty during receiving reward", async function () {});
+
+  it("shouldn't update finish period before the time", async function () {});
   it("should distribute reward during the one epoch", async function () {});
   it("should distribute reward during the few epoches", async function () {});
   it("should work if no reward send per epoch", async function () {});
