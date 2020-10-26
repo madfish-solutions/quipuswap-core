@@ -226,7 +226,7 @@ export class Dex extends TokenFA12 {
     return operation;
   }
 
-  async withdrawProfit(receiver: number): Promise<TransactionOperation> {
+  async withdrawProfit(receiver: string): Promise<TransactionOperation> {
     const operation = await this.contract.methods
       .use(3, "withdrawProfit", receiver)
       .send();

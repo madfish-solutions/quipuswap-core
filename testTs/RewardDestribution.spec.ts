@@ -2,6 +2,7 @@ import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
+import { calculateFee } from "./contracManagers/utils";
 
 async function bakeBlocks(count: number) {
   for (let i = 0; i < count; i++) {
@@ -1009,20 +1010,14 @@ contract("RewardDestribution()", function () {
       console.log();
 
       // checks
-      // strictEqual(
-      //   finalRewardInfo.loyaltyPerShare.toNumber(),
-      //   aliceFinalRewardsInfo.loyalty.toNumber() /
-      //     aliceInitTokenBalance.toNumber(),
-      //   "Total and Alice loyalty mismatch"
-      // );
-      // notStrictEqual(
-      //   finalRewardInfo.periodFinish,
-      //   initRewardInfo.periodFinish,
-      //   "The period is the same"
-      // );
+      strictEqual(
+        aliceFinalRewardsInfo.rewardPaid.toNumber(),
+        new BigNumber(1e15).multipliedBy(1000 * i).toNumber(),
+        "Alice reward paid mismatch"
+      );
       strictEqual(
         aliceFinalRewardsInfo.reward.toNumber(),
-        new BigNumber(1e15).multipliedBy(1000 * i * (1 + i)).toNumber(),
+        new BigNumber(1e15).multipliedBy((1000 * i * (1 + i)) / 2).toNumber(),
         "Alice reward should be updated"
       );
     }
@@ -1125,7 +1120,91 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it("should force reward epoch update", async function () {});
+  it("should withdraw reward", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get gelegate address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 0;
+
+    for (let i = 0; i < 3; i++) {
+      // store prev balances
+      let aliceAddress = await Tezos.signer.publicKeyHash();
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress],
+        userRewards: [aliceAddress],
+      });
+      let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
+        aliceAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+      let initRewardInfo = context.pairs[0].storage.rewardInfo;
+      let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
+        aliceAddress
+      ].balance;
+      let timeLeft =
+        Date.parse(initRewardInfo.periodFinish) -
+        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        1;
+      if (timeLeft > 0) {
+        // transfer
+        await context.pairs[0].sendReward(1000 * i);
+        console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+        await bakeBlocks(timeLeft / 1000);
+      }
+      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+      console.log(Date.parse(initRewardInfo.periodFinish));
+
+      // transfer
+      await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+      // checks
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress],
+        userRewards: [aliceAddress],
+      });
+      let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+        aliceAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+      let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+      console.log(Date.parse(finalRewardInfo.periodFinish));
+      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+      console.log();
+
+      strictEqual(
+        aliceFinalRewardsInfo.reward.toNumber(),
+        new BigNumber(1e15).multipliedBy(1000 * i).toNumber(),
+        "Alice reward should be updated"
+      );
+
+      // check withdraw
+      let aliceInitTezBalance = await Tezos.tz.getBalance(aliceAddress);
+      let operations = await context.pairs[0].withdrawProfit(aliceAddress);
+      let fees = calculateFee([operations], aliceAddress);
+      let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
+      strictEqual(
+        aliceInitTezBalance.toNumber() - fees + 1000 * i,
+        aliceFinalTezBalance.toNumber(),
+        "Alice tez balance should be updated"
+      );
+    }
+  });
+
+  it("should update reward for few users", async function () {});
 });
 
 // TODO: check loyalty test with ALice
