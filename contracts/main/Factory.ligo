@@ -70,7 +70,7 @@ function updateReward (const s : dex_storage) : dex_storage is
     (* update rewards info *)
     const newLoyalty : nat = abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier;
     s.rewardInfo.loyaltyPerShare := s.rewardInfo.loyaltyPerShare + newLoyalty / s.totalSupply;
-    s.rewardInfo.                                                                                                                                                                                                                                                              :=  s.rewardInfo.totalAccomulatedLoyalty + newLoyalty; 
+    s.rewardInfo.totalAccomulatedLoyalty :=  s.rewardInfo.totalAccomulatedLoyalty + newLoyalty; 
     s.rewardInfo.lastUpdateTime := Tezos.now;
 
     (* check reward update*)
