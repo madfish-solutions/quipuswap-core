@@ -454,11 +454,8 @@ contract("RewardDestribution()", function () {
         Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
         1;
       if (timeLeft > 0) {
-        console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
         await bakeBlocks(timeLeft / 1000);
       }
-      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
-      console.log(Date.parse(initRewardInfo.periodFinish));
 
       // transfer
       await context.pairs[0].transfer(aliceAddress, bobAddress, value);
@@ -477,9 +474,6 @@ contract("RewardDestribution()", function () {
         loyaltyPaid: new BigNumber(0),
       };
       let finalRewardInfo = context.pairs[0].storage.rewardInfo;
-      console.log(Date.parse(finalRewardInfo.periodFinish));
-      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
-      console.log();
 
       // checks
       strictEqual(
@@ -768,18 +762,17 @@ contract("RewardDestribution()", function () {
     // checks
     strictEqual(
       finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
-      accomulatedLoyalty.toNumber(),
+      0,
       "Total accomulated loyalty is wrong"
     );
     strictEqual(
       finalRewardInfo.reward.toNumber(),
       value,
-      "Total accomulated loyalty is wrong"
+      "Total reward is wrong"
     );
     strictEqual(
       finalRewardInfo.loyaltyPerShare.toNumber(),
-      accomulatedLoyalty.toNumber() /
-        context.pairs[0].storage.totalSupply.toNumber(),
+      0,
       "Loyalty per share isn't calculated properly"
     );
   });
@@ -850,7 +843,7 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it.only("should distribute reward to the only liquidity provider", async function () {
+  it("should distribute reward to the only liquidity provider", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -950,7 +943,90 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it("should distribute reward during the few epoches", async function () {});
+  it.only("should distribute reward during the few epoches", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get gelegate address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 0;
+
+    for (let i = 0; i < 3; i++) {
+      // store prev balances
+      let aliceAddress = await Tezos.signer.publicKeyHash();
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress],
+        userRewards: [aliceAddress],
+      });
+      let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
+        aliceAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+      let initRewardInfo = context.pairs[0].storage.rewardInfo;
+      let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
+        aliceAddress
+      ].balance;
+      let timeLeft =
+        Date.parse(initRewardInfo.periodFinish) -
+        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        1;
+      if (timeLeft > 0) {
+        // transfer
+        await context.pairs[0].sendReward(1000 * i);
+        console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+        await bakeBlocks(timeLeft / 1000);
+      }
+      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+      console.log(Date.parse(initRewardInfo.periodFinish));
+
+      // transfer
+      await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+      // checks
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress],
+        userRewards: [aliceAddress],
+      });
+      let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+        aliceAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+      let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+      console.log(Date.parse(finalRewardInfo.periodFinish));
+      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+      console.log();
+
+      // checks
+      // strictEqual(
+      //   finalRewardInfo.loyaltyPerShare.toNumber(),
+      //   aliceFinalRewardsInfo.loyalty.toNumber() /
+      //     aliceInitTokenBalance.toNumber(),
+      //   "Total and Alice loyalty mismatch"
+      // );
+      // notStrictEqual(
+      //   finalRewardInfo.periodFinish,
+      //   initRewardInfo.periodFinish,
+      //   "The period is the same"
+      // );
+      strictEqual(
+        aliceFinalRewardsInfo.reward.toNumber(),
+        new BigNumber(1e15).multipliedBy(1000 * i * (1 + i)).toNumber(),
+        "Alice reward should be updated"
+      );
+    }
+  });
 
   it("should work if no reward send per epoch", async function () {
     // reset pairs
@@ -1051,3 +1127,5 @@ contract("RewardDestribution()", function () {
 
   it("should force reward epoch update", async function () {});
 });
+
+// TODO: check loyalty test with ALice
