@@ -16,15 +16,17 @@ type user_reward_info is record [
   rewardPaid    : nat;
   loyalty       : nat;
   loyaltyPaid   : nat;
+  updateTime    : timestamp;
 ]
 
 type reward_info is record [
   reward                    : nat;
   loyaltyPerShare           : nat;
   totalAccomulatedLoyalty   : nat;
-  prevAccomulatedLoyalty    : nat;
   lastUpdateTime            : timestamp;
+  lastPeriodFinish          : timestamp;
   periodFinish              : timestamp;
+  lastLoyaltyPerShare       : nat;
   rewardPerToken            : nat;
 ]
 
@@ -33,7 +35,6 @@ type dex_storage is record [
   tokenPool         : nat;
   invariant         : nat;
   tokenAddress      : address;
-  factoryAddress    : address;
   totalSupply       : nat;
   ledger            : big_map(address, account_info);
   voters            : big_map(address, vote_info);

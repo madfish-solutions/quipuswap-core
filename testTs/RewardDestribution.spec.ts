@@ -2,8 +2,15 @@ import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+
+async function bakeBlocks(count: number) {
+  for (let i = 0; i < count; i++) {
+    let operation = await Tezos.contract.transfer({
+      to: await Tezos.signer.publicKeyHash(),
+      amount: 1,
+    });
+    await operation.confirmation();
+  }
 }
 
 contract("RewardDestribution()", function () {
@@ -411,7 +418,7 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it.only("should distribute loyalty during the few epoches", async function () {
+  it("should distribute loyalty during the few epoches", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -423,7 +430,7 @@ contract("RewardDestribution()", function () {
 
     let value = 0;
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 3; i++) {
       // store prev balances
       let aliceAddress = await Tezos.signer.publicKeyHash();
       await context.pairs[0].updateStorage({
@@ -448,7 +455,7 @@ contract("RewardDestribution()", function () {
         1;
       if (timeLeft > 0) {
         console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
-        await sleep(timeLeft);
+        await bakeBlocks(timeLeft / 1000);
       }
       console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
       console.log(Date.parse(initRewardInfo.periodFinish));
@@ -708,7 +715,7 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it.only("should update loyalty during receiving reward", async function () {
+  it("should update loyalty during receiving reward", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -821,7 +828,7 @@ contract("RewardDestribution()", function () {
     let value = 0;
     let aliceAddress = await Tezos.signer.publicKeyHash();
 
-    // trnsfer to update the period
+    // transfer to update the period
     await context.pairs[0].transfer(aliceAddress, bobAddress, value);
 
     // store prev balances
@@ -843,11 +850,204 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it("should distribute reward during the one epoch", async function () {});
+  it.only("should distribute reward to the only liquidity provider", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get receiver address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 0;
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+
+    // transfer to update the period
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    value = 1000;
+    // store prev balances
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
+    let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
+      aliceAddress
+    ].balance;
+
+    // trnsfer
+    await context.pairs[0].sendReward(value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceMiddleRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let middleRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // checks
+    strictEqual(
+      middleRewardInfo.reward.toNumber(),
+      value,
+      "The reward is wrong"
+    );
+    strictEqual(
+      middleRewardInfo.rewardPerToken.toNumber(),
+      0,
+      "Reward per token shouldn't be accomulated"
+    );
+
+    // update user reward
+    let timeLeft =
+      Date.parse(initRewardInfo.periodFinish) -
+      Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+      1;
+    if (timeLeft > 0) {
+      await bakeBlocks(timeLeft / 1000);
+    }
+
+    // transfer
+    await context.pairs[0].transfer(aliceAddress, bobAddress, 0);
+
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // checks
+    strictEqual(finalRewardInfo.reward.toNumber(), 0, "The reward is wrong");
+    strictEqual(
+      new BigNumber(1e15).multipliedBy(value).toNumber(),
+      aliceFinalRewardsInfo.reward.toNumber(),
+      "Alice reward should be accomulated"
+    );
+  });
 
   it("should distribute reward during the few epoches", async function () {});
 
-  it("should work if no reward send per epoch", async function () {});
+  it("should work if no reward send per epoch", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get receiver address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 0;
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+
+    // transfer to update the period
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    value = 0;
+    // store prev balances
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
+    let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
+      aliceAddress
+    ].balance;
+
+    // trnsfer
+    await context.pairs[0].sendReward(value);
+
+    // checks
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let middleRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // checks
+    strictEqual(
+      middleRewardInfo.reward.toNumber(),
+      value,
+      "The reward is wrong"
+    );
+    strictEqual(
+      middleRewardInfo.rewardPerToken.toNumber(),
+      0,
+      "Reward per token shouldn't be accomulated"
+    );
+
+    // update user reward
+    let timeLeft =
+      Date.parse(initRewardInfo.periodFinish) -
+      Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+      1;
+    if (timeLeft > 0) {
+      await bakeBlocks(timeLeft / 1000);
+    }
+
+    // transfer
+    await context.pairs[0].transfer(aliceAddress, bobAddress, 0);
+
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress],
+      userRewards: [aliceAddress],
+    });
+    let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+      aliceAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
+    let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // checks
+    strictEqual(finalRewardInfo.reward.toNumber(), 0, "The reward is wrong");
+    strictEqual(
+      aliceFinalRewardsInfo.reward.toNumber(),
+      0,
+      "Alice reward shouldn't be accomulated"
+    );
+    strictEqual(
+      finalRewardInfo.rewardPerToken.toNumber(),
+      0,
+      "Reward per token shouldn't be accomulated"
+    );
+  });
 
   it("should force reward epoch update", async function () {});
 });
