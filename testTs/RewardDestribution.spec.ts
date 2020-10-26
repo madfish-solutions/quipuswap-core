@@ -2,6 +2,9 @@ import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 contract("RewardDestribution()", function () {
   let context: Context;
@@ -444,8 +447,11 @@ contract("RewardDestribution()", function () {
         Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
         1;
       if (timeLeft > 0) {
-        await new Promise((r) => setTimeout(r, timeLeft));
+        console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+        await sleep(timeLeft);
       }
+      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+      console.log(Date.parse(initRewardInfo.periodFinish));
 
       // transfer
       await context.pairs[0].transfer(aliceAddress, bobAddress, value);
@@ -464,6 +470,9 @@ contract("RewardDestribution()", function () {
         loyaltyPaid: new BigNumber(0),
       };
       let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+      console.log(Date.parse(finalRewardInfo.periodFinish));
+      console.log(Date.parse((await Tezos.rpc.getBlockHeader()).timestamp));
+      console.log();
 
       // checks
       strictEqual(
@@ -768,11 +777,77 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it("should finish period properly", async function () {});
+  it("should finish period properly", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
 
-  it("shouldn't update finish period before the time", async function () {});
+    // get gelegate address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 0;
+    // store prev balances
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].updateStorage({});
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // trnsfer
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    // checks
+    await context.pairs[0].updateStorage({});
+    let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // checks
+    notStrictEqual(
+      finalRewardInfo.periodFinish,
+      initRewardInfo.periodFinish,
+      "Period finish should be updated"
+    );
+  });
+
+  it("shouldn't update finish period before the time", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    // get gelegate address
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    await context.updateActor();
+
+    let value = 0;
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+
+    // trnsfer to update the period
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    // store prev balances
+    await context.pairs[0].updateStorage({});
+    let initRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // trnsfer
+    await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+    // checks
+    await context.pairs[0].updateStorage({});
+    let finalRewardInfo = context.pairs[0].storage.rewardInfo;
+
+    // checks
+    strictEqual(
+      finalRewardInfo.periodFinish,
+      initRewardInfo.periodFinish,
+      "Period finish shouldn't be updated"
+    );
+  });
+
   it("should distribute reward during the one epoch", async function () {});
+
   it("should distribute reward during the few epoches", async function () {});
+
   it("should work if no reward send per epoch", async function () {});
+
   it("should force reward epoch update", async function () {});
 });
