@@ -108,7 +108,6 @@ export class Context {
       },
     ];
     for (let dexFunction of dexFunctions) {
-      console.log(dexFunction);
       await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
     }
     await this.factory.updateStorage({
@@ -140,7 +139,6 @@ export class Context {
       },
     ];
     for (let tokenFunction of tokenFunctions) {
-      console.log(tokenFunction);
       await this.factory.setTokenFunction(
         tokenFunction.index,
         tokenFunction.name

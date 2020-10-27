@@ -32,7 +32,7 @@ type exchangeAction is
 | SetDexFunction of setDexFunctionParams
 | SetTokenFunction of setTokenFunctionParams
 
-const votingPeriod : int = 10; // 1474560
+const votingPeriod : int = 10; // 2592000
 const accurancyMultiplier : nat = 1000000000000000n;
 const vetoPeriod : int = 7889229;
 const feeRate : nat = 333n;

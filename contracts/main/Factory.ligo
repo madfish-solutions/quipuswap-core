@@ -66,9 +66,8 @@ function getAllowance (const ownerAccount : account_info; const spender : addres
   end;
 
 (* Helper function to update global rewards info *)
-function updateReward (const s : dex_storage) : return is
+function updateReward (const s : dex_storage) : dex_storage is
   block {
-    var operations : list(operation) := list[];
     (* update rewards info *)
     const newLoyalty : nat = abs(Tezos.now - s.rewardInfo.lastUpdateTime) * accurancyMultiplier;
     s.rewardInfo.loyaltyPerShare := s.rewardInfo.loyaltyPerShare + newLoyalty / s.totalSupply;
@@ -82,22 +81,8 @@ function updateReward (const s : dex_storage) : return is
       s.rewardInfo.lastPeriodFinish := Tezos.now;
       s.rewardInfo.periodFinish := Tezos.now + votingPeriod;
       s.rewardInfo.reward := 0n;
-
-      if case s.currentDelegated of
-        | None -> case s.currentCandidate of
-          | None -> False
-          | Some(c) -> True
-          end
-        | Some(current) -> case s.currentCandidate of
-          | None -> True
-          | Some(next) -> current =/= next
-          end
-      end then {
-        s.currentDelegated := s.currentCandidate;
-        operations := set_delegate(s.currentDelegated) # operations;
-      } else skip;
     } else skip;
-  } with (operations, s)
+  } with s
 
 (* Helper function to update user rewards info *)
 function updateUserReward (const addr : address; const account: account_info; const newBalance: nat; const s : dex_storage) : dex_storage is
@@ -130,9 +115,7 @@ function transfer (const p : tokenAction; const s : dex_storage) : return is
     var operations: list(operation) := list[];
     case p of
     | ITransfer(params) -> {
-      const res : return = updateReward(s);
-      operations := res.0;
-      s := res.1;
+      s := updateReward(s);
 
       const value : nat = params.1.1;
       if params.0 = params.1.0 then
@@ -273,6 +256,7 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
 (* Vote for the baker by freezing shares *)
 function vote (const p : dexAction; const s : dex_storage; const this: address) :  return is
   block {
+    var operations: list(operation) := list[];
     case p of
       | InitializeExchange(tokenAmount) -> failwith("00")
       | TezToTokenPayment(n) -> failwith("00")
@@ -333,13 +317,27 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
               end then 
                 s.currentCandidate := Some(args.candidate);
             else skip;
+
+            if case s.currentDelegated of
+              | None -> case s.currentCandidate of
+                | None -> False
+                | Some(c) -> True
+                end
+              | Some(current) -> case s.currentCandidate of
+                | None -> True
+                | Some(next) -> current =/= next
+                end
+            end then {
+              s.currentDelegated := s.currentCandidate;
+              operations := set_delegate(s.currentDelegated) # operations;
+            } else skip;
         }
         end
       }
       | Veto(n) -> failwith("00")
       | WithdrawProfit(n) -> failwith("00")
     end
-  } with ((nil:list(operation)), s)
+  } with (operations, s)
 
 (* Vote for veto the current delegated baker by freezing shares *)
 function veto (const p : dexAction; const s : dex_storage; const this: address) : return is
@@ -488,9 +486,7 @@ function investLiquidity (const p : dexAction; const s : dex_storage; const this
         if minShares > 0n and sharesPurchased >= minShares then 
           skip 
         else failwith("Dex/wrong-params");
-        const res : return = updateReward(s);
-        operations := res.0;
-        s := res.1;
+        s := updateReward(s);
 
         const tokensRequired : nat = sharesPurchased * s.tokenPool / s.totalSupply;
         if tokensRequired = 0n then failwith("Dex/dangerous-rate") else {
@@ -531,9 +527,7 @@ function divestLiquidity (const p : dexAction; const s : dex_storage; const this
         var account : account_info := getAccount(Tezos.sender, s);
         const share : nat = account.balance;
         if args.shares > 0n and args.shares <= share then block {
-          const res : return = updateReward(s);
-          operations := res.0;
-          s := res.1;
+          s := updateReward(s);
 
           s := updateUserReward(Tezos.sender, account, abs(share - args.shares) + account.frozenBalance,s);
 
@@ -587,11 +581,10 @@ function getAllowance (const p : tokenAction; const s : dex_storage) : return is
 (* The default method to be called when no entrypoint is chosen *)
 function receiveReward (const p : dexAction; const s : dex_storage; const this : address) : return is 
   block {
-    const res : return = updateReward(s);
-    s := res.1;
+    s := updateReward(s);
   
     s.rewardInfo.reward := s.rewardInfo.reward + Tezos.amount / 1mutez;
-  } with (res.0, s)
+  } with ((nil : list(operation)), s)
 
 (* Withdraw reward from baker *)
 function withdrawProfit (const p : dexAction; const s : dex_storage; const this : address) : return is
@@ -609,9 +602,7 @@ function withdrawProfit (const p : dexAction; const s : dex_storage; const this 
         var account : account_info := getAccount(Tezos.sender, s);
         const share : nat = account.balance;
 
-        const res : return = updateReward(s);
-        operations := res.0;
-        s := res.1;
+        s := updateReward(s);
 
         s := updateUserReward(Tezos.sender, account, account.balance + account.frozenBalance, s);
 
