@@ -2,6 +2,7 @@ import {
   TezosToolkit,
   ContractAbstraction,
   ContractProvider,
+  Tezos,
 } from "@taquito/taquito";
 import fs = require("fs");
 import path = require("path");
@@ -72,4 +73,14 @@ export function calculateFee(
     }, 0);
     return prev + trxFee + internalFees;
   }, 0);
+}
+
+export async function bakeBlocks(count: number) {
+  for (let i = 0; i < count; i++) {
+    let operation = await Tezos.contract.transfer({
+      to: await Tezos.signer.publicKeyHash(),
+      amount: 1,
+    });
+    await operation.confirmation();
+  }
 }

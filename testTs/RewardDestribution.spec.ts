@@ -2,19 +2,9 @@ import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
-import { calculateFee } from "./contracManagers/utils";
+import { calculateFee, bakeBlocks } from "./contracManagers/utils";
 
-async function bakeBlocks(count: number) {
-  for (let i = 0; i < count; i++) {
-    let operation = await Tezos.contract.transfer({
-      to: await Tezos.signer.publicKeyHash(),
-      amount: 1,
-    });
-    await operation.confirmation();
-  }
-}
-
-contract("RewardDestribution()", function () {
+contract.only("RewardDestribution()", function () {
   let context: Context;
 
   before(async () => {
@@ -82,6 +72,11 @@ contract("RewardDestribution()", function () {
     let finalRewardInfo = context.pairs[0].storage.rewardInfo;
 
     // checks
+    strictEqual(
+      finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
+      aliceFinalRewardsInfo.loyalty.toNumber(),
+      "Total accomulted loyalty and Alice loyalty mismatch"
+    );
     strictEqual(
       finalRewardInfo.loyaltyPerShare.toNumber(),
       aliceFinalRewardsInfo.loyalty.toNumber() /
@@ -1192,7 +1187,7 @@ contract("RewardDestribution()", function () {
     }
   });
 
-  it.only("should update reward for few users", async function () {
+  it("should update reward for few users", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -1205,18 +1200,6 @@ contract("RewardDestribution()", function () {
       ledger: [aliceAddress],
       userRewards: [aliceAddress],
     });
-    let aliceInitRewardsInfo = context.pairs[0].storage.userRewards[
-      aliceAddress
-    ] || {
-      reward: new BigNumber(0),
-      rewardPaid: new BigNumber(0),
-      loyalty: new BigNumber(0),
-      loyaltyPaid: new BigNumber(0),
-    };
-    let initRewardInfo = context.pairs[0].storage.rewardInfo;
-    let aliceInitTokenBalance = await context.pairs[0].storage.ledger[
-      aliceAddress
-    ].balance;
 
     let reward = 1000;
     await context.pairs[0].sendReward(reward);
@@ -1238,17 +1221,6 @@ contract("RewardDestribution()", function () {
       ledger: [bobAddress],
       userRewards: [bobAddress],
     });
-    let bobInitRewardsInfo = context.pairs[0].storage.userRewards[
-      bobAddress
-    ] || {
-      reward: new BigNumber(0),
-      rewardPaid: new BigNumber(0),
-      loyalty: new BigNumber(0),
-      loyaltyPaid: new BigNumber(0),
-    };
-    let rewardInfoAfterBobInvestment = context.pairs[0].storage.rewardInfo;
-    let bobInitTokenBalance = await context.pairs[0].storage.ledger[bobAddress]
-      .balance;
 
     // get shares by Carol
     await context.updateActor("carol");
@@ -1268,18 +1240,7 @@ contract("RewardDestribution()", function () {
       ledger: [carolAddress],
       userRewards: [carolAddress],
     });
-    let carolInitRewardsInfo = context.pairs[0].storage.userRewards[
-      carolAddress
-    ] || {
-      reward: new BigNumber(0),
-      rewardPaid: new BigNumber(0),
-      loyalty: new BigNumber(0),
-      loyaltyPaid: new BigNumber(0),
-    };
     let rewardInfoAfterCarolInvestment = context.pairs[0].storage.rewardInfo;
-    let carolInitTokenBalance = await context.pairs[0].storage.ledger[
-      carolAddress
-    ].balance;
 
     await context.updateActor();
 
@@ -1308,34 +1269,6 @@ contract("RewardDestribution()", function () {
       loyalty: new BigNumber(0),
       loyaltyPaid: new BigNumber(0),
     };
-    console.log(rewardInfoAfterCarolInvestment);
-    console.log(aliceFinalRewardsInfo);
-    let aliceFinalTokenBalance = await context.pairs[0].storage.ledger[
-      aliceAddress
-    ].balance;
-    let bobRewardsInfoAfterA2BTransfer = context.pairs[0].storage.userRewards[
-      bobAddress
-    ] || {
-      reward: new BigNumber(0),
-      rewardPaid: new BigNumber(0),
-      loyalty: new BigNumber(0),
-      loyaltyPaid: new BigNumber(0),
-    };
-    let bobTokenBalanceAfterA2BTransfer = await context.pairs[0].storage.ledger[
-      bobAddress
-    ].balance;
-
-    let rewardInfoAfterA2BTransfer = context.pairs[0].storage.rewardInfo;
-
-    let accomulatedLoyaltyAfterCarolInvestment = new BigNumber(
-      1e15
-    ).multipliedBy(
-      Math.floor(
-        (Date.parse(rewardInfoAfterA2BTransfer.lastUpdateTime) -
-          Date.parse(rewardInfoAfterCarolInvestment.lastUpdateTime)) /
-          1000
-      )
-    );
 
     // update Bob and Carol loyalty
     await context.updateActor("bob");
@@ -1398,6 +1331,130 @@ contract("RewardDestribution()", function () {
       "Total reward is too big"
     );
   });
-});
 
-// TODO: check loyalty test with ALice
+  it("should update reward for few users during few epoches", async function () {
+    // reset pairs
+    await context.flushPairs();
+    await context.createPairs();
+
+    let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].sendReward(0);
+
+    for (let i = 0; i < 3; i++) {
+      let reward = 1000;
+      await context.pairs[0].sendReward(reward);
+
+      // get shares by Bob
+      await context.updateActor("bob");
+      let tezAmount = 1000;
+      let tokenAmount = 100000;
+      let newShares = 100;
+      let bobAddress = await Tezos.signer.publicKeyHash();
+
+      await context.updateActor();
+      await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
+
+      await context.updateActor("bob");
+      await context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares);
+
+      // store updated state
+      await context.pairs[0].updateStorage({
+        ledger: [bobAddress],
+        userRewards: [bobAddress],
+      });
+
+      // get shares by Carol
+      await context.updateActor("carol");
+      tezAmount = 2000;
+      tokenAmount = 200000;
+      newShares = 200;
+      let carolAddress = await Tezos.signer.publicKeyHash();
+
+      await context.updateActor();
+      await context.tokens[0].transfer(aliceAddress, carolAddress, tokenAmount);
+
+      await context.updateActor("carol");
+      await context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares);
+
+      // store updated state
+      await context.pairs[0].updateStorage({
+        ledger: [carolAddress],
+        userRewards: [carolAddress],
+      });
+      let rewardInfoAfterCarolInvestment = context.pairs[0].storage.rewardInfo;
+
+      await context.updateActor();
+
+      // update Alice and Bob loyalty
+      let value = 0;
+      let timeLeft =
+        Date.parse(rewardInfoAfterCarolInvestment.periodFinish) -
+        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        1;
+      if (timeLeft > 0) {
+        // transfer
+        await bakeBlocks(timeLeft / 1000);
+      }
+      await context.pairs[0].transfer(aliceAddress, bobAddress, value);
+
+      // store updated storage
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress, bobAddress, carolAddress],
+        userRewards: [aliceAddress, bobAddress, carolAddress],
+      });
+      let aliceFinalRewardsInfo = context.pairs[0].storage.userRewards[
+        aliceAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+
+      // update Bob and Carol loyalty
+      await context.updateActor("bob");
+      await context.pairs[0].transfer(bobAddress, carolAddress, value);
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress, bobAddress, carolAddress],
+        userRewards: [aliceAddress, bobAddress, carolAddress],
+      });
+      let bobFinalRewardsInfo = context.pairs[0].storage.userRewards[
+        bobAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+      await context.updateActor("carol");
+      await context.pairs[0].transfer(carolAddress, bobAddress, value);
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress, bobAddress, carolAddress],
+        userRewards: [aliceAddress, bobAddress, carolAddress],
+      });
+      let carolFinalRewardsInfo = context.pairs[0].storage.userRewards[
+        carolAddress
+      ] || {
+        reward: new BigNumber(0),
+        rewardPaid: new BigNumber(0),
+        loyalty: new BigNumber(0),
+        loyaltyPaid: new BigNumber(0),
+      };
+
+      ok(
+        bobFinalRewardsInfo.reward
+          .plus(aliceFinalRewardsInfo.reward)
+          .plus(carolFinalRewardsInfo.reward)
+          .gt(new BigNumber(reward * 0.99 * 1e15)),
+        "Total reward is too small"
+      );
+      ok(
+        bobFinalRewardsInfo.reward
+          .plus(aliceFinalRewardsInfo.reward)
+          .plus(carolFinalRewardsInfo.reward)
+          .lte(new BigNumber(reward * (i + 1) * 1e15)),
+        "Total reward is too big"
+      );
+    }
+  });
+});

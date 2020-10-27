@@ -26,6 +26,7 @@ export declare type RewardInfo = {
   lastLoyaltyPerShare: BigNumber;
   totalAccomulatedLoyalty: BigNumber;
   lastUpdateTime: string;
+  lastPeriodFinish: string;
   periodFinish: string;
   rewardPerToken: BigNumber;
 };
@@ -35,6 +36,7 @@ export declare type UserRewardInfo = {
   rewardPaid: BigNumber;
   loyalty: BigNumber;
   loyaltyPaid: BigNumber;
+  updateTime: string;
 };
 
 export declare type AccountInfo = {

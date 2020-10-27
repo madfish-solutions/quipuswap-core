@@ -3,12 +3,12 @@
 // types for internal transaction calls
 type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 
-// helpers
+(* Helper function to get token contract *)
 function getTokenContract(const tokenAddress : address) : contract(transfer_type) is 
-    case (Tezos.get_entrypoint_opt("%transfer", tokenAddress) : option(contract(transfer_type))) of 
-      Some(contr) -> contr
-      | None -> (failwith("01"):contract(transfer_type))
-    end;
+  case (Tezos.get_entrypoint_opt("%transfer", tokenAddress) : option(contract(transfer_type))) of 
+    Some(contr) -> contr
+    | None -> (failwith("01"):contract(transfer_type))
+  end;
 
 (* Helper function to get account *)
 function getAccount (const addr : address; const s : dex_storage) : account_info is
@@ -65,6 +65,7 @@ function getAllowance (const ownerAccount : account_info; const spender : addres
   | None -> 0n
   end;
 
+(* Helper function to update global rewards info *)
 function updateReward (const s : dex_storage) : dex_storage is
   block {
     (* update rewards info *)
@@ -85,6 +86,7 @@ function updateReward (const s : dex_storage) : dex_storage is
     } else skip;
   } with s
 
+(* Helper function to update user rewards info *)
 function updateUserReward (const addr : address; const account: account_info; const newBalance: nat; const s : dex_storage) : dex_storage is
   block {
     var userRewardInfo : user_reward_info := getUserRewardInfo(addr, s);
@@ -96,16 +98,15 @@ function updateUserReward (const addr : address; const account: account_info; co
       userRewardInfo := record [
         reward        = userRewardInfo.reward + currentReward;
         rewardPaid    = s.rewardInfo.rewardPerToken;
-        loyalty       = prevLoyalty + (account.balance + account.frozenBalance) * s.rewardInfo.loyaltyPerShare;
-        loyaltyPaid   = newBalance * s.rewardInfo.loyaltyPerShare;
+        loyalty       = prevLoyalty;
+        loyaltyPaid   = (account.balance + account.frozenBalance) * s.rewardInfo.lastLoyaltyPerShare;
         updateTime    = Tezos.now;
       ];
-    } else {
-      (* update user loyalty *)
-      const currentLoyalty : nat = (account.balance + account.frozenBalance) * s.rewardInfo.loyaltyPerShare;
-      userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
-      userRewardInfo.loyaltyPaid := newBalance * s.rewardInfo.loyaltyPerShare;
-    };
+    } else skip;
+    
+    const currentLoyalty : nat = (account.balance + account.frozenBalance) * s.rewardInfo.loyaltyPerShare;
+    userRewardInfo.loyalty := userRewardInfo.loyalty + abs(currentLoyalty - userRewardInfo.loyaltyPaid);
+    userRewardInfo.loyaltyPaid := newBalance * s.rewardInfo.loyaltyPerShare;
 
     s.userRewards[addr] := userRewardInfo;
   } with s
@@ -188,7 +189,7 @@ function getBalance (const p : tokenAction; const s : dex_storage) : return is
     end
   } with (operations, s)
 
-// (* View function that forwards the totalSupply to a contract *)
+(* View function that forwards the totalSupply to a contract *)
 function getTotalSupply (const p : tokenAction; const s : dex_storage) : return is
   block {
     var operations : list(operation) := list[];
@@ -203,7 +204,7 @@ function getTotalSupply (const p : tokenAction; const s : dex_storage) : return 
     end
   } with (operations, s)
 
-// wrappers
+(* Initialize exchange after the previous liquidity was drained *)
 function initializeExchange (const p : dexAction ; const s : dex_storage ; const this: address) :  return is
   block {
     var operations : list(operation) := list[];
@@ -253,6 +254,7 @@ function initializeExchange (const p : dexAction ; const s : dex_storage ; const
       end
   } with (operations, s)
 
+(* Vote for the baker by freezing shares *)
 function vote (const p : dexAction; const s : dex_storage; const this: address) :  return is
   block {
     case p of
@@ -323,6 +325,7 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
     end
   } with ((nil:list(operation)), s)
 
+(* Vote for veto the current delegated baker by freezing shares *)
 function veto (const p : dexAction; const s : dex_storage; const this: address) : return is
   block {
     var operations: list(operation) := list[];
@@ -390,6 +393,7 @@ function veto (const p : dexAction; const s : dex_storage; const this: address) 
     end
   } with (operations, s)
 
+(* Exchange Tez to tokens *)
 function tezToToken (const p : dexAction; const s : dex_storage; const this : address) : return is
   block {
     var operations : list(operation) := list[];
@@ -420,6 +424,7 @@ function tezToToken (const p : dexAction; const s : dex_storage; const this : ad
     end
   } with (operations, s)
 
+(* Exchange tokens to tez, note: tokens should be approved before the operation *)
 function tokenToTez (const p : dexAction; const s : dex_storage; const this : address) : return is
   block {
     var operations : list(operation) := list[];
@@ -454,6 +459,7 @@ function tokenToTez (const p : dexAction; const s : dex_storage; const this : ad
     end
   } with (operations, s)
 
+(* Provide liquidity (both tokens and tez) to the pool, note: tokens should be approved before the operation *)
 function investLiquidity (const p : dexAction; const s : dex_storage; const this: address) : return is
   block {
     var operations: list(operation) := list[];
@@ -494,6 +500,7 @@ function investLiquidity (const p : dexAction; const s : dex_storage; const this
     end
   } with (operations, s)
 
+(* Remove liquidity (both tokens and tez) from the pool by burning shares *)
 function divestLiquidity (const p : dexAction; const s : dex_storage; const this: address) :  return is
   block {
     var operations: list(operation) := list[];
@@ -557,6 +564,7 @@ function getAllowance (const p : tokenAction; const s : dex_storage) : return is
     end
   } with (operations, s)
 
+(* The default method to be called when no entrypoint is chosen *)
 function receiveReward (const p : dexAction; const s : dex_storage; const this : address) : return is 
   block {
     var operations : list(operation) := list[];
@@ -581,6 +589,7 @@ function receiveReward (const p : dexAction; const s : dex_storage; const this :
     s.rewardInfo.reward := s.rewardInfo.reward + Tezos.amount / 1mutez;
   } with (operations, s)
 
+(* Withdraw reward from baker *)
 function withdrawProfit (const p : dexAction; const s : dex_storage; const this : address) : return is
   block {
     var operations: list(operation) := list[];
@@ -621,6 +630,7 @@ const createDex : createDexFunc =
                     PAIR } |}
            : createDexFunc)];
   
+(* Create the pool contract for Tez-Token pair *)
 function launchExchange (const self : address; const token : address; const tokenAmount : nat; var s : exchange_storage) :  full_factory_return is
   block {
     if s.tokenList contains token then 
@@ -678,6 +688,7 @@ function launchExchange (const self : address; const token : address; const toke
     )
   ], s)
 
+(* Set the dex function code to factory storage *)
 function setDexFunction (const idx : nat; const f : dexFunc; const s : exchange_storage) : exchange_storage is
 block {
   case s.dexLambdas[idx] of 
@@ -685,6 +696,8 @@ block {
     | None -> s.dexLambdas[idx] := f 
   end;
 } with s
+
+(* Set the token function code to factory storage *)
 function setTokenFunction (const idx : nat; const f : tokenFunc; const s : exchange_storage) : exchange_storage is
 block {
   case s.tokenLambdas[idx] of 
@@ -699,19 +712,3 @@ function main (const p : exchangeAction; const s : exchange_storage) : full_fact
     | SetDexFunction(params) -> ((nil:list(operation)), if params.index > 8n then (failwith("Factory/wrong-index") : exchange_storage) else setDexFunction(params.index, params.func, s))
     | SetTokenFunction(params) -> ((nil:list(operation)), if params.index > 4n then (failwith("Factory/wrong-index") : exchange_storage) else setTokenFunction(params.index, params.func, s))
   end
-
-// record [  tokenList = (set[] : set(address));        
-//   tokenToExchange = (big_map[] :big_map(address, address));        
-//   dexLambdas = (big_map[] : big_map(nat, dexFunc));  
-//   tokenLambdas = (big_map[] : big_map(nat, tokenFunc));]
-// record [  tokenList = (set[] : set(address));        tokenToExchange = (big_map[] :big_map(address, address));        dexLambdas = (big_map[] : big_map(nat, dexFunc));  tokenLambdas = big_map[  0n -> transfer;   1n -> approve;   2n -> getBalance;   3n -> getAllowance;   4n -> getTotalSupply; ];]
-// record [  tokenList = (set[] : set(address));        
-//   tokenToExchange = (big_map[] :big_map(address, address));        
-//   dexLambdas = (big_map[] : big_map(nat, dexFunc));  
-//   tokenLambdas = big_map[
-//     0n -> transfer; 
-//     1n -> approve; 
-//     2n -> getBalance; 
-//     3n -> getAllowance; 
-//     4n -> getTotalSupply; 
-//   ];]

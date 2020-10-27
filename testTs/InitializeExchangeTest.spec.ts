@@ -121,65 +121,6 @@ contract("InitializeExchange()", function () {
     );
   });
 
-  it.skip("should initialize & deploy a 10 of exchanges and set initial state", async function () {
-    this.timeout(500000);
-
-    // generate configs
-    let exchangeCount = 10;
-    let configs = [];
-    for (let i = 0; i < exchangeCount; i++) {
-      configs.push({
-        tezAmount: 20 * (exchangeCount - i),
-        tokenAmount: 30000 * (i + 1),
-      });
-    }
-
-    // create context with 10 exchanges
-    let context = await Context.init(configs, false);
-
-    // ensure factory registered 10 exchanges
-    await context.factory.updateStorage({
-      tokenToExchange: context.factory.storage.tokenList,
-    });
-    strictEqual(
-      context.factory.storage.tokenList.length,
-      exchangeCount,
-      "Factory tokenList should be empty"
-    );
-
-    let aliceAddress = await Tezos.signer.publicKeyHash();
-
-    // check each exchange pair state
-    for (let i = 0; i < exchangeCount; i++) {
-      await context.pairs[i].updateStorage({ ledger: [aliceAddress] });
-      strictEqual(
-        context.pairs[i].storage.ledger[aliceAddress].balance.toNumber(),
-        1000,
-        "Alice should receive 1000 shares"
-      );
-      strictEqual(
-        context.pairs[i].storage.totalSupply.toNumber(),
-        1000,
-        "Alice tokens should be all supply"
-      );
-      strictEqual(
-        context.pairs[i].storage.tezPool.toNumber(),
-        configs[i].tezAmount,
-        "Tez pool should be fully funded by sent amount"
-      );
-      strictEqual(
-        context.pairs[i].storage.tokenPool.toNumber(),
-        configs[i].tokenAmount,
-        "Token pool should be fully funded by sent amount"
-      );
-      strictEqual(
-        context.pairs[i].storage.invariant.toNumber(),
-        configs[i].tokenAmount * configs[i].tezAmount,
-        "Inveriant should be calculated properly"
-      );
-    }
-  });
-
   it("should initialize existing pair if there are no shares", async function () {
     let tezAmount = 10000;
     let tokenAmount = 1000000;

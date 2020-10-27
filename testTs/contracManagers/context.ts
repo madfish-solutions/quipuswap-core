@@ -34,11 +34,9 @@ export class Context {
     accountName: string = "alice",
     useDeployedFactory: boolean = true
   ): Promise<Context> {
-    console.log("Setuping Tezos");
     let config = await prepareProviderOptions(accountName);
     Tezos.setProvider(config);
 
-    console.log("Deploying factory");
     let factoryInstance = useDeployedFactory
       ? await CFactory.deployed()
       : await CFactory.new(factoryStorage);
@@ -46,11 +44,9 @@ export class Context {
 
     let context = new Context(factory, [], []);
     if (setFactoryFunctions) {
-      console.log("Setting functions");
       await context.setAllFactoryFunctions();
     }
 
-    console.log("Creating pairs");
     await context.createPairs(pairsConfigs);
     return context;
   }
