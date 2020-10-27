@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 import { calculateFee, bakeBlocks } from "./contracManagers/utils";
 
-contract.only("RewardDestribution()", function () {
+contract("RewardDestribution()", function () {
   let context: Context;
 
   before(async () => {
@@ -758,7 +758,7 @@ contract.only("RewardDestribution()", function () {
     // checks
     strictEqual(
       finalRewardInfo.totalAccomulatedLoyalty.toNumber(),
-      0,
+      accomulatedLoyalty.toNumber(),
       "Total accomulated loyalty is wrong"
     );
     strictEqual(
@@ -768,7 +768,7 @@ contract.only("RewardDestribution()", function () {
     );
     strictEqual(
       finalRewardInfo.loyaltyPerShare.toNumber(),
-      0,
+      Math.floor(accomulatedLoyalty.toNumber() / value),
       "Loyalty per share isn't calculated properly"
     );
   });
@@ -1001,7 +1001,7 @@ contract.only("RewardDestribution()", function () {
       // checks
       strictEqual(
         aliceFinalRewardsInfo.rewardPaid.toNumber(),
-        new BigNumber(1e15).multipliedBy((1000 * i * (1 + i)) / 2).toNumber(),
+        finalRewardInfo.rewardPerToken.toNumber(),
         "Alice reward paid mismatch"
       );
       strictEqual(
@@ -1145,8 +1145,8 @@ contract.only("RewardDestribution()", function () {
         Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
         1;
       if (timeLeft > 0) {
-        // transfer
         await context.pairs[0].sendReward(1000 * i);
+        // transfer
         await bakeBlocks(timeLeft / 1000);
       }
 
@@ -1176,14 +1176,16 @@ contract.only("RewardDestribution()", function () {
 
       // check withdraw
       let aliceInitTezBalance = await Tezos.tz.getBalance(aliceAddress);
-      let operations = await context.pairs[0].withdrawProfit(aliceAddress);
-      let fees = calculateFee([operations], aliceAddress);
-      let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
-      strictEqual(
-        aliceInitTezBalance.toNumber() - fees + 1000 * i,
-        aliceFinalTezBalance.toNumber(),
-        "Alice tez balance should be updated"
-      );
+      if (i) {
+        let operations = await context.pairs[0].withdrawProfit(aliceAddress);
+        let fees = calculateFee([operations], aliceAddress);
+        let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
+        strictEqual(
+          aliceInitTezBalance.toNumber() - fees + 1000 * i,
+          aliceFinalTezBalance.toNumber(),
+          "Alice tez balance should be updated"
+        );
+      }
     }
   });
 
@@ -1333,6 +1335,7 @@ contract.only("RewardDestribution()", function () {
   });
 
   it("should update reward for few users during few epoches", async function () {
+    this.timeout(5000000);
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
