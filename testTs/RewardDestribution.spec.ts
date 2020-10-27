@@ -944,7 +944,7 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it.only("should distribute reward during the few epoches", async function () {
+  it("should distribute reward during the few epoches", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -1192,12 +1192,13 @@ contract("RewardDestribution()", function () {
     }
   });
 
-  it("should update reward for few users", async function () {
+  it.only("should update reward for few users", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
 
     let aliceAddress = await Tezos.signer.publicKeyHash();
+    await context.pairs[0].sendReward(0);
 
     // save initial state
     await context.pairs[0].updateStorage({
@@ -1217,6 +1218,8 @@ contract("RewardDestribution()", function () {
       aliceAddress
     ].balance;
 
+    let reward = 1000;
+    await context.pairs[0].sendReward(reward);
     // get shares by Bob
     await context.updateActor("bob");
     let tezAmount = 1000;
@@ -1282,6 +1285,14 @@ contract("RewardDestribution()", function () {
 
     // update Alice and Bob loyalty
     let value = 0;
+    let timeLeft =
+      Date.parse(rewardInfoAfterCarolInvestment.periodFinish) -
+      Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+      1;
+    if (timeLeft > 0) {
+      // transfer
+      await bakeBlocks(timeLeft / 1000);
+    }
     await context.pairs[0].transfer(aliceAddress, bobAddress, value);
 
     // store updated storage
@@ -1297,6 +1308,8 @@ contract("RewardDestribution()", function () {
       loyalty: new BigNumber(0),
       loyaltyPaid: new BigNumber(0),
     };
+    console.log(rewardInfoAfterCarolInvestment);
+    console.log(aliceFinalRewardsInfo);
     let aliceFinalTokenBalance = await context.pairs[0].storage.ledger[
       aliceAddress
     ].balance;
@@ -1322,90 +1335,6 @@ contract("RewardDestribution()", function () {
           Date.parse(rewardInfoAfterCarolInvestment.lastUpdateTime)) /
           1000
       )
-    );
-
-    // check loyalty per share
-    ok(
-      rewardInfoAfterA2BTransfer.loyaltyPerShare
-        .minus(rewardInfoAfterCarolInvestment.loyaltyPerShare)
-        .eq(
-          accomulatedLoyaltyAfterCarolInvestment
-            .div(context.pairs[0].storage.totalSupply)
-            .integerValue(BigNumber.ROUND_DOWN)
-        ),
-      "Loyalty per share after Carol investment is wrong"
-    );
-    // check accomulated loyalty
-    ok(
-      rewardInfoAfterA2BTransfer.totalAccomulatedLoyalty
-        .minus(rewardInfoAfterCarolInvestment.totalAccomulatedLoyalty)
-        .eq(accomulatedLoyaltyAfterCarolInvestment),
-      "Total accomulated loyalty mismatch"
-    );
-
-    // check alice loyalty
-    ok(
-      aliceFinalRewardsInfo.loyalty.eq(
-        aliceInitTokenBalance.multipliedBy(
-          rewardInfoAfterA2BTransfer.loyaltyPerShare
-        )
-      ),
-      "Alice loyalty is wrong"
-    );
-    ok(
-      aliceFinalRewardsInfo.loyalty.gt(
-        aliceInitTokenBalance.multipliedBy(
-          rewardInfoAfterBobInvestment.loyaltyPerShare
-        )
-      ),
-      "Alice loyalty is too small"
-    );
-    ok(
-      aliceFinalRewardsInfo.loyalty.gt(
-        aliceInitTokenBalance.multipliedBy(
-          rewardInfoAfterCarolInvestment.loyaltyPerShare
-        )
-      ),
-      "Alice loyalty is too small"
-    );
-
-    // check bob loyalty
-
-    ok(
-      bobRewardsInfoAfterA2BTransfer.loyalty.eq(
-        bobInitTokenBalance
-          .multipliedBy(rewardInfoAfterA2BTransfer.loyaltyPerShare)
-          .minus(bobInitRewardsInfo.loyaltyPaid)
-      ),
-      "Bob loyalty is wrong"
-    );
-    ok(
-      bobRewardsInfoAfterA2BTransfer.loyalty.gt(
-        bobInitTokenBalance
-          .multipliedBy(rewardInfoAfterCarolInvestment.loyaltyPerShare)
-          .minus(bobInitRewardsInfo.loyaltyPaid)
-      ),
-      "Bob loyalty is too small"
-    );
-
-    // check alice loyalty paid
-    ok(
-      aliceFinalRewardsInfo.loyaltyPaid.eq(
-        aliceInitTokenBalance.multipliedBy(
-          rewardInfoAfterA2BTransfer.loyaltyPerShare
-        )
-      ),
-      "Alice loyalty paid is wrong"
-    );
-
-    // check bob loyalty paid
-    ok(
-      bobRewardsInfoAfterA2BTransfer.loyaltyPaid.eq(
-        bobInitTokenBalance.multipliedBy(
-          rewardInfoAfterA2BTransfer.loyaltyPerShare
-        )
-      ),
-      "Bob loyalty paid is wrong"
     );
 
     // update Bob and Carol loyalty
@@ -1439,79 +1368,34 @@ contract("RewardDestribution()", function () {
 
     let rewardInfoAfterB2CTransfer = context.pairs[0].storage.rewardInfo;
 
-    // check loyalty per share
-    ok(
-      rewardInfoAfterB2CTransfer.loyaltyPerShare
-        .minus(rewardInfoAfterA2BTransfer.loyaltyPerShare)
-        .eq(
-          accomulatedLoyaltyAfterCarolInvestment
-            .div(context.pairs[0].storage.totalSupply)
-            .integerValue(BigNumber.ROUND_DOWN)
-        ),
-      "Loyalty per share after Carol investment is wrong"
-    );
-    // check accomulated loyalty
-    ok(
-      rewardInfoAfterB2CTransfer.totalAccomulatedLoyalty
-        .minus(rewardInfoAfterA2BTransfer.totalAccomulatedLoyalty)
-        .eq(accomulatedLoyaltyAfterCarolInvestment),
-      "Total accomulated loyalty mismatch"
-    );
+    await context.updateActor("carol");
+    await context.pairs[0].transfer(carolAddress, bobAddress, value);
+    await context.pairs[0].updateStorage({
+      ledger: [aliceAddress, bobAddress, carolAddress],
+      userRewards: [aliceAddress, bobAddress, carolAddress],
+    });
+    carolFinalRewardsInfo = context.pairs[0].storage.userRewards[
+      carolAddress
+    ] || {
+      reward: new BigNumber(0),
+      rewardPaid: new BigNumber(0),
+      loyalty: new BigNumber(0),
+      loyaltyPaid: new BigNumber(0),
+    };
 
-    // check Carol loyalty
     ok(
-      carolFinalRewardsInfo.loyalty.eq(
-        carolInitTokenBalance
-          .multipliedBy(rewardInfoAfterB2CTransfer.loyaltyPerShare)
-          .minus(carolInitRewardsInfo.loyaltyPaid)
-      ),
-      "Carol loyalty is wrong"
+      bobFinalRewardsInfo.reward
+        .plus(aliceFinalRewardsInfo.reward)
+        .plus(carolFinalRewardsInfo.reward)
+        .gt(new BigNumber(reward * 0.99 * 1e15)),
+      "Total reward is too small"
     );
     ok(
-      carolFinalRewardsInfo.loyalty.gt(
-        carolInitTokenBalance
-          .multipliedBy(rewardInfoAfterA2BTransfer.loyaltyPerShare)
-          .minus(carolInitRewardsInfo.loyaltyPaid)
-      ),
-      "Carol loyalty is too small"
-    );
-
-    // check Bob loyalty
-    ok(
-      bobFinalRewardsInfo.loyalty.eq(
-        bobInitTokenBalance
-          .multipliedBy(rewardInfoAfterB2CTransfer.loyaltyPerShare)
-          .minus(bobInitRewardsInfo.loyaltyPaid)
-      ),
-      "Bob loyalty is wrong"
-    );
-    ok(
-      bobFinalRewardsInfo.loyalty.gt(
-        bobInitTokenBalance
-          .multipliedBy(rewardInfoAfterCarolInvestment.loyaltyPerShare)
-          .minus(bobInitRewardsInfo.loyaltyPaid)
-      ),
-      "Bob loyalty is too small"
-    );
-
-    // check carol loyalty paid
-    ok(
-      carolFinalRewardsInfo.loyaltyPaid.eq(
-        carolInitTokenBalance.multipliedBy(
-          rewardInfoAfterB2CTransfer.loyaltyPerShare
-        )
-      ),
-      "Carol loyalty paid is wrong"
-    );
-
-    // check bob loyalty paid
-    ok(
-      bobFinalRewardsInfo.loyaltyPaid.eq(
-        bobInitTokenBalance.multipliedBy(
-          rewardInfoAfterB2CTransfer.loyaltyPerShare
-        )
-      ),
-      "Bob loyalty paid is wrong"
+      bobFinalRewardsInfo.reward
+        .plus(aliceFinalRewardsInfo.reward)
+        .plus(carolFinalRewardsInfo.reward)
+        .lte(new BigNumber(reward * 1e15)),
+      "Total reward is too big"
     );
   });
 });
