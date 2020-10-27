@@ -1180,9 +1180,14 @@ contract("RewardDestribution()", function () {
         let operations = await context.pairs[0].withdrawProfit(aliceAddress);
         let fees = calculateFee([operations], aliceAddress);
         let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
-        strictEqual(
-          aliceInitTezBalance.toNumber() - fees + 1000 * i,
-          aliceFinalTezBalance.toNumber(),
+        ok(
+          aliceInitTezBalance.toNumber() - fees + 1000 * i >=
+            aliceFinalTezBalance.toNumber(),
+          "Alice tez balance should be updated"
+        );
+        ok(
+          0.99 * (aliceInitTezBalance.toNumber() - fees + 1000 * i) <
+            aliceFinalTezBalance.toNumber(),
           "Alice tez balance should be updated"
         );
       }
