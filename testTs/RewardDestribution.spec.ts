@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 import { calculateFee, bakeBlocks } from "./contracManagers/utils";
 
-contract.skip("RewardDestribution()", function () {
+contract("RewardDestribution()", function () {
   let context: Context;
 
   before(async () => {
