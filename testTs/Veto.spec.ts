@@ -102,7 +102,7 @@ contract("Veto()", function () {
     strictEqual(
       aliceFinalVoteInfo.veto.toNumber(),
       value,
-      "User vetj wasn't updated"
+      "User veto wasn't updated"
     );
     // 3. veto time set
     notStrictEqual(aliceFinalCandidateVeto, 0, "Delegate wasn't locked");
@@ -579,8 +579,13 @@ contract("Veto()", function () {
     });
     strictEqual(
       context.pairs[0].storage.currentDelegated,
+      delegate,
+      "Delegated and real delegated doesn't match"
+    );
+    strictEqual(
       context.pairs[0].storage.currentCandidate,
-      "Delegator and candidate doesn't match"
+      null,
+      "Candidate doesn't match"
     );
 
     // veto
@@ -624,12 +629,32 @@ contract("Veto()", function () {
     });
     strictEqual(
       context.pairs[0].storage.currentDelegated,
+      delegate,
+      "Delegated and real delegated doesn't match"
+    );
+    strictEqual(
       context.pairs[0].storage.currentCandidate,
-      "Delegator and candidate doesn't match"
+      null,
+      "Candidate doesn't match"
     );
 
     // update candidate
-    await context.pairs[0].vote(aliceAddress, aliceAddress, 2 * value);
+    await context.updateActor("bob");
+    let bobAddress = await Tezos.signer.publicKeyHash();
+    let tezAmount = 1000;
+    let tokenAmount = 100000;
+    let newShares = 100;
+    await context.updateActor();
+    await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
+
+    await context.updateActor("bob");
+    await context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares);
+
+    await context.pairs[0].vote(
+      bobAddress,
+      aliceAddress,
+      Math.floor(value / 2)
+    );
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
       voters: [aliceAddress],
@@ -638,11 +663,22 @@ contract("Veto()", function () {
     notStrictEqual(
       context.pairs[0].storage.currentDelegated,
       context.pairs[0].storage.currentCandidate,
-      "Delegator and candidate doesn't match"
+      "Delegator and candidate match"
+    );
+    strictEqual(
+      context.pairs[0].storage.currentDelegated,
+      delegate,
+      "Delegated doesn't match after voting"
+    );
+    strictEqual(
+      aliceAddress,
+      context.pairs[0].storage.currentCandidate,
+      "Current candidate wrong"
     );
 
     // veto
-    await context.pairs[0].veto(aliceAddress, value + 1);
+    await context.updateActor();
+    await context.pairs[0].veto(aliceAddress, Math.floor(value / 2) + 1);
 
     // checks
     await context.pairs[0].updateStorage({
@@ -652,8 +688,13 @@ contract("Veto()", function () {
     });
     let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    strictEqual(
+      context.pairs[0].storage.veto.toNumber(),
+      0,
+      "Total veto isn't updated"
+    );
     strictEqual(finalCurrentDelegate, aliceAddress, "Delegate wasn't updated");
-    strictEqual(finalCurrentCandidate, aliceAddress, "Candidate was updated");
+    strictEqual(finalCurrentCandidate, null, "Candidate was updated");
   });
 
   it("should withdraw veto if delegator was removed by veto", async function () {

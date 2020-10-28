@@ -309,29 +309,17 @@ function vote (const p : dexAction; const s : dex_storage; const this: address) 
             const newVotes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + args.value;
             s.votes[args.candidate] := newVotes;
             if case s.currentCandidate of None -> True 
-              | Some(delegated) ->
-                if (case s.votes[delegated] of None -> 0n | Some(v) -> v end) > newVotes then 
-                  False 
-                else 
-                  True
-              end then 
-                s.currentCandidate := Some(args.candidate);
-            else skip;
-
-            if case s.currentDelegated of
-              | None -> case s.currentCandidate of
-                | None -> False
-                | Some(c) -> True
-                end
-              | Some(current) -> case s.currentCandidate of
+              | Some(candidate) -> (case s.votes[candidate] of None -> 0n | Some(v) -> v end) < newVotes
+              end then if case s.currentDelegated of
                 | None -> True
-                | Some(next) -> current =/= next
-                end
-            end then {
-              s.currentDelegated := s.currentCandidate;
-              operations := set_delegate(s.currentDelegated) # operations;
-            } else skip;
-        }
+                | Some(current) -> (case s.votes[current] of None -> 0n | Some(v) -> v end) < newVotes
+              end then {
+                s.currentCandidate := s.currentDelegated;
+                s.currentDelegated := Some(args.candidate);
+                operations := set_delegate(s.currentDelegated) # operations;
+              } else s.currentCandidate := Some(args.candidate);
+            else skip;
+          }
         end
       }
       | Veto(n) -> failwith("00")
@@ -381,19 +369,19 @@ function veto (const p : dexAction; const s : dex_storage; const this: address) 
             voterInfo.lastVeto := Tezos.now;
             s.voters[args.voter] := voterInfo;
 
-            if s.veto > s.totalVotes / 2n then {
+            if s.veto > s.totalVotes / 3n then {
                 s.veto := 0n;
                 s.lastVeto := Tezos.now;
                 case s.currentDelegated of None -> skip
                 | Some(d) -> {
                   s.vetos[d] := Tezos.now + vetoPeriod;
-                  case s.currentCandidate of None -> skip
+                  case s.currentCandidate of None -> 
+                    s.currentDelegated := s.currentCandidate
                   | Some(c) -> {
-                    if d = c then block {
-                      s.currentDelegated := (None: option(key_hash));
-                      s.currentCandidate := (None: option(key_hash));
-                    }
-                    else s.currentDelegated := s.currentCandidate;
+                    s.currentDelegated := if d = c then
+                      (None: option(key_hash));
+                    else s.currentCandidate;
+                    s.currentCandidate := (None: option(key_hash));
                   }
                   end;
                   operations := set_delegate(s.currentDelegated) # operations;

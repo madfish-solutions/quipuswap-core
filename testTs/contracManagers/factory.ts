@@ -8,8 +8,6 @@ import { TransactionOperation } from "@taquito/taquito/dist/types/operations/tra
 import { FactoryStorage } from "./types";
 import { execSync } from "child_process";
 import { getLigo, prepareProviderOptions, tezPrecision } from "./utils";
-const CFactory = artifacts.require("Factory");
-const Token = artifacts.require("Token");
 
 export class Factory {
   public contract: ContractAbstraction<ContractProvider>;

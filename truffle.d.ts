@@ -22,6 +22,7 @@ declare interface Contract<T> {
 declare interface Artifacts {
   require(name: "Token"): Contract<TokenContractInstance>;
   require(name: "Factory"): Contract<FactoryContractInstance>;
+  require(name: "FactoryTest"): Contract<FactoryContractInstance>;
   require(name: "Dex"): Contract<DexContractInstance>;
 }
 
