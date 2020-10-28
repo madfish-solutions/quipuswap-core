@@ -125,28 +125,111 @@ type exchangeAction is
 ### SetDexFunction
 
 Sets the dex specific function. Is used before the whole system is launched.
+
 `index` : the key in functions map;
+
 `func` : function code.
+
 Each `index` is designed for specific `func` which functionality are decribed below.
 
 ### SetTokenFunction
 
 Sets the FA1.2 function. Is used before the whole system is launched.
+
 `index` : the key in functions map;
+
 `func` : function code.
+
 Each `index` is designed for specific `func` which functionality are decribed below.
 
 ### LaunchExchange
 
 Deploys a new empty `Dex` for `token`, stores the address of the new contract and put initial liquidity; has to be called with tezos amount that will be used as intial liquidity.
+
 `token` : address of the paired token;
+
 `tokenAmount` : amount of tokens that will be withdrawn from user account and used as initial liquidity.
+
 `tezAmount`(not an argument) : the XTZ for initial liquidity should be send along with the launch transaction.
 
 ## Dex
 
-- `default()`: default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation cycle.
-- `use(funcIndex: nat, action: dexAction)`: executes the function with index `funcIndex` from `lambdas` with parameters `action`.
+`Dex` fully implements FA1.2 token interface. For more details check the [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md). And the extends it with other exchnge-related methods.
+
+The contract has the following entrypoints:
+
+```
+
+type tezToTokenPaymentParams is record [
+  amount    : nat;
+  receiver  : address;
+]
+
+type tokenToTezPaymentParams is record [
+  amount      : nat;
+  minOut      : nat;
+  receiver    : address;
+]
+
+type divestLiquidityParams is record [
+  minTez      : nat;
+  minTokens   : nat;
+  shares      : nat;
+]
+
+type voteParams is record [
+  candidate   : key_hash;
+  value       : nat;
+  voter       : address;
+]
+
+type vetoParams is record [
+  value       : nat;
+  voter       : address;
+]
+
+type dexAction is
+| InitializeExchange of (nat)
+| TezToTokenPayment of tezToTokenPaymentParams
+| TokenToTezPayment of tokenToTezPaymentParams
+| InvestLiquidity of (nat)
+| DivestLiquidity of divestLiquidityParams
+| Vote of voteParams
+| Veto of vetoParams
+| WithdrawProfit of (address)
+
+type defaultParams is unit
+type useParams is (nat * dexAction)
+type transferParams is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
+type approveParams is michelson_pair(address, "spender", nat, "value")
+type balanceParams is michelson_pair(address, "owner", contract(nat), "")
+type allowanceParams is michelson_pair(michelson_pair(address, "owner", address, "spender"), "", contract(nat), "")
+type totalSupplyParams is (unit * contract(nat))
+
+type tokenAction is
+| ITransfer of transferParams
+| IApprove of approveParams
+| IGetBalance of balanceParams
+| IGetAllowance of allowanceParams
+| IGetTotalSupply of totalSupplyParams
+
+type fullAction is
+| Use of useParams
+| Default of defaultParams
+| Transfer of transferParams
+| Approve of approveParams
+| GetBalance of balanceParams
+| GetAllowance of allowanceParams
+| GetTotalSupply of totalSupplyParams
+```
+
+### Default
+
+Used to collect rewards from bakers, donations or misguided payments without specified entrypoint.
+
+### Use
+
+Executes the exchange-related which code is stored in map of lamdas and thus the `index` param is needed.
 
 Actions have the following parameters (index in the list matches the index in `lambdas`):
 
