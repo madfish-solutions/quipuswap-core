@@ -223,7 +223,7 @@ type fullAction is
 | GetTotalSupply of totalSupplyParams
 ```
 
-### Default
+### Default (index 8)
 
 Used to collect rewards from bakers, donations or misguided payments without specified entrypoint.
 
@@ -233,16 +233,75 @@ Executes the exchange-related which code is stored in map of lamdas and thus the
 
 Actions have the following parameters (index in the list matches the index in `lambdas`):
 
-0. `initializeExchange(tokenAmount: nat)`: sets initial liquidity, XTZ must be sent.
-1. `tezToToken(minTokensOut: nat, receiver: address)`: exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `minTokensOut`.
-2. `tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address)`: exchanges `tokensIn` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minTezOut`.
-3. `withdrawProfit(receiver: address)`: withdraws delegation reward of the sender to `receiver` address.
-4. `investLiquidity(minShares: nat)`: allows to own `minShares` by investing tokens and XTZ; the corresponding amount of XTZ has to be sent via transaction and amount of tokens has to be approved to be spent by `Dex`.
-5. `divestLiquidity(minTezDivested: nat, minTokensDivested: nat, sharesBurned: nat)`: divests `sharesBurned` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `minTokensDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
-6. `setVotesDelegation(deputy: address, isAllowed: bool)`: allows or prohibits `deputy` to vote with sender shares.
-7. `vote(candidate: key_hash, voter: address)`: votes for `candidate` with shares of `voter`.
-8. `veto(voter: address)`: votes against current delegate with shares of `voter`.
-9. `default()`: default entrypoint to receive payments; received XTZ is distributed between liquidity providers at the end of the delegation cycle.
+#### InitializeExchange (index 0)
+
+Sets initial liquidity, XTZ must be sent.
+
+`amount` : the token amount for initial liquidity;
+
+`tezAmount`(not an argument) : the XTZ for initial liquidity should be send along with the launch transaction.
+
+#### TezToTokenPayment (index 1)
+
+Exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `amount`.
+
+`amount` : min amount of tokens received to accept exchange;
+
+`receiver` : tokens received;
+
+`tezAmount`(not an argument) : the XTZ to be exchanged.
+
+#### TokenToTezPayment (index 2)
+
+Exchanges `amount` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minOut`.
+
+`amount` : amount of tokens to be exchanged;
+
+`minOut` : min amount of XTZ received to accept exchange;
+
+`receiver` : tokens received;
+
+#### WithdrawProfit (index 3)
+
+Withdraws delegation reward of the sender to `receiver` address.
+
+`receiver` : XTZ received;
+
+#### InvestLiquidity (index 4)
+
+Mints `minShares` by investing tokens and XTZ; the corresponding amount of XTZ has to be sent via transaction and max amount of tokens to be spent should be approved for `Dex`.
+
+`minShares` : the minimal shares amount to be minted;
+
+`tezAmount`(not an argument) : the XTZ to be provided as liquidity.
+
+#### DivestLiquidity (index 5)
+
+Burns `shares` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `minTokens` or the amount of divested XTZ is smaller than `minTez`.
+
+`shares` : amount of shares to be burnt;
+
+`minTez` : min amount of XTZ received to accept the divestment;
+
+`minTokens` : min amount of tokens received to accept the divestment;
+
+#### Vote (index 6)
+
+Votes for `candidate` with shares of `voter`.
+
+`candidate` : the chosen baker;
+
+`value` : amount of shares that is used to vote;
+
+`voter` : the account from which the voting is done.
+
+#### Veto (index 7)
+
+Votes against current delegate with `value` shares of `voter`; the `value` is frozen and can't be transfered or used for other voting.
+
+`value` : amount of shares that is used to vote against the chozen baker;
+
+`voter` : the account from which the veto voting is done.
 
 ## Token
 
