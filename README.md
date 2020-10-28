@@ -90,10 +90,58 @@ Addresses of deployed contracts are displayed in terminal. At this stage, new Fa
 
 # Entrypoints
 
+The Ligo interfaces of the contracts can be found in `contracts/partials`
+
 ## Factory
 
-- `launchExchange(token: address, tokenAmount: nat)`: deploys a new empty `Dex` for `token`, stores the address of the new contract and put initial liquidity; has to be called with tezos amount that will be used as intial liquidity.
-- `setFunction(func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)), funcIndex: nat`: adds lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
+Factory contains the code template for the `Dex` Token-XTZ pair contracts, deploys them and keeps the list of deployed pairs. The functions for `Dex` are stored in `Factory` contract but because of gas and operation limits their code cannot be stored in Factory contract during the origination: they are added separately one by one.
+
+New exchange pairs are registred and deployed via `LaunchExchange`.
+
+The contract has the following entrypoints:
+
+```
+type launchExchangeParams is record [
+  token         : address;
+  tokenAmount   : nat;
+]
+
+type setTokenFunctionParams is record [
+  func    : tokenFunc;
+  index   : nat;
+]
+
+type setDexFunctionParams is record [
+  func    : dexFunc;
+  index   : nat;
+]
+
+type exchangeAction is
+| LaunchExchange of launchExchangeParams
+| SetDexFunction of setDexFunctionParams
+| SetTokenFunction of setTokenFunctionParams
+```
+
+### SetDexFunction
+
+Sets the dex specific function. Is used before the whole system is launched.
+`index` : the key in functions map;
+`func` : function code.
+Each `index` is designed for specific `func` which functionality are decribed below.
+
+### SetTokenFunction
+
+Sets the FA1.2 function. Is used before the whole system is launched.
+`index` : the key in functions map;
+`func` : function code.
+Each `index` is designed for specific `func` which functionality are decribed below.
+
+### LaunchExchange
+
+Deploys a new empty `Dex` for `token`, stores the address of the new contract and put initial liquidity; has to be called with tezos amount that will be used as intial liquidity.
+`token` : address of the paired token;
+`tokenAmount` : amount of tokens that will be withdrawn from user account and used as initial liquidity.
+`tezAmount`(not an argument) : the XTZ for initial liquidity should be send along with the launch transaction.
 
 ## Dex
 
