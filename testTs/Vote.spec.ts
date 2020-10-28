@@ -71,6 +71,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
     let finalVotes = context.pairs[0].storage.totalVotes;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // 1. tokens frozen
     strictEqual(
@@ -109,7 +110,8 @@ contract("Vote()", function () {
       finalVotes.toNumber(),
       "Total votes weren't updated"
     );
-    strictEqual(finalCurrentCandidate, delegate, "Candidate wasn't updated");
+    strictEqual(finalCurrentCandidate, null, "Candidate shoudn't be updated");
+    strictEqual(finalCurrentDelegated, delegate, "Delegated wasn't updated");
   });
 
   it("should vote and replace candidate ", async function () {
@@ -154,6 +156,7 @@ contract("Vote()", function () {
     let initVotes = context.pairs[0].storage.totalVotes;
 
     // vote
+    let prevDelegated = delegate;
     delegate = carolAddress;
     let value = 200;
     await context.pairs[0].vote(aliceAddress, delegate, value);
@@ -180,7 +183,8 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
     let finalVotes = context.pairs[0].storage.totalVotes;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
-
+    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    console.log(context.pairs[0].storage);
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber(),
@@ -218,7 +222,12 @@ contract("Vote()", function () {
       finalVotes.toNumber(),
       "Total votes weren't updated"
     );
-    strictEqual(finalCurrentCandidate, delegate, "Candidate wasn't updated");
+    strictEqual(finalCurrentDelegated, delegate, "Delegated wasn't updated");
+    strictEqual(
+      finalCurrentCandidate,
+      prevDelegated,
+      "Candidate shoudn't be updated"
+    );
   });
 
   it("should vote for the same candidate", async function () {
@@ -364,6 +373,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
     let initVotes = context.pairs[0].storage.totalVotes;
     let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let initCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // vote
     await context.pairs[0].vote(aliceAddress, delegate, 0);
@@ -390,6 +400,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
     let finalVotes = context.pairs[0].storage.totalVotes;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // 1. tokens frozen
     strictEqual(
@@ -430,9 +441,9 @@ contract("Vote()", function () {
     );
 
     strictEqual(
-      finalCurrentCandidate,
-      initCurrentCandidate,
-      "Candidate wasn't updated"
+      finalCurrentDelegated,
+      initCurrentDelegated,
+      "Delegated was updated"
     );
   });
 
@@ -587,6 +598,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
     let finalVotes = context.pairs[0].storage.totalVotes;
     let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let initCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // check global state
     strictEqual(
@@ -594,7 +606,8 @@ contract("Vote()", function () {
       aliceFinalCandidateVotes.toNumber(),
       "Tokens not voted"
     );
-    strictEqual(initCurrentCandidate, aliceDelegate, "Candidate not updated");
+    strictEqual(initCurrentCandidate, null, "Candidate shouldn't be updated");
+    strictEqual(initCurrentDelegated, aliceDelegate, "Delegated not updated");
     strictEqual(
       initVotes.toNumber() + value,
       finalVotes.toNumber(),
@@ -615,6 +628,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
     finalVotes = context.pairs[0].storage.totalVotes;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // check global state
     strictEqual(
@@ -622,7 +636,8 @@ contract("Vote()", function () {
       bobFinalCandidateVotes.toNumber(),
       "Tokens not voted"
     );
-    strictEqual(finalCurrentCandidate, bobDelegate, "Candidate not updated");
+    strictEqual(finalCurrentCandidate, aliceDelegate, "Candidate not updated");
+    strictEqual(finalCurrentDelegated, bobDelegate, "Delegated not updated");
     strictEqual(
       initVotes.toNumber() + value,
       finalVotes.toNumber(),
@@ -674,6 +689,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
     let finalVotes = context.pairs[0].storage.totalVotes;
     let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let initCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // check global state
     strictEqual(
@@ -681,7 +697,8 @@ contract("Vote()", function () {
       aliceFinalCandidateVotes.toNumber(),
       "Tokens not voted"
     );
-    strictEqual(initCurrentCandidate, aliceDelegate, "Candidate not updated");
+    strictEqual(initCurrentCandidate, null, "Candidate shouldn't be updated");
+    strictEqual(initCurrentDelegated, aliceDelegate, "Delegated not updated");
     strictEqual(
       initVotes.toNumber() + value,
       finalVotes.toNumber(),
@@ -702,6 +719,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
     finalVotes = context.pairs[0].storage.totalVotes;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // check global state
     strictEqual(
@@ -709,7 +727,8 @@ contract("Vote()", function () {
       bobFinalCandidateVotes.toNumber(),
       "Tokens not voted"
     );
-    strictEqual(finalCurrentCandidate, aliceDelegate, "Candidate not updated");
+    strictEqual(finalCurrentCandidate, bobDelegate, "Candidate not updated");
+    strictEqual(finalCurrentDelegated, aliceDelegate, "Delegated not updated");
     strictEqual(
       initVotes.toNumber() + value,
       finalVotes.toNumber(),

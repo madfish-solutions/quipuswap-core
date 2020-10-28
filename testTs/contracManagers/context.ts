@@ -13,7 +13,7 @@ import factoryStorage from "../storage/Factory";
 
 const CDex = artifacts.require("Dex");
 const Token = artifacts.require("Token");
-const CFactory = artifacts.require("FactoryTest");
+const CFactory = artifacts.require("Factory");
 
 export class Context {
   public factory: Factory;

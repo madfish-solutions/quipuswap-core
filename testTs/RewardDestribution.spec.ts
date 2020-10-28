@@ -415,6 +415,7 @@ contract("RewardDestribution()", function () {
   });
 
   it("should distribute loyalty during the few epoches", async function () {
+    this.timeout(5000000);
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -840,6 +841,7 @@ contract("RewardDestribution()", function () {
   });
 
   it("should distribute reward to the only liquidity provider", async function () {
+    this.timeout(5000000);
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -940,6 +942,7 @@ contract("RewardDestribution()", function () {
   });
 
   it("should distribute reward during the few epoches", async function () {
+    this.timeout(5000000);
     // reset pairs
     await context.flushPairs();
     await context.createPairs();

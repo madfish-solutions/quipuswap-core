@@ -1,5 +1,4 @@
 const Factory = artifacts.require("Factory");
-const FactoryTest = artifacts.require("FactoryTest");
 const Token = artifacts.require("Token");
 const tokenStorage = require("../storage/Token");
 const factoryStorage = require("../storage/Factory");
@@ -31,10 +30,7 @@ module.exports = async (deployer, network) => {
   try {
     await Factory.deployed();
   } catch (e) {
-    let factoryInstance =
-      network === "development"
-        ? await FactoryTest.new(factoryStorage)
-        : await Factory.new(factoryStorage);
+    let factoryInstance = await Factory.new(factoryStorage);
     let token0Instance = await Token.new(tokenStorage);
     let token1Instance = await Token.new(tokenStorage);
     console.log(`Factory address: ${factoryInstance.address}`);
