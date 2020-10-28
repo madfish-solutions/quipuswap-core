@@ -1,7 +1,6 @@
 # Description
 
-This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens
-to exchange, invest liquidity, and potentially make a profit in a fully decentralized way.
+This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens to exchange, invest liquidity, and potentially make a profit in a fully decentralized way.
 
 The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
 
@@ -20,15 +19,10 @@ The solution consists of 3 types of contracts:
 ```
 .
 ├──  contracts/ # contract sources for FA1.2 compatible version
-├──  contractsV2/ # contract sources for FA2 compatible version
-├──  test/ # test cases
+├──  testTs/ # test cases
 ├──  storage/ # initial storage for contract origination
-├──  scripts/ # scripts for dex/factory actions
-├──  fixtures/ # deployment & test account keys
-├──  misc/ # other sources
+├──  scripts/ # cli for dex/factory actions
 ├──  README.md # current file
-├──  test_cases.md # implemented tests list
-├──  test.sh # script for quick development
 ├──  .gitignore
 ├──  package.json
 └──  Architecture.png
@@ -37,6 +31,20 @@ The solution consists of 3 types of contracts:
 # Prerequisites
 
 - Installed NodeJS (tested with NodeJS v12+)
+- Installed Truffle:
+
+```
+npm install -g truffle@tezos
+
+```
+
+- Installed ganache-cli:
+
+```
+npm install -g ganache-cli@tezos
+
+```
+
 - Installed Ligo:
 
 ```
@@ -49,8 +57,7 @@ curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "ne
 cd quipuswap-core && npm i
 ```
 
-- Private keys for signing transactions. The unencrypted private keys have to be placed in `key`,`key1`, `key2` file in the `fixtures` directory.
-`key` is development key. `key1` and `key2` are used for testing only.
+- Configure `truffle-config.js` if [needed](https://www.trufflesuite.com/docs/tezos/truffle/reference/configuring-tezos-projects).
 
 # Usage
 
@@ -63,53 +70,23 @@ Contracts are processed in the following stages:
 
 ## Compilation
 
-To compile the contracts and generate Michelson you should run:
+To compile the contracts run:
 
 ```
-npm run build
+npm run compile
 ```
 
-It will compile `Dex.ligo` to raw Michelson code. This code will be deployed during `Factory.LaunchExchange` call when adding a new exchange-pair. And then compile other contracts and store them in JSON format to deploy with [Taquito](https://tezostaquito.io/) library.
+Artifacts are stored in the `build/contracts` directory.
 
-Сompiled `Factory` and `Token` are stored in the `build/` directory.
-
-## Standard
-
-Exchange support FA1.2 and FA2 tokens separately. Set `$npm_package_config_standard` to `fa1.2` or `fa2` according to the goals in `package.json`.
-
-## Factory & Token Deployment
+## Deployment
 
 For deployment step the following command should be used:
 
 ```
-npm run deploy
+npm run migrate
 ```
 
-First, we prepare storage for `Factory` contract, and then contracts are deployed to the network.
-
-Addresses of deployed contacts are displayed and stored in JSON format in the `deploy` folder.
-
-## Factory Configuration
-
-Because of the **_gas limit issue_** it is impossible to put all the functions to the code sections of the contract(and execute it). Instead, they are being stored as lambdas in `big_map` structure. Their code cannot be placed in the `storage` due to **_operation size limits issue_**. So each `Dex` function is added to `Factory` by making a separate transaction.
-
-To configure factory run the following command:
-
-```
-npm run set-functions
-```
-
-After performing step new token pairs can be deployed.
-
-## Exchange Pair Deployment
-
-Each token can have only one exchange pair contract (AKA `Dex`). To add a new token pair `Factory.LaunchExchange` method is called and a new empty `Dex` instance is deployed, initial liquidity is provided. There's a specific command for that:
-
-```
-npm run add-tokens
-```
-
-After the command is completed, the exchange can be used.
+Addresses of deployed contracts are displayed in terminal. At this stage, new Factory, two new pairs are originated.
 
 # Entrypoints
 
@@ -138,13 +115,11 @@ Actions have the following parameters (index in the list matches the index in `l
 
 ## Token
 
-Implements two token interfaces [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
+Implements [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) token interface.
 
 # Testing
 
-Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `fixtures/key`, `fixtures/key1`, and `fixtures/key2`. `Factory`, `Token` and `Token2` contracts have to be deployed before and their addresses have to be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Refer to `test.sh` for better understanding.
-
-Run:
+Truffle framework is used for testing. Run:
 
 ```
 npm test

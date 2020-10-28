@@ -446,7 +446,7 @@ contract("Vote()", function () {
     );
   });
 
-  it.only("should allow to vote and set candidate by approved user", async function () {
+  it("should allow to vote and set candidate by approved user", async function () {
     this.timeout(5000000);
 
     // reset pairs
