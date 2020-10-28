@@ -184,7 +184,6 @@ contract("Vote()", function () {
     let finalVotes = context.pairs[0].storage.totalVotes;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
     let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
-    console.log(context.pairs[0].storage);
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber(),
@@ -447,7 +446,7 @@ contract("Vote()", function () {
     );
   });
 
-  it("should allow to vote and set candidate by approved user", async function () {
+  it.only("should allow to vote and set candidate by approved user", async function () {
     this.timeout(5000000);
 
     // reset pairs
@@ -513,6 +512,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
     let finalVotes = context.pairs[0].storage.totalVotes;
     let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
 
     // 1. tokens frozen
     strictEqual(
@@ -551,7 +551,9 @@ contract("Vote()", function () {
       finalVotes.toNumber(),
       "Total votes weren't updated"
     );
-    strictEqual(finalCurrentCandidate, delegate, "Candidate wasn't updated");
+
+    strictEqual(finalCurrentDelegated, delegate, "Delegated wasn't updated");
+    strictEqual(finalCurrentCandidate, null, "Candidate wasn't updated");
   });
 
   it("should update current candidate", async function () {
