@@ -64,7 +64,6 @@ type balanceParams_ is
     callback    : contract (list (balanceOfResponse));
   ]
 
-
 type operatorTransferPolicy_ is
   | No_transfer
   | Owner_transfer
@@ -135,7 +134,7 @@ type updateOperatorParams is list (updateOperatorParam)
 
 type tokenAction is
   | Transfer                of transferParams
-  // | Balance_of              of balanceParams
+  | Balance_of              of balanceParams
   // | Token_metadata_registry of tokenMetadataRegistryParams
   // | Permissions_descriptor  of permissionsDescriptorParams
   // | Update_operators        of updateOperatorParams
