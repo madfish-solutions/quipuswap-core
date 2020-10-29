@@ -1,9 +1,10 @@
 const Factory = artifacts.require("Factory");
-const Token = artifacts.require("Token");
-const tokenStorage = require("../storage/Token");
 const factoryStorage = require("../storage/Factory");
 const { dexFunctions, tokenFunctions } = require("../storage/Functions");
 const { execSync } = require("child_process");
+const standard = process.env.npm_package_config_standard;
+const Token = artifacts.require("Token" + standard);
+const tokenStorage = require("../storage/Token" + standard);
 
 function getLigo(isDockerizedLigo) {
   let path = "ligo";
@@ -40,7 +41,7 @@ module.exports = async (deployer, network) => {
     console.log("Setting dex functions");
     for (dexFunction of dexFunctions) {
       const stdout = execSync(
-        `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
+        `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
         { maxBuffer: 1024 * 500 }
       );
       const operation = await tezos.contract.transfer({
@@ -57,7 +58,7 @@ module.exports = async (deployer, network) => {
     console.log("Setting token functions");
     for (tokenFunction of tokenFunctions) {
       const stdout = execSync(
-        `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
+        `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
         { maxBuffer: 1024 * 500 }
       );
       const operation = await tezos.contract.transfer({

@@ -1,8 +1,12 @@
+#if FA2_STANDARD_ENABLED
+
+#else
 type account_info is record [
   balance           : nat;
   frozenBalance     : nat;
   allowances        : map (address, nat);
 ]
+#endif
 
 type vote_info is record [
   candidate   : option(key_hash);
@@ -31,6 +35,9 @@ type reward_info is record [
 ]
 
 type dex_storage is record [
+#if FA2_STANDARD_ENABLED
+  tokenId           : nat;
+#endif
   tezPool           : nat;
   tokenPool         : nat;
   invariant         : nat;
@@ -89,6 +96,9 @@ type dexAction is
 
 type defaultParams is unit
 type useParams is (nat * dexAction)
+#if FA2_STANDARD_ENABLED
+
+#else
 type transferParams is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type approveParams is michelson_pair(address, "spender", nat, "value")
 type balanceParams is michelson_pair(address, "owner", contract(nat), "")
@@ -110,6 +120,7 @@ type fullAction is
 | GetBalance of balanceParams
 | GetAllowance of allowanceParams
 | GetTotalSupply of totalSupplyParams
+#endif
 
 type return is list (operation) * dex_storage
 type dexFunc is (dexAction * dex_storage * address) -> return

@@ -1,8 +1,14 @@
 #include "./IDex.ligo"
 
+#if FA2_STANDARD_ENABLED
+type token_identifier is address
+#else
+type token_identifier is (address * nat)
+#endif
+
 type exchange_storage is record [
-  tokenList         : set (address);
-  tokenToExchange   : big_map(address, address);
+  tokenList         : set (token_identifier);
+  tokenToExchange   : big_map(token_identifier, address);
   dexLambdas        : big_map(nat, dexFunc);
   tokenLambdas      : big_map(nat, tokenFunc);
 ]
@@ -14,6 +20,9 @@ type factory_return is list(operation) * exchange_storage
 type full_factory_return is list(operation) * exchange_storage
 
 type launchExchangeParams is record [
+#if FA2_STANDARD_ENABLED
+  tokenId       : nat;
+#endif
   token         : address;
   tokenAmount   : nat;
 ]
@@ -32,7 +41,11 @@ type exchangeAction is
 | SetDexFunction of setDexFunctionParams
 | SetTokenFunction of setTokenFunctionParams
 
-const votingPeriod : int = 10; // UNCOMMENT for prod 2592000;
+#if TEST_ENABLED
+const votingPeriod : int = 10;
+#else
+const votingPeriod : int = 2592000;
+#endif
 const accurancyMultiplier : nat = 1000000000000000n;
 const vetoPeriod : int = 7889229;
 const feeRate : nat = 333n;
