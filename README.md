@@ -96,7 +96,7 @@ The Ligo interfaces of the contracts can be found in `contracts/partials`
 
 Factory contains the code template for the `Dex` Token-XTZ pair contracts, deploys them and keeps the list of deployed pairs. The functions for `Dex` are stored in `Factory` contract but because of gas and operation limits their code cannot be stored in Factory contract during the origination: they are added separately one by one.
 
-New exchange pairs are registred and deployed via `LaunchExchange`.
+New exchange pairs are registered and deployed via `LaunchExchange`.
 
 The contract has the following entrypoints:
 
@@ -130,7 +130,7 @@ Sets the dex specific function. Is used before the whole system is launched.
 
 `func` : function code.
 
-Each `index` is designed for specific `func` which functionality are decribed below.
+Each `index` is designed for a specific `func` which functionality is described below.
 
 ### SetTokenFunction
 
@@ -140,21 +140,21 @@ Sets the FA1.2 function. Is used before the whole system is launched.
 
 `func` : function code.
 
-Each `index` is designed for specific `func` which functionality are decribed below.
+Each `index` is designed for a specific `func` which functionality is described below.
 
 ### LaunchExchange
 
-Deploys a new empty `Dex` for `token`, stores the address of the new contract and put initial liquidity; has to be called with tezos amount that will be used as intial liquidity.
+Deploys a new empty `Dex` for `token`, stores the address of the new contract, and puts initial liquidity; has to be called with XTZ amount that will be used as initial liquidity.
 
 `token` : address of the paired token;
 
-`tokenAmount` : amount of tokens that will be withdrawn from user account and used as initial liquidity.
+`tokenAmount` : amount of tokens that will be withdrawn from the user account and used as initial liquidity.
 
-`tezAmount`(not an argument) : the XTZ for initial liquidity should be send along with the launch transaction.
+`tezAmount`(not an argument) : the XTZ for initial liquidity should be sent along with the launch transaction.
 
 ## Dex
 
-`Dex` fully implements FA1.2 token interface. For more details check the [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md). And the extends it with other exchnge-related methods.
+`Dex` fully implements FA1.2 token interface. For more details check the [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md). And the extends it with other exchange-related methods.
 
 The contract has the following entrypoints:
 
@@ -291,15 +291,15 @@ Votes for `candidate` with shares of `voter`.
 
 `candidate` : the chosen baker;
 
-`value` : amount of shares that is used to vote;
+`value` : amount of shares that are used to vote;
 
 `voter` : the account from which the voting is done.
 
 #### Veto (index 7)
 
-Votes against current delegate with `value` shares of `voter`; the `value` is frozen and can't be transfered or used for other voting.
+Votes against current delegate with `value` shares of `voter`; the `value` is frozen and can't be transferred or used for another voting.
 
-`value` : amount of shares that is used to vote against the chozen baker;
+`value` : amount of shares that are used to vote against the chosen baker;
 
 `voter` : the account from which the veto voting is done.
 
