@@ -4,7 +4,7 @@
   "config": {
     "network": "http://127.0.0.1:8732",
     "network1": "https://testnet-tezos.giganode.io",
-    "standard": "FA2",
+    "standard": "",
     "default": {
       "key": "../../scripts/sandbox/accounts",
       "storagedir": "./storage",
