@@ -1,6 +1,10 @@
 (* Define types *)
 type token_id is nat
-type account is nat
+type account is
+  record [
+    balance         : nat;
+    allowances      : set (address);
+  ]
 
 type tokenMetadataInfo_ is 
   record [
@@ -100,6 +104,7 @@ type operatorParam_ is
   record [
     owner     : address; 
     operator  : address;
+    token_id  : token_id;
   ]
 
 type operatorParam is michelson_pair_right_comb(operatorParam_)
@@ -137,5 +142,4 @@ type tokenAction is
   | Balance_of              of balanceParams
   // | Token_metadata_registry of tokenMetadataRegistryParams
   // | Permissions_descriptor  of permissionsDescriptorParams
-  // | Update_operators        of updateOperatorParams
-
+  | Update_operators        of updateOperatorParams

@@ -2,10 +2,17 @@
 
 (* Helper function to get account *)
 function getAccount (const addr : address; const s : storage) : account is
-  case s.ledger[addr] of
-      None -> 0n
-    | Some(instance) -> instance
+  block {
+    var acct : account :=
+      record [
+        balance    = 0n;
+        allowances = (set [] : set (address));
+      ];
+    case s.ledger[addr] of
+      None -> skip
+    | Some(instance) -> acct := instance
     end;
+  } with acct
 
 (* Perform transfers from one sender *)
 function iterateTransfer (const s : storage; const params : transferParam) : storage is
@@ -26,14 +33,14 @@ function iterateTransfer (const s : storage; const params : transferParam) : sto
         else skip;
 
         (* Balance check *)
-        if senderAccount < transfer.amount then
+        if senderAccount.balance < transfer.amount then
           failwith("FA2_INSUFFICIENT_BALANCE")
         else skip;
 
         // XXX::check permission policy
 
         (* Update sender balance *)
-        senderAccount := abs(senderAccount - transfer.amount);
+        senderAccount.balance := abs(senderAccount.balance - transfer.amount);
 
         (* Update storage *)
         s.ledger[userTrxParams.from_] := senderAccount;
@@ -42,13 +49,64 @@ function iterateTransfer (const s : storage; const params : transferParam) : sto
         var destAccount : account := getAccount(transfer.to_, s);
 
         (* Update destination balance *)
-        destAccount := destAccount + transfer.amount;
+        destAccount.balance := destAccount.balance + transfer.amount;
 
         (* Update storage *)
         s.ledger[transfer.to_] := destAccount;
     } with s
 
 } with (List.fold (makeTransfer, userTrxParams.txs, s))
+
+(* Perform single operator update *)
+function iterateUpdateOperator (const s : storage; const params : updateOperatorParam) : storage is
+  block {
+    case params of
+    | Add_operator(p) -> {
+      const param: operatorParam_ = Layout.convert_from_right_comb(p);
+
+      (* Token id check *)
+      if defaultTokenId =/= param.token_id then
+        failwith("FA2_TOKEN_UNDEFINED")
+      else skip;
+      
+      (* Check an owner *)
+      if Tezos.sender =/= param.owner then
+        failwith("FA2_NOT_OWNER")
+      else skip;
+
+      (* Create or get sender account *)
+      var senderAccount : account := getAccount(param.owner, s);
+
+      (* Set operator *)
+      senderAccount.allowances := Set.add(param.operator, senderAccount.allowances);
+
+      (* Update storage *)
+      s.ledger[param.owner] := senderAccount;
+    }
+    | Remove_operator(p) -> {
+      const param: operatorParam_ = Layout.convert_from_right_comb(p);
+
+      (* Token id check *)
+      if defaultTokenId =/= param.token_id then
+        failwith("FA2_TOKEN_UNDEFINED")
+      else skip;
+      
+      (* Check an owner *)
+      if Tezos.sender =/= param.owner then
+        failwith("FA2_NOT_OWNER")
+      else skip;
+
+      (* Create or get sender account *)
+      var senderAccount : account := getAccount(param.owner, s);
+
+      (* Set operator *)
+      senderAccount.allowances := Set.remove(param.operator, senderAccount.allowances);
+
+      (* Update storage *)
+      s.ledger[param.owner] := senderAccount;
+    }
+    end
+  } with s
 
 (* Perform balance look up *)
 function getBalanceOf (const params : balanceParams; const s : storage) : list(operation) is
@@ -69,7 +127,7 @@ function getBalanceOf (const params : balanceParams; const s : storage) : list(o
         (* Form the response *)
         const response : balanceOfResponse_ = record [
           request   = request;
-          balance   = senderAccount;
+          balance   = senderAccount.balance;
         ];
         const convertedResp : balanceOfResponse = Layout.convert_to_right_comb(response);  
       } with convertedResp # l;
@@ -86,6 +144,6 @@ function main (const action : tokenAction; var s : storage) : return is
     | Balance_of(params) -> (getBalanceOf(params, s), s)
     // | Token_metadata_registry(params) -> tokenMetadataRegistry(params.0, params.1, s)
     // | Permissions_descriptor(params) -> permissionDescriptor(params.0.0, params.0.1, params.1, s)
-    // | Update_operators(params) -> updateOperatorsAction(params.1, s)
+    | Update_operators(params) -> ((nil : list (operation)), List.fold(iterateUpdateOperator, params, s))
   end;
   
