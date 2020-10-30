@@ -14,13 +14,18 @@ function get_account (const addr : address; const s : storage) : account is
     end;
   } with acct
 
-(* Perform transfers from one sender *)
+(* Perform transfers from one owner *)
 function iterate_transfer (const s : storage; const params : transfer_param) : storage is
   block {
     const user_trx_params: transfer_param_r = Layout.convert_from_right_comb(params);
 
     (* Retrieve sender account from storage *)
     const sender_account : account = get_account(user_trx_params.from_, s);
+
+    (* Check permissions *)
+    if user_trx_params.from_ = Tezos.sender or sender_account.allowances contains Tezos.sender then 
+      skip
+    else failwith("FA2_NOT_OPERATOR");
 
     (* Perform single transfer *)
     function make_transfer(const s : storage; const params : transfer_destination) : storage is 
@@ -37,8 +42,6 @@ function iterate_transfer (const s : storage; const params : transfer_param) : s
           failwith("FA2_INSUFFICIENT_BALANCE")
         else skip;
 
-        // XXX::check permission policy
-
         (* Update sender balance *)
         sender_account.balance := abs(sender_account.balance - transfer.amount);
 
@@ -53,8 +56,7 @@ function iterate_transfer (const s : storage; const params : transfer_param) : s
 
         (* Update storage *)
         s.ledger[transfer.to_] := dest_account;
-    } with s
-
+    } with s;
 } with (List.fold (make_transfer, user_trx_params.txs, s))
 
 (* Perform single operator update *)
@@ -82,7 +84,7 @@ function iterate_update_operator (const s : storage; const params : update_opera
 
       (* Update storage *)
       s.ledger[param.owner] := sender_account;
-    }
+    } 
     | Remove_operator(p) -> {
       const param: operator_param_r = Layout.convert_from_right_comb(p);
 
@@ -104,7 +106,7 @@ function iterate_update_operator (const s : storage; const params : update_opera
 
       (* Update storage *)
       s.ledger[param.owner] := sender_account;
-    }
+    } 
     end
   } with s
 
@@ -125,16 +127,16 @@ function get_balance_of (const params : balance_params; const s : storage) : lis
         const sender_account : account = get_account(request.owner, s);
 
         (* Form the response *)
-        const response : balance_of_response_r = record [
+        const response_r : balance_of_response_r = record [
           request   = request;
           balance   = sender_account.balance;
         ];
-        const converted_resp : balance_of_response = Layout.convert_to_right_comb(response);  
-      } with converted_resp # l;
+        const response : balance_of_response = Layout.convert_to_right_comb(response_r);  
+      } with response # l;
     
-    (* Collect balances *)
-    const resp : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
-  } with list [transaction(resp, 0tz, balance_params.callback)]
+    (* Collect balances info *)
+    const accomulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
+  } with list [transaction(accomulated_response, 0tz, balance_params.callback)]
 
 (* Perform balance look up *)
 function get_token_metadata_registry (const receiver : contract(address); const s : storage) : list(operation) is
@@ -147,7 +149,6 @@ function main (const action : token_action; var s : storage) : return is
     | Transfer(params) -> ((nil : list (operation)), List.fold(iterate_transfer, params, s))
     | Balance_of(params) -> (get_balance_of(params, s), s)
     | Token_metadata_registry(params) -> (get_token_metadata_registry(params, s), s)
-    // | Permissions_descriptor(params) -> permissionDescriptor(params.0.0, params.0.1, params.1, s)
     | Update_operators(params) -> ((nil : list (operation)), List.fold(iterate_update_operator, params, s))
   end;
   
