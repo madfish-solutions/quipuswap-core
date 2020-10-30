@@ -1,12 +1,16 @@
 #if FA2_STANDARD_ENABLED
+#include "./TypesFA2.ligo"
+#endif
 
-#else
 type account_info is record [
   balance           : nat;
   frozen_balance    : nat;
+#if FA2_STANDARD_ENABLED
+  allowances        : set (address);
+#else
   allowances        : map (address, nat);
-]
 #endif
+]
 
 type vote_info is record [
   candidate   : option(key_hash);
@@ -36,7 +40,8 @@ type reward_info is record [
 
 type dex_storage is record [
 #if FA2_STANDARD_ENABLED
-  token_id            : nat;
+  token_id            : token_id;
+  token_metadata      : big_map (token_id, token_metadata_info);
 #endif
   tez_pool            : nat;
   token_pool          : nat;
@@ -62,15 +67,15 @@ type tez_to_token_payment_params is record [
 ]
 
 type token_to_tez_payment_params is record [
-  amount      : nat; 
+  amount       : nat; 
   min_out      : nat; 
-  receiver    : address;
+  receiver     : address;
 ]
 
 type divest_liquidity_params is record [
   min_tez      : nat; 
   min_tokens   : nat;
-  shares      : nat; 
+  shares       : nat; 
 ]
 
 type vote_params is record [
@@ -96,30 +101,11 @@ type dex_action is
 
 type default_params is unit
 type use_params is (nat * dex_action)
+
 #if FA2_STANDARD_ENABLED
-
+#include "./ActionFA2.ligo"
 #else
-type transfer_params is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
-type approve_params is michelson_pair(address, "spender", nat, "value")
-type balance_params is michelson_pair(address, "owner", contract(nat), "")
-type allowance_params is michelson_pair(michelson_pair(address, "owner", address, "spender"), "", contract(nat), "")
-type total_supply_params is (unit * contract(nat))
-
-type token_action is
-| ITransfer of transfer_params
-| IApprove of approve_params
-| IGetBalance of balance_params
-| IGetAllowance of allowance_params
-| IGetTotalSupply of total_supply_params
-
-type full_action is
-| Use of use_params
-| Default of default_params
-| Transfer of transfer_params
-| Approve of approve_params
-| GetBalance of balance_params
-| GetAllowance of allowance_params
-| GetTotalSupply of total_supply_params
+#include "./ActionFA12.ligo"
 #endif
 
 type return is list (operation) * dex_storage
