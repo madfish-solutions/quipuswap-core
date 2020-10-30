@@ -539,7 +539,6 @@ const create_dex : create_dex_func =
 #else
 #include "DexFA2.tz"
 #endif
-
                   ;
                     PAIR } |}
            : create_dex_func)];
