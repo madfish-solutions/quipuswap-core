@@ -1,24 +1,55 @@
 #include "../partials/IFactory.ligo"
 
-// types for internal transaction calls
-type transfer_type is TransferType of michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
+(* Helper function to get account *)
+function get_account (const addr : address; const s : dex_storage) : account_info is
+  block {
+    var acct : account_info :=
+      record [
+        balance    = 0n;
+        frozen_balance   = 0n;
+#if FA2_STANDARD_ENABLED
+        allowances = (set [] : set (address));
+#else
+        allowances = (map [] : map(address, nat));
+#endif
+      ];
+    case s.ledger[addr] of
+      None -> skip
+    | Some(instance) -> acct := instance
+    end;
+  } with acct
+
+function wrap_transfer_trx(const owner : address; const receiver : address; const value : nat; const s : dex_storage) : transfer_type is 
+#if FA2_STANDARD_ENABLED
+  TransferType(list[Layout.convert_to_right_comb(
+    (record[
+      from_ = owner; 
+      txs = list [ Layout.convert_to_right_comb((record [
+          to_ = receiver; 
+          token_id = s.token_id;
+          amount = value;
+        ]: transfer_destination_r)) ]
+    ]: transfer_param_r))
+  ])
+#else
+  TransferType(owner, (receiver, value))
+#endif
 
 (* Helper function to get token contract *)
 function get_token_contract(const token_address : address) : contract(transfer_type) is 
   case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type))) of 
     Some(contr) -> contr
-    | None -> (failwith("01"):contract(transfer_type))
+    | None -> (failwith("01") : contract(transfer_type))
   end;
-
 
 (* Helper function to get voter info *)
 function get_voter (const addr : address; const s : dex_storage) : vote_info is
   block {
     var acct : vote_info :=
       record [
-        candidate   = (None : option(key_hash));
-        vote        = 0n;
-        veto        = 0n;
+        candidate    = (None : option(key_hash));
+        vote         = 0n;
+        veto         = 0n;
         last_veto    = Tezos.now;
       ];
     case s.voters[addr] of
@@ -32,9 +63,9 @@ function get_user_reward_info (const addr : address; const s : dex_storage) : us
   block {
     var acct : user_reward_info :=
       record [
-        reward        = 0n;
+        reward         = 0n;
         reward_paid    = 0n;
-        loyalty       = 0n;
+        loyalty        = 0n;
         loyalty_paid   = 0n;
         update_time    = Tezos.now;
       ];
@@ -74,9 +105,9 @@ function update_user_reward (const addr : address; const account: account_info; 
       const prev_loyalty : nat = user_reward_info.loyalty + abs((account.balance + account.frozen_balance) * s.reward_info.last_loyalty_per_share - user_reward_info.loyalty_paid);
       const current_reward : nat = prev_loyalty * abs(s.reward_info.reward_per_token - user_reward_info.reward_paid) / accurancy_multiplier;
       user_reward_info := record [
-        reward        = user_reward_info.reward + current_reward;
+        reward         = user_reward_info.reward + current_reward;
         reward_paid    = s.reward_info.reward_per_token;
-        loyalty       = prev_loyalty;
+        loyalty        = prev_loyalty;
         loyalty_paid   = (account.balance + account.frozen_balance) * s.reward_info.last_loyalty_per_share;
         update_time    = Tezos.now;
       ];
@@ -113,7 +144,11 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           s.ledger[Tezos.sender] := record [
               balance    = 1000n;
               frozen_balance    = 0n;
-              allowances = (map [] : map (address, nat));
+#if FA2_STANDARD_ENABLED
+              allowances = (set [] : set(address));
+#else
+              allowances = (map [] : map(address, nat));
+#endif
             ];
           s.total_supply := 1000n; 
 
@@ -130,7 +165,7 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
             ];
           
           operations := list[ transaction(
-            TransferType(Tezos.sender, (this, token_amount)), 
+            wrap_transfer_trx(Tezos.sender, this, token_amount, s), 
             0mutez, 
             get_token_contract(s.token_address)
           )];
@@ -171,6 +206,12 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
             if account.balance + voter_info.vote < args.value then
               failwith("Dex/not-enough-balance")
             else skip;
+ 
+#if FA2_STANDARD_ENABLED
+            if args.voter = Tezos.sender or account.allowances contains Tezos.sender then 
+              skip
+            else failwith("Dex/not-enough-allowance");
+#else
             if args.voter =/= Tezos.sender then block {
               const spender_allowance : nat = get_allowance(account, Tezos.sender, s);
               if spender_allowance < args.value then
@@ -178,7 +219,7 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
               else skip;
               account.allowances[Tezos.sender] := abs(spender_allowance - args.value);
             } else skip;
-            
+#endif
             (* remove prev *)
             case voter_info.candidate of 
               | None -> skip
@@ -240,6 +281,13 @@ function veto (const p : dex_action; const s : dex_storage; const this: address)
             if account.balance + voter_info.veto < args.value then
               failwith("Dex/not-enough-balance")
             else skip;
+
+            (* Check permissions *)
+#if FA2_STANDARD_ENABLED
+            if args.voter = Tezos.sender or account.allowances contains Tezos.sender then 
+              skip
+            else failwith("Dex/not-enough-allowance");
+#else
             if args.voter =/= Tezos.sender then block {
               const spender_allowance : nat = get_allowance(account, Tezos.sender, s);
               if spender_allowance < args.value then
@@ -247,6 +295,7 @@ function veto (const p : dex_action; const s : dex_storage; const this: address)
               else skip;
               account.allowances[Tezos.sender] := abs(spender_allowance - args.value);
             } else skip;
+#endif
 
             account.balance := abs(account.balance + voter_info.veto - args.value);
             account.frozen_balance := abs(account.frozen_balance - voter_info.veto + args.value);
@@ -302,7 +351,7 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
               s.token_pool := new_token_pool;
               s.invariant := s.tez_pool * new_token_pool;
               operations := transaction(
-                TransferType(this, (args.receiver, tokens_out)), 
+                wrap_transfer_trx(this, args.receiver, tokens_out, s), 
                 0mutez, 
                 get_token_contract(s.token_address)
               ) # operations;
@@ -336,7 +385,7 @@ function token_to_tez (const p : dex_action; const s : dex_storage; const this :
           } else failwith("Dex/high-min-tez-out");
         } else failwith("Dex/wrong-params");
         operations := list [transaction(
-            TransferType(Tezos.sender, (this, args.amount)), 
+            wrap_transfer_trx(Tezos.sender, this, args.amount, s), 
             0mutez, 
             get_token_contract(s.token_address)); 
           transaction(
@@ -382,7 +431,7 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
           s.invariant := s.tez_pool * s.token_pool;
           s.total_supply := s.total_supply + shares_purchased;
         };
-        operations := list[transaction(TransferType(Tezos.sender, (this, tokens_required)), 
+        operations := list[transaction(wrap_transfer_trx(Tezos.sender, this, tokens_required, s), 
           0mutez, 
           get_token_contract(s.token_address)
         )];
@@ -424,7 +473,7 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
 
           operations := list [
             transaction(
-              TransferType(this, (Tezos.sender, tokens_divested)), 
+              wrap_transfer_trx(this, Tezos.sender, tokens_divested, s), 
               0mutez,          
               get_token_contract(s.token_address)
             ); 
@@ -438,23 +487,6 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       | Vote(n) -> failwith("00")
       | Veto(voter) -> failwith("00")
       | WithdrawProfit(n) -> failwith("00")
-    end
-  } with (operations, s)
-
-(* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
-function get_allowance (const p : token_action; const s : dex_storage) : return is
-  block {
-    var operations : list(operation) := list[];
-    case p of
-    | ITransfer(params) -> failwith("00")
-    | IApprove(params) -> failwith("00")
-    | IGetBalance(params) -> failwith("00")
-    | IGetAllowance(params) -> {
-      const owner_account : account_info = get_account(params.0.0, s);
-      const spender_allowance : nat = get_allowance(owner_account, params.0.1, s);
-      operations := list [transaction(spender_allowance, 0tz, params.1)];
-    }
-    | IGetTotalSupply(params) -> failwith("00")
     end
   } with (operations, s)
 
@@ -502,13 +534,18 @@ function withdrawProfit (const p : dex_action; const s : dex_storage; const this
 const create_dex : create_dex_func =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT 
+#if FA2_STANDARD_ENABLED
 #include "Dex.tz"
+#else
+#include "DexFA2.tz"
+#endif
+
                   ;
                     PAIR } |}
            : create_dex_func)];
   
 (* Create the pool contract for Tez-Token pair *)
-function launch_exchange (const self : address; const token : address; const token_amount : nat; var s : exchange_storage) :  full_factory_return is
+function launch_exchange (const self : address; const token : token_identifier; const token_amount : nat; var s : exchange_storage) :  full_factory_return is
   block {
     if s.token_list contains token then 
       failwith("Factory/exchange-launched") 
@@ -518,50 +555,66 @@ function launch_exchange (const self : address; const token : address; const tok
     else skip; 
     s.token_list := Set.add (token, s.token_list);
 
-    const res : (operation * address) = create_dex((None : option(key_hash)), Tezos.amount, record [
-      storage = 
+    const storage : dex_storage = record [
+#if FA2_STANDARD_ENABLED
+      token_id = token.1;
+      token_metadata = (big_map [] : big_map (token_id, token_metadata_info));
+#endif
+      tez_pool = Tezos.amount / 1mutez;      
+      token_pool = token_amount;      
+      invariant = Tezos.amount / 1mutez * token_amount;      
+      total_supply = 1000n; 
+#if FA2_STANDARD_ENABLED
+      token_address = token.0;      
+#else
+      token_address = token;      
+#endif
+      ledger = big_map[Tezos.sender -> record [
+          balance = 1000n;
+          frozen_balance = 0n;
+#if FA2_STANDARD_ENABLED
+          allowances = (set [] : set(address));
+#else
+          allowances = (map [] : map(address, nat));
+#endif
+        ]
+      ];
+      voters = (big_map [] : big_map(address, vote_info));      
+      vetos = (big_map [] : big_map(key_hash, timestamp));      
+      votes = (big_map [] : big_map(key_hash, nat));      
+      veto = 0n;      
+      last_veto = Tezos.now;
+      current_delegated = (None: option(key_hash));      
+      current_candidate = (None: option(key_hash));      
+      total_votes = 0n;      
+      reward_info = 
         record [
-            tez_pool = Tezos.amount / 1mutez;      
-            token_pool = token_amount;      
-            invariant = Tezos.amount / 1mutez * token_amount;      
-            total_supply = 1000n; 
-            token_address = token;      
-            ledger = big_map[Tezos.sender -> record [
-                balance = 1000n;
-                frozen_balance = 0n;
-                allowances = (map [] : map(address, nat));
-              ]
-            ];
-            voters = (big_map [] : big_map(address, vote_info));      
-            vetos = (big_map [] : big_map(key_hash, timestamp));      
-            votes = (big_map [] : big_map(key_hash, nat));      
-            veto = 0n;      
-            last_veto = Tezos.now;
-            current_delegated = (None: option(key_hash));      
-            current_candidate = (None: option(key_hash));      
-            total_votes = 0n;      
-            reward_info = 
-              record [
-                reward = 0n;
-                loyalty_per_share = 0n;
-                last_update_time = Tezos.now;
-                period_finish = Tezos.now;
-                last_period_finish = Tezos.now;
-                total_accomulated_loyalty = 0n;
-                reward_per_token = 0n;    
-                last_loyalty_per_share = 0n;    
-              ];
-            user_rewards = (big_map [] : big_map(address, user_reward_info));      
-        ];   
+          reward = 0n;
+          loyalty_per_share = 0n;
+          last_update_time = Tezos.now;
+          period_finish = Tezos.now;
+          last_period_finish = Tezos.now;
+          total_accomulated_loyalty = 0n;
+          reward_per_token = 0n;    
+          last_loyalty_per_share = 0n;    
+        ];
+      user_rewards = (big_map [] : big_map(address, user_reward_info));      
+    ]; 
+    const res : (operation * address) = create_dex((None : option(key_hash)), Tezos.amount, record [
+      storage = storage;
       dex_lambdas = s.dex_lambdas;
       token_lambdas = s.token_lambdas;
     ]);
     s.token_to_exchange[token] := res.1;
   } with (list[res.0;
     transaction(
-      TransferType(Tezos.sender, (res.1, token_amount)), 
+      wrap_transfer_trx(Tezos.sender, res.1, token_amount, storage), 
       0mutez, 
+#if FA2_STANDARD_ENABLED
+      get_token_contract(token.0)
+#else
       get_token_contract(token)
+#endif
     )
   ], s)
 

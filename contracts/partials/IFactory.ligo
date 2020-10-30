@@ -20,10 +20,7 @@ type factory_return is list(operation) * exchange_storage
 type full_factory_return is list(operation) * exchange_storage
 
 type launch_exchange_params is record [
-#if FA2_STANDARD_ENABLED
-  token_id       : nat;
-#endif
-  token         : address;
+  token          : token_identifier;
   token_amount   : nat;
 ]
 
@@ -49,3 +46,5 @@ const voting_period : int = 2592000;
 const accurancy_multiplier : nat = 1000000000000000n;
 const veto_period : int = 7889229;
 const fee_rate : nat = 333n;
+
+type transfer_type is TransferType of transfer_params

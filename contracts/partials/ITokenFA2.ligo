@@ -30,11 +30,11 @@ type storage is
 type return is list (operation) * storage
 
 type transfer_destination_r is 
-  record
+  record [
     to_       : address;
     token_id  : token_id;
     amount    : nat;
-end
+  ]
 
 type transfer_destination is michelson_pair_right_comb(transfer_destination_r)
 
@@ -76,8 +76,8 @@ type operator_param_r is
 type operator_param is michelson_pair_right_comb(operator_param_r)
 
 type update_operator_param is
-  | Add_operator    of operator_param
-  | Remove_operator of operator_param
+| Add_operator    of operator_param
+| Remove_operator of operator_param
 
 type transfer_params is list (transfer_param)
 type balance_params is michelson_pair_right_comb(balance_params_r)
@@ -85,7 +85,7 @@ type token_metadata_registry_params is contract (address)
 type update_operator_params is list (update_operator_param)
 
 type token_action is
-  | Transfer                of transfer_params
-  | Balance_of              of balance_params
-  | Token_metadata_registry of token_metadata_registry_params
-  | Update_operators        of update_operator_params
+| Transfer                of transfer_params
+| Balance_of              of balance_params
+| Token_metadata_registry of token_metadata_registry_params
+| Update_operators        of update_operator_params

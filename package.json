@@ -4,7 +4,7 @@
   "config": {
     "network": "http://127.0.0.1:8732",
     "network1": "https://testnet-tezos.giganode.io",
-    "standard": "",
+    "standard": "FA2",
     "default": {
       "key": "../../scripts/sandbox/accounts",
       "storagedir": "./storage",
@@ -19,7 +19,7 @@
     "clean": "rm -rf ./build",
     "migrate": "truffle migrate",
     "migrate-carthagenet": "truffle migrate --network carthagenet",
-    "compile": "node scripts/cli.js build ./main/Dex --no-json -o contracts && truffle compile",
+    "compile": "node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",
     "test": "tsc && npm run compile && npm run clean && truffle test",
     "test:quick": "tsc && truffle test"

@@ -1,19 +1,3 @@
-
-(* Helper function to get account *)
-function get_account (const addr : address; const s : dex_storage) : account_info is
-  block {
-    var acct : account_info :=
-      record [
-        balance         = 0n;
-        frozen_balance   = 0n;
-        allowances      = (map [] : map (address, nat));
-      ];
-    case s.ledger[addr] of
-      None -> skip
-    | Some(instance) -> acct := instance
-    end;
-  } with acct
-  
 (* Helper function to get allowance for an account *)
 function get_allowance (const owner_account : account_info; const spender : address; const s : dex_storage) : nat is
   case owner_account.allowances[spender] of
@@ -112,5 +96,22 @@ function get_total_supply (const p : token_action; const s : dex_storage) : retu
     | IGetTotalSupply(params) -> {
       operations := list [transaction(s.total_supply, 0tz, params.1)];
     }
+    end
+  } with (operations, s)
+
+(* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
+function get_allowance_to_contract (const p : token_action; const s : dex_storage) : return is
+  block {
+    var operations : list(operation) := list[];
+    case p of
+    | ITransfer(params) -> failwith("00")
+    | IApprove(params) -> failwith("00")
+    | IGetBalance(params) -> failwith("00")
+    | IGetAllowance(params) -> {
+      const owner_account : account_info = get_account(params.0.0, s);
+      const spender_allowance : nat = get_allowance(owner_account, params.0.1, s);
+      operations := list [transaction(spender_allowance, 0tz, params.1)];
+    }
+    | IGetTotalSupply(params) -> failwith("00")
     end
   } with (operations, s)
