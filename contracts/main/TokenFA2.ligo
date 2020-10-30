@@ -1,7 +1,7 @@
 #include "../partials/ITokenFA2.ligo"
 
 (* Helper function to get account *)
-function getAccount (const addr : address; const s : storage) : account is
+function get_account (const addr : address; const s : storage) : account is
   block {
     var acct : account :=
       record [
@@ -15,57 +15,57 @@ function getAccount (const addr : address; const s : storage) : account is
   } with acct
 
 (* Perform transfers from one sender *)
-function iterateTransfer (const s : storage; const params : transferParam) : storage is
+function iterate_transfer (const s : storage; const params : transfer_param) : storage is
   block {
-    const userTrxParams: transferParam_ = Layout.convert_from_right_comb(params);
+    const user_trx_params: transfer_param_r = Layout.convert_from_right_comb(params);
 
     (* Retrieve sender account from storage *)
-    const senderAccount : account = getAccount(userTrxParams.from_, s);
+    const sender_account : account = get_account(user_trx_params.from_, s);
 
     (* Perform single transfer *)
-    function makeTransfer(const s : storage; const params : transferDestination) : storage is 
+    function make_transfer(const s : storage; const params : transfer_destination) : storage is 
       block { 
-        const transfer: transferDestination_ = Layout.convert_from_right_comb(params);
+        const transfer: transfer_destination_r = Layout.convert_from_right_comb(params);
 
         (* Token id check *)
-        if defaultTokenId =/= transfer.token_id then
+        if default_token_id =/= transfer.token_id then
           failwith("FA2_TOKEN_UNDEFINED")
         else skip;
 
         (* Balance check *)
-        if senderAccount.balance < transfer.amount then
+        if sender_account.balance < transfer.amount then
           failwith("FA2_INSUFFICIENT_BALANCE")
         else skip;
 
         // XXX::check permission policy
 
         (* Update sender balance *)
-        senderAccount.balance := abs(senderAccount.balance - transfer.amount);
+        sender_account.balance := abs(sender_account.balance - transfer.amount);
 
         (* Update storage *)
-        s.ledger[userTrxParams.from_] := senderAccount;
+        s.ledger[user_trx_params.from_] := sender_account;
 
         (* Create or get destination account *)
-        var destAccount : account := getAccount(transfer.to_, s);
+        var dest_account : account := get_account(transfer.to_, s);
 
         (* Update destination balance *)
-        destAccount.balance := destAccount.balance + transfer.amount;
+        dest_account.balance := dest_account.balance + transfer.amount;
 
         (* Update storage *)
-        s.ledger[transfer.to_] := destAccount;
+        s.ledger[transfer.to_] := dest_account;
     } with s
 
-} with (List.fold (makeTransfer, userTrxParams.txs, s))
+} with (List.fold (make_transfer, user_trx_params.txs, s))
 
 (* Perform single operator update *)
-function iterateUpdateOperator (const s : storage; const params : updateOperatorParam) : storage is
+function iterate_update_operator (const s : storage; const params : update_operator_param) : storage is
   block {
     case params of
     | Add_operator(p) -> {
-      const param: operatorParam_ = Layout.convert_from_right_comb(p);
+      const param: operator_param_r = Layout.convert_from_right_comb(p);
 
       (* Token id check *)
-      if defaultTokenId =/= param.token_id then
+      if default_token_id =/= param.token_id then
         failwith("FA2_TOKEN_UNDEFINED")
       else skip;
       
@@ -75,19 +75,19 @@ function iterateUpdateOperator (const s : storage; const params : updateOperator
       else skip;
 
       (* Create or get sender account *)
-      var senderAccount : account := getAccount(param.owner, s);
+      var sender_account : account := get_account(param.owner, s);
 
       (* Set operator *)
-      senderAccount.allowances := Set.add(param.operator, senderAccount.allowances);
+      sender_account.allowances := Set.add(param.operator, sender_account.allowances);
 
       (* Update storage *)
-      s.ledger[param.owner] := senderAccount;
+      s.ledger[param.owner] := sender_account;
     }
     | Remove_operator(p) -> {
-      const param: operatorParam_ = Layout.convert_from_right_comb(p);
+      const param: operator_param_r = Layout.convert_from_right_comb(p);
 
       (* Token id check *)
-      if defaultTokenId =/= param.token_id then
+      if default_token_id =/= param.token_id then
         failwith("FA2_TOKEN_UNDEFINED")
       else skip;
       
@@ -97,53 +97,57 @@ function iterateUpdateOperator (const s : storage; const params : updateOperator
       else skip;
 
       (* Create or get sender account *)
-      var senderAccount : account := getAccount(param.owner, s);
+      var sender_account : account := get_account(param.owner, s);
 
       (* Set operator *)
-      senderAccount.allowances := Set.remove(param.operator, senderAccount.allowances);
+      sender_account.allowances := Set.remove(param.operator, sender_account.allowances);
 
       (* Update storage *)
-      s.ledger[param.owner] := senderAccount;
+      s.ledger[param.owner] := sender_account;
     }
     end
   } with s
 
 (* Perform balance look up *)
-function getBalanceOf (const params : balanceParams; const s : storage) : list(operation) is
+function get_balance_of (const params : balance_params; const s : storage) : list(operation) is
   block {
-    const balanceParams: balanceParams_ = Layout.convert_from_right_comb(params);
+    const balance_params: balance_params_r = Layout.convert_from_right_comb(params);
 
     (* Perform single balance lookup *)
-    function lookUpBalance(const l: list (balanceOfResponse); const request : balanceOfRequest) : list (balanceOfResponse) is
+    function look_up_balance(const l: list (balance_of_response); const request : balance_of_request_r) : list (balance_of_response) is
       block {       
         (* Token id check *)
-        if defaultTokenId =/= request.token_id then
+        if default_token_id =/= request.token_id then
           failwith("FA2_TOKEN_UNDEFINED")
         else skip;
 
         (* Retrieve the asked account balance from storage *)
-        const senderAccount : account = getAccount(request.owner, s);
+        const sender_account : account = get_account(request.owner, s);
 
         (* Form the response *)
-        const response : balanceOfResponse_ = record [
+        const response : balance_of_response_r = record [
           request   = request;
-          balance   = senderAccount.balance;
+          balance   = sender_account.balance;
         ];
-        const convertedResp : balanceOfResponse = Layout.convert_to_right_comb(response);  
-      } with convertedResp # l;
+        const converted_resp : balance_of_response = Layout.convert_to_right_comb(response);  
+      } with converted_resp # l;
     
     (* Collect balances *)
-    const resp : list (balanceOfResponse) = List.fold(lookUpBalance, balanceParams.requests, (nil: list(balanceOfResponse)));
-  } with list [transaction(resp, 0tz, balanceParams.callback)]
+    const resp : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
+  } with list [transaction(resp, 0tz, balance_params.callback)]
 
-function main (const action : tokenAction; var s : storage) : return is
+(* Perform balance look up *)
+function get_token_metadata_registry (const receiver : contract(address); const s : storage) : list(operation) is
+  list [transaction(Tezos.self_address, 0tz, receiver)]
+
+function main (const action : token_action; var s : storage) : return is
   block {
     skip
   } with case action of
-    | Transfer(params) -> ((nil : list (operation)), List.fold(iterateTransfer, params, s))
-    | Balance_of(params) -> (getBalanceOf(params, s), s)
-    // | Token_metadata_registry(params) -> tokenMetadataRegistry(params.0, params.1, s)
+    | Transfer(params) -> ((nil : list (operation)), List.fold(iterate_transfer, params, s))
+    | Balance_of(params) -> (get_balance_of(params, s), s)
+    | Token_metadata_registry(params) -> (get_token_metadata_registry(params, s), s)
     // | Permissions_descriptor(params) -> permissionDescriptor(params.0.0, params.0.1, params.1, s)
-    | Update_operators(params) -> ((nil : list (operation)), List.fold(iterateUpdateOperator, params, s))
+    | Update_operators(params) -> ((nil : list (operation)), List.fold(iterate_update_operator, params, s))
   end;
   
