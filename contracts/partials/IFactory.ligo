@@ -1,51 +1,51 @@
 #include "./IDex.ligo"
 
 #if FA2_STANDARD_ENABLED
-type token_identifier is address
-#else
 type token_identifier is (address * nat)
+#else
+type token_identifier is address
 #endif
 
 type exchange_storage is record [
-  tokenList         : set (token_identifier);
-  tokenToExchange   : big_map(token_identifier, address);
-  dexLambdas        : big_map(nat, dexFunc);
-  tokenLambdas      : big_map(nat, tokenFunc);
+  token_list          : set (token_identifier);
+  token_to_exchange   : big_map(token_identifier, address);
+  dex_lambdas         : big_map(nat, dex_func);
+  token_lambdas       : big_map(nat, token_func);
 ]
 
-type createDexFunc is (option(key_hash) * tez * full_dex_storage) -> (operation * address)
+type create_dex_func is (option(key_hash) * tez * full_dex_storage) -> (operation * address)
 
 type factory_return is list(operation) * exchange_storage
 
 type full_factory_return is list(operation) * exchange_storage
 
-type launchExchangeParams is record [
+type launch_exchange_params is record [
 #if FA2_STANDARD_ENABLED
-  tokenId       : nat;
+  token_id       : nat;
 #endif
   token         : address;
-  tokenAmount   : nat;
+  token_amount   : nat;
 ]
 
-type setTokenFunctionParams is record [
-  func    : tokenFunc;
+type set_token_function_params is record [
+  func    : token_func;
   index   : nat;
 ]
-type setDexFunctionParams is record [
-  func    : dexFunc;
+type set_dex_function_params is record [
+  func    : dex_func;
   index   : nat;
 ]
 
-type exchangeAction is
-| LaunchExchange of launchExchangeParams
-| SetDexFunction of setDexFunctionParams
-| SetTokenFunction of setTokenFunctionParams
+type exchange_action is
+| LaunchExchange of launch_exchange_params
+| SetDexFunction of set_dex_function_params
+| SetTokenFunction of set_token_function_params
 
 #if TEST_ENABLED
-const votingPeriod : int = 10;
+const voting_period : int = 10;
 #else
-const votingPeriod : int = 2592000;
+const voting_period : int = 2592000;
 #endif
-const accurancyMultiplier : nat = 1000000000000000n;
-const vetoPeriod : int = 7889229;
-const feeRate : nat = 333n;
+const accurancy_multiplier : nat = 1000000000000000n;
+const veto_period : int = 7889229;
+const fee_rate : nat = 333n;
