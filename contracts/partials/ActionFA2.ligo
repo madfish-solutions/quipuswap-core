@@ -1,5 +1,5 @@
 type transfer_params is list (transfer_param)
-type balance_params is michelson_pair_right_comb(balance_params_r)
+// type balance_params is michelson_pair_right_comb(balance_params_r)
 type token_metadata_registry_params is contract (address)
 type update_operator_params is list (update_operator_param)
 

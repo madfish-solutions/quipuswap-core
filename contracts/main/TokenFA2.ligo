@@ -15,10 +15,8 @@ function get_account (const addr : address; const s : storage) : account is
   } with acct
 
 (* Perform transfers from one owner *)
-function iterate_transfer (const s : storage; const params : transfer_param) : storage is
+function iterate_transfer (const s : storage; const user_trx_params : transfer_param) : storage is
   block {
-    const user_trx_params: transfer_param_r = Layout.convert_from_right_comb(params);
-
     (* Retrieve sender account from storage *)
     const sender_account : account = get_account(user_trx_params.from_, s);
 
@@ -28,10 +26,8 @@ function iterate_transfer (const s : storage; const params : transfer_param) : s
     else failwith("FA2_NOT_OPERATOR");
 
     (* Perform single transfer *)
-    function make_transfer(const s : storage; const params : transfer_destination) : storage is 
+    function make_transfer(const s : storage; const transfer : transfer_destination) : storage is 
       block { 
-        const transfer: transfer_destination_r = Layout.convert_from_right_comb(params);
-
         (* Token id check *)
         if default_token_id =/= transfer.token_id then
           failwith("FA2_TOKEN_UNDEFINED")
@@ -63,9 +59,7 @@ function iterate_transfer (const s : storage; const params : transfer_param) : s
 function iterate_update_operator (const s : storage; const params : update_operator_param) : storage is
   block {
     case params of
-    | Add_operator(p) -> {
-      const param: operator_param_r = Layout.convert_from_right_comb(p);
-
+    | Add_operator(param) -> {
       (* Token id check *)
       if default_token_id =/= param.token_id then
         failwith("FA2_TOKEN_UNDEFINED")
@@ -85,9 +79,7 @@ function iterate_update_operator (const s : storage; const params : update_opera
       (* Update storage *)
       s.ledger[param.owner] := sender_account;
     } 
-    | Remove_operator(p) -> {
-      const param: operator_param_r = Layout.convert_from_right_comb(p);
-
+    | Remove_operator(param) -> {
       (* Token id check *)
       if default_token_id =/= param.token_id then
         failwith("FA2_TOKEN_UNDEFINED")
@@ -111,12 +103,11 @@ function iterate_update_operator (const s : storage; const params : update_opera
   } with s
 
 (* Perform balance look up *)
-function get_balance_of (const params : balance_params; const s : storage) : list(operation) is
+function get_balance_of (const balance_params : balance_params; const s : storage) : list(operation) is
   block {
-    const balance_params: balance_params_r = Layout.convert_from_right_comb(params);
 
     (* Perform single balance lookup *)
-    function look_up_balance(const l: list (balance_of_response); const request : balance_of_request_r) : list (balance_of_response) is
+    function look_up_balance(const l: list (balance_of_response); const request : balance_of_request) : list (balance_of_response) is
       block {       
         (* Token id check *)
         if default_token_id =/= request.token_id then
@@ -127,11 +118,10 @@ function get_balance_of (const params : balance_params; const s : storage) : lis
         const sender_account : account = get_account(request.owner, s);
 
         (* Form the response *)
-        const response_r : balance_of_response_r = record [
+        const response : balance_of_response = record [
           request   = request;
           balance   = sender_account.balance;
         ];
-        const response : balance_of_response = Layout.convert_to_right_comb(response_r);  
       } with response # l;
     
     (* Collect balances info *)

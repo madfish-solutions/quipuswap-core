@@ -6,7 +6,8 @@ type account is
     allowances      : set (address);
   ]
 
-type token_metadata_info_r is 
+type token_metadata_info is 
+  [@layout:comb]
   record [
     token_id  : token_id;
     symbol    : string;
@@ -15,7 +16,7 @@ type token_metadata_info_r is
     extras    : map (string, string);
   ]
 
-type token_metadata_info is michelson_pair_right_comb(token_metadata_info_r)
+// type token_metadata_info is michelson_pair_right_comb(token_metadata_info_r)
   
 const default_token_id : token_id = 0n;
 
@@ -29,58 +30,58 @@ type storage is
 
 type return is list (operation) * storage
 
-type transfer_destination_r is 
+type transfer_destination is 
+  [@layout:comb]
   record [
     to_       : address;
     token_id  : token_id;
     amount    : nat;
   ]
 
-type transfer_destination is michelson_pair_right_comb(transfer_destination_r)
-
-type transfer_param_r is 
+type transfer_param is  
+  [@layout:comb]
   record [
     from_   : address;
     txs     : list (transfer_destination);
   ]
 
-type transfer_param is michelson_pair_right_comb(transfer_param_r)
+// type transfer_param is michelson_pair_right_comb(transfer_param_r)
 
-type balance_of_request_r is 
+type balance_of_request is 
+  [@layout:comb]
   record [
     owner       : address;
     token_id    : token_id;
   ]
 
-type balance_of_response_r is 
+type balance_of_response is 
+  [@layout:comb]
   record [
-    request     : balance_of_request_r;
+    request     : balance_of_request;
     balance     : nat;
   ]
 
-type balance_of_response is michelson_pair_right_comb(balance_of_response_r)
-
-type balance_params_r is 
+type balance_params is 
+  [@layout:comb]
   record [
-    requests    : list (balance_of_request_r); 
+    requests    : list (balance_of_request); 
     callback    : contract (list (balance_of_response));
   ]
 
-type operator_param_r is 
+type operator_param is 
+  [@layout:comb]
   record [
     owner     : address; 
     operator  : address;
     token_id  : token_id;
   ]
 
-type operator_param is michelson_pair_right_comb(operator_param_r)
-
 type update_operator_param is
 | Add_operator    of operator_param
 | Remove_operator of operator_param
 
 type transfer_params is list (transfer_param)
-type balance_params is michelson_pair_right_comb(balance_params_r)
+// type balance_params is michelson_pair_right_comb(balance_params_r)
 type token_metadata_registry_params is contract (address)
 type update_operator_params is list (update_operator_param)
 
