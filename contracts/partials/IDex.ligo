@@ -110,7 +110,7 @@ type use_params is (nat * dex_action)
 
 type return is list (operation) * dex_storage
 type dex_func is (dex_action * dex_storage * address) -> return
-type token_func is (token_action * dex_storage) -> return
+type token_func is (token_action * dex_storage * address) -> return
 
 type full_dex_storage is record
   storage        : dex_storage;

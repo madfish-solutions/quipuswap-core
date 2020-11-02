@@ -1,1 +1,1 @@
-#include "./Factory.ligo"
+#include "../partials/Factory.ligo"

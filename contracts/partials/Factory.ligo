@@ -1,4 +1,4 @@
-#include "../partials/IFactory.ligo"
+#include "./IFactory.ligo"
 
 (* Helper function to get account *)
 function get_account (const addr : address; const s : dex_storage) : account_info is
@@ -531,9 +531,9 @@ const create_dex : create_dex_func =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT 
 #if FA2_STANDARD_ENABLED
-#include "DexFA2.tz"
+#include "../main/DexFA2.tz"
 #else
-#include "DexFA12.tz"
+#include "../main/DexFA12.tz"
 #endif
                   ;
                     PAIR } |}

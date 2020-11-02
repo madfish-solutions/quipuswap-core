@@ -8,8 +8,8 @@ function main (const p : full_action; const s : full_dex_storage) : full_return 
   } with case p of
       | Default -> use_default(s) 
       | Use(params) -> middle_dex(params.1, this, params.0, s) 
-      | Transfer(params) -> middle_token(ITransfer(params), 0n, s)
-      | Balance_of(params) -> middle_token(IBalance_of(params), 1n, s)
-      | Token_metadata_registry(params) -> middle_token(IToken_metadata_registry(params), 2n, s)
-      | Update_operators(params) -> middle_token(IUpdate_operators(params), 3n, s)
+      | Transfer(params) -> middle_token(ITransfer(params), this, 0n, s)
+      | Balance_of(params) -> middle_token(IBalance_of(params), this, 1n, s)
+      | Token_metadata_registry(params) -> middle_token(IToken_metadata_registry(params), this, 2n, s)
+      | Update_operators(params) -> middle_token(IUpdate_operators(params), this, 3n, s)
     end

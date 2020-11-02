@@ -6,7 +6,7 @@ function get_allowance (const owner_account : account_info; const spender : addr
   end;
 
 (* Transfer token to another account *)
-function transfer (const p : token_action; const s : dex_storage) : return is
+function transfer (const p : token_action; const s : dex_storage; const this : address) : return is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -49,7 +49,7 @@ function transfer (const p : token_action; const s : dex_storage) : return is
   } with (operations, s)
 
 (* Approve an nat to be spent by another address in the name of the sender *)
-function approve (const p : token_action; const s : dex_storage) : return is
+function approve (const p : token_action; const s : dex_storage; const this : address) : return is
   block {
     case p of
     | ITransfer(params) -> failwith("00")
@@ -69,7 +69,7 @@ function approve (const p : token_action; const s : dex_storage) : return is
   } with ((nil  : list(operation)), s)
 
 (* View function that forwards the balance of source to a contract *)
-function get_balance (const p : token_action; const s : dex_storage) : return is
+function get_balance (const p : token_action; const s : dex_storage; const this : address) : return is
   block {
     var operations : list(operation) := list[];
     case p of
@@ -85,7 +85,7 @@ function get_balance (const p : token_action; const s : dex_storage) : return is
   } with (operations, s)
 
 (* View function that forwards the total_supply to a contract *)
-function get_total_supply (const p : token_action; const s : dex_storage) : return is
+function get_total_supply (const p : token_action; const s : dex_storage; const this : address) : return is
   block {
     var operations : list(operation) := list[];
     case p of
@@ -100,7 +100,7 @@ function get_total_supply (const p : token_action; const s : dex_storage) : retu
   } with (operations, s)
 
 (* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
-function get_allowance_to_contract (const p : token_action; const s : dex_storage) : return is
+function get_allowance_to_contract (const p : token_action; const s : dex_storage; const this : address) : return is
   block {
     var operations : list(operation) := list[];
     case p of

@@ -55,23 +55,23 @@ module.exports = async (deployer, network) => {
       await operation.confirmation();
       console.log(`${dexFunction.name} function set`);
     }
-    // console.log("Setting token functions");
-    // for (tokenFunction of tokenFunctions) {
-    //   const stdout = execSync(
-    //     `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
-    //     { maxBuffer: 1024 * 500 }
-    //   );
-    //   const operation = await tezos.contract.transfer({
-    //     to: factoryInstance.address,
-    //     amount: 0,
-    //     parameter: {
-    //       entrypoint: "setTokenFunction",
-    //       value: JSON.parse(stdout.toString()).args[0],
-    //     },
-    //   });
-    //   await operation.confirmation();
-    //   console.log(`${tokenFunction.name} function set`);
-    // }
+    console.log("Setting token functions");
+    for (tokenFunction of tokenFunctions[standard]) {
+      const stdout = execSync(
+        `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
+        { maxBuffer: 1024 * 500 }
+      );
+      const operation = await tezos.contract.transfer({
+        to: factoryInstance.address,
+        amount: 0,
+        parameter: {
+          entrypoint: "setTokenFunction",
+          value: JSON.parse(stdout.toString()).args[0],
+        },
+      });
+      await operation.confirmation();
+      console.log(`${tokenFunction.name} function set`);
+    }
     if (network !== "development") {
       let tezAmount = 10000;
       let tokenAmount = 1000000;
