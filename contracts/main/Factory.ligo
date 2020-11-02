@@ -21,15 +21,15 @@ function get_account (const addr : address; const s : dex_storage) : account_inf
 
 function wrap_transfer_trx(const owner : address; const receiver : address; const value : nat; const s : dex_storage) : transfer_type is 
 #if FA2_STANDARD_ENABLED
-  TransferType(list[Layout.convert_to_right_comb(
-    (record[
+  TransferType(list[
+    record[
       from_ = owner; 
-      txs = list [ Layout.convert_to_right_comb((record [
+      txs = list [ record [
           to_ = receiver; 
           token_id = s.token_id;
           amount = value;
-        ]: transfer_destination_r)) ]
-    ]: transfer_param_r))
+        ] ]
+    ]
   ])
 #else
   TransferType(owner, (receiver, value))
