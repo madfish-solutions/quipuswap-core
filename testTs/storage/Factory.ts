@@ -1,8 +1,8 @@
 import { MichelsonMap } from "@taquito/michelson-encoder";
 
 export default {
-  tokenList: [],
-  tokenToExchange: MichelsonMap.fromLiteral({}),
-  dexLambdas: MichelsonMap.fromLiteral({}),
-  tokenLambdas: MichelsonMap.fromLiteral({}),
+  token_list: [],
+  token_to_exchange: MichelsonMap.fromLiteral({}),
+  dex_lambdas: MichelsonMap.fromLiteral({}),
+  token_lambdas: MichelsonMap.fromLiteral({}),
 };

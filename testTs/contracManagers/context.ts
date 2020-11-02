@@ -1,3 +1,5 @@
+const standard = process.env.npm_package_config_standard;
+
 import {
   Tezos,
   TezosToolkit,
@@ -8,12 +10,13 @@ import { Dex } from "./dex";
 import { Factory } from "./factory";
 import { TokenFA12 } from "./tokenFA12";
 import { prepareProviderOptions } from "./utils";
-import tokenStorage from "../storage/Token";
-import factoryStorage from "../storage/Factory";
 
-const CDex = artifacts.require("Dex");
-const Token = artifacts.require("Token");
-const CFactory = artifacts.require("Factory");
+import factoryStorage from "../storage/Factory";
+let tokenStorage = require("../storage/Token" + standard);
+
+const CDex = artifacts.require("DexFA12");
+const Token = artifacts.require("TokenFA12");
+const CFactory = artifacts.require("FactoryFA12");
 
 export class Context {
   public factory: Factory;
@@ -111,7 +114,7 @@ export class Context {
       await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
     }
     await this.factory.updateStorage({
-      dexLambdas: [...Array(9).keys()],
+      dex_lambdas: [...Array(9).keys()],
     });
   }
 
@@ -145,7 +148,7 @@ export class Context {
       );
     }
     await this.factory.updateStorage({
-      tokenLambdas: [...Array(5).keys()],
+      token_lambdas: [...Array(5).keys()],
     });
   }
 
@@ -153,8 +156,8 @@ export class Context {
     await this.setDexFactoryFunctions();
     await this.setTokenFactoryFunctions();
     await this.factory.updateStorage({
-      dexLambdas: [...Array(9).keys()],
-      tokenLambdas: [...Array(5).keys()],
+      dex_lambdas: [...Array(9).keys()],
+      token_lambdas: [...Array(5).keys()],
     });
   }
 

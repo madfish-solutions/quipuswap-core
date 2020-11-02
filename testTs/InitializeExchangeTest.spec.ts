@@ -84,7 +84,7 @@ contract("InitializeExchange()", function () {
         context.factory.storage.token_list[0]
       ],
       null,
-      "Factory tokenToExchange should contain DexPair contract address"
+      "Factory token_to_exchange should contain DexPair contract address"
     );
 
     // 3. new pair state
@@ -194,7 +194,7 @@ contract("InitializeExchange()", function () {
         context.factory.storage.token_list[0]
       ],
       null,
-      "Factory tokenToExchange should contain DexPair contract address"
+      "Factory token_to_exchange should contain DexPair contract address"
     );
 
     // 3. new pair state

@@ -32,11 +32,7 @@ module.exports = async (deployer, network) => {
     await Factory.deployed();
   } catch (e) {
     let factoryInstance = await Factory.new(factoryStorage);
-    let token0Instance = await Token.new(tokenStorage);
-    let token1Instance = await Token.new(tokenStorage);
     console.log(`Factory address: ${factoryInstance.address}`);
-    console.log(`Token 1 address: ${token0Instance.address}`);
-    console.log(`Token 2 address: ${token1Instance.address}`);
     let ligo = getLigo(true);
     console.log("Setting dex functions");
     for (dexFunction of dexFunctions) {
@@ -73,6 +69,10 @@ module.exports = async (deployer, network) => {
       console.log(`${tokenFunction.name} function set`);
     }
     if (network !== "development") {
+      let token0Instance = await Token.new(tokenStorage);
+      let token1Instance = await Token.new(tokenStorage);
+      console.log(`Token 1 address: ${token0Instance.address}`);
+      console.log(`Token 2 address: ${token1Instance.address}`);
       let tezAmount = 10000;
       let tokenAmount = 1000000;
       console.log("Approve token 0");

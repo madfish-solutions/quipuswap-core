@@ -7,7 +7,7 @@ import {
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { TokenStorage } from "./types";
 import { prepareProviderOptions } from "./utils";
-const Token = artifacts.require("Token");
+const Token = artifacts.require("TokenFA12");
 
 export class TokenFA12 {
   public contract: ContractAbstraction<ContractProvider>;

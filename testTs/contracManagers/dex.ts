@@ -28,26 +28,26 @@ export class Dex extends TokenFA12 {
       voters?: string[];
       vetos?: string[];
       votes?: string[];
-      userRewards?: string[];
+      user_rewards?: string[];
     } = {}
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      tez_pool: storage.storage.tezPool,
-      token_pool: storage.storage.tokenPool,
+      tez_pool: storage.storage.tez_pool,
+      token_pool: storage.storage.token_pool,
       invariant: storage.storage.invariant,
-      token_address: storage.storage.tokenAddress,
-      total_supply: storage.storage.totalSupply,
-      last_veto: storage.storage.lastVeto,
+      token_address: storage.storage.token_address,
+      total_supply: storage.storage.total_supply,
+      last_veto: storage.storage.last_veto,
       ledger: {},
       voters: {},
       vetos: {},
       votes: {},
       veto: storage.storage.veto,
-      current_delegated: storage.storage.currentDelegated,
-      current_candidate: storage.storage.currentCandidate,
-      total_votes: storage.storage.totalVotes,
-      reward_info: storage.storage.rewardInfo,
+      current_delegated: storage.storage.current_delegated,
+      current_candidate: storage.storage.current_candidate,
+      total_votes: storage.storage.total_votes,
+      reward_info: storage.storage.reward_info,
       user_rewards: {},
     };
     for (let key in maps) {

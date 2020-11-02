@@ -28,14 +28,14 @@ export class Factory {
 
   async updateStorage(
     maps: {
-      tokenToExchange?: string[];
-      dexLambdas?: number[];
-      tokenLambdas?: number[];
+      token_to_exchange?: string[];
+      dex_lambdas?: number[];
+      token_lambdas?: number[];
     } = {}
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      token_list: storage.tokenList,
+      token_list: storage.token_list,
       token_to_exchange: {},
       dex_lambdas: {},
       token_lambdas: {},
@@ -66,7 +66,7 @@ export class Factory {
       .launchExchange(tokenAddress, tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
-    await this.updateStorage({ tokenToExchange: [tokenAddress] });
+    await this.updateStorage({ token_to_exchange: [tokenAddress] });
     return operation;
   }
 

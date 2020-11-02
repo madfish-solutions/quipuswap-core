@@ -26,7 +26,7 @@ contract("RewardDestribution()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -59,7 +59,7 @@ contract("RewardDestribution()", function () {
     // checks
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -101,7 +101,7 @@ contract("RewardDestribution()", function () {
     // save initial state
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -132,7 +132,7 @@ contract("RewardDestribution()", function () {
     // store updated state
     await context.pairs[0].updateStorage({
       ledger: [bobAddress],
-      userRewards: [bobAddress],
+      user_rewards: [bobAddress],
     });
     let bobInitRewardsInfo = context.pairs[0].storage.user_rewards[
       bobAddress
@@ -162,7 +162,7 @@ contract("RewardDestribution()", function () {
     // store updated state
     await context.pairs[0].updateStorage({
       ledger: [carolAddress],
-      userRewards: [carolAddress],
+      user_rewards: [carolAddress],
     });
     let carolInitRewardsInfo = context.pairs[0].storage.user_rewards[
       carolAddress
@@ -186,7 +186,7 @@ contract("RewardDestribution()", function () {
     // store updated storage
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress, carolAddress],
-      userRewards: [aliceAddress, bobAddress, carolAddress],
+      user_rewards: [aliceAddress, bobAddress, carolAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -312,7 +312,7 @@ contract("RewardDestribution()", function () {
     await context.pairs[0].transfer(bobAddress, carolAddress, value);
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress, carolAddress],
-      userRewards: [aliceAddress, bobAddress, carolAddress],
+      user_rewards: [aliceAddress, bobAddress, carolAddress],
     });
     let carolFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       carolAddress
@@ -432,7 +432,7 @@ contract("RewardDestribution()", function () {
       let aliceAddress = await Tezos.signer.publicKeyHash();
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
-        userRewards: [aliceAddress],
+        user_rewards: [aliceAddress],
       });
       let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
         aliceAddress
@@ -460,7 +460,7 @@ contract("RewardDestribution()", function () {
       // checks
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
-        userRewards: [aliceAddress],
+        user_rewards: [aliceAddress],
       });
       let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
         aliceAddress
@@ -509,7 +509,7 @@ contract("RewardDestribution()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress],
-      userRewards: [aliceAddress, bobAddress],
+      user_rewards: [aliceAddress, bobAddress],
     });
     let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -542,7 +542,7 @@ contract("RewardDestribution()", function () {
     // checks
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress],
-      userRewards: [aliceAddress, bobAddress],
+      user_rewards: [aliceAddress, bobAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -618,7 +618,7 @@ contract("RewardDestribution()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -651,7 +651,7 @@ contract("RewardDestribution()", function () {
     // checks
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -716,7 +716,7 @@ contract("RewardDestribution()", function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -737,7 +737,7 @@ contract("RewardDestribution()", function () {
     // checks
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -861,7 +861,7 @@ contract("RewardDestribution()", function () {
     // store prev balances
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -882,7 +882,7 @@ contract("RewardDestribution()", function () {
     // checks
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceMiddleRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -920,7 +920,7 @@ contract("RewardDestribution()", function () {
 
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -959,7 +959,7 @@ contract("RewardDestribution()", function () {
       let aliceAddress = await Tezos.signer.publicKeyHash();
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
-        userRewards: [aliceAddress],
+        user_rewards: [aliceAddress],
       });
       let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
         aliceAddress
@@ -989,7 +989,7 @@ contract("RewardDestribution()", function () {
       // checks
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
-        userRewards: [aliceAddress],
+        user_rewards: [aliceAddress],
       });
       let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
         aliceAddress
@@ -1035,7 +1035,7 @@ contract("RewardDestribution()", function () {
     // store prev balances
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -1056,7 +1056,7 @@ contract("RewardDestribution()", function () {
     // checks
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let middleRewardInfo = context.pairs[0].storage.reward_info;
 
@@ -1086,7 +1086,7 @@ contract("RewardDestribution()", function () {
 
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -1129,7 +1129,7 @@ contract("RewardDestribution()", function () {
       let aliceAddress = await Tezos.signer.publicKeyHash();
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
-        userRewards: [aliceAddress],
+        user_rewards: [aliceAddress],
       });
       let aliceInitRewardsInfo = context.pairs[0].storage.user_rewards[
         aliceAddress
@@ -1159,7 +1159,7 @@ contract("RewardDestribution()", function () {
       // checks
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
-        userRewards: [aliceAddress],
+        user_rewards: [aliceAddress],
       });
       let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
         aliceAddress
@@ -1208,7 +1208,7 @@ contract("RewardDestribution()", function () {
     // save initial state
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
-      userRewards: [aliceAddress],
+      user_rewards: [aliceAddress],
     });
 
     let reward = 1000;
@@ -1229,7 +1229,7 @@ contract("RewardDestribution()", function () {
     // store updated state
     await context.pairs[0].updateStorage({
       ledger: [bobAddress],
-      userRewards: [bobAddress],
+      user_rewards: [bobAddress],
     });
 
     // get shares by Carol
@@ -1248,7 +1248,7 @@ contract("RewardDestribution()", function () {
     // store updated state
     await context.pairs[0].updateStorage({
       ledger: [carolAddress],
-      userRewards: [carolAddress],
+      user_rewards: [carolAddress],
     });
     let rewardInfoAfterCarolInvestment = context.pairs[0].storage.reward_info;
 
@@ -1269,7 +1269,7 @@ contract("RewardDestribution()", function () {
     // store updated storage
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress, carolAddress],
-      userRewards: [aliceAddress, bobAddress, carolAddress],
+      user_rewards: [aliceAddress, bobAddress, carolAddress],
     });
     let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       aliceAddress
@@ -1285,7 +1285,7 @@ contract("RewardDestribution()", function () {
     await context.pairs[0].transfer(bobAddress, carolAddress, value);
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress, carolAddress],
-      userRewards: [aliceAddress, bobAddress, carolAddress],
+      user_rewards: [aliceAddress, bobAddress, carolAddress],
     });
     let carolFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       carolAddress
@@ -1315,7 +1315,7 @@ contract("RewardDestribution()", function () {
     await context.pairs[0].transfer(carolAddress, bobAddress, value);
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress, carolAddress],
-      userRewards: [aliceAddress, bobAddress, carolAddress],
+      user_rewards: [aliceAddress, bobAddress, carolAddress],
     });
     carolFinalRewardsInfo = context.pairs[0].storage.user_rewards[
       carolAddress
@@ -1371,7 +1371,7 @@ contract("RewardDestribution()", function () {
       // store updated state
       await context.pairs[0].updateStorage({
         ledger: [bobAddress],
-        userRewards: [bobAddress],
+        user_rewards: [bobAddress],
       });
 
       // get shares by Carol
@@ -1390,7 +1390,7 @@ contract("RewardDestribution()", function () {
       // store updated state
       await context.pairs[0].updateStorage({
         ledger: [carolAddress],
-        userRewards: [carolAddress],
+        user_rewards: [carolAddress],
       });
       let rewardInfoAfterCarolInvestment = context.pairs[0].storage.reward_info;
 
@@ -1411,7 +1411,7 @@ contract("RewardDestribution()", function () {
       // store updated storage
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress, bobAddress, carolAddress],
-        userRewards: [aliceAddress, bobAddress, carolAddress],
+        user_rewards: [aliceAddress, bobAddress, carolAddress],
       });
       let aliceFinalRewardsInfo = context.pairs[0].storage.user_rewards[
         aliceAddress
@@ -1427,7 +1427,7 @@ contract("RewardDestribution()", function () {
       await context.pairs[0].transfer(bobAddress, carolAddress, value);
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress, bobAddress, carolAddress],
-        userRewards: [aliceAddress, bobAddress, carolAddress],
+        user_rewards: [aliceAddress, bobAddress, carolAddress],
       });
       let bobFinalRewardsInfo = context.pairs[0].storage.user_rewards[
         bobAddress
@@ -1441,7 +1441,7 @@ contract("RewardDestribution()", function () {
       await context.pairs[0].transfer(carolAddress, bobAddress, value);
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress, bobAddress, carolAddress],
-        userRewards: [aliceAddress, bobAddress, carolAddress],
+        user_rewards: [aliceAddress, bobAddress, carolAddress],
       });
       let carolFinalRewardsInfo = context.pairs[0].storage.user_rewards[
         carolAddress

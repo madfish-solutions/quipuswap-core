@@ -1,27 +1,27 @@
 export let dexFunctions = [
   {
     index: 0,
-    name: "initializeExchange",
+    name: "initialize_exchange",
   },
   {
     index: 1,
-    name: "tezToToken",
+    name: "tez_to_token",
   },
   {
     index: 2,
-    name: "tokenToTez",
+    name: "token_to_tez",
   },
   {
     index: 3,
-    name: "withdrawProfit",
+    name: "withdraw_profit",
   },
   {
     index: 4,
-    name: "investLiquidity",
+    name: "invest_liquidity",
   },
   {
     index: 5,
-    name: "divestLiquidity",
+    name: "divest_liquidity",
   },
   {
     index: 6,
@@ -33,7 +33,7 @@ export let dexFunctions = [
   },
   {
     index: 8,
-    name: "receiveReward",
+    name: "receive_reward",
   },
 ];
 
@@ -48,14 +48,14 @@ export let tokenFunctions = [
   },
   {
     index: 2,
-    name: "getBalance",
+    name: "get_balance",
   },
   {
     index: 3,
-    name: "getAllowance",
+    name: "get_allowance_to_contract",
   },
   {
     index: 4,
-    name: "getTotalSupply",
+    name: "get_total_supply",
   },
 ];
