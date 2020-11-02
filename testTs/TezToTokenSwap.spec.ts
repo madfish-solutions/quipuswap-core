@@ -73,12 +73,12 @@ contract("TezToTokenSwap()", function () {
     // 3. new pair state
     await context.pairs[0].updateStorage();
     strictEqual(
-      context.pairs[0].storage.tezPool.toNumber(),
+      context.pairs[0].storage.tez_pool.toNumber(),
       10000 + tezAmount,
       "Tez pool should increment by sent amount"
     );
     strictEqual(
-      context.pairs[0].storage.tokenPool.toNumber(),
+      context.pairs[0].storage.token_pool.toNumber(),
       1000000 - minTokens,
       "Token pool should decrement by withdrawn amount"
     );

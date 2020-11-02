@@ -13,7 +13,7 @@ contract("SetXFunctions()", function () {
   it("should set all Dex functions to Factory", async function () {
     // ensure no functions are stored
     await context.factory.updateStorage();
-    Object.values(context.factory.storage.dexLambdas).forEach((value) => {
+    Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
       strictEqual(value, null, "Dex function set");
     });
 
@@ -21,7 +21,7 @@ contract("SetXFunctions()", function () {
     await context.setDexFactoryFunctions();
 
     // ensure code added
-    Object.values(context.factory.storage.dexLambdas).forEach((value) => {
+    Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Dex function not set");
     });
   });
@@ -29,7 +29,7 @@ contract("SetXFunctions()", function () {
   it("should set all Token functions to Factory", async function () {
     // ensure no functions are stored
     await context.factory.updateStorage();
-    Object.values(context.factory.storage.tokenLambdas).forEach((value) => {
+    Object.values(context.factory.storage.token_lambdas).forEach((value) => {
       strictEqual(value, null, "Token function set");
     });
 
@@ -37,14 +37,14 @@ contract("SetXFunctions()", function () {
     await context.setTokenFactoryFunctions();
 
     // ensure code added
-    Object.values(context.factory.storage.tokenLambdas).forEach((value) => {
+    Object.values(context.factory.storage.token_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Token function not set");
     });
   });
 
   it("should fail replacement of Dex functions to Factory", async function () {
     // ensure code added
-    Object.values(context.factory.storage.dexLambdas).forEach((value) => {
+    Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Dex function not set");
     });
 
@@ -65,7 +65,7 @@ contract("SetXFunctions()", function () {
 
   it("should fail replacement of Token functions to Factory", async function () {
     // ensure code added
-    Object.values(context.factory.storage.tokenLambdas).forEach((value) => {
+    Object.values(context.factory.storage.token_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Token function not set");
     });
 
@@ -86,7 +86,7 @@ contract("SetXFunctions()", function () {
 
   it("should fail adding more than 9 Dex functions to Factory", async function () {
     // ensure code added
-    Object.values(context.factory.storage.dexLambdas).forEach((value) => {
+    Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Dex function not set");
     });
 
@@ -107,7 +107,7 @@ contract("SetXFunctions()", function () {
 
   it("should fail adding more than 5 Token functions to Factory", async function () {
     // ensure code added
-    Object.values(context.factory.storage.tokenLambdas).forEach((value) => {
+    Object.values(context.factory.storage.token_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Token function not set");
     });
 

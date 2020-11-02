@@ -177,10 +177,10 @@ export class Context {
     );
     this.pairs.push(
       await Dex.init(
-        this.factory.storage.tokenToExchange[pairConfig.tokenAddress]
+        this.factory.storage.token_to_exchange[pairConfig.tokenAddress]
       )
     );
-    return this.factory.storage.tokenToExchange[pairConfig.tokenAddress];
+    return this.factory.storage.token_to_exchange[pairConfig.tokenAddress];
   }
 
   async createPairs(

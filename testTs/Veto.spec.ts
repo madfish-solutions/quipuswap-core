@@ -36,7 +36,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );
@@ -46,11 +46,11 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVeto =
@@ -69,19 +69,19 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVeto =
       context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
     let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber(),
@@ -89,14 +89,14 @@ contract("Veto()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() + value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() + value,
       "Tokens not frozen"
     );
     // 2. voter info updated
     notStrictEqual(
-      aliceFinalVoteInfo.lastVeto,
-      aliceInitVoteInfo.lastVeto,
+      aliceFinalVoteInfo.last_veto,
+      aliceInitVoteInfo.last_veto,
       "User last veto time wasn't updated"
     );
     strictEqual(
@@ -138,7 +138,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );
@@ -155,11 +155,11 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVeto =
@@ -178,19 +178,19 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVeto =
       context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
     let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber(),
@@ -198,14 +198,14 @@ contract("Veto()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() + value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() + value,
       "Tokens not frozen"
     );
     // 2. voter info updated
     notStrictEqual(
-      aliceFinalVoteInfo.lastVeto,
-      aliceInitVoteInfo.lastVeto,
+      aliceFinalVoteInfo.last_veto,
+      aliceInitVoteInfo.last_veto,
       "User last veto time wasn't updated"
     );
     strictEqual(
@@ -246,7 +246,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );
@@ -266,11 +266,11 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVeto =
@@ -289,19 +289,19 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVeto =
       context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
     let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber(),
@@ -309,14 +309,14 @@ contract("Veto()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() - value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() - value,
       "Tokens not frozen"
     );
     // 2. voter info updated
     notStrictEqual(
-      aliceFinalVoteInfo.lastVeto,
-      aliceInitVoteInfo.lastVeto,
+      aliceFinalVoteInfo.last_veto,
+      aliceInitVoteInfo.last_veto,
       "User last veto time wasn't updated"
     );
     strictEqual(
@@ -360,7 +360,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );
@@ -380,11 +380,11 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVeto =
@@ -403,19 +403,19 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVeto =
       context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
     let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber() + value,
@@ -423,14 +423,14 @@ contract("Veto()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() + value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() + value,
       "Tokens not frozen"
     );
     // 2. voter info updated
     notStrictEqual(
-      aliceFinalVoteInfo.lastVeto,
-      aliceInitVoteInfo.lastVeto,
+      aliceFinalVoteInfo.last_veto,
+      aliceInitVoteInfo.last_veto,
       "User last veto time wasn't updated"
     );
     strictEqual(
@@ -478,7 +478,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );
@@ -500,7 +500,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
 
     strictEqual(0, finalVetos.toNumber(), "Total votes weren't updated");
     strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
@@ -531,7 +531,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );
@@ -547,7 +547,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
 
     strictEqual(0, finalVetos.toNumber(), "Total votes weren't updated");
     strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
@@ -578,12 +578,12 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegated and real delegated doesn't match"
     );
     strictEqual(
-      context.pairs[0].storage.currentCandidate,
+      context.pairs[0].storage.current_candidate,
       null,
       "Candidate doesn't match"
     );
@@ -597,8 +597,8 @@ contract("Veto()", function () {
       voters: [aliceAddress],
       vetos: [delegate],
     });
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
     strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
     strictEqual(finalCurrentCandidate, null, "Candidate wasn't updated");
   });
@@ -628,12 +628,12 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegated and real delegated doesn't match"
     );
     strictEqual(
-      context.pairs[0].storage.currentCandidate,
+      context.pairs[0].storage.current_candidate,
       null,
       "Candidate doesn't match"
     );
@@ -661,18 +661,18 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     notStrictEqual(
-      context.pairs[0].storage.currentDelegated,
-      context.pairs[0].storage.currentCandidate,
+      context.pairs[0].storage.current_delegated,
+      context.pairs[0].storage.current_candidate,
       "Delegator and candidate match"
     );
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegated doesn't match after voting"
     );
     strictEqual(
       aliceAddress,
-      context.pairs[0].storage.currentCandidate,
+      context.pairs[0].storage.current_candidate,
       "Current candidate wrong"
     );
 
@@ -686,8 +686,8 @@ contract("Veto()", function () {
       voters: [aliceAddress],
       vetos: [delegate],
     });
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
     strictEqual(
       context.pairs[0].storage.veto.toNumber(),
       0,
@@ -723,7 +723,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );
@@ -746,11 +746,11 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVeto =
@@ -767,21 +767,21 @@ contract("Veto()", function () {
       candidate: undefined,
       vote: new BigNumber(0),
       veto: new BigNumber(0),
-      lastVeto: 0,
+      last_veto: 0,
     };
 
     let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
 
     let aliceFinalCandidateVeto =
       context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
     let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.currentDelegated;
+    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber(),
@@ -789,14 +789,14 @@ contract("Veto()", function () {
       "Tokens not unfrozen"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() - value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() - value,
       "Frozen tokens not removed"
     );
     // 2. voter info updated
     notStrictEqual(
-      aliceFinalVoteInfo.lastVeto,
-      aliceInitVoteInfo.lastVeto,
+      aliceFinalVoteInfo.last_veto,
+      aliceInitVoteInfo.last_veto,
       "User last veto time wasn't updated"
     );
     strictEqual(
@@ -860,7 +860,7 @@ contract("Veto()", function () {
       vetos: [delegate],
     });
     strictEqual(
-      context.pairs[0].storage.currentDelegated,
+      context.pairs[0].storage.current_delegated,
       delegate,
       "Delegator not set"
     );

@@ -14,7 +14,7 @@ contract("InitializeExchange()", function () {
     // ensure no token pairs added
     await context.factory.updateStorage();
     strictEqual(
-      context.factory.storage.tokenList.length,
+      context.factory.storage.token_list.length,
       0,
       "Factory tokenList should be empty"
     );
@@ -75,13 +75,13 @@ contract("InitializeExchange()", function () {
 
     // 2. factory state
     strictEqual(
-      context.factory.storage.tokenList.length,
+      context.factory.storage.token_list.length,
       1,
       "Factory tokenList should contain 1 entity"
     );
     notStrictEqual(
-      context.factory.storage.tokenToExchange[
-        context.factory.storage.tokenList[0]
+      context.factory.storage.token_to_exchange[
+        context.factory.storage.token_list[0]
       ],
       null,
       "Factory tokenToExchange should contain DexPair contract address"
@@ -95,17 +95,17 @@ contract("InitializeExchange()", function () {
       "Alice should receive 1000 shares"
     );
     strictEqual(
-      context.pairs[0].storage.totalSupply.toNumber(),
+      context.pairs[0].storage.total_supply.toNumber(),
       1000,
       "Alice tokens should be all supply"
     );
     strictEqual(
-      context.pairs[0].storage.tezPool.toNumber(),
+      context.pairs[0].storage.tez_pool.toNumber(),
       tezAmount,
       "Tez pool should be fully funded by sent amount"
     );
     strictEqual(
-      context.pairs[0].storage.tokenPool.toNumber(),
+      context.pairs[0].storage.token_pool.toNumber(),
       tokenAmount,
       "Token pool should be fully funded by sent amount"
     );
@@ -115,7 +115,7 @@ contract("InitializeExchange()", function () {
       "Inveriant should be calculated properly"
     );
     strictEqual(
-      context.pairs[0].storage.tokenAddress,
+      context.pairs[0].storage.token_address,
       tokenAddress,
       "Token address should match the created token"
     );
@@ -128,7 +128,7 @@ contract("InitializeExchange()", function () {
     // ensure pair added
     await context.factory.updateStorage();
     strictEqual(
-      context.factory.storage.tokenList.length,
+      context.factory.storage.token_list.length,
       1,
       "Factory tokenList should contain 1 exchange"
     );
@@ -185,13 +185,13 @@ contract("InitializeExchange()", function () {
 
     // 2. factory state
     strictEqual(
-      context.factory.storage.tokenList.length,
+      context.factory.storage.token_list.length,
       1,
       "Factory tokenList should contain 1 entity"
     );
     notStrictEqual(
-      context.factory.storage.tokenToExchange[
-        context.factory.storage.tokenList[0]
+      context.factory.storage.token_to_exchange[
+        context.factory.storage.token_list[0]
       ],
       null,
       "Factory tokenToExchange should contain DexPair contract address"
@@ -205,17 +205,17 @@ contract("InitializeExchange()", function () {
       "Alice should receive 1000 shares"
     );
     strictEqual(
-      context.pairs[0].storage.totalSupply.toNumber(),
+      context.pairs[0].storage.total_supply.toNumber(),
       1000,
       "Alice tokens should be all supply"
     );
     strictEqual(
-      context.pairs[0].storage.tezPool.toNumber(),
+      context.pairs[0].storage.tez_pool.toNumber(),
       tezAmount,
       "Tez pool should be fully funded by sent amount"
     );
     strictEqual(
-      context.pairs[0].storage.tokenPool.toNumber(),
+      context.pairs[0].storage.token_pool.toNumber(),
       tokenAmount,
       "Token pool should be fully funded by sent amount"
     );
@@ -225,7 +225,7 @@ contract("InitializeExchange()", function () {
       "Inveriant should be calculated properly"
     );
     strictEqual(
-      context.pairs[0].storage.tokenAddress,
+      context.pairs[0].storage.token_address,
       tokenAddress,
       "Token address should match the created token"
     );
@@ -238,13 +238,13 @@ contract("InitializeExchange()", function () {
     // ensure pair added
     await context.factory.updateStorage();
     strictEqual(
-      context.factory.storage.tokenList.length,
+      context.factory.storage.token_list.length,
       1,
       "Factory tokenList should contain 1 exchange"
     );
 
     // ensure attempt to add the pair again fails Factory/exchange-launched
-    let tokenAddress = context.factory.storage.tokenList[0];
+    let tokenAddress = context.factory.storage.token_list[0];
     await rejects(
       context.createPair({
         tokenAddress,

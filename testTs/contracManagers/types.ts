@@ -1,47 +1,46 @@
 import BigNumber from "bignumber.js";
 
 export declare type DexStorage = {
-  tezPool: BigNumber;
-  tokenPool: BigNumber;
+  tez_pool: BigNumber;
+  token_pool: BigNumber;
   invariant: BigNumber;
-  tokenAddress: string;
-  factoryAddress: string;
-  totalSupply: BigNumber;
+  token_address: string;
+  total_supply: BigNumber;
   ledger: { [key: string]: AccountInfo };
   voters: { [key: string]: VoteInfo };
   vetos: { [key: string]: BigNumber };
   votes: { [key: string]: BigNumber };
   veto: BigNumber;
-  currentDelegated: string | null | undefined;
-  currentCandidate: string | null | undefined;
-  totalVotes: BigNumber;
-  rewardInfo: RewardInfo;
-  userRewards: { [key: string]: UserRewardInfo };
-  lastVeto: number;
+  current_delegated: string | null | undefined;
+  current_candidate: string | null | undefined;
+  total_votes: BigNumber;
+  reward_info: RewardInfo;
+  user_rewards: { [key: string]: UserRewardInfo };
+  last_veto: number;
 };
 
 export declare type RewardInfo = {
   reward: BigNumber;
-  loyaltyPerShare: BigNumber;
-  lastLoyaltyPerShare: BigNumber;
-  totalAccomulatedLoyalty: BigNumber;
-  lastUpdateTime: string;
-  lastPeriodFinish: string;
-  periodFinish: string;
-  rewardPerToken: BigNumber;
+  loyalty_per_share: BigNumber;
+  last_loyalty_per_share: BigNumber;
+  total_accomulated_loyalty: BigNumber;
+  last_update_time: string;
+  last_period_finish: string;
+  period_finish: string;
+  reward_per_token: BigNumber;
 };
 
 export declare type UserRewardInfo = {
   reward: BigNumber;
-  rewardPaid: BigNumber;
+  reward_paid: BigNumber;
   loyalty: BigNumber;
-  loyaltyPaid: BigNumber;
-  updateTime: string;
+  loyalty_paid: BigNumber;
+  update_time: string;
 };
 
 export declare type AccountInfo = {
   balance: BigNumber;
-  frozenBalance: BigNumber;
+  frozen_balance: BigNumber;
   allowances: { [key: string]: BigNumber };
 };
 
@@ -54,17 +53,17 @@ export declare type VoteInfo = {
   candidate: string | null | undefined;
   vote: BigNumber;
   veto: BigNumber;
-  lastVeto: number;
+  last_veto: number;
 };
 
 export declare type TokenStorage = {
-  totalSupply: BigNumber;
+  total_supply: BigNumber;
   ledger: { [key: string]: AccountTokenInfo };
 };
 
 export declare type FactoryStorage = {
-  tokenList: string[];
-  tokenToExchange: { [key: string]: string };
-  dexLambdas: { [key: number]: any };
-  tokenLambdas: { [key: number]: any };
+  token_list: string[];
+  token_to_exchange: { [key: string]: string };
+  dex_lambdas: { [key: number]: any };
+  token_lambdas: { [key: number]: any };
 };

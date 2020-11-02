@@ -39,12 +39,12 @@ contract("Vote()", function () {
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
+    let initVotes = context.pairs[0].storage.total_votes;
 
     // vote
     await context.pairs[0].vote(aliceAddress, delegate, value);
@@ -64,14 +64,14 @@ contract("Vote()", function () {
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    let finalVotes = context.pairs[0].storage.total_votes;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // 1. tokens frozen
     strictEqual(
@@ -80,8 +80,8 @@ contract("Vote()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() + value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() + value,
       "Tokens not frozen"
     );
 
@@ -148,12 +148,12 @@ contract("Vote()", function () {
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
+    let initVotes = context.pairs[0].storage.total_votes;
 
     // vote
     let prevDelegated = delegate;
@@ -176,14 +176,14 @@ contract("Vote()", function () {
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    let finalVotes = context.pairs[0].storage.total_votes;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
     // 1. tokens frozen
     strictEqual(
       aliceFinalSharesInfo.balance.toNumber(),
@@ -191,8 +191,8 @@ contract("Vote()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() - initValue + value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() - initValue + value,
       "Tokens not frozen"
     );
 
@@ -262,12 +262,12 @@ contract("Vote()", function () {
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
+    let initVotes = context.pairs[0].storage.total_votes;
 
     // vote
     await context.pairs[0].vote(aliceAddress, delegate, value);
@@ -287,13 +287,13 @@ contract("Vote()", function () {
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
+    let finalVotes = context.pairs[0].storage.total_votes;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
 
     // 1. tokens frozen
     strictEqual(
@@ -302,8 +302,8 @@ contract("Vote()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() + value - initValue,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() + value - initValue,
       "Tokens not frozen"
     );
 
@@ -365,14 +365,14 @@ contract("Vote()", function () {
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
-    let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let initCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    let initVotes = context.pairs[0].storage.total_votes;
+    let initCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let initCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // vote
     await context.pairs[0].vote(aliceAddress, delegate, 0);
@@ -392,14 +392,14 @@ contract("Vote()", function () {
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    let finalVotes = context.pairs[0].storage.total_votes;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // 1. tokens frozen
     strictEqual(
@@ -408,7 +408,7 @@ contract("Vote()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
       0,
       "Tokens not frozen"
     );
@@ -480,12 +480,12 @@ contract("Vote()", function () {
     };
     let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceInitCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
+    let initVotes = context.pairs[0].storage.total_votes;
 
     // vote
     await context.pairs[0].vote(aliceAddress, delegate, value);
@@ -505,14 +505,14 @@ contract("Vote()", function () {
       aliceAddress
     ] || {
       balance: new BigNumber(0),
-      frozenBalance: new BigNumber(0),
+      frozen_balance: new BigNumber(0),
       allowances: {},
     };
     let aliceFinalCandidateVotes =
       context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    let finalVotes = context.pairs[0].storage.total_votes;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // 1. tokens frozen
     strictEqual(
@@ -521,8 +521,8 @@ contract("Vote()", function () {
       "Tokens not removed"
     );
     strictEqual(
-      aliceFinalSharesInfo.frozenBalance.toNumber(),
-      aliceInitSharesInfo.frozenBalance.toNumber() + value,
+      aliceFinalSharesInfo.frozen_balance.toNumber(),
+      aliceInitSharesInfo.frozen_balance.toNumber() + value,
       "Tokens not frozen"
     );
 
@@ -586,7 +586,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
     let bobInitCandidateVotes =
       context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
+    let initVotes = context.pairs[0].storage.total_votes;
 
     // vote
     await context.pairs[0].vote(aliceAddress, aliceDelegate, value);
@@ -598,9 +598,9 @@ contract("Vote()", function () {
 
     let aliceFinalCandidateVotes =
       context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let initCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    let finalVotes = context.pairs[0].storage.total_votes;
+    let initCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let initCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // check global state
     strictEqual(
@@ -628,9 +628,9 @@ contract("Vote()", function () {
     });
     let bobFinalCandidateVotes =
       context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
-    finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    finalVotes = context.pairs[0].storage.total_votes;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // check global state
     strictEqual(
@@ -677,7 +677,7 @@ contract("Vote()", function () {
       context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
     let bobInitCandidateVotes =
       context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.totalVotes;
+    let initVotes = context.pairs[0].storage.total_votes;
 
     // vote
     await context.pairs[0].vote(aliceAddress, aliceDelegate, value);
@@ -689,9 +689,9 @@ contract("Vote()", function () {
 
     let aliceFinalCandidateVotes =
       context.pairs[0].storage.votes[aliceDelegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.totalVotes;
-    let initCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let initCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    let finalVotes = context.pairs[0].storage.total_votes;
+    let initCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let initCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // check global state
     strictEqual(
@@ -719,9 +719,9 @@ contract("Vote()", function () {
     });
     let bobFinalCandidateVotes =
       context.pairs[0].storage.votes[bobDelegate] || new BigNumber(0);
-    finalVotes = context.pairs[0].storage.totalVotes;
-    let finalCurrentCandidate = context.pairs[0].storage.currentCandidate;
-    let finalCurrentDelegated = context.pairs[0].storage.currentDelegated;
+    finalVotes = context.pairs[0].storage.total_votes;
+    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
+    let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
 
     // check global state
     strictEqual(

@@ -35,10 +35,10 @@ export class Factory {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      tokenList: storage.tokenList,
-      tokenToExchange: {},
-      dexLambdas: {},
-      tokenLambdas: {},
+      token_list: storage.tokenList,
+      token_to_exchange: {},
+      dex_lambdas: {},
+      token_lambdas: {},
     };
     for (let key in maps) {
       this.storage[key] = await maps[key].reduce(async (prev, current) => {

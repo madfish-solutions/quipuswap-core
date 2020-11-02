@@ -52,7 +52,7 @@ let tokenFunctionsFA12 = [
   },
   {
     index: 3,
-    name: "get_allowance",
+    name: "get_allowance_to_contract",
   },
   {
     index: 4,

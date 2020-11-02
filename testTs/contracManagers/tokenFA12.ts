@@ -33,7 +33,7 @@ export class TokenFA12 {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      totalSupply: storage.totalSupply,
+      total_supply: storage.totalSupply,
       ledger: {},
     };
     for (let key in maps) {

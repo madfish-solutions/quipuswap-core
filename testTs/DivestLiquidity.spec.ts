@@ -82,17 +82,17 @@ contract("DivestLiquidity()", function () {
       "Alice should receive 1000 shares"
     );
     strictEqual(
-      context.pairs[0].storage.totalSupply.toNumber(),
+      context.pairs[0].storage.total_supply.toNumber(),
       1000 - sharesBurned,
       "Alice tokens should be all supply"
     );
     strictEqual(
-      context.pairs[0].storage.tezPool.toNumber(),
+      context.pairs[0].storage.tez_pool.toNumber(),
       10000 - tezAmount,
       "Tez pool should be fully funded by sent amount"
     );
     strictEqual(
-      context.pairs[0].storage.tokenPool.toNumber(),
+      context.pairs[0].storage.token_pool.toNumber(),
       1000000 - tokenAmount,
       "Token pool should be fully funded by sent amount"
     );
@@ -186,17 +186,17 @@ contract("DivestLiquidity()", function () {
       "Alice should receive 1000 shares"
     );
     strictEqual(
-      context.pairs[0].storage.totalSupply.toNumber(),
+      context.pairs[0].storage.total_supply.toNumber(),
       1000 - sharesBurned,
       "Alice tokens should be all supply"
     );
     strictEqual(
-      context.pairs[0].storage.tezPool.toNumber(),
+      context.pairs[0].storage.tez_pool.toNumber(),
       10000 - tezAmount,
       "Tez pool should be fully funded by sent amount"
     );
     strictEqual(
-      context.pairs[0].storage.tokenPool.toNumber(),
+      context.pairs[0].storage.token_pool.toNumber(),
       1000000 - tokenAmount,
       "Token pool should be fully funded by sent amount"
     );

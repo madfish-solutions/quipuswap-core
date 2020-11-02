@@ -157,22 +157,22 @@ contract("TokenToTokenPayment()", function () {
     await context.pairs[0].updateStorage();
     await context.pairs[1].updateStorage();
     strictEqual(
-      context.pairs[0].storage.tezPool.toNumber(),
+      context.pairs[0].storage.tez_pool.toNumber(),
       10000 - middleTezAmount,
       "Tez pool should decrement by sent amount"
     );
     strictEqual(
-      context.pairs[0].storage.tokenPool.toNumber(),
+      context.pairs[0].storage.token_pool.toNumber(),
       1000000 + tokenAmount,
       "Token pool should decrement by withdrawn amount"
     );
     strictEqual(
-      context.pairs[1].storage.tezPool.toNumber(),
+      context.pairs[1].storage.tez_pool.toNumber(),
       20000 + middleTezAmount,
       "Tez pool should decrement by sent amount"
     );
     strictEqual(
-      context.pairs[1].storage.tokenPool.toNumber(),
+      context.pairs[1].storage.token_pool.toNumber(),
       10000 - minTokensOut,
       "Token pool should decrement by withdrawn amount"
     );

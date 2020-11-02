@@ -33,23 +33,22 @@ export class Dex extends TokenFA12 {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      tezPool: storage.storage.tezPool,
-      tokenPool: storage.storage.tokenPool,
+      tez_pool: storage.storage.tezPool,
+      token_pool: storage.storage.tokenPool,
       invariant: storage.storage.invariant,
-      tokenAddress: storage.storage.tokenAddress,
-      factoryAddress: storage.storage.factoryAddress,
-      totalSupply: storage.storage.totalSupply,
-      lastVeto: storage.storage.lastVeto,
+      token_address: storage.storage.tokenAddress,
+      total_supply: storage.storage.totalSupply,
+      last_veto: storage.storage.lastVeto,
       ledger: {},
       voters: {},
       vetos: {},
       votes: {},
       veto: storage.storage.veto,
-      currentDelegated: storage.storage.currentDelegated,
-      currentCandidate: storage.storage.currentCandidate,
-      totalVotes: storage.storage.totalVotes,
-      rewardInfo: storage.storage.rewardInfo,
-      userRewards: {},
+      current_delegated: storage.storage.currentDelegated,
+      current_candidate: storage.storage.currentCandidate,
+      total_votes: storage.storage.totalVotes,
+      reward_info: storage.storage.rewardInfo,
+      user_rewards: {},
     };
     for (let key in maps) {
       this.storage[key] = await maps[key].reduce(async (prev, current) => {
@@ -136,7 +135,7 @@ export class Dex extends TokenFA12 {
     receiver: string
   ): Promise<BatchOperation[]> {
     await this.updateStorage();
-    let token = await Tezos.contract.at(this.storage.tokenAddress);
+    let token = await Tezos.contract.at(this.storage.token_address);
     const minTez = Math.floor(middleTezAmount * 0.9);
     const batch = Tezos.batch([])
       .withTransfer(
@@ -248,7 +247,7 @@ export class Dex extends TokenFA12 {
     address: string
   ): Promise<TransactionOperation> {
     await this.updateStorage();
-    let token = await Tezos.contract.at(this.storage.tokenAddress);
+    let token = await Tezos.contract.at(this.storage.token_address);
     let operation = await token.methods.approve(address, tokenAmount).send();
     await operation.confirmation();
     return operation;
