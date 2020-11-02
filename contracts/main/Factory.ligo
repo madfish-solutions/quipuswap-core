@@ -241,16 +241,13 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
 
             const new_votes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + args.value;
             s.votes[args.candidate] := new_votes;
-            if case s.current_candidate of None -> True 
-              | Some(candidate) -> (case s.votes[candidate] of None -> 0n | Some(v) -> v end) < new_votes
-              end then if case s.current_delegated of
+            if case s.current_delegated of
                 | None -> True
                 | Some(current) -> (case s.votes[current] of None -> 0n | Some(v) -> v end) < new_votes
               end then {
-                s.current_candidate := s.current_delegated;
                 s.current_delegated := Some(args.candidate);
                 operations := set_delegate(s.current_delegated) # operations;
-              } else s.current_candidate := Some(args.candidate);
+              }
             else skip;
           }
         end
@@ -313,21 +310,20 @@ function veto (const p : dex_action; const s : dex_storage; const this: address)
             if s.veto > s.total_votes / 3n then {
                 s.veto := 0n;
                 s.last_veto := Tezos.now;
-                case s.current_delegated of None -> skip
-                | Some(d) -> {
-                  s.vetos[d] := Tezos.now + veto_period;
-                  case s.current_candidate of None -> 
-                    s.current_delegated := s.current_candidate
-                  | Some(c) -> {
-                    s.current_delegated := if d = c then
-                      (None: option(key_hash));
-                    else s.current_candidate;
-                    s.current_candidate := (None: option(key_hash));
-                  }
-                  end;
-                  operations := set_delegate(s.current_delegated) # operations;
-                }
-                end;
+                s.current_delegated :=(None: option(key_hash));
+                operations := set_delegate(s.current_delegated) # operations;
+                // case s.current_delegated of None -> skip
+                // | Some(d) -> {
+                //   s.vetos[d] := Tezos.now + veto_period;
+                //   case s.current_candidate of None -> 
+                //     s.current_delegated := s.current_candidate
+                //   | Some(c) -> {
+                //     else s.current_candidate;
+                //     s.current_candidate := (None: option(key_hash));
+                //   }
+                //   end;
+                // }
+                // end;
             } else skip;
           }
         end
@@ -535,9 +531,9 @@ const create_dex : create_dex_func =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT 
 #if FA2_STANDARD_ENABLED
-#include "Dex.tz"
-#else
 #include "DexFA2.tz"
+#else
+#include "DexFA12.tz"
 #endif
                   ;
                     PAIR } |}
@@ -557,7 +553,7 @@ function launch_exchange (const self : address; const token : token_identifier; 
     const storage : dex_storage = record [
 #if FA2_STANDARD_ENABLED
       token_id = token.1;
-      token_metadata = (big_map [] : big_map (token_id, token_metadata_info));
+      // token_metadata = (big_map [] : big_map (token_id, token_metadata_info));
 #endif
       tez_pool = Tezos.amount / 1mutez;      
       token_pool = token_amount;      
@@ -584,7 +580,7 @@ function launch_exchange (const self : address; const token : token_identifier; 
       veto = 0n;      
       last_veto = Tezos.now;
       current_delegated = (None: option(key_hash));      
-      current_candidate = (None: option(key_hash));      
+      // current_candidate = (None: option(key_hash));      
       total_votes = 0n;      
       reward_info = 
         record [

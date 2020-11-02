@@ -1,9 +1,16 @@
 { parameter
-    (or (or (or (pair %approve (address %spender) (nat %value)) (unit %default))
-            (or (pair %getAllowance (pair (address %owner) (address %spender)) (contract nat))
-                (pair %getBalance (address %owner) (contract nat))))
-        (or (or (pair %getTotalSupply unit (contract nat))
-                (pair %transfer (address %from) (pair (address %to) (nat %value))))
+    (or (or (or (pair %balance_of
+                   (list %requests (pair (address %owner) (nat %token_id)))
+                   (contract %callback
+                      (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))))
+                (unit %default))
+            (or (contract %token_metadata_registry address)
+                (list %transfer
+                   (pair (address %from_)
+                         (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))))
+        (or (list %update_operators
+               (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                   (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))
             (pair %use
                nat
                (or (or (or (pair %divestLiquidity (pair (nat %min_tez) (nat %min_tokens)) (nat %shares))
@@ -26,17 +33,18 @@
                                               (pair %veto (nat %value) (address %voter)))
                                           (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
                                               (address %withdrawProfit))))
-                                  (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                                    (pair (nat %invariant) (timestamp %last_veto)))
-                                              (pair (pair (big_map %ledger
+                                  (pair (pair (pair (pair (option %current_delegated key_hash) (nat %invariant))
+                                                    (pair (timestamp %last_veto)
+                                                          (big_map %ledger
                                                              address
-                                                             (pair (pair (map %allowances address nat) (nat %balance)) (nat %frozen_balance)))
-                                                          (pair %reward_info
+                                                             (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))))
+                                              (pair (pair (pair %reward_info
                                                              (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
                                                                    (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
                                                              (pair (pair (timestamp %period_finish) (nat %reward))
-                                                                   (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
-                                                    (pair (nat %tez_pool) (address %token_address))))
+                                                                   (pair (nat %reward_per_token) (nat %total_accomulated_loyalty))))
+                                                          (nat %tez_pool))
+                                                    (pair (address %token_address) (nat %token_id))))
                                         (pair (pair (pair (nat %token_pool) (nat %total_supply))
                                                     (pair (nat %total_votes)
                                                           (big_map %user_rewards
@@ -51,17 +59,18 @@
                                                           (big_map %votes key_hash nat))))))
                             address)
                       (pair (list operation)
-                            (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                              (pair (nat %invariant) (timestamp %last_veto)))
-                                        (pair (pair (big_map %ledger
+                            (pair (pair (pair (pair (option %current_delegated key_hash) (nat %invariant))
+                                              (pair (timestamp %last_veto)
+                                                    (big_map %ledger
                                                        address
-                                                       (pair (pair (map %allowances address nat) (nat %balance)) (nat %frozen_balance)))
-                                                    (pair %reward_info
+                                                       (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))))
+                                        (pair (pair (pair %reward_info
                                                        (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
                                                              (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
                                                        (pair (pair (timestamp %period_finish) (nat %reward))
-                                                             (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
-                                              (pair (nat %tez_pool) (address %token_address))))
+                                                             (pair (nat %reward_per_token) (nat %total_accomulated_loyalty))))
+                                                    (nat %tez_pool))
+                                              (pair (address %token_address) (nat %token_id))))
                                   (pair (pair (pair (nat %token_pool) (nat %total_supply))
                                               (pair (nat %total_votes)
                                                     (big_map %user_rewards
@@ -75,17 +84,18 @@
                                                              (pair (nat %veto) (nat %vote))))
                                                     (big_map %votes key_hash nat))))))))
                 (pair %storage
-                   (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                               (pair (nat %invariant) (timestamp %last_veto)))
-                         (pair (pair (big_map %ledger
+                   (pair (pair (pair (option %current_delegated key_hash) (nat %invariant))
+                               (pair (timestamp %last_veto)
+                                     (big_map %ledger
                                         address
-                                        (pair (pair (map %allowances address nat) (nat %balance)) (nat %frozen_balance)))
-                                     (pair %reward_info
+                                        (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))))
+                         (pair (pair (pair %reward_info
                                         (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
                                               (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
                                         (pair (pair (timestamp %period_finish) (nat %reward))
-                                              (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
-                               (pair (nat %tez_pool) (address %token_address))))
+                                              (pair (nat %reward_per_token) (nat %total_accomulated_loyalty))))
+                                     (nat %tez_pool))
+                               (pair (address %token_address) (nat %token_id))))
                    (pair (pair (pair (nat %token_pool) (nat %total_supply))
                                (pair (nat %total_votes)
                                      (big_map %user_rewards
@@ -101,22 +111,29 @@
           (big_map %token_lambdas
              nat
              (lambda
-                (pair (or (or (or (pair %iApprove (address %spender) (nat %value))
-                                  (pair %iGetAllowance (pair (address %owner) (address %spender)) (contract nat)))
-                              (or (pair %iGetBalance (address %owner) (contract nat))
-                                  (pair %iGetTotalSupply unit (contract nat))))
-                          (pair %iTransfer (address %from) (pair (address %to) (nat %value))))
-                      (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                        (pair (nat %invariant) (timestamp %last_veto)))
-                                  (pair (pair (big_map %ledger
+                (pair (or (or (pair %iBalance_of
+                                 (list %requests (pair (address %owner) (nat %token_id)))
+                                 (contract %callback
+                                    (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))))
+                              (contract %iToken_metadata_registry address))
+                          (or (list %iTransfer
+                                 (pair (address %from_)
+                                       (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))
+                              (list %iUpdate_operators
+                                 (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                                     (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))))
+                      (pair (pair (pair (pair (option %current_delegated key_hash) (nat %invariant))
+                                        (pair (timestamp %last_veto)
+                                              (big_map %ledger
                                                  address
-                                                 (pair (pair (map %allowances address nat) (nat %balance)) (nat %frozen_balance)))
-                                              (pair %reward_info
+                                                 (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))))
+                                  (pair (pair (pair %reward_info
                                                  (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
                                                        (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
                                                  (pair (pair (timestamp %period_finish) (nat %reward))
-                                                       (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
-                                        (pair (nat %tez_pool) (address %token_address))))
+                                                       (pair (nat %reward_per_token) (nat %total_accomulated_loyalty))))
+                                              (nat %tez_pool))
+                                        (pair (address %token_address) (nat %token_id))))
                             (pair (pair (pair (nat %token_pool) (nat %total_supply))
                                         (pair (nat %total_votes)
                                               (big_map %user_rewards
@@ -130,17 +147,18 @@
                                                        (pair (nat %veto) (nat %vote))))
                                               (big_map %votes key_hash nat))))))
                 (pair (list operation)
-                      (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                        (pair (nat %invariant) (timestamp %last_veto)))
-                                  (pair (pair (big_map %ledger
+                      (pair (pair (pair (pair (option %current_delegated key_hash) (nat %invariant))
+                                        (pair (timestamp %last_veto)
+                                              (big_map %ledger
                                                  address
-                                                 (pair (pair (map %allowances address nat) (nat %balance)) (nat %frozen_balance)))
-                                              (pair %reward_info
+                                                 (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))))
+                                  (pair (pair (pair %reward_info
                                                  (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
                                                        (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
                                                  (pair (pair (timestamp %period_finish) (nat %reward))
-                                                       (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
-                                        (pair (nat %tez_pool) (address %token_address))))
+                                                       (pair (nat %reward_per_token) (nat %total_accomulated_loyalty))))
+                                              (nat %tez_pool))
+                                        (pair (address %token_address) (nat %token_id))))
                             (pair (pair (pair (nat %token_pool) (nat %total_supply))
                                         (pair (nat %total_votes)
                                               (big_map %user_rewards
@@ -154,9 +172,10 @@
                                                        (pair (nat %veto) (nat %vote))))
                                               (big_map %votes key_hash nat))))))))) ;
   code { LAMBDA
-           (pair (pair (or (or (or (pair address nat) (pair (pair address address) (contract nat)))
-                               (or (pair address (contract nat)) (pair unit (contract nat))))
-                           (pair address (pair address nat)))
+           (pair (pair (or (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
+                               (contract address))
+                           (or (list (pair address (list (pair address (pair nat nat)))))
+                               (list (or (pair address (pair address nat)) (pair address (pair address nat))))))
                        nat)
                  (pair (pair (big_map
                                 nat
@@ -164,11 +183,12 @@
                                    (pair (pair (or (or (or (pair (pair nat nat) nat) nat) (or nat (pair nat address)))
                                                    (or (or (pair (pair nat nat) address) (pair nat address))
                                                        (or (pair (pair key_hash nat) address) address)))
-                                               (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                                           (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                                       (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                             (pair (pair timestamp nat) (pair nat nat))))
-                                                                 (pair nat address)))
+                                               (pair (pair (pair (pair (option key_hash) nat)
+                                                                 (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                                           (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                             (pair (pair timestamp nat) (pair nat nat)))
+                                                                       nat)
+                                                                 (pair address nat)))
                                                      (pair (pair (pair nat nat)
                                                                  (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                            (pair (pair nat (big_map key_hash timestamp))
@@ -176,21 +196,23 @@
                                                                        (big_map key_hash nat))))))
                                          address)
                                    (pair (list operation)
-                                         (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                                     (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                                 (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                       (pair (pair timestamp nat) (pair nat nat))))
-                                                           (pair nat address)))
+                                         (pair (pair (pair (pair (option key_hash) nat)
+                                                           (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                                     (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                       (pair (pair timestamp nat) (pair nat nat)))
+                                                                 nat)
+                                                           (pair address nat)))
                                                (pair (pair (pair nat nat)
                                                            (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                      (pair (pair nat (big_map key_hash timestamp))
                                                            (pair (big_map address (pair (pair (option key_hash) timestamp) (pair nat nat)))
                                                                  (big_map key_hash nat))))))))
-                             (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                         (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                     (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                           (pair (pair timestamp nat) (pair nat nat))))
-                                               (pair nat address)))
+                             (pair (pair (pair (pair (option key_hash) nat)
+                                               (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                         (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                           (pair (pair timestamp nat) (pair nat nat)))
+                                                     nat)
+                                               (pair address nat)))
                                    (pair (pair (pair nat nat)
                                                (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                          (pair (pair nat (big_map key_hash timestamp))
@@ -199,25 +221,28 @@
                        (big_map
                           nat
                           (lambda
-                             (pair (or (or (or (pair address nat) (pair (pair address address) (contract nat)))
-                                           (or (pair address (contract nat)) (pair unit (contract nat))))
-                                       (pair address (pair address nat)))
-                                   (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                               (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                           (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                 (pair (pair timestamp nat) (pair nat nat))))
-                                                     (pair nat address)))
+                             (pair (or (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
+                                           (contract address))
+                                       (or (list (pair address (list (pair address (pair nat nat)))))
+                                           (list (or (pair address (pair address nat)) (pair address (pair address nat))))))
+                                   (pair (pair (pair (pair (option key_hash) nat)
+                                                     (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                               (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                 (pair (pair timestamp nat) (pair nat nat)))
+                                                           nat)
+                                                     (pair address nat)))
                                          (pair (pair (pair nat nat)
                                                      (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                (pair (pair nat (big_map key_hash timestamp))
                                                      (pair (big_map address (pair (pair (option key_hash) timestamp) (pair nat nat)))
                                                            (big_map key_hash nat))))))
                              (pair (list operation)
-                                   (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                               (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                           (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                 (pair (pair timestamp nat) (pair nat nat))))
-                                                     (pair nat address)))
+                                   (pair (pair (pair (pair (option key_hash) nat)
+                                                     (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                               (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                 (pair (pair timestamp nat) (pair nat nat)))
+                                                           nat)
+                                                     (pair address nat)))
                                          (pair (pair (pair nat nat)
                                                      (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                (pair (pair nat (big_map key_hash timestamp))
@@ -230,11 +255,12 @@
                                    (pair (pair (or (or (or (pair (pair nat nat) nat) nat) (or nat (pair nat address)))
                                                    (or (or (pair (pair nat nat) address) (pair nat address))
                                                        (or (pair (pair key_hash nat) address) address)))
-                                               (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                                           (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                                       (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                             (pair (pair timestamp nat) (pair nat nat))))
-                                                                 (pair nat address)))
+                                               (pair (pair (pair (pair (option key_hash) nat)
+                                                                 (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                                           (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                             (pair (pair timestamp nat) (pair nat nat)))
+                                                                       nat)
+                                                                 (pair address nat)))
                                                      (pair (pair (pair nat nat)
                                                                  (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                            (pair (pair nat (big_map key_hash timestamp))
@@ -242,21 +268,23 @@
                                                                        (big_map key_hash nat))))))
                                          address)
                                    (pair (list operation)
-                                         (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                                     (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                                 (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                       (pair (pair timestamp nat) (pair nat nat))))
-                                                           (pair nat address)))
+                                         (pair (pair (pair (pair (option key_hash) nat)
+                                                           (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                                     (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                       (pair (pair timestamp nat) (pair nat nat)))
+                                                                 nat)
+                                                           (pair address nat)))
                                                (pair (pair (pair nat nat)
                                                            (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                      (pair (pair nat (big_map key_hash timestamp))
                                                            (pair (big_map address (pair (pair (option key_hash) timestamp) (pair nat nat)))
                                                                  (big_map key_hash nat))))))))
-                             (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                         (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                     (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                           (pair (pair timestamp nat) (pair nat nat))))
-                                               (pair nat address)))
+                             (pair (pair (pair (pair (option key_hash) nat)
+                                               (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                         (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                           (pair (pair timestamp nat) (pair nat nat)))
+                                                     nat)
+                                               (pair address nat)))
                                    (pair (pair (pair nat nat)
                                                (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                          (pair (pair nat (big_map key_hash timestamp))
@@ -265,25 +293,28 @@
                        (big_map
                           nat
                           (lambda
-                             (pair (or (or (or (pair address nat) (pair (pair address address) (contract nat)))
-                                           (or (pair address (contract nat)) (pair unit (contract nat))))
-                                       (pair address (pair address nat)))
-                                   (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                               (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                           (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                 (pair (pair timestamp nat) (pair nat nat))))
-                                                     (pair nat address)))
+                             (pair (or (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
+                                           (contract address))
+                                       (or (list (pair address (list (pair address (pair nat nat)))))
+                                           (list (or (pair address (pair address nat)) (pair address (pair address nat))))))
+                                   (pair (pair (pair (pair (option key_hash) nat)
+                                                     (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                               (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                 (pair (pair timestamp nat) (pair nat nat)))
+                                                           nat)
+                                                     (pair address nat)))
                                          (pair (pair (pair nat nat)
                                                      (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                (pair (pair nat (big_map key_hash timestamp))
                                                      (pair (big_map address (pair (pair (option key_hash) timestamp) (pair nat nat)))
                                                            (big_map key_hash nat))))))
                              (pair (list operation)
-                                   (pair (pair (pair (pair (option key_hash) (option key_hash)) (pair nat timestamp))
-                                               (pair (pair (big_map address (pair (pair (map address nat) nat) nat))
-                                                           (pair (pair (pair nat timestamp) (pair timestamp nat))
-                                                                 (pair (pair timestamp nat) (pair nat nat))))
-                                                     (pair nat address)))
+                                   (pair (pair (pair (pair (option key_hash) nat)
+                                                     (pair timestamp (big_map address (pair (pair (set address) nat) nat))))
+                                               (pair (pair (pair (pair (pair nat timestamp) (pair timestamp nat))
+                                                                 (pair (pair timestamp nat) (pair nat nat)))
+                                                           nat)
+                                                     (pair address nat)))
                                          (pair (pair (pair nat nat)
                                                      (pair nat (big_map address (pair (pair (pair nat nat) (pair nat nat)) timestamp))))
                                                (pair (pair nat (big_map key_hash timestamp))
@@ -328,9 +359,9 @@
                    { SWAP ;
                      PUSH nat 1 ;
                      DIG 2 ;
-                     LEFT (pair (pair address address) (contract nat)) ;
-                     LEFT (or (pair address (contract nat)) (pair unit (contract nat))) ;
-                     LEFT (pair address (pair address nat)) ;
+                     LEFT (contract address) ;
+                     LEFT (or (list (pair address (list (pair address (pair nat nat)))))
+                              (list (or (pair address (pair address nat)) (pair address (pair address nat))))) ;
                      PAIR ;
                      PAIR ;
                      EXEC }
@@ -370,45 +401,37 @@
                      PAIR } }
                { IF_LEFT
                    { SWAP ;
-                     PUSH nat 3 ;
-                     DIG 2 ;
-                     RIGHT (pair address nat) ;
-                     LEFT (or (pair address (contract nat)) (pair unit (contract nat))) ;
-                     LEFT (pair address (pair address nat)) ;
-                     PAIR ;
-                     PAIR ;
-                     EXEC }
-                   { SWAP ;
                      PUSH nat 2 ;
                      DIG 2 ;
-                     LEFT (pair unit (contract nat)) ;
-                     RIGHT (or (pair address nat) (pair (pair address address) (contract nat))) ;
-                     LEFT (pair address (pair address nat)) ;
-                     PAIR ;
-                     PAIR ;
-                     EXEC } } }
-           { IF_LEFT
-               { SWAP ;
-                 DROP ;
-                 IF_LEFT
-                   { SWAP ;
-                     PUSH nat 4 ;
-                     DIG 2 ;
-                     RIGHT (pair address (contract nat)) ;
-                     RIGHT (or (pair address nat) (pair (pair address address) (contract nat))) ;
-                     LEFT (pair address (pair address nat)) ;
+                     RIGHT (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))) ;
+                     LEFT (or (list (pair address (list (pair address (pair nat nat)))))
+                              (list (or (pair address (pair address nat)) (pair address (pair address nat))))) ;
                      PAIR ;
                      PAIR ;
                      EXEC }
                    { SWAP ;
                      PUSH nat 0 ;
                      DIG 2 ;
+                     LEFT (list (or (pair address (pair address nat)) (pair address (pair address nat)))) ;
                      RIGHT
-                       (or (or (pair address nat) (pair (pair address address) (contract nat)))
-                           (or (pair address (contract nat)) (pair unit (contract nat)))) ;
+                       (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
+                           (contract address)) ;
                      PAIR ;
                      PAIR ;
-                     EXEC } }
+                     EXEC } } }
+           { IF_LEFT
+               { SWAP ;
+                 DROP ;
+                 SWAP ;
+                 PUSH nat 3 ;
+                 DIG 2 ;
+                 RIGHT (list (pair address (list (pair address (pair nat nat))))) ;
+                 RIGHT
+                   (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
+                       (contract address)) ;
+                 PAIR ;
+                 PAIR ;
+                 EXEC }
                { DIG 3 ;
                  DROP ;
                  DIG 2 ;

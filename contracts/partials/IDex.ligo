@@ -41,7 +41,7 @@ type reward_info is record [
 type dex_storage is record [
 #if FA2_STANDARD_ENABLED
   token_id            : token_id;
-  token_metadata      : big_map (token_id, token_metadata_info);
+  // token_metadata      : big_map (token_id, token_metadata_info);
 #endif
   tez_pool            : nat;
   token_pool          : nat;
@@ -55,7 +55,7 @@ type dex_storage is record [
   veto                : nat;
   last_veto           : timestamp;
   current_delegated   : option(key_hash);
-  current_candidate   : option(key_hash);
+  // current_candidate   : option(key_hash);
   total_votes         : nat;
   reward_info         : reward_info;
   user_rewards        : big_map(address, user_reward_info);
