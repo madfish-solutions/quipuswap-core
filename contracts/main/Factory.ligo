@@ -495,7 +495,7 @@ function receive_reward (const p : dex_action; const s : dex_storage; const this
   } with ((nil : list(operation)), s)
 
 (* Withdraw reward from baker *)
-function withdrawProfit (const p : dex_action; const s : dex_storage; const this : address) : return is
+function withdraw_profit (const p : dex_action; const s : dex_storage; const this : address) : return is
   block {
     var operations: list(operation) := list[];
     case p of

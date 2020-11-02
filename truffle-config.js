@@ -1,4 +1,4 @@
-const { alice } = require('./scripts/sandbox/accounts');
+const { alice } = require("./scripts/sandbox/accounts");
 
 module.exports = {
   // see <http://truffleframework.com/docs/advanced/configuration>
@@ -10,26 +10,26 @@ module.exports = {
       port: 8732,
       network_id: "*",
       secretKey: alice.sk,
-      type: "tezos"
+      type: "tezos",
     },
     carthagenet: {
       host: "https://carthagenet.smartpy.io",
       port: 443,
       network_id: "*",
       secretKey: alice.sk,
-      type: "tezos"
+      type: "tezos",
     },
     mainnet: {
       host: "https://mainnet.smartpy.io",
       port: 443,
       network_id: "*",
-      type: "tezos"
+      type: "tezos",
     },
     zeronet: {
       host: "https://zeronet.smartpy.io",
       port: 443,
       network_id: "*",
-      type: "tezos"
-    }
-  }
+      type: "tezos",
+    },
+  },
 };

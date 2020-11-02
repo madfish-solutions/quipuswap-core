@@ -1,7 +1,8 @@
 const { MichelsonMap } = require("@taquito/michelson-encoder");
 
-module.exports = { tokenList:[],
-  tokenToExchange:MichelsonMap.fromLiteral({}),
-  dexLambdas:MichelsonMap.fromLiteral({}),
-  tokenLambdas:MichelsonMap.fromLiteral({})}
-
+module.exports = {
+  token_list: [],
+  token_to_exchange: MichelsonMap.fromLiteral({}),
+  dex_lambdas: MichelsonMap.fromLiteral({}),
+  token_lambdas: MichelsonMap.fromLiteral({}),
+};
