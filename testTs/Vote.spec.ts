@@ -446,116 +446,121 @@ contract("Vote()", function () {
     );
   });
 
-  it("should allow to vote and set candidate by approved user", async function () {
-    this.timeout(5000000);
+  if (process.env.npm_package_config_standard === "FA12") {
+    it("should allow to vote and set candidate by approved user", async function () {
+      this.timeout(5000000);
 
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
+      // reset pairs
+      await context.flushPairs();
+      await context.createPairs();
 
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+      let aliceAddress = await Tezos.signer.publicKeyHash();
 
-    // get gelegate address
-    await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor();
+      // get gelegate address
+      await context.updateActor("bob");
+      let bobAddress = await Tezos.signer.publicKeyHash();
+      await context.updateActor();
 
-    // approve tokens
-    let value = 500;
-    await context.pairs[0].approve(bobAddress, value);
-    await context.updateActor("bob");
+      // approve tokens
+      let value = 500;
+      await context.pairs[0].approve(bobAddress, value);
+      await context.updateActor("bob");
 
-    let delegate = bobAddress;
+      let delegate = bobAddress;
 
-    // store prev balances
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      votes: [delegate],
+      // store prev balances
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress],
+        voters: [aliceAddress],
+        votes: [delegate],
+      });
+      let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
+        candidate: undefined,
+        vote: new BigNumber(0),
+        veto: new BigNumber(0),
+      };
+      let aliceInitSharesInfo = context.pairs[0].storage.ledger[
+        aliceAddress
+      ] || {
+        balance: new BigNumber(0),
+        frozen_balance: new BigNumber(0),
+        allowances: {},
+      };
+      let aliceInitCandidateVotes =
+        context.pairs[0].storage.votes[delegate] || new BigNumber(0);
+      let initVotes = context.pairs[0].storage.total_votes;
+
+      // vote
+      await context.pairs[0].vote(aliceAddress, delegate, value);
+
+      // checks
+      await context.pairs[0].updateStorage({
+        ledger: [aliceAddress],
+        voters: [aliceAddress],
+        votes: [delegate],
+      });
+      let aliceFinalVoteInfo = context.pairs[0].storage.voters[
+        aliceAddress
+      ] || {
+        candidate: undefined,
+        vote: new BigNumber(0),
+        veto: new BigNumber(0),
+      };
+      let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
+        aliceAddress
+      ] || {
+        balance: new BigNumber(0),
+        frozen_balance: new BigNumber(0),
+        allowances: {},
+      };
+      let aliceFinalCandidateVotes =
+        context.pairs[0].storage.votes[delegate] || new BigNumber(0);
+      let finalVotes = context.pairs[0].storage.total_votes;
+      let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
+      let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
+
+      // 1. tokens frozen
+      strictEqual(
+        aliceFinalSharesInfo.balance.toNumber(),
+        aliceInitSharesInfo.balance.toNumber() - value,
+        "Tokens not removed"
+      );
+      strictEqual(
+        aliceFinalSharesInfo.frozen_balance.toNumber(),
+        aliceInitSharesInfo.frozen_balance.toNumber() + value,
+        "Tokens not frozen"
+      );
+
+      // 2. voter info updated
+      strictEqual(
+        aliceFinalVoteInfo.candidate,
+        delegate,
+        "User candidate wasn't updated"
+      );
+      strictEqual(
+        aliceFinalVoteInfo.vote.toNumber(),
+        aliceInitVoteInfo.vote.toNumber() + value,
+        "User vote wasn't updated"
+      );
+
+      // 3. votes added
+      strictEqual(
+        aliceFinalCandidateVotes.toNumber(),
+        aliceInitCandidateVotes.toNumber() + value,
+        "Candidate didn't receive tokens"
+      );
+
+      // 4. global state updated
+      strictEqual(
+        initVotes.toNumber() + value,
+        finalVotes.toNumber(),
+        "Total votes weren't updated"
+      );
+
+      strictEqual(finalCurrentDelegated, delegate, "Delegated wasn't updated");
+      strictEqual(finalCurrentCandidate, null, "Candidate wasn't updated");
     });
-    let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-    };
-    let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceInitCandidateVotes =
-      context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let initVotes = context.pairs[0].storage.total_votes;
-
-    // vote
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      votes: [delegate],
-    });
-    let aliceFinalVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-    };
-    let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
-      aliceAddress
-    ] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceFinalCandidateVotes =
-      context.pairs[0].storage.votes[delegate] || new BigNumber(0);
-    let finalVotes = context.pairs[0].storage.total_votes;
-    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
-    let finalCurrentDelegated = context.pairs[0].storage.current_delegated;
-
-    // 1. tokens frozen
-    strictEqual(
-      aliceFinalSharesInfo.balance.toNumber(),
-      aliceInitSharesInfo.balance.toNumber() - value,
-      "Tokens not removed"
-    );
-    strictEqual(
-      aliceFinalSharesInfo.frozen_balance.toNumber(),
-      aliceInitSharesInfo.frozen_balance.toNumber() + value,
-      "Tokens not frozen"
-    );
-
-    // 2. voter info updated
-    strictEqual(
-      aliceFinalVoteInfo.candidate,
-      delegate,
-      "User candidate wasn't updated"
-    );
-    strictEqual(
-      aliceFinalVoteInfo.vote.toNumber(),
-      aliceInitVoteInfo.vote.toNumber() + value,
-      "User vote wasn't updated"
-    );
-
-    // 3. votes added
-    strictEqual(
-      aliceFinalCandidateVotes.toNumber(),
-      aliceInitCandidateVotes.toNumber() + value,
-      "Candidate didn't receive tokens"
-    );
-
-    // 4. global state updated
-    strictEqual(
-      initVotes.toNumber() + value,
-      finalVotes.toNumber(),
-      "Total votes weren't updated"
-    );
-
-    strictEqual(finalCurrentDelegated, delegate, "Delegated wasn't updated");
-    strictEqual(finalCurrentCandidate, null, "Candidate wasn't updated");
-  });
-
+  }
   it("should update current candidate", async function () {
     this.timeout(5000000);
 

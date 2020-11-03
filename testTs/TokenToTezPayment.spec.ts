@@ -153,31 +153,33 @@ contract("TokenToTezPayment()", function () {
     );
   });
 
-  it("should fail if not enough tokens are approved", async function () {
-    let tokenAmount = 1000;
-    let minTezOut = 10;
+  if (process.env.npm_package_config_standard === "FA12") {
+    it("should fail if not enough tokens are approved", async function () {
+      let tokenAmount = 1000;
+      let minTezOut = 10;
 
-    // get alice address
-    await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
-    await context.updateActor();
+      // get alice address
+      await context.updateActor("bob");
+      let bobAddress = await Tezos.signer.publicKeyHash();
+      await context.updateActor();
 
-    // attempt to exchange tokens
-    await rejects(
-      context.pairs[0].contract.methods
-        .use(2, "tokenToTezPayment", tokenAmount, minTezOut, bobAddress)
-        .send(),
-      (err) => {
-        strictEqual(
-          err.message,
-          "NotEnoughAllowance",
-          "Error message mismatch"
-        );
-        return true;
-      },
-      "Swap Dex should fail"
-    );
-  });
+      // attempt to exchange tokens
+      await rejects(
+        context.pairs[0].contract.methods
+          .use(2, "tokenToTezPayment", tokenAmount, minTezOut, bobAddress)
+          .send(),
+        (err) => {
+          strictEqual(
+            err.message,
+            "NotEnoughAllowance",
+            "Error message mismatch"
+          );
+          return true;
+        },
+        "Swap Dex should fail"
+      );
+    });
+  }
 
   it("should fail if tokens amount is too low", async function () {
     let aliceAddress = await Tezos.signer.publicKeyHash();

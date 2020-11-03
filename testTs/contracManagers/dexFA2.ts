@@ -142,7 +142,15 @@ export class Dex extends TokenFA2 {
     const batch = Tezos.batch([])
       .withTransfer(
         token.methods
-          .approve(this.contract.address, tokenAmount)
+          .update_operators([
+            {
+              add_operator: {
+                owner: await Tezos.signer.publicKeyHash(),
+                operator: this.contract.address,
+                token_id: defaultTokenId,
+              },
+            },
+          ])
           .toTransferParams()
       )
       .withTransfer(
