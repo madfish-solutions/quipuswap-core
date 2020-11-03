@@ -26,6 +26,8 @@ function get_allowance (const owner_account : account_info; const spender : addr
           failwith("FA2_INSUFFICIENT_BALANCE")
         else skip;
 
+        s := update_user_reward(user_trx_params.from_, sender_account, abs(sender_account.balance - transfer.amount) + sender_account.frozen_balance,  s);
+
         (* Update sender balance *)
         sender_account.balance := abs(sender_account.balance - transfer.amount);
 
@@ -34,6 +36,8 @@ function get_allowance (const owner_account : account_info; const spender : addr
 
         (* Create or get destination account *)
         var dest_account : account_info := get_account(transfer.to_, s);
+
+        s := update_user_reward(transfer.to_, dest_account, dest_account.balance + transfer.amount + dest_account.frozen_balance, s);
 
         (* Update destination balance *)
         dest_account.balance := dest_account.balance + transfer.amount;
@@ -96,6 +100,7 @@ function transfer (const p : token_action; var s : dex_storage; const this : add
     var operations: list(operation) := list[];
     case p of
     | ITransfer(params) -> {
+      s := update_reward(s);
       s := List.fold(iterate_transfer, params, s);
     }
     | IBalance_of(params) -> failwith("11")
