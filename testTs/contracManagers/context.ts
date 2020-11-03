@@ -14,7 +14,7 @@ import { prepareProviderOptions } from "./utils";
 
 import factoryStorage from "../storage/Factory";
 import tokenFA12Storage from "../storage/TokenFA12";
-import tokenFA2Storage from "../storage/TokenFA12";
+import tokenFA2Storage from "../storage/TokenFA2";
 import { dexFunctions, tokenFunctions } from "../storage/Functions";
 import { TokenFA2 } from "./tokenFA2";
 import { Token } from "./token";

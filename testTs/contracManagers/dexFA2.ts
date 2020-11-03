@@ -253,14 +253,13 @@ export class Dex extends TokenFA2 {
     let token = await Tezos.contract.at(tokenAddress);
     let operation = await token.methods
       .update_operators([
-        [
-          "Add_operator",
-          {
+        {
+          add_operator: {
             owner: await Tezos.signer.publicKeyHash(),
             operator: address,
             token_id: defaultTokenId,
           },
-        ],
+        },
       ])
       .send();
     await operation.confirmation();

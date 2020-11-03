@@ -9,6 +9,7 @@ import { FactoryStorage } from "./types";
 import { execSync } from "child_process";
 import { getLigo, prepareProviderOptions, tezPrecision } from "./utils";
 import { defaultTokenId } from "./tokenFA2";
+import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 const standard = process.env.npm_package_config_standard;
 
 export class Factory {
@@ -26,6 +27,13 @@ export class Factory {
   async updateProvider(accountName: string): Promise<void> {
     let config = await prepareProviderOptions(accountName);
     Tezos.setProvider(config);
+  }
+
+  wrapStorageArgument(map: string, key: any): any {
+    if (map === "token_to_exchange" && standard === "FA2") {
+      return [key, defaultTokenId];
+    }
+    return key;
   }
 
   async updateStorage(
@@ -47,7 +55,9 @@ export class Factory {
         try {
           return {
             ...(await prev),
-            [current]: await storage[key].get(current),
+            [current]: await storage[key].get(
+              this.wrapStorageArgument(key, current)
+            ),
           };
         } catch (ex) {
           return {
@@ -144,14 +154,13 @@ export class Factory {
     let token = await Tezos.contract.at(tokenAddress);
     let operation = await token.methods
       .update_operators([
-        [
-          "Add_operator",
-          {
+        {
+          add_operator: {
             owner: await Tezos.signer.publicKeyHash(),
             operator: address,
             token_id: defaultTokenId,
           },
-        ],
+        },
       ])
       .send();
     await operation.confirmation();

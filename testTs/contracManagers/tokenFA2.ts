@@ -81,7 +81,7 @@ export class TokenFA2 implements Token {
   async approve(to: string, amount: number): Promise<TransactionOperation> {
     return await this.updateOperators([
       {
-        option: "Add_operator",
+        option: "add_operator",
         param: {
           owner: await Tezos.signer.publicKeyHash(),
           operator: to,
@@ -115,7 +115,7 @@ export class TokenFA2 implements Token {
 
   async updateOperators(
     params: {
-      option: "Add_operator" | "Remove_operator";
+      option: "add_operator" | "remove_operator";
       param: {
         owner: string;
         operator: string;
@@ -124,7 +124,13 @@ export class TokenFA2 implements Token {
     }[]
   ): Promise<TransactionOperation> {
     let operation = await this.contract.methods
-      .update_operators(params.map((param) => [param.option, param]))
+      .update_operators(
+        params.map((param) => {
+          return {
+            [param.option]: param.param,
+          };
+        })
+      )
       .send();
     await operation.confirmation();
     return operation;
