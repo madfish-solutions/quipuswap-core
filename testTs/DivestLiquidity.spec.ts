@@ -3,7 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 
-contract.only("DivestLiquidity()", function () {
+contract("DivestLiquidity()", function () {
   let context: Context;
 
   before(async () => {

@@ -8,6 +8,8 @@ import { TransactionOperation } from "@taquito/taquito/dist/types/operations/tra
 import { FactoryStorage } from "./types";
 import { execSync } from "child_process";
 import { getLigo, prepareProviderOptions, tezPrecision } from "./utils";
+import { defaultTokenId } from "./tokenFA2";
+const standard = process.env.npm_package_config_standard;
 
 export class Factory {
   public contract: ContractAbstraction<ContractProvider>;
@@ -61,6 +63,30 @@ export class Factory {
     tokenAmount: number,
     tezAmount: number
   ): Promise<TransactionOperation> {
+    return standard === "FA2"
+      ? await this.launchExchangeFA2(tokenAddress, tokenAmount, tezAmount)
+      : await this.launchExchangeFA12(tokenAddress, tokenAmount, tezAmount);
+  }
+
+  async launchExchangeFA2(
+    tokenAddress: string,
+    tokenAmount: number,
+    tezAmount: number
+  ): Promise<TransactionOperation> {
+    await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
+    const operation = await this.contract.methods
+      .launchExchange(tokenAddress, defaultTokenId, tokenAmount)
+      .send({ amount: tezAmount / tezPrecision });
+    await operation.confirmation();
+    await this.updateStorage({ token_to_exchange: [tokenAddress] });
+    return operation;
+  }
+
+  async launchExchangeFA12(
+    tokenAddress: string,
+    tokenAmount: number,
+    tezAmount: number
+  ): Promise<TransactionOperation> {
     await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, tokenAmount)
@@ -73,7 +99,7 @@ export class Factory {
   async setDexFunction(index: number, lambdaName: string): Promise<void> {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await Tezos.contract.transfer({
@@ -90,7 +116,7 @@ export class Factory {
   async setTokenFunction(index: number, lambdaName: string): Promise<void> {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await Tezos.contract.transfer({
@@ -105,6 +131,33 @@ export class Factory {
   }
 
   async approveToken(
+    tokenAddress: string,
+    tokenAmount: number,
+    address: string
+  ): Promise<void> {
+    return standard === "FA2"
+      ? await this.approveTokenFA2(tokenAddress, address)
+      : await this.approveTokenFA12(tokenAddress, tokenAmount, address);
+  }
+
+  async approveTokenFA2(tokenAddress: string, address: string): Promise<void> {
+    let token = await Tezos.contract.at(tokenAddress);
+    let operation = await token.methods
+      .update_operators([
+        [
+          "Add_operator",
+          {
+            owner: await Tezos.signer.publicKeyHash(),
+            operator: address,
+            token_id: defaultTokenId,
+          },
+        ],
+      ])
+      .send();
+    await operation.confirmation();
+  }
+
+  async approveTokenFA12(
     tokenAddress: string,
     tokenAmount: number,
     address: string

@@ -13,7 +13,7 @@ type account is
 (* contract storage *)
 type storage is
   record [
-    totalSupply     : amt;
+    total_supply     : amt;
     ledger          : big_map (address, account);
   ]
 

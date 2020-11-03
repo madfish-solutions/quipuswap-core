@@ -50,7 +50,7 @@ contract("SetXFunctions()", function () {
 
     // ensure attempt to replace function fails
     await rejects(
-      context.factory.setDexFunction(1, "initializeExchange"),
+      context.factory.setDexFunction(1, "initialize_exchange"),
       (err) => {
         strictEqual(
           err.message,
@@ -92,7 +92,7 @@ contract("SetXFunctions()", function () {
 
     // ensure attempt to add extra function fails
     await rejects(
-      context.factory.setDexFunction(9, "initializeExchange"),
+      context.factory.setDexFunction(9, "initialize_exchange"),
       (err) => {
         strictEqual(
           err.message,

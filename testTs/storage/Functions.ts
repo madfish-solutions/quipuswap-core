@@ -37,7 +37,7 @@ export let dexFunctions = [
   },
 ];
 
-export let tokenFunctions = [
+let tokenFunctionsFA12 = [
   {
     index: 0,
     name: "transfer",
@@ -59,3 +59,26 @@ export let tokenFunctions = [
     name: "get_total_supply",
   },
 ];
+
+let tokenFunctionsFA2 = [
+  {
+    index: 0,
+    name: "transfer",
+  },
+  {
+    index: 1,
+    name: "update_operators",
+  },
+  {
+    index: 2,
+    name: "get_balance_of",
+  },
+  {
+    index: 3,
+    name: "get_token_metadata_registry",
+  },
+];
+export let tokenFunctions = {
+  FA12: tokenFunctionsFA12,
+  FA2: tokenFunctionsFA2,
+};

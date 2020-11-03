@@ -6,24 +6,39 @@ import {
   ContractAbstraction,
   ContractProvider,
 } from "@taquito/taquito";
-import { Dex } from "./dex";
+import { Dex as DexFA12 } from "./dexFA12";
+import { Dex as DexFA2 } from "./dexFA2";
 import { Factory } from "./factory";
 import { TokenFA12 } from "./tokenFA12";
 import { prepareProviderOptions } from "./utils";
 
 import factoryStorage from "../storage/Factory";
-let tokenStorage = require("../storage/Token" + standard);
+import tokenFA12Storage from "../storage/TokenFA12";
+import tokenFA2Storage from "../storage/TokenFA12";
+import { dexFunctions, tokenFunctions } from "../storage/Functions";
+import { TokenFA2 } from "./tokenFA2";
+import { Token } from "./token";
 
-const CDex = artifacts.require("DexFA12");
-const Token = artifacts.require("TokenFA12");
-const CFactory = artifacts.require("FactoryFA12");
+let tokenStorage, CDex, CToken, CFactory;
+type Dex = DexFA12 | DexFA2;
+if (standard == "FA12") {
+  tokenStorage = tokenFA12Storage;
+  CDex = artifacts.require("DexFA12");
+  CToken = artifacts.require("TokenFA12");
+  CFactory = artifacts.require("FactoryFA12");
+} else {
+  tokenStorage = tokenFA2Storage;
+  CDex = artifacts.require("DexFA2");
+  CToken = artifacts.require("TokenFA2");
+  CFactory = artifacts.require("FactoryFA2");
+}
 
 export class Context {
   public factory: Factory;
   public pairs: Dex[];
-  public tokens: TokenFA12[];
+  public tokens: Token[];
 
-  constructor(factory: Factory, pairs: Dex[], tokens: TokenFA12[]) {
+  constructor(factory: Factory, pairs: Dex[], tokens: Token[]) {
     this.factory = factory;
     this.pairs = pairs;
     this.tokens = tokens;
@@ -65,51 +80,17 @@ export class Context {
   }
 
   async createToken(): Promise<string> {
-    let tokenInstance = await Token.new(tokenStorage);
+    let tokenInstance = await CToken.new(tokenStorage);
     let tokenAddress = tokenInstance.address.toString();
-    this.tokens.push(await TokenFA12.init(tokenAddress));
+    this.tokens.push(
+      standard === "FA2"
+        ? await TokenFA2.init(tokenAddress)
+        : await TokenFA12.init(tokenAddress)
+    );
     return tokenAddress;
   }
 
   async setDexFactoryFunctions(): Promise<void> {
-    let dexFunctions = [
-      {
-        index: 0,
-        name: "initializeExchange",
-      },
-      {
-        index: 1,
-        name: "tezToToken",
-      },
-      {
-        index: 2,
-        name: "tokenToTez",
-      },
-      {
-        index: 3,
-        name: "withdrawProfit",
-      },
-      {
-        index: 4,
-        name: "investLiquidity",
-      },
-      {
-        index: 5,
-        name: "divestLiquidity",
-      },
-      {
-        index: 6,
-        name: "vote",
-      },
-      {
-        index: 7,
-        name: "veto",
-      },
-      {
-        index: 8,
-        name: "receiveReward",
-      },
-    ];
     for (let dexFunction of dexFunctions) {
       await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
     }
@@ -119,29 +100,7 @@ export class Context {
   }
 
   async setTokenFactoryFunctions(): Promise<void> {
-    let tokenFunctions = [
-      {
-        index: 0,
-        name: "transfer",
-      },
-      {
-        index: 1,
-        name: "approve",
-      },
-      {
-        index: 2,
-        name: "getBalance",
-      },
-      {
-        index: 3,
-        name: "getAllowance",
-      },
-      {
-        index: 4,
-        name: "getTotalSupply",
-      },
-    ];
-    for (let tokenFunction of tokenFunctions) {
+    for (let tokenFunction of tokenFunctions[standard]) {
       await this.factory.setTokenFunction(
         tokenFunction.index,
         tokenFunction.name
@@ -179,9 +138,13 @@ export class Context {
       pairConfig.tezAmount
     );
     this.pairs.push(
-      await Dex.init(
-        this.factory.storage.token_to_exchange[pairConfig.tokenAddress]
-      )
+      standard == "FA12"
+        ? await DexFA12.init(
+            this.factory.storage.token_to_exchange[pairConfig.tokenAddress]
+          )
+        : await DexFA2.init(
+            this.factory.storage.token_to_exchange[pairConfig.tokenAddress]
+          )
     );
     return this.factory.storage.token_to_exchange[pairConfig.tokenAddress];
   }

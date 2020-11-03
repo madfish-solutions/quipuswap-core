@@ -5,7 +5,7 @@ let totalSupply = "10000000";
 
 module.exports = {
   owner: alice.pkh,
-  totalSupply: totalSupply,
+  total_supply: totalSupply,
   ledger: MichelsonMap.fromLiteral({
     [alice.pkh]: {
       balance: totalSupply,

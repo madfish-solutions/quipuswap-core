@@ -55,7 +55,7 @@ type dex_storage is record [
   veto                : nat;
   last_veto           : timestamp;
   current_delegated   : option(key_hash);
-  // current_candidate   : option(key_hash);
+  current_candidate   : option(key_hash);
   total_votes         : nat;
   reward_info         : reward_info;
   user_rewards        : big_map(address, user_reward_info);

@@ -8,8 +8,9 @@ import { TransactionOperation } from "@taquito/taquito/dist/types/operations/tra
 import { Token } from "./token";
 import { TokenStorage } from "./types";
 import { prepareProviderOptions } from "./utils";
+export const defaultTokenId = 0;
 
-export class TokenFA12 implements Token {
+export class TokenFA2 implements Token {
   public contract: ContractAbstraction<ContractProvider>;
   public storage: TokenStorage;
 
@@ -17,8 +18,8 @@ export class TokenFA12 implements Token {
     this.contract = contract;
   }
 
-  static async init(tokenAddress: string): Promise<TokenFA12> {
-    return new TokenFA12(await Tezos.contract.at(tokenAddress));
+  static async init(tokenAddress: string): Promise<TokenFA2> {
+    return new TokenFA2(await Tezos.contract.at(tokenAddress));
   }
 
   async updateProvider(accountName: string): Promise<void> {
@@ -59,44 +60,71 @@ export class TokenFA12 implements Token {
     amount: number
   ): Promise<TransactionOperation> {
     let operation = await this.contract.methods
-      .transfer(from, to, amount)
+      .transfer([
+        {
+          from_: from,
+          txs: [
+            {
+              token_id: defaultTokenId,
+              amount,
+              to_: to,
+            },
+          ],
+        },
+      ])
       .send();
+
     await operation.confirmation();
     return operation;
   }
 
   async approve(to: string, amount: number): Promise<TransactionOperation> {
-    let operation = await this.contract.methods.approve(to, amount).send();
-    await operation.confirmation();
-    return operation;
+    return await this.updateOperators([
+      {
+        option: "Add_operator",
+        param: {
+          owner: await Tezos.signer.publicKeyHash(),
+          operator: to,
+          token_id: defaultTokenId,
+        },
+      },
+    ]);
   }
 
-  async getBalance(
-    owner: string,
-    contract: number
+  async balanceOf(
+    requests: {
+      owner: string;
+      token_id: number;
+    }[],
+    contract: string
   ): Promise<TransactionOperation> {
     let operation = await this.contract.methods
-      .getBalance(owner, contract)
+      .balance_of({ requests, contract })
       .send();
     await operation.confirmation();
     return operation;
   }
 
-  async getAllowance(
-    owner: string,
-    trusted: string,
-    contract: number
-  ): Promise<TransactionOperation> {
+  async tokenMetadataRegistry(receiver: string): Promise<TransactionOperation> {
     let operation = await this.contract.methods
-      .getAllowance(owner, trusted, contract)
+      .token_metadata_registry(receiver)
       .send();
     await operation.confirmation();
     return operation;
   }
 
-  async getTotalSupply(contract: number): Promise<TransactionOperation> {
+  async updateOperators(
+    params: {
+      option: "Add_operator" | "Remove_operator";
+      param: {
+        owner: string;
+        operator: string;
+        token_id: number;
+      };
+    }[]
+  ): Promise<TransactionOperation> {
     let operation = await this.contract.methods
-      .getTotalSupply(null, contract)
+      .update_operators(params.map((param) => [param.option, param]))
       .send();
     await operation.confirmation();
     return operation;

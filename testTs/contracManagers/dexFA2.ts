@@ -6,11 +6,13 @@ import {
 } from "@taquito/taquito";
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
-import { TokenFA12 } from "./tokenFA12";
+import { TokenFA2 } from "./tokenFA2";
+import { defaultTokenId } from "./tokenFA2";
 import { DexStorage } from "./types";
 import { tezPrecision } from "./utils";
+const standard = process.env.npm_package_config_standard;
 
-export class Dex extends TokenFA12 {
+export class Dex extends TokenFA2 {
   public contract: ContractAbstraction<ContractProvider>;
   public storage: DexStorage;
 
@@ -247,8 +249,20 @@ export class Dex extends TokenFA12 {
     address: string
   ): Promise<TransactionOperation> {
     await this.updateStorage();
-    let token = await Tezos.contract.at(this.storage.token_address);
-    let operation = await token.methods.approve(address, tokenAmount).send();
+    let tokenAddress = this.storage.token_address;
+    let token = await Tezos.contract.at(tokenAddress);
+    let operation = await token.methods
+      .update_operators([
+        [
+          "Add_operator",
+          {
+            owner: await Tezos.signer.publicKeyHash(),
+            operator: address,
+            token_id: defaultTokenId,
+          },
+        ],
+      ])
+      .send();
     await operation.confirmation();
     return operation;
   }

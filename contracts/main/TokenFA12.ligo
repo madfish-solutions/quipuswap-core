@@ -109,7 +109,7 @@ function getAllowance (const owner : address; const spender : address; const con
 function getTotalSupply (const contr : contract(amt); var s : storage) : return is
   block {
     skip
-  } with (list [transaction(s.totalSupply, 0tz, contr)], s)
+  } with (list [transaction(s.total_supply, 0tz, contr)], s)
 
 (* Main entrypoint *)
 function main (const action : tokenAction; var s : storage) : return is
