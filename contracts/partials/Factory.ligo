@@ -170,13 +170,13 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
             get_token_contract(s.token_address)
           )];
         }
-        | TezToTokenPayment(n) -> failwith("00")
-        | TokenToTezPayment(n) -> failwith("00")
-        | InvestLiquidity(n) -> failwith("00")
-        | DivestLiquidity(n) -> failwith("00")
-        | Vote(n) -> failwith("00")
-        | Veto(n) -> failwith("00")
-        | WithdrawProfit(n) -> failwith("00")
+        | TezToTokenPayment(n) -> failwith("09")
+        | TokenToTezPayment(n) -> failwith("09")
+        | InvestLiquidity(n) -> failwith("09")
+        | DivestLiquidity(n) -> failwith("09")
+        | Vote(n) -> failwith("09")
+        | Veto(n) -> failwith("09")
+        | WithdrawProfit(n) -> failwith("09")
       end
   } with (operations, s)
 
@@ -185,11 +185,11 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
   block {
     var operations: list(operation) := list[];
     case p of
-      | InitializeExchange(token_amount) -> failwith("00")
-      | TezToTokenPayment(n) -> failwith("00")
-      | TokenToTezPayment(n) -> failwith("00")
-      | InvestLiquidity(n) -> failwith("00")
-      | DivestLiquidity(n) -> failwith("00")
+      | InitializeExchange(token_amount) -> failwith("01")
+      | TezToTokenPayment(n) -> failwith("01")
+      | TokenToTezPayment(n) -> failwith("01")
+      | InvestLiquidity(n) -> failwith("01")
+      | DivestLiquidity(n) -> failwith("01")
       | Vote(args) -> {
         case s.ledger[args.voter] of 
           | None -> failwith ("Dex/no-shares")
@@ -255,8 +255,8 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
           }
         end
       }
-      | Veto(n) -> failwith("00")
-      | WithdrawProfit(n) -> failwith("00")
+      | Veto(n) -> failwith("01")
+      | WithdrawProfit(n) -> failwith("01")
     end
   } with (operations, s)
 
@@ -265,12 +265,12 @@ function veto (const p : dex_action; const s : dex_storage; const this: address)
   block {
     var operations: list(operation) := list[];
     case p of
-      | InitializeExchange(token_amount) -> failwith("00")
-      | TezToTokenPayment(n) -> failwith("00")
-      | TokenToTezPayment(n) -> failwith("00")
-      | InvestLiquidity(n) -> failwith("00")
-      | DivestLiquidity(n) -> failwith("00")
-      | Vote(n) -> failwith("00")
+      | InitializeExchange(token_amount) -> failwith("02")
+      | TezToTokenPayment(n) -> failwith("02")
+      | TokenToTezPayment(n) -> failwith("02")
+      | InvestLiquidity(n) -> failwith("02")
+      | DivestLiquidity(n) -> failwith("02")
+      | Vote(n) -> failwith("02")
       | Veto(args) -> {
         case s.ledger[args.voter] of 
           | None -> failwith ("Dex/no-shares")
@@ -332,7 +332,7 @@ function veto (const p : dex_action; const s : dex_storage; const this: address)
           }
         end
       }
-      | WithdrawProfit(n) -> failwith("00")
+      | WithdrawProfit(n) -> failwith("02")
     end
   } with (operations, s)
 
@@ -341,7 +341,7 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
   block {
     var operations : list(operation) := list[];
     case p of
-      | InitializeExchange(n) -> failwith("00")
+      | InitializeExchange(n) -> failwith("03")
       | TezToTokenPayment(args) -> {
         if Tezos.amount / 1mutez > 0n and args.amount > 0n then block {
           s.tez_pool := s.tez_pool + Tezos.amount / 1mutez;
@@ -358,12 +358,12 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
           } else failwith("Dex/high-min-out");
         } else failwith("Dex/wrong-params")
       }
-      | TokenToTezPayment(n) -> failwith("00")
-      | InvestLiquidity(n) -> failwith("00")
-      | DivestLiquidity(n) -> failwith("00")
-      | Vote(n) -> failwith("00")
-      | Veto(voter) -> failwith("00")
-      | WithdrawProfit(n) -> failwith("00")
+      | TokenToTezPayment(n) -> failwith("03")
+      | InvestLiquidity(n) -> failwith("03")
+      | DivestLiquidity(n) -> failwith("03")
+      | Vote(n) -> failwith("03")
+      | Veto(voter) -> failwith("03")
+      | WithdrawProfit(n) -> failwith("03")
     end
   } with (operations, s)
 
@@ -372,8 +372,8 @@ function token_to_tez (const p : dex_action; const s : dex_storage; const this :
   block {
     var operations : list(operation) := list[];
     case p of
-      | InitializeExchange(n) -> failwith("00")
-      | TezToTokenPayment(n) -> failwith("00")
+      | InitializeExchange(n) -> failwith("04")
+      | TezToTokenPayment(n) -> failwith("04")
       | TokenToTezPayment(args) -> {
         if args.amount > 0n and args.min_out > 0n then {
           s.token_pool := s.token_pool + args.amount;
@@ -394,11 +394,11 @@ function token_to_tez (const p : dex_action; const s : dex_storage; const this :
             (get_contract(args.receiver) : contract(unit)));
         ];
       }
-      | InvestLiquidity(n) -> failwith("00")
-      | DivestLiquidity(n) -> failwith("00")
-      | Vote(n) -> failwith("00")
-      | Veto(voter) -> failwith("00")
-      | WithdrawProfit(n) -> failwith("00")
+      | InvestLiquidity(n) -> failwith("04")
+      | DivestLiquidity(n) -> failwith("04")
+      | Vote(n) -> failwith("04")
+      | Veto(voter) -> failwith("04")
+      | WithdrawProfit(n) -> failwith("04")
     end
   } with (operations, s)
 
@@ -407,9 +407,9 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
   block {
     var operations: list(operation) := list[];
     case p of
-      | InitializeExchange(n) -> failwith("00")
-      | TezToTokenPayment(n) -> failwith("00")
-      | TokenToTezPayment(n) -> failwith("00")
+      | InitializeExchange(n) -> failwith("05")
+      | TezToTokenPayment(n) -> failwith("05")
+      | TokenToTezPayment(n) -> failwith("05")
       | InvestLiquidity(min_shares) -> {
         const shares_purchased : nat = (Tezos.amount / 1mutez) * s.total_supply / s.tez_pool; 
         if min_shares > 0n and shares_purchased >= min_shares then 
@@ -436,10 +436,10 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
           get_token_contract(s.token_address)
         )];
       }
-      | DivestLiquidity(n) -> failwith("00")
-      | Vote(n) -> failwith("00")
-      | Veto(voter) -> failwith("00")
-      | WithdrawProfit(n) -> failwith("00")
+      | DivestLiquidity(n) -> failwith("05")
+      | Vote(n) -> failwith("05")
+      | Veto(voter) -> failwith("05")
+      | WithdrawProfit(n) -> failwith("05")
     end
   } with (operations, s)
 
@@ -448,10 +448,10 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
   block {
     var operations: list(operation) := list[];
       case p of
-      | InitializeExchange(token_amount) -> failwith("00")
-      | TezToTokenPayment(n) -> failwith("00")
-      | TokenToTezPayment(n) -> failwith("00")
-      | InvestLiquidity(min_shares) -> failwith("00")
+      | InitializeExchange(token_amount) -> failwith("06")
+      | TezToTokenPayment(n) -> failwith("06")
+      | TokenToTezPayment(n) -> failwith("06")
+      | InvestLiquidity(min_shares) -> failwith("06")
       | DivestLiquidity(args) -> {
         var account : account_info := get_account(Tezos.sender, s);
         const share : nat = account.balance;
@@ -484,9 +484,9 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
           ];
         } else failwith("Dex/wrong-params");
       }
-      | Vote(n) -> failwith("00")
-      | Veto(voter) -> failwith("00")
-      | WithdrawProfit(n) -> failwith("00")
+      | Vote(n) -> failwith("06")
+      | Veto(voter) -> failwith("06")
+      | WithdrawProfit(n) -> failwith("06")
     end
   } with (operations, s)
 
@@ -503,13 +503,13 @@ function withdraw_profit (const p : dex_action; const s : dex_storage; const thi
   block {
     var operations: list(operation) := list[];
     case p of
-      | InitializeExchange(n) -> failwith("00")
-      | TezToTokenPayment(n) -> failwith("00")
-      | TokenToTezPayment(n) -> failwith("00")
-      | InvestLiquidity(n) -> failwith("00")
-      | DivestLiquidity(n) -> failwith("00")
-      | Vote(n) -> failwith("00")
-      | Veto(voter) -> failwith("00")
+      | InitializeExchange(n) -> failwith("07")
+      | TezToTokenPayment(n) -> failwith("07")
+      | TokenToTezPayment(n) -> failwith("07")
+      | InvestLiquidity(n) -> failwith("07")
+      | DivestLiquidity(n) -> failwith("07")
+      | Vote(n) -> failwith("07")
+      | Veto(voter) -> failwith("07")
       | WithdrawProfit(receiver) -> {
         var account : account_info := get_account(Tezos.sender, s);
         const share : nat = account.balance;

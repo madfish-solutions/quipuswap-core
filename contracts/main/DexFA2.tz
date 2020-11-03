@@ -182,7 +182,7 @@
            { IF_LEFT
                { IF_LEFT
                    { DIG 2 ;
-                     PUSH nat 1 ;
+                     PUSH nat 2 ;
                      PAIR ;
                      DUG 2 ;
                      LEFT (contract address) ;
@@ -265,7 +265,7 @@
                      PAIR } }
                { IF_LEFT
                    { DIG 2 ;
-                     PUSH nat 2 ;
+                     PUSH nat 3 ;
                      PAIR ;
                      DUG 2 ;
                      RIGHT (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))) ;
@@ -363,7 +363,7 @@
                      PAIR } } }
            { IF_LEFT
                { DIG 2 ;
-                 PUSH nat 3 ;
+                 PUSH nat 1 ;
                  PAIR ;
                  DUG 2 ;
                  RIGHT (list (pair address (list (pair address (pair nat nat))))) ;

@@ -459,7 +459,7 @@ contract("Veto()", function () {
     strictEqual(finalCurrentDelegate, delegate, "Delegate updated");
   });
 
-  it.only("should replace delegator", async function () {
+  it("should replace delegator", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();

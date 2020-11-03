@@ -98,9 +98,9 @@ function transfer (const p : token_action; var s : dex_storage; const this : add
     | ITransfer(params) -> {
       s := List.fold(iterate_transfer, params, s);
     }
-    | IBalance_of(params) -> failwith("00")
-    | IToken_metadata_registry(params) -> failwith("00")
-    | IUpdate_operators(params) -> failwith("00")
+    | IBalance_of(params) -> failwith("11")
+    | IToken_metadata_registry(params) -> failwith("11")
+    | IUpdate_operators(params) -> failwith("11")
     end
   } with (operations, s)
 
@@ -108,7 +108,7 @@ function get_balance_of (const p : token_action; const s : dex_storage; const th
   block {
     var operations: list(operation) := list[];
     case p of
-    | ITransfer(params) -> failwith("00")
+    | ITransfer(params) -> failwith("12")
     | IBalance_of(balance_params) -> {
       (* Perform single balance lookup *)
       function look_up_balance(const l: list (balance_of_response); const request : balance_of_request) : list (balance_of_response) is
@@ -131,8 +131,8 @@ function get_balance_of (const p : token_action; const s : dex_storage; const th
       (* Collect balances info *)
       const accomulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
     }
-    | IToken_metadata_registry(params) -> failwith("00")
-    | IUpdate_operators(params) -> failwith("00")
+    | IToken_metadata_registry(params) -> failwith("12")
+    | IUpdate_operators(params) -> failwith("12")
     end
   } with (operations, s)
 
@@ -141,12 +141,12 @@ function get_token_metadata_registry (const p : token_action; const s : dex_stor
   block {
     var operations: list(operation) := list[];
     case p of
-    | ITransfer(params) -> failwith("00")
-    | IBalance_of(params) -> failwith("00")
+    | ITransfer(params) -> failwith("13")
+    | IBalance_of(params) -> failwith("13")
     | IToken_metadata_registry(receiver) -> {
       operations := list [transaction(this, 0tz, receiver)];
     }
-    | IUpdate_operators(params) -> failwith("00")
+    | IUpdate_operators(params) -> failwith("13")
     end
   } with (operations, s)
 
@@ -154,9 +154,9 @@ function update_operators (const p : token_action; const s : dex_storage; const 
   block {
     var operations: list(operation) := list[];
     case p of
-    | ITransfer(params) -> failwith("00")
-    | IBalance_of(params) -> failwith("00")
-    | IToken_metadata_registry(receiver) -> failwith("00")
+    | ITransfer(params) -> failwith("14")
+    | IBalance_of(params) -> failwith("14")
+    | IToken_metadata_registry(receiver) -> failwith("14")
     | IUpdate_operators(params) -> {
       s := List.fold(iterate_update_operator, params, s);
     }
