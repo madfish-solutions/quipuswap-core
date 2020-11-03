@@ -1,5 +1,4 @@
 #define FA2_STANDARD_ENABLED
-
 #include "../partials/Dex.ligo"
 
 function main (const p : full_action; const s : full_dex_storage) : full_return is

@@ -36,6 +36,15 @@ export class Factory {
     return key;
   }
 
+  convertTokensList(list: any): any {
+    if (standard === "FA2") {
+      return list.map((value) => {
+        return value["0"];
+      });
+    }
+    return list;
+  }
+
   async updateStorage(
     maps: {
       token_to_exchange?: string[];
@@ -45,7 +54,7 @@ export class Factory {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      token_list: storage.token_list,
+      token_list: this.convertTokensList(storage.token_list),
       token_to_exchange: {},
       dex_lambdas: {},
       token_lambdas: {},

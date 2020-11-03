@@ -90,14 +90,14 @@ type veto_params is record [
 ]
 
 type dex_action is
-| InitializeExchange of (nat)
-| TezToTokenPayment of tez_to_token_payment_params
-| TokenToTezPayment of token_to_tez_payment_params
-| InvestLiquidity of (nat)
-| DivestLiquidity of divest_liquidity_params
-| Vote of vote_params
-| Veto of veto_params
-| WithdrawProfit of (address)
+| InitializeExchange      of (nat)
+| TezToTokenPayment       of tez_to_token_payment_params
+| TokenToTezPayment       of token_to_tez_payment_params
+| InvestLiquidity         of (nat)
+| DivestLiquidity         of divest_liquidity_params
+| Vote                    of vote_params
+| Veto                    of veto_params
+| WithdrawProfit          of (address)
 
 type default_params is unit
 type use_params is (nat * dex_action)

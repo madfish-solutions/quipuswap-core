@@ -66,7 +66,7 @@ export class TokenFA2 implements Token {
           txs: [
             {
               token_id: defaultTokenId,
-              amount,
+              amount: amount,
               to_: to,
             },
           ],

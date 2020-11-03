@@ -5,17 +5,17 @@ type allowance_params is michelson_pair(michelson_pair(address, "owner", address
 type total_supply_params is (unit * contract(nat))
 
 type token_action is
-| ITransfer of transfer_params
-| IApprove of approve_params
-| IGetBalance of balance_params
-| IGetAllowance of allowance_params
-| IGetTotalSupply of total_supply_params
+| ITransfer             of transfer_params
+| IApprove              of approve_params
+| IGetBalance           of balance_params
+| IGetAllowance         of allowance_params
+| IGetTotalSupply       of total_supply_params
 
 type full_action is
-| Use of use_params
-| Default of default_params
-| Transfer of transfer_params
-| Approve of approve_params
-| GetBalance of balance_params
-| GetAllowance of allowance_params
-| GetTotalSupply of total_supply_params
+| Use                   of use_params
+| Default               of default_params
+| Transfer              of transfer_params
+| Approve               of approve_params
+| GetBalance            of balance_params
+| GetAllowance          of allowance_params
+| GetTotalSupply        of total_supply_params

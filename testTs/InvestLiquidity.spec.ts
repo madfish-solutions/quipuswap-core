@@ -3,7 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 
-contract.only("InvestLiquidity()", function () {
+contract("InvestLiquidity()", function () {
   let context: Context;
 
   before(async () => {
@@ -243,27 +243,29 @@ contract.only("InvestLiquidity()", function () {
     );
   });
 
-  it("should fail investment if too little tokens are sent", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
+  if (process.env.npm_package_config_standard === "FA12") {
+    it("should fail investment if too little tokens are sent", async function () {
+      // reset pairs
+      await context.flushPairs();
+      await context.createPairs();
 
-    let tezAmount = 100;
-    let tokenAmount = 1000;
-    let newShares = 10;
+      let tezAmount = 100;
+      let tokenAmount = 1000;
+      let newShares = 10;
 
-    // attempt to invest liquidity
-    await rejects(
-      context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares),
-      (err) => {
-        strictEqual(
-          err.message,
-          "NotEnoughAllowance",
-          "Error message mismatch"
-        );
-        return true;
-      },
-      "Investment to Dex should fail"
-    );
-  });
+      // attempt to invest liquidity
+      await rejects(
+        context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares),
+        (err) => {
+          strictEqual(
+            err.message,
+            "NotEnoughAllowance",
+            "Error message mismatch"
+          );
+          return true;
+        },
+        "Investment to Dex should fail"
+      );
+    });
+  }
 });

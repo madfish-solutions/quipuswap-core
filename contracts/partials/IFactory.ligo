@@ -34,9 +34,9 @@ type set_dex_function_params is record [
 ]
 
 type exchange_action is
-| LaunchExchange of launch_exchange_params
-| SetDexFunction of set_dex_function_params
-| SetTokenFunction of set_token_function_params
+| LaunchExchange        of launch_exchange_params
+| SetDexFunction        of set_dex_function_params
+| SetTokenFunction      of set_token_function_params
 
 #if TEST_ENABLED
 const voting_period : int = 10;

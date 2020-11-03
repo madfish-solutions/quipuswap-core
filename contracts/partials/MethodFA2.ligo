@@ -91,12 +91,12 @@ function iterate_update_operator (const s : dex_storage; const params : update_o
   } with s
 
 
-function transfer (const p : token_action; const s : dex_storage; const this : address) : return is
+function transfer (const p : token_action; var s : dex_storage; const this : address) : return is
   block {
     var operations: list(operation) := list[];
     case p of
     | ITransfer(params) -> {
-      const s : dex_storage = List.fold(iterate_transfer, params, s);
+      s := List.fold(iterate_transfer, params, s);
     }
     | IBalance_of(params) -> failwith("00")
     | IToken_metadata_registry(params) -> failwith("00")

@@ -57,5 +57,5 @@ type operator_param is
   ]
 
 type update_operator_param is
-  | Add_operator    of operator_param
-  | Remove_operator of operator_param
+  | Add_operator        of operator_param
+  | Remove_operator     of operator_param
