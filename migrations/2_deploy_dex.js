@@ -34,7 +34,12 @@ module.exports = async (deployer, network) => {
     prefix = "Test";
   }
 
-  let factoryInstance = await Factory.new(factoryStorage);
+  await deployer.deploy(Factory, factoryStorage, {
+    gas: 49000,
+    // gasPrice: 1000,
+    fee: 1000000,
+  });
+  let factoryInstance = await Factory.deployed();
   console.log(`Factory address: ${factoryInstance.address}`);
 
   let ligo = getLigo(true);
