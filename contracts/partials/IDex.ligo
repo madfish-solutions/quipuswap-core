@@ -41,7 +41,6 @@ type reward_info is record [
 type dex_storage is record [
 #if FA2_STANDARD_ENABLED
   token_id            : token_id;
-  // token_metadata      : big_map (token_id, token_metadata_info);
 #endif
   tez_pool            : nat;
   token_pool          : nat;
@@ -115,6 +114,7 @@ type token_func is (token_action * dex_storage * address) -> return
 type full_dex_storage is record
   storage        : dex_storage;
   dex_lambdas    : big_map(nat, dex_func);
+  metadata       : big_map(string, bytes);
   token_lambdas  : big_map(nat, token_func);
 end
 

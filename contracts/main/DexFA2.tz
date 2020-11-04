@@ -83,7 +83,8 @@
                                                              (pair (pair (option %candidate key_hash) (timestamp %last_veto))
                                                                    (pair (nat %veto) (nat %vote))))))))
                                   (big_map %votes key_hash nat)))))
-                (pair %storage
+                (big_map %metadata string bytes))
+          (pair (pair %storage
                    (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
                                      (pair (nat %invariant) (timestamp %last_veto)))
                                (pair (pair (big_map %ledger
@@ -107,21 +108,47 @@
                                               address
                                               (pair (pair (option %candidate key_hash) (timestamp %last_veto))
                                                     (pair (nat %veto) (nat %vote))))))))
-                   (big_map %votes key_hash nat)))
-          (big_map %token_lambdas
-             nat
-             (lambda
-                (pair (pair (or (or (pair %iBalance_of
-                                       (list %requests (pair (address %owner) (nat %token_id)))
-                                       (contract %callback
-                                          (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))))
-                                    (contract %iToken_metadata_registry address))
-                                (or (list %iTransfer
-                                       (pair (address %from_)
-                                             (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))
-                                    (list %iUpdate_operators
-                                       (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
-                                           (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))))
+                   (big_map %votes key_hash nat))
+                (big_map %token_lambdas
+                   nat
+                   (lambda
+                      (pair (pair (or (or (pair %iBalance_of
+                                             (list %requests (pair (address %owner) (nat %token_id)))
+                                             (contract %callback
+                                                (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))))
+                                          (contract %iToken_metadata_registry address))
+                                      (or (list %iTransfer
+                                             (pair (address %from_)
+                                                   (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))
+                                          (list %iUpdate_operators
+                                             (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                                                 (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))))
+                                  (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
+                                                          (pair (nat %invariant) (timestamp %last_veto)))
+                                                    (pair (pair (big_map %ledger
+                                                                   address
+                                                                   (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))
+                                                                (pair %reward_info
+                                                                   (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
+                                                                         (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
+                                                                   (pair (pair (timestamp %period_finish) (nat %reward))
+                                                                         (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
+                                                          (pair (nat %tez_pool) (address %token_address))))
+                                              (pair (pair (pair (nat %token_id) (nat %token_pool))
+                                                          (pair (nat %total_supply) (nat %total_votes)))
+                                                    (pair (pair (big_map %user_rewards
+                                                                   address
+                                                                   (pair (pair (pair (nat %loyalty) (nat %loyalty_paid)) (pair (nat %reward) (nat %reward_paid)))
+                                                                         (timestamp %update_time)))
+                                                                (nat %veto))
+                                                          (pair (big_map %vetos key_hash timestamp)
+                                                                (big_map %voters
+                                                                   address
+                                                                   (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                                         (pair (nat %veto) (nat %vote))))))))
+                                        (big_map %votes key_hash nat)))
+                            address)
+                      (pair (list operation)
                             (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
                                                     (pair (nat %invariant) (timestamp %last_veto)))
                                               (pair (pair (big_map %ledger
@@ -145,33 +172,7 @@
                                                              address
                                                              (pair (pair (option %candidate key_hash) (timestamp %last_veto))
                                                                    (pair (nat %veto) (nat %vote))))))))
-                                  (big_map %votes key_hash nat)))
-                      address)
-                (pair (list operation)
-                      (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                              (pair (nat %invariant) (timestamp %last_veto)))
-                                        (pair (pair (big_map %ledger
-                                                       address
-                                                       (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))
-                                                    (pair %reward_info
-                                                       (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
-                                                             (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
-                                                       (pair (pair (timestamp %period_finish) (nat %reward))
-                                                             (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
-                                              (pair (nat %tez_pool) (address %token_address))))
-                                  (pair (pair (pair (nat %token_id) (nat %token_pool))
-                                              (pair (nat %total_supply) (nat %total_votes)))
-                                        (pair (pair (big_map %user_rewards
-                                                       address
-                                                       (pair (pair (pair (nat %loyalty) (nat %loyalty_paid)) (pair (nat %reward) (nat %reward_paid)))
-                                                             (timestamp %update_time)))
-                                                    (nat %veto))
-                                              (pair (big_map %vetos key_hash timestamp)
-                                                    (big_map %voters
-                                                       address
-                                                       (pair (pair (option %candidate key_hash) (timestamp %last_veto))
-                                                             (pair (nat %veto) (nat %vote))))))))
-                            (big_map %votes key_hash nat)))))) ;
+                                  (big_map %votes key_hash nat))))))) ;
   code { DUP ;
          CDR ;
          SELF ;
@@ -195,6 +196,7 @@
                      CDR ;
                      DUP ;
                      CDR ;
+                     CDR ;
                      DIG 2 ;
                      DUP ;
                      DUG 3 ;
@@ -211,8 +213,8 @@
                          DIG 2 ;
                          DUP ;
                          DUG 3 ;
-                         CAR ;
                          CDR ;
+                         CAR ;
                          DIG 4 ;
                          CAR ;
                          CAR ;
@@ -222,9 +224,9 @@
                      DUP ;
                      DUG 2 ;
                      CDR ;
-                     DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
-                     SWAP ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
                      PAIR ;
+                     SWAP ;
                      PAIR ;
                      SWAP ;
                      CAR ;
@@ -243,8 +245,8 @@
                          DIG 2 ;
                          DUP ;
                          DUG 3 ;
-                         CAR ;
                          CDR ;
+                         CAR ;
                          PUSH nat 0 ;
                          RIGHT (pair (pair nat nat) nat) ;
                          LEFT (or nat (pair nat address)) ;
@@ -256,9 +258,9 @@
                      DUP ;
                      DUG 2 ;
                      CDR ;
-                     DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
-                     SWAP ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
                      PAIR ;
+                     SWAP ;
                      PAIR ;
                      SWAP ;
                      CAR ;
@@ -278,6 +280,7 @@
                      CDR ;
                      DUP ;
                      CDR ;
+                     CDR ;
                      DIG 2 ;
                      DUP ;
                      DUG 3 ;
@@ -294,8 +297,8 @@
                          DIG 2 ;
                          DUP ;
                          DUG 3 ;
-                         CAR ;
                          CDR ;
+                         CAR ;
                          DIG 4 ;
                          CAR ;
                          CAR ;
@@ -305,9 +308,9 @@
                      DUP ;
                      DUG 2 ;
                      CDR ;
-                     DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
-                     SWAP ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
                      PAIR ;
+                     SWAP ;
                      PAIR ;
                      SWAP ;
                      CAR ;
@@ -327,6 +330,7 @@
                      CDR ;
                      DUP ;
                      CDR ;
+                     CDR ;
                      DIG 2 ;
                      DUP ;
                      DUG 3 ;
@@ -343,8 +347,8 @@
                          DIG 2 ;
                          DUP ;
                          DUG 3 ;
-                         CAR ;
                          CDR ;
+                         CAR ;
                          DIG 4 ;
                          CAR ;
                          CAR ;
@@ -354,9 +358,9 @@
                      DUP ;
                      DUG 2 ;
                      CDR ;
-                     DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
-                     SWAP ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
                      PAIR ;
+                     SWAP ;
                      PAIR ;
                      SWAP ;
                      CAR ;
@@ -377,6 +381,7 @@
                  CDR ;
                  DUP ;
                  CDR ;
+                 CDR ;
                  DIG 2 ;
                  DUP ;
                  DUG 3 ;
@@ -393,8 +398,8 @@
                      DIG 2 ;
                      DUP ;
                      DUG 3 ;
-                     CAR ;
                      CDR ;
+                     CAR ;
                      DIG 4 ;
                      CAR ;
                      CAR ;
@@ -404,9 +409,9 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
-                 SWAP ;
+                 DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
                  PAIR ;
+                 SWAP ;
                  PAIR ;
                  SWAP ;
                  CAR ;
@@ -443,8 +448,8 @@
                      DIG 2 ;
                      DUP ;
                      DUG 3 ;
-                     CAR ;
                      CDR ;
+                     CAR ;
                      DIG 4 ;
                      CAR ;
                      CAR ;
@@ -454,9 +459,9 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 DIP { DUP ; CDR ; SWAP ; CAR ; CAR } ;
-                 SWAP ;
+                 DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
                  PAIR ;
+                 SWAP ;
                  PAIR ;
                  SWAP ;
                  CAR ;

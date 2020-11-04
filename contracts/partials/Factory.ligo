@@ -557,7 +557,6 @@ function launch_exchange (const self : address; const token : token_identifier; 
     const storage : dex_storage = record [
 #if FA2_STANDARD_ENABLED
       token_id = token.1;
-      // token_metadata = (big_map [] : big_map (token_id, token_metadata_info));
 #endif
       tez_pool = Tezos.amount / 1mutez;      
       token_pool = token_amount;      
@@ -602,6 +601,7 @@ function launch_exchange (const self : address; const token : token_identifier; 
     const res : (operation * address) = create_dex((None : option(key_hash)), Tezos.amount, record [
       storage = storage;
       dex_lambdas = s.dex_lambdas;
+      metadata = big_map["" -> 0x7b7d];
       token_lambdas = s.token_lambdas;
     ]);
     s.token_to_exchange[token] := res.1;
