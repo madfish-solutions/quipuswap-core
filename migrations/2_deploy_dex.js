@@ -39,7 +39,6 @@ module.exports = async (deployer, network) => {
 
   let ligo = getLigo(true);
 
-  console.log("Setting dex functions");
   for (dexFunction of dexFunctions) {
     const stdout = execSync(
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/${prefix}Factory${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
@@ -54,9 +53,7 @@ module.exports = async (deployer, network) => {
       },
     });
     await operation.confirmation();
-    console.log(`${dexFunction.name} function set`);
   }
-  console.log("Setting token functions");
   for (tokenFunction of tokenFunctions[standard]) {
     const stdout = execSync(
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/${prefix}Factory${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
@@ -71,7 +68,6 @@ module.exports = async (deployer, network) => {
       },
     });
     await operation.confirmation();
-    console.log(`${tokenFunction.name} function set`);
   }
 
   if (network !== "development") {
@@ -81,23 +77,19 @@ module.exports = async (deployer, network) => {
     console.log(`Token 2 address: ${token1Instance.address}`);
     let tezAmount = 10000;
     let tokenAmount = 1000000;
-    console.log("Approve token 0");
     await token0Instance.approve(
       factoryInstance.address.toString(),
       tokenAmount
     );
-    console.log("Approve token 1");
     await token1Instance.approve(
       factoryInstance.address.toString(),
       tokenAmount
     );
-    console.log("Launch exchange 0");
     await factoryInstance.launchExchange(
       token0Instance.address.toString(),
       tokenAmount,
       { amount: tezAmount }
     );
-    console.log("Launch exchange 1");
     await factoryInstance.launchExchange(
       token1Instance.address.toString(),
       tokenAmount,

@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "config": {
     "network": "http://127.0.0.1:8732",
-    "network1": "https://testnet-tezos.giganode.io",
     "standard": "FA2",
     "default": {
       "key": "../../scripts/sandbox/accounts",
@@ -19,6 +18,7 @@
     "clean": "rm -rf ./build",
     "migrate": "npm run clean && truffle migrate",
     "migrate-carthagenet": "truffle migrate --network carthagenet",
+    "migrate-delphinet": "truffle migrate --network delphinet",
     "compile-dex": "node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts",
     "compile": "npm run clean && node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",
