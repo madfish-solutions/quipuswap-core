@@ -79,7 +79,7 @@ module.exports = async (deployer, network, accounts) => {
     let token1Instance = await Token.new(tokenStorage);
     console.log(`Token 1 address: ${token0Instance.address}`);
     console.log(`Token 2 address: ${token1Instance.address}`);
-    let tezAmount = 10000;
+    let tezAmount = 1;
     let tokenAmount = 1000000;
     if (standard === "FA12") {
       await token0Instance.approve(
