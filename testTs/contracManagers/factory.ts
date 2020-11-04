@@ -118,7 +118,7 @@ export class Factory {
   async setDexFunction(index: number, lambdaName: string): Promise<void> {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TestFactory${standard}.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await Tezos.contract.transfer({
@@ -135,7 +135,7 @@ export class Factory {
   async setTokenFunction(index: number, lambdaName: string): Promise<void> {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TestFactory${standard}.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await Tezos.contract.transfer({

@@ -25,12 +25,12 @@ if (standard == "FA12") {
   tokenStorage = tokenFA12Storage;
   CDex = artifacts.require("DexFA12");
   CToken = artifacts.require("TokenFA12");
-  CFactory = artifacts.require("FactoryFA12");
+  CFactory = artifacts.require("TestFactoryFA12");
 } else {
   tokenStorage = tokenFA2Storage;
   CDex = artifacts.require("DexFA2");
   CToken = artifacts.require("TokenFA2");
-  CFactory = artifacts.require("FactoryFA2");
+  CFactory = artifacts.require("TestFactoryFA2");
 }
 
 export class Context {

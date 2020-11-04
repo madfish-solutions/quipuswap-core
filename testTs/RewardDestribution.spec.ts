@@ -4,14 +4,14 @@ import BigNumber from "bignumber.js";
 import { Tezos, TezosOperationError } from "@taquito/taquito";
 import { calculateFee, bakeBlocks } from "./contracManagers/utils";
 
-contract("RewardDestribution()", function () {
+contract.only("RewardDestribution()", function () {
   let context: Context;
 
   before(async () => {
     context = await Context.init([]);
   });
 
-  it("should distribute loyalty to one user", async function () {
+  it.skip("should distribute loyalty to one user", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -91,7 +91,7 @@ contract("RewardDestribution()", function () {
     );
   });
 
-  it("should distribute loyalty to many users", async function () {
+  it.skip("should distribute loyalty to many users", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();

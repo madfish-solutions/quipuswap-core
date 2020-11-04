@@ -1,11 +1,12 @@
 const standard = process.env.npm_package_config_standard;
-const Factory = artifacts.require("Factory" + standard);
+let Factory = artifacts.require("Factory" + standard);
+let TestFactory = artifacts.require("TestFactory" + standard);
 const factoryStorage = require("../storage/Factory");
 const { dexFunctions, tokenFunctions } = require("../storage/Functions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + standard);
 const tokenStorage = require("../storage/Token" + standard);
-
+let prefix = "";
 function getLigo(isDockerizedLigo) {
   let path = "ligo";
   if (isDockerizedLigo) {
@@ -28,75 +29,79 @@ function getLigo(isDockerizedLigo) {
 }
 
 module.exports = async (deployer, network) => {
-  try {
-    await Factory.deployed();
-  } catch (e) {
-    let factoryInstance = await Factory.new(factoryStorage);
-    console.log(`Factory address: ${factoryInstance.address}`);
-    let ligo = getLigo(true);
-    console.log("Setting dex functions");
-    for (dexFunction of dexFunctions) {
-      const stdout = execSync(
-        `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
-        { maxBuffer: 1024 * 500 }
-      );
-      const operation = await tezos.contract.transfer({
-        to: factoryInstance.address,
-        amount: 0,
-        parameter: {
-          entrypoint: "setDexFunction",
-          value: JSON.parse(stdout.toString()).args[0].args[0],
-        },
-      });
-      await operation.confirmation();
-      console.log(`${dexFunction.name} function set`);
-    }
-    console.log("Setting token functions");
-    for (tokenFunction of tokenFunctions[standard]) {
-      const stdout = execSync(
-        `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
-        { maxBuffer: 1024 * 500 }
-      );
-      const operation = await tezos.contract.transfer({
-        to: factoryInstance.address,
-        amount: 0,
-        parameter: {
-          entrypoint: "setTokenFunction",
-          value: JSON.parse(stdout.toString()).args[0],
-        },
-      });
-      await operation.confirmation();
-      console.log(`${tokenFunction.name} function set`);
-    }
-    if (network !== "development") {
-      let token0Instance = await Token.new(tokenStorage);
-      let token1Instance = await Token.new(tokenStorage);
-      console.log(`Token 1 address: ${token0Instance.address}`);
-      console.log(`Token 2 address: ${token1Instance.address}`);
-      let tezAmount = 10000;
-      let tokenAmount = 1000000;
-      console.log("Approve token 0");
-      await token0Instance.approve(
-        factoryInstance.address.toString(),
-        tokenAmount
-      );
-      console.log("Approve token 1");
-      await token1Instance.approve(
-        factoryInstance.address.toString(),
-        tokenAmount
-      );
-      console.log("Launch exchange 0");
-      await factoryInstance.launchExchange(
-        token0Instance.address.toString(),
-        tokenAmount,
-        { amount: tezAmount }
-      );
-      console.log("Launch exchange 1");
-      await factoryInstance.launchExchange(
-        token1Instance.address.toString(),
-        tokenAmount,
-        { amount: tezAmount }
-      );
-    }
+  if (network === "development") {
+    Factory = TestFactory;
+    prefix = "Test";
+  }
+
+  let factoryInstance = await Factory.new(factoryStorage);
+  console.log(`Factory address: ${factoryInstance.address}`);
+
+  let ligo = getLigo(true);
+
+  console.log("Setting dex functions");
+  for (dexFunction of dexFunctions) {
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/${prefix}Factory${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await tezos.contract.transfer({
+      to: factoryInstance.address,
+      amount: 0,
+      parameter: {
+        entrypoint: "setDexFunction",
+        value: JSON.parse(stdout.toString()).args[0].args[0],
+      },
+    });
+    await operation.confirmation();
+    console.log(`${dexFunction.name} function set`);
+  }
+  console.log("Setting token functions");
+  for (tokenFunction of tokenFunctions[standard]) {
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/${prefix}Factory${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await tezos.contract.transfer({
+      to: factoryInstance.address,
+      amount: 0,
+      parameter: {
+        entrypoint: "setTokenFunction",
+        value: JSON.parse(stdout.toString()).args[0],
+      },
+    });
+    await operation.confirmation();
+    console.log(`${tokenFunction.name} function set`);
+  }
+
+  if (network !== "development") {
+    let token0Instance = await Token.new(tokenStorage);
+    let token1Instance = await Token.new(tokenStorage);
+    console.log(`Token 1 address: ${token0Instance.address}`);
+    console.log(`Token 2 address: ${token1Instance.address}`);
+    let tezAmount = 10000;
+    let tokenAmount = 1000000;
+    console.log("Approve token 0");
+    await token0Instance.approve(
+      factoryInstance.address.toString(),
+      tokenAmount
+    );
+    console.log("Approve token 1");
+    await token1Instance.approve(
+      factoryInstance.address.toString(),
+      tokenAmount
+    );
+    console.log("Launch exchange 0");
+    await factoryInstance.launchExchange(
+      token0Instance.address.toString(),
+      tokenAmount,
+      { amount: tezAmount }
+    );
+    console.log("Launch exchange 1");
+    await factoryInstance.launchExchange(
+      token1Instance.address.toString(),
+      tokenAmount,
+      { amount: tezAmount }
+    );
   }
 };
