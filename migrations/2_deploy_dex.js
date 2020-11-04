@@ -28,7 +28,7 @@ function getLigo(isDockerizedLigo) {
   return path;
 }
 
-module.exports = async (deployer, network) => {
+module.exports = async (deployer, network, accounts) => {
   if (network === "development") {
     Factory = TestFactory;
     prefix = "Test";
@@ -36,7 +36,6 @@ module.exports = async (deployer, network) => {
 
   await deployer.deploy(Factory, factoryStorage, {
     gas: 49000,
-    // gasPrice: 1000,
     fee: 1000000,
   });
   let factoryInstance = await Factory.deployed();
@@ -82,23 +81,57 @@ module.exports = async (deployer, network) => {
     console.log(`Token 2 address: ${token1Instance.address}`);
     let tezAmount = 10000;
     let tokenAmount = 1000000;
-    await token0Instance.approve(
-      factoryInstance.address.toString(),
-      tokenAmount
-    );
-    await token1Instance.approve(
-      factoryInstance.address.toString(),
-      tokenAmount
-    );
-    await factoryInstance.launchExchange(
-      token0Instance.address.toString(),
-      tokenAmount,
-      { amount: tezAmount }
-    );
-    await factoryInstance.launchExchange(
-      token1Instance.address.toString(),
-      tokenAmount,
-      { amount: tezAmount }
-    );
+    if (standard === "FA12") {
+      await token0Instance.approve(
+        factoryInstance.address.toString(),
+        tokenAmount
+      );
+      await token1Instance.approve(
+        factoryInstance.address.toString(),
+        tokenAmount
+      );
+      await factoryInstance.launchExchange(
+        token0Instance.address.toString(),
+        tokenAmount,
+        { amount: tezAmount }
+      );
+      await factoryInstance.launchExchange(
+        token1Instance.address.toString(),
+        tokenAmount,
+        { amount: tezAmount }
+      );
+    } else {
+      let defaultTokenId = 0;
+      await token0Instance.update_operators([
+        {
+          add_operator: {
+            owner: accounts[0],
+            operator: factoryInstance.address.toString(),
+            token_id: defaultTokenId,
+          },
+        },
+      ]);
+      await token1Instance.update_operators([
+        {
+          add_operator: {
+            owner: accounts[0],
+            operator: factoryInstance.address.toString(),
+            token_id: defaultTokenId,
+          },
+        },
+      ]);
+      await factoryInstance.launchExchange(
+        token0Instance.address.toString(),
+        defaultTokenId,
+        tokenAmount,
+        { amount: tezAmount }
+      );
+      await factoryInstance.launchExchange(
+        token1Instance.address.toString(),
+        defaultTokenId,
+        tokenAmount,
+        { amount: tezAmount }
+      );
+    }
   }
 };
