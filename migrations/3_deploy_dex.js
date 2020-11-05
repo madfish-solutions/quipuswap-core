@@ -34,10 +34,16 @@ module.exports = async (deployer, network, accounts) => {
     prefix = "Test";
   }
 
-  await deployer.deploy(Factory, factoryStorage, {
-    gas: 49000,
-    fee: 1000000,
-  });
+  await deployer.deploy(
+    Factory,
+    factoryStorage,
+    network === "delphinet"
+      ? {
+          gas: 49000,
+          fee: 1000000,
+        }
+      : {}
+  );
   let factoryInstance = await Factory.deployed();
   console.log(`Factory address: ${factoryInstance.address}`);
 
