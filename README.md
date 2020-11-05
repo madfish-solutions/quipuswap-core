@@ -1,9 +1,8 @@
 # Description
 
-This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens
-to exchange, invest liquidity, and potentially make a profit in a fully decentralized way.
+This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens to exchange, provide liquidity, and potentially make a profit in a fully decentralized way.
 
-The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
+The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md).
 
 # Architecture
 
@@ -14,21 +13,19 @@ The solution consists of 3 types of contracts:
 1. `Factory` - singleton used to deploy new exchange pair;
 2. `Dex` - contract for TokenX-XTZ pair exchanges;
 3. `Token` - FA token implementation.
+4. `MetadataStorage` - contract to store and upgrade the shares token metadata.
 
 # Project structure
 
 ```
 .
-├──  contracts/ # contract sources for FA1.2 compatible version
-├──  contractsV2/ # contract sources for FA2 compatible version
-├──  test/ # test cases
+├──  contracts/ # contracts
+|──────── main/ # the contracts to be compiled
+|──────── partial/ # the code parts imported by main contracs
+├──  testTs/ # test cases
 ├──  storage/ # initial storage for contract origination
-├──  scripts/ # scripts for dex/factory actions
-├──  fixtures/ # deployment & test account keys
-├──  misc/ # other sources
+├──  scripts/ # cli for dex/factory actions
 ├──  README.md # current file
-├──  test_cases.md # implemented tests list
-├──  test.sh # script for quick development
 ├──  .gitignore
 ├──  package.json
 └──  Architecture.png
@@ -37,6 +34,20 @@ The solution consists of 3 types of contracts:
 # Prerequisites
 
 - Installed NodeJS (tested with NodeJS v12+)
+- Installed Truffle:
+
+```
+npm install -g truffle@tezos
+
+```
+
+- Installed ganache-cli:
+
+```
+npm install -g ganache-cli@tezos
+
+```
+
 - Installed Ligo:
 
 ```
@@ -49,8 +60,24 @@ curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "ne
 cd quipuswap-core && npm i
 ```
 
-- Private keys for signing transactions. The unencrypted private keys have to be placed in `key`,`key1`, `key2` file in the `fixtures` directory.
-`key` is development key. `key1` and `key2` are used for testing only.
+- Configure `truffle-config.js` if [needed](https://www.trufflesuite.com/docs/tezos/truffle/reference/configuring-tezos-projects).
+
+# Quick Start
+
+To compile and deploy contracts to Delphinet
+
+1. Chose configure the version - `FA12` or `FA2` - by setting `npm_package_config_standard` in package.json and run:
+
+```
+npm run migrate-delphinet
+```
+
+For other networks:
+
+```
+npm run migrate # development
+npm run migrate-carthagenet # carthagenet
+```
 
 # Usage
 
@@ -61,93 +88,319 @@ Contracts are processed in the following stages:
 3. Configuration
 4. Interactions on-chain
 
+As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the intercontract communication between Dex and external tokens, the shared code base is used. There for to work with the spesific standard the version - `FA12` or `FA2` - should be configured by setting `npm_package_config_standard` in package.json
+
 ## Compilation
 
-To compile the contracts and generate Michelson you should run:
+To compile the contracts run:
 
 ```
-npm run build
+npm run compile
 ```
 
-It will compile `Dex.ligo` to raw Michelson code. This code will be deployed during `Factory.LaunchExchange` call when adding a new exchange-pair. And then compile other contracts and store them in JSON format to deploy with [Taquito](https://tezostaquito.io/) library.
+Artifacts are stored in the `build/contracts` directory.
 
-Сompiled `Factory` and `Token` are stored in the `build/` directory.
-
-## Standard
-
-Exchange support FA1.2 and FA2 tokens separately. Set `$npm_package_config_standard` to `fa1.2` or `fa2` according to the goals in `package.json`.
-
-## Factory & Token Deployment
+## Deployment
 
 For deployment step the following command should be used:
 
 ```
-npm run deploy
+npm run migrate
 ```
 
-First, we prepare storage for `Factory` contract, and then contracts are deployed to the network.
+Addresses of deployed contracts are displayed in terminal. At this stage, new MetadataStorage, Factory are originated. Aditionaly, for testnets two new pairs are deployed.
 
-Addresses of deployed contacts are displayed and stored in JSON format in the `deploy` folder.
-
-## Factory Configuration
-
-Because of the **_gas limit issue_** it is impossible to put all the functions to the code sections of the contract(and execute it). Instead, they are being stored as lambdas in `big_map` structure. Their code cannot be placed in the `storage` due to **_operation size limits issue_**. So each `Dex` function is added to `Factory` by making a separate transaction.
-
-To configure factory run the following command:
+For other networks:
 
 ```
-npm run set-functions
+npm run migrate-delphinet
+npm run migrate-carthagenet
 ```
-
-After performing step new token pairs can be deployed.
-
-## Exchange Pair Deployment
-
-Each token can have only one exchange pair contract (AKA `Dex`). To add a new token pair `Factory.LaunchExchange` method is called and a new empty `Dex` instance is deployed, initial liquidity is provided. There's a specific command for that:
-
-```
-npm run add-tokens
-```
-
-After the command is completed, the exchange can be used.
 
 # Entrypoints
 
+The Ligo interfaces of the contracts can be found in `contracts/partials/I__CONTRACT_NAME__.ligo`
+
 ## Factory
 
-- `launchExchange(token: address, tokenAmount: nat)`: deploys a new empty `Dex` for `token`, stores the address of the new contract and put initial liquidity; has to be called with tezos amount that will be used as intial liquidity.
-- `setFunction(func : (dexAction, dex_storage, address) -> (list(operation), dex_storage)), funcIndex: nat`: adds lambda to functions map; the map will be replicated in storage of originated `Dex` contracts.
+Factory contains the code template for the `Dex` Token-XTZ pair contracts, deploys them and keeps the list of deployed pairs. The functions for `Dex` are stored in `Factory` contract but because of gas and operation limits their code cannot be stored in Factory contract during the origination: they are added separately one by one.
+
+New exchange pairs are registered and deployed via `LaunchExchange`. The only difference between factory standards is the token identifier type, for F1.2 it is the token address and for FA2 it is the address the token id:
+
+```
+#if FA2_STANDARD_ENABLED
+type token_identifier is (address * nat)
+#else
+type token_identifier is address
+#endif
+```
+
+The contract has the following entrypoints:
+
+```
+type launch_exchange_params is record [
+  token          : token_identifier;
+  token_amount   : nat;
+]
+
+type set_token_function_params is record [
+  func    : token_func;
+  index   : nat;
+]
+type set_dex_function_params is record [
+  func    : dex_func;
+  index   : nat;
+]
+
+type exchange_action is
+| LaunchExchange        of launch_exchange_params
+| SetDexFunction        of set_dex_function_params
+| SetTokenFunction      of set_token_function_params
+```
+
+### SetDexFunction
+
+Sets the dex specific function. Is used before the whole system is launched.
+
+`index` : the key in functions map;
+
+`func` : function code.
+
+Each `index` is designed for a specific `func` which functionality is described below.
+
+### SetTokenFunction
+
+Sets the FA1.2 function. Is used before the whole system is launched.
+
+`index` : the key in functions map;
+
+`func` : function code.
+
+Each `index` is designed for a specific `func` which functionality is described below.
+
+### LaunchExchange
+
+Deploys a new empty `Dex` for `token`, stores the address of the new contract, and puts initial liquidity; has to be called with XTZ amount that will be used as initial liquidity.
+
+`token` : address(address and token id for FA2) of the paired token;
+
+`token_amount` : amount of tokens that will be withdrawn from the user account and used as initial liquidity.
+
+`tez_amount`(not an argument) : the XTZ for initial liquidity should be sent along with the launch transaction.
 
 ## Dex
 
-- `default()`: default entrypoint to receive payments; received XTZ are destributed between liquidity providers in the end of the delegation cycle.
-- `use(funcIndex: nat, action: dexAction)`: executes the function with index `funcIndex` from `lambdas` with parameters `action`.
+`Dex` fully implements FA1.2/FA2 token interface. For more details check the this [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and this [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md). And the extends it with other exchange-related methods.
+
+The contract has the following entrypoints common for both standards:
+
+```
+
+type tez_to_token_payment_params is record [
+  amount    : nat;
+  receiver  : address;
+]
+
+type token_to_tez_payment_params is record [
+  amount       : nat;
+  min_out      : nat;
+  receiver     : address;
+]
+
+type divest_liquidity_params is record [
+  min_tez      : nat;
+  min_tokens   : nat;
+  shares       : nat;
+]
+
+type vote_params is record [
+  candidate   : key_hash;
+  value       : nat;
+  voter       : address;
+]
+
+type veto_params is record [
+  value       : nat;
+  voter       : address;
+]
+
+type dex_action is
+| InitializeExchange      of (nat)
+| TezToTokenPayment       of tez_to_token_payment_params
+| TokenToTezPayment       of token_to_tez_payment_params
+| InvestLiquidity         of (nat)
+| DivestLiquidity         of divest_liquidity_params
+| Vote                    of vote_params
+| Veto                    of veto_params
+| WithdrawProfit          of (address)
+
+type default_params is unit
+type use_params is (nat * dex_action)
+```
+
+For FA1.2 standard compatibility the following entrypoints are implemented:
+
+```
+type transfer_params is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
+type approve_params is michelson_pair(address, "spender", nat, "value")
+type balance_params is michelson_pair(address, "owner", contract(nat), "")
+type allowance_params is michelson_pair(michelson_pair(address, "owner", address, "spender"), "", contract(nat), "")
+type total_supply_params is (unit * contract(nat))
+
+type token_action is
+| ITransfer             of transfer_params
+| IApprove              of approve_params
+| IGetBalance           of balance_params
+| IGetAllowance         of allowance_params
+| IGetTotalSupply       of total_supply_params
+
+type full_action is
+| Use                   of use_params
+| Default               of default_params
+| Transfer              of transfer_params
+| Approve               of approve_params
+| GetBalance            of balance_params
+| GetAllowance          of allowance_params
+| GetTotalSupply        of total_supply_params
+```
+
+For FA2 standard compatibility the following entrypoints are implemented:
+
+```
+type transfer_params is list (transfer_param)
+type token_metadata_registry_params is contract (address)
+type update_operator_params is list (update_operator_param)
+
+type token_action is
+| ITransfer                of transfer_params
+| IBalance_of              of balance_params
+| IToken_metadata_registry of token_metadata_registry_params
+| IUpdate_operators        of update_operator_params
+
+type full_action is
+| Use                     of use_params
+| Default                 of default_params
+| Transfer                of transfer_params
+| Balance_of              of balance_params
+| Token_metadata_registry of token_metadata_registry_params
+| Update_operators        of update_operator_params
+```
+
+### Default (index 8)
+
+Used to collect rewards from bakers, donations or misguided payments without specified entrypoint.
+
+### Use
+
+Executes the exchange-related which code is stored in map of lamdas and thus the `index` param is needed.
 
 Actions have the following parameters (index in the list matches the index in `lambdas`):
 
-0. `initializeExchange(tokenAmount: nat)`: sets initial liquidity, XTZ must be sent.
-1. `tezToToken(minTokensOut: nat, receiver: address)`: exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `minTokensOut`.
-2. `tokenToTez(tokensIn: nat, minTezOut: nat, receiver: address)`: exchanges `tokensIn` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minTezOut`.
-3. `withdrawProfit(receiver: address)`: withdraws delegation reward of the sender to `receiver` address.
-4. `investLiquidity(minShares: nat)`: allows to own `minShares` by investing tokens and XTZ; the corresponding amount of XTZ has to be sent via transaction and amount of tokens has to be approved to be spent by `Dex`.
-5. `divestLiquidity(minTezDivested: nat, minTokensDivested: nat, sharesBurned: nat)`: divests `sharesBurned` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `minTokensDivested` or the amount of divested XTZ is smaller than `minTezDivested`.
-6. `setVotesDelegation(deputy: address, isAllowed: bool)`: allows or prohibits `deputy` to vote with sender shares.
-7. `vote(candidate: key_hash, voter: address)`: votes for `candidate` with shares of `voter`.
-8. `veto(voter: address)`: votes against current delegate with shares of `voter`.
-9. `default()`: default entrypoint to receive payments; received XTZ is distributed between liquidity providers at the end of the delegation cycle.
+#### InitializeExchange (index 0)
+
+Sets initial liquidity, XTZ must be sent.
+
+`amount` : the token amount for initial liquidity;
+
+`tez_amount`(not an argument) : the XTZ for initial liquidity should be send along with the launch transaction.
+
+#### TezToTokenPayment (index 1)
+
+Exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if the amount of exchanged tokens is less than `amount`.
+
+`amount` : min amount of tokens received to accept exchange;
+
+`receiver` : tokens received;
+
+`tez_amount`(not an argument) : the XTZ to be exchanged.
+
+#### TokenToTezPayment (index 2)
+
+Exchanges `amount` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `min_out`.
+
+`amount` : amount of tokens to be exchanged;
+
+`min_out` : min amount of XTZ received to accept exchange;
+
+`receiver` : tokens received;
+
+#### WithdrawProfit (index 3)
+
+Withdraws delegation reward of the sender to `receiver` address.
+
+`receiver` : XTZ received;
+
+#### InvestLiquidity (index 4)
+
+Mints `min_shares` by investing tokens and XTZ; the corresponding amount of XTZ has to be sent via transaction and max amount of tokens to be spent should be approved for `Dex`.
+
+`min_shares` : the minimal shares amount to be minted;
+
+`tez_amount`(not an argument) : the XTZ to be provided as liquidity.
+
+#### DivestLiquidity (index 5)
+
+Burns `shares` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `min_tokens` or the amount of divested XTZ is smaller than `min_tez`.
+
+`shares` : amount of shares to be burnt;
+
+`min_tez` : min amount of XTZ received to accept the divestment;
+
+`min_tokens` : min amount of tokens received to accept the divestment;
+
+#### Vote (index 6)
+
+Votes for `candidate` with shares of `voter`.
+
+`candidate` : the chosen baker;
+
+`value` : amount of shares that are used to vote;
+
+`voter` : the account from which the voting is done.
+
+#### Veto (index 7)
+
+Votes against current delegate with `value` shares of `voter`; the `value` is frozen and can't be transferred or used for another voting.
+
+`value` : amount of shares that are used to vote against the chosen baker;
+
+`voter` : the account from which the veto voting is done.
 
 ## Token
 
-Implements two token interfaces [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
+Implements [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md) token interface.
+
+## MetadataStorage
+
+Stores the metadata for Dex as it can't be placed inside the `Dex` contract because of operation size limits under the current protocol rules.
+
+The metadata can be updated by authorities to follow the unstable metadata standards.
+
+```
+type update_owner_type is record [
+    owner : address;
+    add : bool;
+]
+type metadata_type is map (string, bytes)
+
+type storage is record [
+    metadata : metadata_type;
+    owners : set(address);
+]
+
+(* Valid entry points *)
+type storage_action is
+| Update_owners of update_owner_type
+| Update_storage of metadata_type
+| Get_metadata of contract (metadata_type)
+```
 
 # Testing
 
-Mocha is used for testing and is installed along with other packages. Testing requires two identities to interact with contracts so their private keys should be placed in the files `fixtures/key`, `fixtures/key1`, and `fixtures/key2`. `Factory`, `Token` and `Token2` contracts have to be deployed before and their addresses have to be stored in `deployed` folder in JSON format. But exchanges for tokens shouldn't be launched (the process is tested inside). Refer to `test.sh` for better understanding.
-
-Run:
+Truffle framework is used for testing. Run:
 
 ```
 npm test
 ```
 
-NOTE: if you want to use a different network, configure `$npm_package_config_network` in `package.json`
+NOTE: if you want to use a different network, configure `truffle-config.js`. If you need to use a different standard, configure `$npm_package_config_standard` in `package.json`

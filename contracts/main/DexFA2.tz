@@ -1,0 +1,469 @@
+{ parameter
+    (or (or (or (pair %balance_of
+                   (list %requests (pair (address %owner) (nat %token_id)))
+                   (contract %callback
+                      (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))))
+                (unit %default))
+            (or (contract %token_metadata_registry address)
+                (list %transfer
+                   (pair (address %from_)
+                         (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))))
+        (or (list %update_operators
+               (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                   (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))
+            (pair %use
+               nat
+               (or (or (or (pair %divestLiquidity (pair (nat %min_tez) (nat %min_tokens)) (nat %shares))
+                           (nat %initializeExchange))
+                       (or (nat %investLiquidity)
+                           (pair %tezToTokenPayment (nat %amount) (address %receiver))))
+                   (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %min_out)) (address %receiver))
+                           (pair %veto (nat %value) (address %voter)))
+                       (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
+                           (address %withdrawProfit))))))) ;
+  storage
+    (pair (pair (big_map %dex_lambdas
+                   nat
+                   (lambda
+                      (pair (pair (or (or (or (pair %divestLiquidity (pair (nat %min_tez) (nat %min_tokens)) (nat %shares))
+                                              (nat %initializeExchange))
+                                          (or (nat %investLiquidity)
+                                              (pair %tezToTokenPayment (nat %amount) (address %receiver))))
+                                      (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %min_out)) (address %receiver))
+                                              (pair %veto (nat %value) (address %voter)))
+                                          (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
+                                              (address %withdrawProfit))))
+                                  (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
+                                                          (pair (nat %invariant) (timestamp %last_veto)))
+                                                    (pair (pair (big_map %ledger
+                                                                   address
+                                                                   (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))
+                                                                (pair %reward_info
+                                                                   (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
+                                                                         (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
+                                                                   (pair (pair (timestamp %period_finish) (nat %reward))
+                                                                         (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
+                                                          (pair (nat %tez_pool) (address %token_address))))
+                                              (pair (pair (pair (nat %token_id) (nat %token_pool))
+                                                          (pair (nat %total_supply) (nat %total_votes)))
+                                                    (pair (pair (big_map %user_rewards
+                                                                   address
+                                                                   (pair (pair (pair (nat %loyalty) (nat %loyalty_paid)) (pair (nat %reward) (nat %reward_paid)))
+                                                                         (timestamp %update_time)))
+                                                                (nat %veto))
+                                                          (pair (big_map %vetos key_hash timestamp)
+                                                                (big_map %voters
+                                                                   address
+                                                                   (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                                         (pair (nat %veto) (nat %vote))))))))
+                                        (big_map %votes key_hash nat)))
+                            address)
+                      (pair (list operation)
+                            (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
+                                                    (pair (nat %invariant) (timestamp %last_veto)))
+                                              (pair (pair (big_map %ledger
+                                                             address
+                                                             (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))
+                                                          (pair %reward_info
+                                                             (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
+                                                                   (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
+                                                             (pair (pair (timestamp %period_finish) (nat %reward))
+                                                                   (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
+                                                    (pair (nat %tez_pool) (address %token_address))))
+                                        (pair (pair (pair (nat %token_id) (nat %token_pool))
+                                                    (pair (nat %total_supply) (nat %total_votes)))
+                                              (pair (pair (big_map %user_rewards
+                                                             address
+                                                             (pair (pair (pair (nat %loyalty) (nat %loyalty_paid)) (pair (nat %reward) (nat %reward_paid)))
+                                                                   (timestamp %update_time)))
+                                                          (nat %veto))
+                                                    (pair (big_map %vetos key_hash timestamp)
+                                                          (big_map %voters
+                                                             address
+                                                             (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                                   (pair (nat %veto) (nat %vote))))))))
+                                  (big_map %votes key_hash nat)))))
+                (big_map %metadata string bytes))
+          (pair (pair %storage
+                   (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
+                                     (pair (nat %invariant) (timestamp %last_veto)))
+                               (pair (pair (big_map %ledger
+                                              address
+                                              (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))
+                                           (pair %reward_info
+                                              (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
+                                                    (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
+                                              (pair (pair (timestamp %period_finish) (nat %reward))
+                                                    (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
+                                     (pair (nat %tez_pool) (address %token_address))))
+                         (pair (pair (pair (nat %token_id) (nat %token_pool))
+                                     (pair (nat %total_supply) (nat %total_votes)))
+                               (pair (pair (big_map %user_rewards
+                                              address
+                                              (pair (pair (pair (nat %loyalty) (nat %loyalty_paid)) (pair (nat %reward) (nat %reward_paid)))
+                                                    (timestamp %update_time)))
+                                           (nat %veto))
+                                     (pair (big_map %vetos key_hash timestamp)
+                                           (big_map %voters
+                                              address
+                                              (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                    (pair (nat %veto) (nat %vote))))))))
+                   (big_map %votes key_hash nat))
+                (big_map %token_lambdas
+                   nat
+                   (lambda
+                      (pair (pair (or (or (pair %iBalance_of
+                                             (list %requests (pair (address %owner) (nat %token_id)))
+                                             (contract %callback
+                                                (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance)))))
+                                          (contract %iToken_metadata_registry address))
+                                      (or (list %iTransfer
+                                             (pair (address %from_)
+                                                   (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))
+                                          (list %iUpdate_operators
+                                             (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                                                 (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))))
+                                  (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
+                                                          (pair (nat %invariant) (timestamp %last_veto)))
+                                                    (pair (pair (big_map %ledger
+                                                                   address
+                                                                   (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))
+                                                                (pair %reward_info
+                                                                   (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
+                                                                         (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
+                                                                   (pair (pair (timestamp %period_finish) (nat %reward))
+                                                                         (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
+                                                          (pair (nat %tez_pool) (address %token_address))))
+                                              (pair (pair (pair (nat %token_id) (nat %token_pool))
+                                                          (pair (nat %total_supply) (nat %total_votes)))
+                                                    (pair (pair (big_map %user_rewards
+                                                                   address
+                                                                   (pair (pair (pair (nat %loyalty) (nat %loyalty_paid)) (pair (nat %reward) (nat %reward_paid)))
+                                                                         (timestamp %update_time)))
+                                                                (nat %veto))
+                                                          (pair (big_map %vetos key_hash timestamp)
+                                                                (big_map %voters
+                                                                   address
+                                                                   (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                                         (pair (nat %veto) (nat %vote))))))))
+                                        (big_map %votes key_hash nat)))
+                            address)
+                      (pair (list operation)
+                            (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
+                                                    (pair (nat %invariant) (timestamp %last_veto)))
+                                              (pair (pair (big_map %ledger
+                                                             address
+                                                             (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance)))
+                                                          (pair %reward_info
+                                                             (pair (pair (nat %last_loyalty_per_share) (timestamp %last_period_finish))
+                                                                   (pair (timestamp %last_update_time) (nat %loyalty_per_share)))
+                                                             (pair (pair (timestamp %period_finish) (nat %reward))
+                                                                   (pair (nat %reward_per_token) (nat %total_accomulated_loyalty)))))
+                                                    (pair (nat %tez_pool) (address %token_address))))
+                                        (pair (pair (pair (nat %token_id) (nat %token_pool))
+                                                    (pair (nat %total_supply) (nat %total_votes)))
+                                              (pair (pair (big_map %user_rewards
+                                                             address
+                                                             (pair (pair (pair (nat %loyalty) (nat %loyalty_paid)) (pair (nat %reward) (nat %reward_paid)))
+                                                                   (timestamp %update_time)))
+                                                          (nat %veto))
+                                                    (pair (big_map %vetos key_hash timestamp)
+                                                          (big_map %voters
+                                                             address
+                                                             (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                                   (pair (nat %veto) (nat %vote))))))))
+                                  (big_map %votes key_hash nat))))))) ;
+  code { DUP ;
+         CDR ;
+         SELF ;
+         ADDRESS ;
+         DIG 2 ;
+         CAR ;
+         IF_LEFT
+           { IF_LEFT
+               { IF_LEFT
+                   { DIG 2 ;
+                     PUSH nat 2 ;
+                     PAIR ;
+                     DUG 2 ;
+                     LEFT (contract address) ;
+                     LEFT (or (list (pair address (list (pair address (pair nat nat)))))
+                              (list (or (pair address (pair address nat)) (pair address (pair address nat))))) ;
+                     PAIR ;
+                     PAIR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CDR ;
+                     CAR ;
+                     GET ;
+                     IF_NONE
+                       { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                       { DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CAR ;
+                         CDR ;
+                         DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CDR ;
+                         CAR ;
+                         DIG 4 ;
+                         CAR ;
+                         CAR ;
+                         PAIR ;
+                         PAIR ;
+                         EXEC } ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
+                     PAIR ;
+                     SWAP ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR }
+                   { SWAP ;
+                     DROP 2 ;
+                     DUP ;
+                     CAR ;
+                     CAR ;
+                     PUSH nat 8 ;
+                     GET ;
+                     IF_NONE
+                       { PUSH string "Dex/function-not-set" ; FAILWITH }
+                       { SELF ;
+                         ADDRESS ;
+                         DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CDR ;
+                         CAR ;
+                         PUSH nat 0 ;
+                         RIGHT (pair (pair nat nat) nat) ;
+                         LEFT (or nat (pair nat address)) ;
+                         LEFT (or (or (pair (pair nat nat) address) (pair nat address))
+                                  (or (pair (pair key_hash nat) address) address)) ;
+                         PAIR ;
+                         PAIR ;
+                         EXEC } ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
+                     PAIR ;
+                     SWAP ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR } }
+               { IF_LEFT
+                   { DIG 2 ;
+                     PUSH nat 3 ;
+                     PAIR ;
+                     DUG 2 ;
+                     RIGHT (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))) ;
+                     LEFT (or (list (pair address (list (pair address (pair nat nat)))))
+                              (list (or (pair address (pair address nat)) (pair address (pair address nat))))) ;
+                     PAIR ;
+                     PAIR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CDR ;
+                     CAR ;
+                     GET ;
+                     IF_NONE
+                       { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                       { DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CAR ;
+                         CDR ;
+                         DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CDR ;
+                         CAR ;
+                         DIG 4 ;
+                         CAR ;
+                         CAR ;
+                         PAIR ;
+                         PAIR ;
+                         EXEC } ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
+                     PAIR ;
+                     SWAP ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR }
+                   { DIG 2 ;
+                     PUSH nat 0 ;
+                     PAIR ;
+                     DUG 2 ;
+                     LEFT (list (or (pair address (pair address nat)) (pair address (pair address nat)))) ;
+                     RIGHT
+                       (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
+                           (contract address)) ;
+                     PAIR ;
+                     PAIR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CDR ;
+                     CAR ;
+                     GET ;
+                     IF_NONE
+                       { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                       { DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CAR ;
+                         CDR ;
+                         DIG 2 ;
+                         DUP ;
+                         DUG 3 ;
+                         CDR ;
+                         CAR ;
+                         DIG 4 ;
+                         CAR ;
+                         CAR ;
+                         PAIR ;
+                         PAIR ;
+                         EXEC } ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
+                     PAIR ;
+                     SWAP ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR } } }
+           { IF_LEFT
+               { DIG 2 ;
+                 PUSH nat 1 ;
+                 PAIR ;
+                 DUG 2 ;
+                 RIGHT (list (pair address (list (pair address (pair nat nat))))) ;
+                 RIGHT
+                   (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
+                       (contract address)) ;
+                 PAIR ;
+                 PAIR ;
+                 DUP ;
+                 CDR ;
+                 CDR ;
+                 DUP ;
+                 CDR ;
+                 CDR ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CDR ;
+                 CAR ;
+                 GET ;
+                 IF_NONE
+                   { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                   { DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CAR ;
+                     CDR ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CDR ;
+                     CAR ;
+                     DIG 4 ;
+                     CAR ;
+                     CAR ;
+                     PAIR ;
+                     PAIR ;
+                     EXEC } ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
+                 PAIR ;
+                 SWAP ;
+                 PAIR ;
+                 SWAP ;
+                 CAR ;
+                 PAIR }
+               { DIG 2 ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 PAIR ;
+                 DUG 2 ;
+                 CDR ;
+                 PAIR ;
+                 PAIR ;
+                 DUP ;
+                 CDR ;
+                 CDR ;
+                 DUP ;
+                 CAR ;
+                 CAR ;
+                 DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CDR ;
+                 CAR ;
+                 GET ;
+                 IF_NONE
+                   { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                   { DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CAR ;
+                     CDR ;
+                     DIG 2 ;
+                     DUP ;
+                     DUG 3 ;
+                     CDR ;
+                     CAR ;
+                     DIG 4 ;
+                     CAR ;
+                     CAR ;
+                     PAIR ;
+                     PAIR ;
+                     EXEC } ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 DIP { DUP ; CAR ; SWAP ; CDR ; CDR } ;
+                 PAIR ;
+                 SWAP ;
+                 PAIR ;
+                 SWAP ;
+                 CAR ;
+                 PAIR } } } }
+
