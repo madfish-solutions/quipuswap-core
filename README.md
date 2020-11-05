@@ -302,7 +302,7 @@ Sets initial liquidity, XTZ must be sent.
 
 `amount` : the token amount for initial liquidity;
 
-`tezAmount`(not an argument) : the XTZ for initial liquidity should be send along with the launch transaction.
+`tez_amount`(not an argument) : the XTZ for initial liquidity should be send along with the launch transaction.
 
 #### TezToTokenPayment (index 1)
 
@@ -312,15 +312,15 @@ Exchanges XTZ to tokens and sends them to `receiver`; operation is reverted if t
 
 `receiver` : tokens received;
 
-`tezAmount`(not an argument) : the XTZ to be exchanged.
+`tez_amount`(not an argument) : the XTZ to be exchanged.
 
 #### TokenToTezPayment (index 2)
 
-Exchanges `amount` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `minOut`.
+Exchanges `amount` tokens to XTZ and sends them to `receiver`; operation is reverted if the amount of exchanged XTZ is less than `min_out`.
 
 `amount` : amount of tokens to be exchanged;
 
-`minOut` : min amount of XTZ received to accept exchange;
+`min_out` : min amount of XTZ received to accept exchange;
 
 `receiver` : tokens received;
 
@@ -332,21 +332,21 @@ Withdraws delegation reward of the sender to `receiver` address.
 
 #### InvestLiquidity (index 4)
 
-Mints `minShares` by investing tokens and XTZ; the corresponding amount of XTZ has to be sent via transaction and max amount of tokens to be spent should be approved for `Dex`.
+Mints `min_shares` by investing tokens and XTZ; the corresponding amount of XTZ has to be sent via transaction and max amount of tokens to be spent should be approved for `Dex`.
 
-`minShares` : the minimal shares amount to be minted;
+`min_shares` : the minimal shares amount to be minted;
 
-`tezAmount`(not an argument) : the XTZ to be provided as liquidity.
+`tez_amount`(not an argument) : the XTZ to be provided as liquidity.
 
 #### DivestLiquidity (index 5)
 
-Burns `shares` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `minTokens` or the amount of divested XTZ is smaller than `minTez`.
+Burns `shares` and sends tokens and XTZ to the owner; operation is reverted if the amount of divested tokens is smaller than `min_tokens` or the amount of divested XTZ is smaller than `min_tez`.
 
 `shares` : amount of shares to be burnt;
 
-`minTez` : min amount of XTZ received to accept the divestment;
+`min_tez` : min amount of XTZ received to accept the divestment;
 
-`minTokens` : min amount of tokens received to accept the divestment;
+`min_tokens` : min amount of tokens received to accept the divestment;
 
 #### Vote (index 6)
 
@@ -369,6 +369,31 @@ Votes against current delegate with `value` shares of `voter`; the `value` is fr
 ## Token
 
 Implements [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md) token interface.
+
+## MetadataStorage
+
+Stores the metadata for Dex as it can't be placed inside the `Dex` contract because of operation size limits under the current protocol rules.
+
+The metadata can be updated by authorities to follow the unstable metadata standards.
+
+```
+type update_owner_type is record [
+    owner : address;
+    add : bool;
+]
+type metadata_type is map (string, bytes)
+
+type storage is record [
+    metadata : metadata_type;
+    owners : set(address);
+]
+
+(* Valid entry points *)
+type storage_action is
+| Update_owners of update_owner_type
+| Update_storage of metadata_type
+| Get_metadata of contract (metadata_type)
+```
 
 # Testing
 
