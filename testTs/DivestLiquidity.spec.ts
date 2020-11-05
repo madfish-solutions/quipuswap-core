@@ -1,9 +1,8 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { Tezos, TezosOperationError } from "@taquito/taquito";
 
-contract("DivestLiquidity()", function () {
+contract.only("DivestLiquidity()", function () {
   let context: Context;
 
   before(async () => {
@@ -23,8 +22,8 @@ contract("DivestLiquidity()", function () {
 
     // store prev balances
     let pairAddress = context.pairs[0].contract.address;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
-    let aliceInitTezBalance = await Tezos.tz.getBalance(aliceAddress);
+    let aliceAddress = await tezos.signer.publicKeyHash();
+    let aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
     await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
     let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
       aliceAddress
@@ -38,7 +37,7 @@ contract("DivestLiquidity()", function () {
     );
 
     // checks
-    let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
+    let aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
     await context.tokens[0].updateStorage({
       ledger: [aliceAddress, pairAddress],
     });
@@ -48,7 +47,7 @@ contract("DivestLiquidity()", function () {
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
-    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
+    let pairTezBalance = await tezos.tz.getBalance(pairAddress);
 
     // 1. tokens/tez sent to user
     strictEqual(
@@ -116,11 +115,11 @@ contract("DivestLiquidity()", function () {
 
     // get alice address
     let pairAddress = context.pairs[0].contract.address;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // update keys
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
@@ -128,7 +127,7 @@ contract("DivestLiquidity()", function () {
     await context.updateActor("bob");
 
     // store prev balances
-    let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobInitTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({ ledger: [bobAddress] });
     let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
     let bobInitTokenBalance = bobInitTokenLedger
@@ -143,7 +142,7 @@ contract("DivestLiquidity()", function () {
     );
 
     // checks
-    let bobFinalTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobFinalTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({
       ledger: [bobAddress, pairAddress],
     });
@@ -153,7 +152,7 @@ contract("DivestLiquidity()", function () {
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
-    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
+    let pairTezBalance = await tezos.tz.getBalance(pairAddress);
 
     // 1. tokens/tez sent to user
     strictEqual(

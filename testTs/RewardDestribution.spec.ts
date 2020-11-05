@@ -1,7 +1,6 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { Tezos, TezosOperationError } from "@taquito/taquito";
 import { calculateFee, bakeBlocks } from "./contracManagers/utils";
 
 contract("RewardDestribution()", function () {
@@ -18,12 +17,12 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
     // store prev balances
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
       user_rewards: [aliceAddress],
@@ -96,7 +95,7 @@ contract("RewardDestribution()", function () {
     await context.flushPairs();
     await context.createPairs();
 
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // save initial state
     await context.pairs[0].updateStorage({
@@ -121,7 +120,7 @@ contract("RewardDestribution()", function () {
     let tezAmount = 1000;
     let tokenAmount = 100000;
     let newShares = 100;
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
 
     await context.updateActor();
     await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
@@ -151,7 +150,7 @@ contract("RewardDestribution()", function () {
     tezAmount = 2000;
     tokenAmount = 200000;
     newShares = 200;
-    let carolAddress = await Tezos.signer.publicKeyHash();
+    let carolAddress = await tezos.signer.publicKeyHash();
 
     await context.updateActor();
     await context.tokens[0].transfer(aliceAddress, carolAddress, tokenAmount);
@@ -422,14 +421,14 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
 
     for (let i = 0; i < 3; i++) {
       // store prev balances
-      let aliceAddress = await Tezos.signer.publicKeyHash();
+      let aliceAddress = await tezos.signer.publicKeyHash();
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
         user_rewards: [aliceAddress],
@@ -448,7 +447,7 @@ contract("RewardDestribution()", function () {
       ].balance;
       let timeLeft =
         Date.parse(initRewardInfo.period_finish) -
-        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        Date.parse((await tezos.rpc.getBlockHeader()).timestamp) +
         1;
       if (timeLeft > 0) {
         await bakeBlocks(timeLeft / 1000);
@@ -500,13 +499,13 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 500;
 
     // store prev balances
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress, bobAddress],
       user_rewards: [aliceAddress, bobAddress],
@@ -610,12 +609,12 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 100;
     // store prev balances
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
       user_rewards: [aliceAddress],
@@ -713,7 +712,7 @@ contract("RewardDestribution()", function () {
 
     let value = 1000;
     // store prev balances
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({
       ledger: [aliceAddress],
       user_rewards: [aliceAddress],
@@ -781,12 +780,12 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
     // store prev balances
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.pairs[0].updateStorage({});
     let initRewardInfo = context.pairs[0].storage.reward_info;
 
@@ -812,11 +811,11 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // transfer to update the period
     await context.pairs[0].transfer(aliceAddress, bobAddress, value);
@@ -848,11 +847,11 @@ contract("RewardDestribution()", function () {
 
     // get receiver address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // transfer to update the period
     await context.pairs[0].transfer(aliceAddress, bobAddress, value);
@@ -909,7 +908,7 @@ contract("RewardDestribution()", function () {
     // update user reward
     let timeLeft =
       Date.parse(initRewardInfo.period_finish) -
-      Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+      Date.parse((await tezos.rpc.getBlockHeader()).timestamp) +
       1;
     if (timeLeft > 0) {
       await bakeBlocks(timeLeft / 1000);
@@ -949,14 +948,14 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
 
     for (let i = 0; i < 3; i++) {
       // store prev balances
-      let aliceAddress = await Tezos.signer.publicKeyHash();
+      let aliceAddress = await tezos.signer.publicKeyHash();
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
         user_rewards: [aliceAddress],
@@ -975,7 +974,7 @@ contract("RewardDestribution()", function () {
       ].balance;
       let timeLeft =
         Date.parse(initRewardInfo.period_finish) -
-        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        Date.parse((await tezos.rpc.getBlockHeader()).timestamp) +
         1;
       if (timeLeft > 0) {
         // transfer
@@ -1022,11 +1021,11 @@ contract("RewardDestribution()", function () {
 
     // get receiver address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // transfer to update the period
     await context.pairs[0].transfer(aliceAddress, bobAddress, value);
@@ -1075,7 +1074,7 @@ contract("RewardDestribution()", function () {
     // update user reward
     let timeLeft =
       Date.parse(initRewardInfo.period_finish) -
-      Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+      Date.parse((await tezos.rpc.getBlockHeader()).timestamp) +
       1;
     if (timeLeft > 0) {
       await bakeBlocks(timeLeft / 1000);
@@ -1119,14 +1118,14 @@ contract("RewardDestribution()", function () {
 
     // get gelegate address
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     let value = 0;
 
     for (let i = 0; i < 3; i++) {
       // store prev balances
-      let aliceAddress = await Tezos.signer.publicKeyHash();
+      let aliceAddress = await tezos.signer.publicKeyHash();
       await context.pairs[0].updateStorage({
         ledger: [aliceAddress],
         user_rewards: [aliceAddress],
@@ -1145,7 +1144,7 @@ contract("RewardDestribution()", function () {
       ].balance;
       let timeLeft =
         Date.parse(initRewardInfo.period_finish) -
-        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        Date.parse((await tezos.rpc.getBlockHeader()).timestamp) +
         1;
       if (timeLeft > 0) {
         await context.pairs[0].sendReward(1000 * i);
@@ -1178,11 +1177,11 @@ contract("RewardDestribution()", function () {
       );
 
       // check withdraw
-      let aliceInitTezBalance = await Tezos.tz.getBalance(aliceAddress);
+      let aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
       if (i) {
         let operations = await context.pairs[0].withdrawProfit(aliceAddress);
         let fees = calculateFee([operations], aliceAddress);
-        let aliceFinalTezBalance = await Tezos.tz.getBalance(aliceAddress);
+        let aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
         ok(
           aliceInitTezBalance.toNumber() - fees + 1000 * i >=
             aliceFinalTezBalance.toNumber(),
@@ -1202,7 +1201,7 @@ contract("RewardDestribution()", function () {
     await context.flushPairs();
     await context.createPairs();
 
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.pairs[0].sendReward(0);
 
     // save initial state
@@ -1218,7 +1217,7 @@ contract("RewardDestribution()", function () {
     let tezAmount = 1000;
     let tokenAmount = 100000;
     let newShares = 100;
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
 
     await context.updateActor();
     await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
@@ -1237,7 +1236,7 @@ contract("RewardDestribution()", function () {
     tezAmount = 2000;
     tokenAmount = 200000;
     newShares = 200;
-    let carolAddress = await Tezos.signer.publicKeyHash();
+    let carolAddress = await tezos.signer.publicKeyHash();
 
     await context.updateActor();
     await context.tokens[0].transfer(aliceAddress, carolAddress, tokenAmount);
@@ -1258,7 +1257,7 @@ contract("RewardDestribution()", function () {
     let value = 0;
     let timeLeft =
       Date.parse(rewardInfoAfterCarolInvestment.period_finish) -
-      Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+      Date.parse((await tezos.rpc.getBlockHeader()).timestamp) +
       1;
     if (timeLeft > 0) {
       // transfer
@@ -1348,7 +1347,7 @@ contract("RewardDestribution()", function () {
     await context.flushPairs();
     await context.createPairs();
 
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.pairs[0].sendReward(0);
 
     for (let i = 0; i < 3; i++) {
@@ -1360,7 +1359,7 @@ contract("RewardDestribution()", function () {
       let tezAmount = 1000;
       let tokenAmount = 100000;
       let newShares = 100;
-      let bobAddress = await Tezos.signer.publicKeyHash();
+      let bobAddress = await tezos.signer.publicKeyHash();
 
       await context.updateActor();
       await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
@@ -1379,7 +1378,7 @@ contract("RewardDestribution()", function () {
       tezAmount = 2000;
       tokenAmount = 200000;
       newShares = 200;
-      let carolAddress = await Tezos.signer.publicKeyHash();
+      let carolAddress = await tezos.signer.publicKeyHash();
 
       await context.updateActor();
       await context.tokens[0].transfer(aliceAddress, carolAddress, tokenAmount);
@@ -1400,7 +1399,7 @@ contract("RewardDestribution()", function () {
       let value = 0;
       let timeLeft =
         Date.parse(rewardInfoAfterCarolInvestment.period_finish) -
-        Date.parse((await Tezos.rpc.getBlockHeader()).timestamp) +
+        Date.parse((await tezos.rpc.getBlockHeader()).timestamp) +
         1;
       if (timeLeft > 0) {
         // transfer

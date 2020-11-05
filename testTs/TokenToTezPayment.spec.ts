@@ -1,7 +1,6 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { Tezos, TezosOperationError } from "@taquito/taquito";
 import { calculateFee } from "./contracManagers/utils";
 
 contract("TokenToTezPayment()", function () {
@@ -22,22 +21,22 @@ contract("TokenToTezPayment()", function () {
     let minTezOut = 10;
 
     let pairAddress = context.pairs[0].contract.address;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // update keys
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
     await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
     await context.updateActor("carol");
-    let carolAddress = await Tezos.signer.publicKeyHash();
+    let carolAddress = await tezos.signer.publicKeyHash();
     await context.updateActor("bob");
 
     // check initial balance
-    let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
-    let carolInitTezBalance = await Tezos.tz.getBalance(carolAddress);
+    let bobInitTezBalance = await tezos.tz.getBalance(bobAddress);
+    let carolInitTezBalance = await tezos.tz.getBalance(carolAddress);
     await context.tokens[0].updateStorage({
       ledger: [bobAddress, carolAddress],
     });
@@ -55,7 +54,7 @@ contract("TokenToTezPayment()", function () {
     let fees = calculateFee(operations, bobAddress);
 
     // checks
-    let bobFinalTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobFinalTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({
       ledger: [bobAddress, pairAddress, carolAddress],
     });
@@ -65,11 +64,11 @@ contract("TokenToTezPayment()", function () {
     let bobFinalTokenBalance = bobFinalTokenLedger
       ? bobFinalTokenLedger.balance
       : new BigNumber(0);
-    let carolFinalTezBalance = await Tezos.tz.getBalance(carolAddress);
+    let carolFinalTezBalance = await tezos.tz.getBalance(carolAddress);
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
-    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
+    let pairTezBalance = await tezos.tz.getBalance(pairAddress);
 
     // 1. tez sent to user
     // strictEqual(
@@ -116,7 +115,7 @@ contract("TokenToTezPayment()", function () {
   });
 
   it("should fail if min tez amount is too low", async function () {
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.updateActor("bob");
     let tokenAmount = 1000;
     let minTezOut = 0;
@@ -133,7 +132,7 @@ contract("TokenToTezPayment()", function () {
   });
 
   it("should fail if min tez amount is too high", async function () {
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.updateActor("bob");
     let tokenAmount = 1000;
     let minTezOut = 1000;
@@ -160,7 +159,7 @@ contract("TokenToTezPayment()", function () {
 
       // get alice address
       await context.updateActor("bob");
-      let bobAddress = await Tezos.signer.publicKeyHash();
+      let bobAddress = await tezos.signer.publicKeyHash();
       await context.updateActor();
 
       // attempt to exchange tokens
@@ -182,7 +181,7 @@ contract("TokenToTezPayment()", function () {
   }
 
   it("should fail if tokens amount is too low", async function () {
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
     await context.updateActor("bob");
     let tokenAmount = 0;
     let minTezOut = 1000;

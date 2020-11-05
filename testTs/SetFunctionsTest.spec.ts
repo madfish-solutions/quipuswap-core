@@ -1,7 +1,5 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
-import BigNumber from "bignumber.js";
-import { TezosOperationError } from "@taquito/taquito";
 
 contract("SetXFunctions()", function () {
   let context: Context;

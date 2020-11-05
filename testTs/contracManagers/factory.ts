@@ -1,9 +1,4 @@
-import {
-  Tezos,
-  TezosToolkit,
-  ContractAbstraction,
-  ContractProvider,
-} from "@taquito/taquito";
+import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { FactoryStorage } from "./types";
 import { execSync } from "child_process";
@@ -21,12 +16,12 @@ export class Factory {
   }
 
   static async init(factoryAddress: string): Promise<Factory> {
-    return new Factory(await Tezos.contract.at(factoryAddress));
+    return new Factory(await tezos.contract.at(factoryAddress));
   }
 
   async updateProvider(accountName: string): Promise<void> {
     let config = await prepareProviderOptions(accountName);
-    Tezos.setProvider(config);
+    tezos.setProvider(config);
   }
 
   wrapStorageArgument(map: string, key: any): any {
@@ -121,7 +116,7 @@ export class Factory {
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TestFactory${standard}.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
-    const operation = await Tezos.contract.transfer({
+    const operation = await tezos.contract.transfer({
       to: this.contract.address,
       amount: 0,
       parameter: {
@@ -138,7 +133,7 @@ export class Factory {
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TestFactory${standard}.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
-    const operation = await Tezos.contract.transfer({
+    const operation = await tezos.contract.transfer({
       to: this.contract.address,
       amount: 0,
       parameter: {
@@ -160,12 +155,12 @@ export class Factory {
   }
 
   async approveTokenFA2(tokenAddress: string, address: string): Promise<void> {
-    let token = await Tezos.contract.at(tokenAddress);
+    let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods
       .update_operators([
         {
           add_operator: {
-            owner: await Tezos.signer.publicKeyHash(),
+            owner: await tezos.signer.publicKeyHash(),
             operator: address,
             token_id: defaultTokenId,
           },
@@ -180,7 +175,7 @@ export class Factory {
     tokenAmount: number,
     address: string
   ): Promise<void> {
-    let token = await Tezos.contract.at(tokenAddress);
+    let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods.approve(address, tokenAmount).send();
     await operation.confirmation();
   }

@@ -87,6 +87,8 @@ Contracts are processed in the following stages:
 3. Configuration
 4. Interactions on-chain
 
+As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the intercontract communication between Dex and external tokens, the shared code base is used. There for to work with the spesific standard the version - `FA12` or `FA2` - should be configured by setting `npm_package_config_standard` in package.json
+
 ## Compilation
 
 To compile the contracts run:
@@ -106,6 +108,13 @@ npm run migrate
 ```
 
 Addresses of deployed contracts are displayed in terminal. At this stage, new MetadataStorage, Factory are originated. Aditionaly, for testnets two new pairs are deployed.
+
+For other networks:
+
+```
+npm run migrate-delphinet
+npm run migrate-carthagenet
+```
 
 # Entrypoints
 
@@ -324,7 +333,7 @@ Votes against current delegate with `value` shares of `voter`; the `value` is fr
 
 ## Token
 
-Implements [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) token interface.
+Implements [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md) token interface.
 
 # Testing
 
@@ -334,4 +343,4 @@ Truffle framework is used for testing. Run:
 npm test
 ```
 
-NOTE: if you want to use a different network, configure `$npm_package_config_network` in `package.json`. If you need to use a different standard, configure `$npm_package_config_standard` in `package.json`
+NOTE: if you want to use a different network, configure `truffle-config.js`. If you need to use a different standard, configure `$npm_package_config_standard` in `package.json`

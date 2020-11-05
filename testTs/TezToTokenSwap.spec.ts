@@ -1,7 +1,6 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { Tezos, TezosOperationError } from "@taquito/taquito";
 
 contract("TezToTokenSwap()", function () {
   let context: Context;
@@ -22,9 +21,9 @@ contract("TezToTokenSwap()", function () {
 
     // store prev balances
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     let pairAddress = context.pairs[0].contract.address;
-    let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobInitTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({ ledger: [bobAddress] });
     let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
     let bobInitTokenBalance = bobInitTokenLedger
@@ -35,7 +34,7 @@ contract("TezToTokenSwap()", function () {
     await context.pairs[0].tezToTokenSwap(minTokens, tezAmount);
 
     // checks
-    let bobFinalTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobFinalTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({
       ledger: [bobAddress, pairAddress],
     });
@@ -45,7 +44,7 @@ contract("TezToTokenSwap()", function () {
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
-    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
+    let pairTezBalance = await tezos.tz.getBalance(pairAddress);
 
     // 1. tokens sent to user
     strictEqual(

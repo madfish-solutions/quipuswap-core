@@ -1,7 +1,6 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { Tezos, TezosOperationError } from "@taquito/taquito";
 import { calculateFee } from "./contracManagers/utils";
 
 contract("TokenToTezSwap()", function () {
@@ -22,11 +21,11 @@ contract("TokenToTezSwap()", function () {
     let minTezOut = 10;
 
     let pairAddress = context.pairs[0].contract.address;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // update keys
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
@@ -34,7 +33,7 @@ contract("TokenToTezSwap()", function () {
     await context.updateActor("bob");
 
     // check initial balance
-    let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobInitTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({ ledger: [bobAddress] });
     let bobInitTokenLedger = await context.tokens[0].storage.ledger[bobAddress];
     let bobInitTokenBalance = bobInitTokenLedger
@@ -49,7 +48,7 @@ contract("TokenToTezSwap()", function () {
     let fees = calculateFee(operations, bobAddress);
 
     // checks
-    let bobFinalTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobFinalTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({
       ledger: [bobAddress, pairAddress],
     });
@@ -59,7 +58,7 @@ contract("TokenToTezSwap()", function () {
 
     let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
       .balance;
-    let pairTezBalance = await Tezos.tz.getBalance(pairAddress);
+    let pairTezBalance = await tezos.tz.getBalance(pairAddress);
 
     // 1. tez sent to user
     strictEqual(
@@ -144,7 +143,7 @@ contract("TokenToTezSwap()", function () {
       let minTezOut = 10;
 
       // get alice address
-      let aliceAddress = await Tezos.signer.publicKeyHash();
+      let aliceAddress = await tezos.signer.publicKeyHash();
 
       // attempt to exchange tokens
       await rejects(

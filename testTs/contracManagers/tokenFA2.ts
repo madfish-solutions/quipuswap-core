@@ -1,9 +1,4 @@
-import {
-  Tezos,
-  TezosToolkit,
-  ContractAbstraction,
-  ContractProvider,
-} from "@taquito/taquito";
+import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { Token } from "./token";
 import { TokenStorage } from "./types";
@@ -19,12 +14,12 @@ export class TokenFA2 implements Token {
   }
 
   static async init(tokenAddress: string): Promise<TokenFA2> {
-    return new TokenFA2(await Tezos.contract.at(tokenAddress));
+    return new TokenFA2(await tezos.contract.at(tokenAddress));
   }
 
   async updateProvider(accountName: string): Promise<void> {
     let config = await prepareProviderOptions(accountName);
-    Tezos.setProvider(config);
+    tezos.setProvider(config);
   }
 
   async updateStorage(
@@ -83,7 +78,7 @@ export class TokenFA2 implements Token {
       {
         option: "add_operator",
         param: {
-          owner: await Tezos.signer.publicKeyHash(),
+          owner: await tezos.signer.publicKeyHash(),
           operator: to,
           token_id: defaultTokenId,
         },

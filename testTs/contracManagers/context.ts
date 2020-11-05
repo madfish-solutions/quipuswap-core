@@ -1,11 +1,5 @@
 const standard = process.env.npm_package_config_standard;
 
-import {
-  Tezos,
-  TezosToolkit,
-  ContractAbstraction,
-  ContractProvider,
-} from "@taquito/taquito";
 import { Dex as DexFA12 } from "./dexFA12";
 import { Dex as DexFA2 } from "./dexFA2";
 import { Factory } from "./factory";
@@ -53,7 +47,7 @@ export class Context {
     useDeployedFactory: boolean = true
   ): Promise<Context> {
     let config = await prepareProviderOptions(accountName);
-    Tezos.setProvider(config);
+    tezos.setProvider(config);
 
     let factoryInstance = useDeployedFactory
       ? await CFactory.deployed()

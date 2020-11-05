@@ -56,3 +56,4 @@ declare interface DexContractInstance {
 }
 
 declare var artifacts: Artifacts;
+declare var tezos: any;

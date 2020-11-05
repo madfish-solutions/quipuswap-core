@@ -1,9 +1,4 @@
-import {
-  Tezos,
-  TezosToolkit,
-  ContractAbstraction,
-  ContractProvider,
-} from "@taquito/taquito";
+import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { TokenFA12 } from "./tokenFA12";
@@ -19,7 +14,7 @@ export class Dex extends TokenFA12 {
   }
 
   static async init(dexAddress: string): Promise<Dex> {
-    return new Dex(await Tezos.contract.at(dexAddress));
+    return new Dex(await tezos.contract.at(dexAddress));
   }
 
   async updateStorage(
@@ -96,7 +91,7 @@ export class Dex extends TokenFA12 {
     return await this.tezToTokenPayment(
       minTokens,
       tezAmount,
-      await Tezos.signer.publicKeyHash()
+      await tezos.signer.publicKeyHash()
     );
   }
 
@@ -123,7 +118,7 @@ export class Dex extends TokenFA12 {
     return await this.tokenToTezPayment(
       tokenAmount,
       minTezOut,
-      await Tezos.signer.publicKeyHash()
+      await tezos.signer.publicKeyHash()
     );
   }
 
@@ -135,9 +130,10 @@ export class Dex extends TokenFA12 {
     receiver: string
   ): Promise<BatchOperation[]> {
     await this.updateStorage();
-    let token = await Tezos.contract.at(this.storage.token_address);
+    let token = await tezos.contract.at(this.storage.token_address);
     const minTez = Math.floor(middleTezAmount * 0.9);
-    const batch = Tezos.batch([])
+    const batch = tezos
+      .batch([])
       .withTransfer(
         token.methods
           .approve(this.contract.address, tokenAmount)
@@ -150,7 +146,7 @@ export class Dex extends TokenFA12 {
             "tokenToTezPayment",
             tokenAmount,
             middleTezAmount ? middleTezAmount : 1,
-            await Tezos.signer.publicKeyHash()
+            await tezos.signer.publicKeyHash()
           )
           .toTransferParams()
       )
@@ -175,7 +171,7 @@ export class Dex extends TokenFA12 {
       minTokensOut,
       secondDexContract,
       middleTezAmount,
-      await Tezos.signer.publicKeyHash()
+      await tezos.signer.publicKeyHash()
     );
   }
 
@@ -234,7 +230,7 @@ export class Dex extends TokenFA12 {
   }
 
   async sendReward(amount: number): Promise<TransactionOperation> {
-    const operation = await Tezos.contract.transfer({
+    const operation = await tezos.contract.transfer({
       to: this.contract.address,
       amount: amount / tezPrecision,
     });
@@ -248,7 +244,7 @@ export class Dex extends TokenFA12 {
   ): Promise<TransactionOperation> {
     await this.updateStorage();
     let tokenAddress = this.storage.token_address;
-    let token = await Tezos.contract.at(tokenAddress);
+    let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods.approve(address, tokenAmount).send();
     await operation.confirmation();
     return operation;

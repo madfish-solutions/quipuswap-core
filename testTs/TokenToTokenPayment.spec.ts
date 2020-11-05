@@ -1,7 +1,6 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { Tezos, TezosOperationError } from "@taquito/taquito";
 import { calculateFee } from "./contracManagers/utils";
 
 contract("TokenToTokenPayment()", function () {
@@ -28,13 +27,13 @@ contract("TokenToTokenPayment()", function () {
 
     let firstDexContract = context.pairs[0].contract;
     let secondDexContract = context.pairs[1].contract;
-    let aliceAddress = await Tezos.signer.publicKeyHash();
+    let aliceAddress = await tezos.signer.publicKeyHash();
 
     // update keys
     await context.updateActor("carol");
-    let carolAddress = await Tezos.signer.publicKeyHash();
+    let carolAddress = await tezos.signer.publicKeyHash();
     await context.updateActor("bob");
-    let bobAddress = await Tezos.signer.publicKeyHash();
+    let bobAddress = await tezos.signer.publicKeyHash();
     await context.updateActor();
 
     // send tokens to bob
@@ -42,7 +41,7 @@ contract("TokenToTokenPayment()", function () {
     await context.updateActor("bob");
 
     // check initial balance
-    let bobInitTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobInitTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({ ledger: [bobAddress] });
     await context.tokens[1].updateStorage({
       ledger: [bobAddress, carolAddress],
@@ -76,7 +75,7 @@ contract("TokenToTokenPayment()", function () {
     );
 
     // checks
-    let bobFinalTezBalance = await Tezos.tz.getBalance(bobAddress);
+    let bobFinalTezBalance = await tezos.tz.getBalance(bobAddress);
     await context.tokens[0].updateStorage({
       ledger: [bobAddress, firstDexContract.address],
     });
@@ -100,13 +99,13 @@ contract("TokenToTokenPayment()", function () {
     let firstPairTokenBalance = await context.tokens[0].storage.ledger[
       firstDexContract.address
     ].balance;
-    let firstPairTezBalance = await Tezos.tz.getBalance(
+    let firstPairTezBalance = await tezos.tz.getBalance(
       firstDexContract.address
     );
     let secondPairTokenBalance = await context.tokens[1].storage.ledger[
       secondDexContract.address
     ].balance;
-    let secondPairTezBalance = await Tezos.tz.getBalance(
+    let secondPairTezBalance = await tezos.tz.getBalance(
       secondDexContract.address
     );
 
