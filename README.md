@@ -2,7 +2,7 @@
 
 This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens to exchange, provide liquidity, and potentially make a profit in a fully decentralized way.
 
-The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
+The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md).
 
 # Architecture
 
@@ -13,6 +13,7 @@ The solution consists of 3 types of contracts:
 1. `Factory` - singleton used to deploy new exchange pair;
 2. `Dex` - contract for TokenX-XTZ pair exchanges;
 3. `Token` - FA token implementation.
+4. `MetadataStorage` - contract to store and upgrade the shares token metadata.
 
 # Project structure
 
@@ -124,30 +125,37 @@ The Ligo interfaces of the contracts can be found in `contracts/partials/I__CONT
 
 Factory contains the code template for the `Dex` Token-XTZ pair contracts, deploys them and keeps the list of deployed pairs. The functions for `Dex` are stored in `Factory` contract but because of gas and operation limits their code cannot be stored in Factory contract during the origination: they are added separately one by one.
 
-New exchange pairs are registered and deployed via `LaunchExchange`.
+New exchange pairs are registered and deployed via `LaunchExchange`. The only difference between factory standards is the token identifier type, for F1.2 it is the token address and for FA2 it is the address the token id:
+
+```
+#if FA2_STANDARD_ENABLED
+type token_identifier is (address * nat)
+#else
+type token_identifier is address
+#endif
+```
 
 The contract has the following entrypoints:
 
 ```
-type launchExchangeParams is record [
-  token         : address;
-  tokenAmount   : nat;
+type launch_exchange_params is record [
+  token          : token_identifier;
+  token_amount   : nat;
 ]
 
-type setTokenFunctionParams is record [
-  func    : tokenFunc;
+type set_token_function_params is record [
+  func    : token_func;
+  index   : nat;
+]
+type set_dex_function_params is record [
+  func    : dex_func;
   index   : nat;
 ]
 
-type setDexFunctionParams is record [
-  func    : dexFunc;
-  index   : nat;
-]
-
-type exchangeAction is
-| LaunchExchange of launchExchangeParams
-| SetDexFunction of setDexFunctionParams
-| SetTokenFunction of setTokenFunctionParams
+type exchange_action is
+| LaunchExchange        of launch_exchange_params
+| SetDexFunction        of set_dex_function_params
+| SetTokenFunction      of set_token_function_params
 ```
 
 ### SetDexFunction
@@ -174,81 +182,108 @@ Each `index` is designed for a specific `func` which functionality is described 
 
 Deploys a new empty `Dex` for `token`, stores the address of the new contract, and puts initial liquidity; has to be called with XTZ amount that will be used as initial liquidity.
 
-`token` : address of the paired token;
+`token` : address(address and token id for FA2) of the paired token;
 
-`tokenAmount` : amount of tokens that will be withdrawn from the user account and used as initial liquidity.
+`token_amount` : amount of tokens that will be withdrawn from the user account and used as initial liquidity.
 
-`tezAmount`(not an argument) : the XTZ for initial liquidity should be sent along with the launch transaction.
+`tez_amount`(not an argument) : the XTZ for initial liquidity should be sent along with the launch transaction.
 
 ## Dex
 
-`Dex` fully implements FA1.2 token interface. For more details check the [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md). And the extends it with other exchange-related methods.
+`Dex` fully implements FA1.2/FA2 token interface. For more details check the this [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and this [spec](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md). And the extends it with other exchange-related methods.
 
-The contract has the following entrypoints:
+The contract has the following entrypoints common for both standards:
 
 ```
 
-type tezToTokenPaymentParams is record [
+type tez_to_token_payment_params is record [
   amount    : nat;
   receiver  : address;
 ]
 
-type tokenToTezPaymentParams is record [
-  amount      : nat;
-  minOut      : nat;
-  receiver    : address;
+type token_to_tez_payment_params is record [
+  amount       : nat;
+  min_out      : nat;
+  receiver     : address;
 ]
 
-type divestLiquidityParams is record [
-  minTez      : nat;
-  minTokens   : nat;
-  shares      : nat;
+type divest_liquidity_params is record [
+  min_tez      : nat;
+  min_tokens   : nat;
+  shares       : nat;
 ]
 
-type voteParams is record [
+type vote_params is record [
   candidate   : key_hash;
   value       : nat;
   voter       : address;
 ]
 
-type vetoParams is record [
+type veto_params is record [
   value       : nat;
   voter       : address;
 ]
 
-type dexAction is
-| InitializeExchange of (nat)
-| TezToTokenPayment of tezToTokenPaymentParams
-| TokenToTezPayment of tokenToTezPaymentParams
-| InvestLiquidity of (nat)
-| DivestLiquidity of divestLiquidityParams
-| Vote of voteParams
-| Veto of vetoParams
-| WithdrawProfit of (address)
+type dex_action is
+| InitializeExchange      of (nat)
+| TezToTokenPayment       of tez_to_token_payment_params
+| TokenToTezPayment       of token_to_tez_payment_params
+| InvestLiquidity         of (nat)
+| DivestLiquidity         of divest_liquidity_params
+| Vote                    of vote_params
+| Veto                    of veto_params
+| WithdrawProfit          of (address)
 
-type defaultParams is unit
-type useParams is (nat * dexAction)
-type transferParams is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
-type approveParams is michelson_pair(address, "spender", nat, "value")
-type balanceParams is michelson_pair(address, "owner", contract(nat), "")
-type allowanceParams is michelson_pair(michelson_pair(address, "owner", address, "spender"), "", contract(nat), "")
-type totalSupplyParams is (unit * contract(nat))
+type default_params is unit
+type use_params is (nat * dex_action)
+```
 
-type tokenAction is
-| ITransfer of transferParams
-| IApprove of approveParams
-| IGetBalance of balanceParams
-| IGetAllowance of allowanceParams
-| IGetTotalSupply of totalSupplyParams
+For FA1.2 standard compatibility the following entrypoints are implemented:
 
-type fullAction is
-| Use of useParams
-| Default of defaultParams
-| Transfer of transferParams
-| Approve of approveParams
-| GetBalance of balanceParams
-| GetAllowance of allowanceParams
-| GetTotalSupply of totalSupplyParams
+```
+type transfer_params is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
+type approve_params is michelson_pair(address, "spender", nat, "value")
+type balance_params is michelson_pair(address, "owner", contract(nat), "")
+type allowance_params is michelson_pair(michelson_pair(address, "owner", address, "spender"), "", contract(nat), "")
+type total_supply_params is (unit * contract(nat))
+
+type token_action is
+| ITransfer             of transfer_params
+| IApprove              of approve_params
+| IGetBalance           of balance_params
+| IGetAllowance         of allowance_params
+| IGetTotalSupply       of total_supply_params
+
+type full_action is
+| Use                   of use_params
+| Default               of default_params
+| Transfer              of transfer_params
+| Approve               of approve_params
+| GetBalance            of balance_params
+| GetAllowance          of allowance_params
+| GetTotalSupply        of total_supply_params
+```
+
+For FA2 standard compatibility the following entrypoints are implemented:
+
+```
+type transfer_params is list (transfer_param)
+type token_metadata_registry_params is contract (address)
+type update_operator_params is list (update_operator_param)
+
+type token_action is
+| ITransfer                of transfer_params
+| IBalance_of              of balance_params
+| IToken_metadata_registry of token_metadata_registry_params
+| IUpdate_operators        of update_operator_params
+
+type full_action is
+| Use                     of use_params
+| Default                 of default_params
+| Transfer                of transfer_params
+| Balance_of              of balance_params
+| Token_metadata_registry of token_metadata_registry_params
+| Update_operators        of update_operator_params
 ```
 
 ### Default (index 8)
@@ -333,7 +368,7 @@ Votes against current delegate with `value` shares of `voter`; the `value` is fr
 
 ## Token
 
-Implements [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md) token interface.
+Implements [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) or [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md) token interface.
 
 # Testing
 

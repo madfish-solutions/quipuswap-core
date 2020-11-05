@@ -2,7 +2,7 @@ import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 
-contract.only("DivestLiquidity()", function () {
+contract("DivestLiquidity()", function () {
   let context: Context;
 
   before(async () => {
