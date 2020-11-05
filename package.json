@@ -3,15 +3,11 @@
   "version": "0.0.1",
   "config": {
     "network": "http://127.0.0.1:8732",
-    "standard": "FA2",
+    "standard": "FA12",
     "default": {
       "key": "../../scripts/sandbox/accounts",
       "storagedir": "./storage",
-      "inputdir": "./build",
-      "pool": {
-        "tez": "1.0",
-        "token": "1000"
-      }
+      "inputdir": "./build"
     }
   },
   "scripts": {
@@ -19,6 +15,7 @@
     "migrate": "npm run clean && truffle migrate",
     "migrate-carthagenet": "truffle migrate --network carthagenet",
     "migrate-delphinet": "truffle migrate --network delphinet",
+    "migrate-delphinet-reset": "truffle migrate --network delphinet --reset",
     "compile-dex": "node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts",
     "compile": "npm run clean && node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",

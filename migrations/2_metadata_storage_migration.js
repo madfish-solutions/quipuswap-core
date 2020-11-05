@@ -14,11 +14,11 @@ module.exports = async (deployer, network, accounts) => {
   const fileName = `./build/contracts/${prefix}Factory${standard}.json`;
   let rawdata = fs.readFileSync(fileName);
   let factory = JSON.parse(rawdata);
-  console.log(factory);
   factory.michelson = factory.michelson.replace(
     "7b7d",
     Buffer(metadataStorageInstance.address.toString(), "ascii").toString("hex")
   );
   let data = JSON.stringify(factory);
   fs.writeFileSync(fileName, data);
+  console.log(`MetadataStorage address: ${metadataStorageInstance.address}`);
 };

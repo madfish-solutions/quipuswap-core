@@ -1,6 +1,6 @@
 # Description
 
-This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens to exchange, invest liquidity, and potentially make a profit in a fully decentralized way.
+This project is intended to provide an easy and efficient way to exchange tokens and XTZ on Tezos blockchain in a wide number of directions. Using smart contracts listed in this repo users can add their tokens to exchange, provide liquidity, and potentially make a profit in a fully decentralized way.
 
 The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-7.md) and [FA2](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-7/tzip-12.md).
 
@@ -18,7 +18,9 @@ The solution consists of 3 types of contracts:
 
 ```
 .
-├──  contracts/ # contract sources for FA1.2 compatible version
+├──  contracts/ # contracts
+|──────── main/ # the contracts to be compiled
+|──────── partial/ # the code parts imported by main contracs
 ├──  testTs/ # test cases
 ├──  storage/ # initial storage for contract origination
 ├──  scripts/ # cli for dex/factory actions
@@ -59,6 +61,23 @@ cd quipuswap-core && npm i
 
 - Configure `truffle-config.js` if [needed](https://www.trufflesuite.com/docs/tezos/truffle/reference/configuring-tezos-projects).
 
+# Quick Start
+
+To compile and deploy contracts to Delphinet
+
+1. Chose configure the version - `FA12` or `FA2` - by setting `npm_package_config_standard` in package.json and run:
+
+```
+npm run migrate-delphinet
+```
+
+For other networks:
+
+```
+npm run migrate # development
+npm run migrate-carthagenet # carthagenet
+```
+
 # Usage
 
 Contracts are processed in the following stages:
@@ -86,11 +105,11 @@ For deployment step the following command should be used:
 npm run migrate
 ```
 
-Addresses of deployed contracts are displayed in terminal. At this stage, new Factory, two new pairs are originated.
+Addresses of deployed contracts are displayed in terminal. At this stage, new MetadataStorage, Factory are originated. Aditionaly, for testnets two new pairs are deployed.
 
 # Entrypoints
 
-The Ligo interfaces of the contracts can be found in `contracts/partials`
+The Ligo interfaces of the contracts can be found in `contracts/partials/I__CONTRACT_NAME__.ligo`
 
 ## Factory
 
@@ -315,4 +334,4 @@ Truffle framework is used for testing. Run:
 npm test
 ```
 
-NOTE: if you want to use a different network, configure `$npm_package_config_network` in `package.json`
+NOTE: if you want to use a different network, configure `$npm_package_config_network` in `package.json`. If you need to use a different standard, configure `$npm_package_config_standard` in `package.json`
