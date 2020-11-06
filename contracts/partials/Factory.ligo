@@ -301,7 +301,7 @@ function veto (const p : dex_action; const s : dex_storage; const this: address)
             account.frozen_balance := abs(account.frozen_balance - voter_info.veto + args.value);
             s.ledger[args.voter] := account;
 
-            if s.last_veto > voter_info.last_veto then 
+            if s.last_veto >= voter_info.last_veto then 
               voter_info.veto := 0n
             else skip;
             
