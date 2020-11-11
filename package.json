@@ -2,7 +2,7 @@
   "name": "quipuswap",
   "version": "0.0.1",
   "config": {
-    "standard": "FA2"
+    "standard": "FA12"
   },
   "scripts": {
     "clean": "rm -rf ./build",
@@ -29,7 +29,6 @@
     "test": "./test"
   },
   "devDependencies": {
-    "ganache-cli": "^6.10.0-tezos.1",
     "@types/chai": "^4.2.13",
     "@types/mocha": "^8.0.3",
     "chai": "^4.2.0",

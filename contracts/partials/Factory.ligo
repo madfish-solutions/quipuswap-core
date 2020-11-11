@@ -235,15 +235,16 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
             account.frozen_balance := abs(account.frozen_balance - voter_info.vote + args.value);
             s.ledger[args.voter] := account;
             s.total_votes := abs(s.total_votes + args.value - voter_info.vote);
-            voter_info.candidate := Some(args.candidate);
+            if args.value = 0n then voter_info.candidate := (None : option(key_hash))
+            else voter_info.candidate := Some(args.candidate);
             voter_info.vote := args.value;
             s.voters[args.voter] := voter_info;
 
             const new_votes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + args.value;
             s.votes[args.candidate] := new_votes;
-            if case s.current_candidate of None -> True 
+            if args.value =/= 0n and (case s.current_candidate of None -> True 
               | Some(candidate) -> (case s.votes[candidate] of None -> 0n | Some(v) -> v end) < new_votes
-              end then if case s.current_delegated of
+              end) then if case s.current_delegated of
                 | None -> True
                 | Some(current) -> (case s.votes[current] of None -> 0n | Some(v) -> v end) < new_votes
               end then {

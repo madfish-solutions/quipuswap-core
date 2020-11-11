@@ -3,7 +3,7 @@ type update_owner_type is record [
     owner : address;
     add : bool;
 ]
-type metadata_type is map (string, bytes)
+type metadata_type is big_map (string, bytes)
 
 type storage is record [
     metadata : metadata_type;
