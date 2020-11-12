@@ -415,7 +415,7 @@ contract("Vote()", function () {
     // 2. voter info updated
     strictEqual(
       aliceFinalVoteInfo.candidate,
-      delegate,
+      null,
       "User candidate wasn't updated"
     );
     strictEqual(
