@@ -14,7 +14,8 @@
     "compile": "npm run clean && node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",
     "test": "tsc  && npm run clean && npm run compile && truffle test",
-    "test:quick": "tsc && truffle test"
+    "test:quick": "tsc && truffle test",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@taquito/taquito": "^6.3.4-beta.0",
@@ -22,8 +23,9 @@
     "commander": "^5.1.0",
     "dotenv": "^8.2.0",
     "ganache-cli": "^6.10.0-tezos.1",
-    "typescript": "^4.0.3",
-    "truffle": "^5.5.0-tezos.4"
+    "patch-package": "^6.2.2",
+    "truffle": "^5.5.0-tezos.4",
+    "typescript": "^4.0.3"
   },
   "directories": {
     "test": "./test"
