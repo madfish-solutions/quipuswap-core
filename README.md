@@ -21,7 +21,7 @@ The solution consists of 3 types of contracts:
 .
 ├──  contracts/ # contracts
 |──────── main/ # the contracts to be compiled
-|──────── partial/ # the code parts imported by main contracs
+|──────── partial/ # the code parts imported by main contracts
 ├──  testTs/ # test cases
 ├──  storage/ # initial storage for contract origination
 ├──  scripts/ # cli for dex/factory actions
@@ -34,19 +34,8 @@ The solution consists of 3 types of contracts:
 # Prerequisites
 
 - Installed NodeJS (tested with NodeJS v12+)
-- Installed Truffle:
+- Installed Yarn (NPM isn't working properly with `ganache-cli@6.11.0-tezos.0`)
 
-```
-npm install -g truffle@tezos
-
-```
-
-- Installed ganache-cli:
-
-```
-npm install -g ganache-cli@tezos
-
-```
 
 - Installed Ligo:
 
@@ -57,7 +46,7 @@ curl https://gitlab.com/ligolang/ligo/raw/dev/scripts/installer.sh | bash -s "ne
 - Installed node modules:
 
 ```
-cd quipuswap-core && npm i
+cd quipuswap-core && yarn
 ```
 
 - Configure `truffle-config.js` if [needed](https://www.trufflesuite.com/docs/tezos/truffle/reference/configuring-tezos-projects).
@@ -69,14 +58,14 @@ To compile and deploy contracts to Delphinet
 1. Chose configure the version - `FA12` or `FA2` - by setting `npm_package_config_standard` in package.json and run:
 
 ```
-npm run migrate-delphinet
+yarn run migrate-delphinet
 ```
 
 For other networks:
 
 ```
-npm run migrate # development
-npm run migrate-carthagenet # carthagenet
+yarn run migrate # development
+yarn run migrate-carthagenet # carthagenet
 ```
 
 # Usage
@@ -95,7 +84,7 @@ As the Quipuswap supports 2 token standards that vary only in the token interfac
 To compile the contracts run:
 
 ```
-npm run compile
+yarn run compile
 ```
 
 Artifacts are stored in the `build/contracts` directory.
@@ -105,7 +94,7 @@ Artifacts are stored in the `build/contracts` directory.
 For deployment step the following command should be used:
 
 ```
-npm run migrate
+yarn run migrate
 ```
 
 Addresses of deployed contracts are displayed in terminal. At this stage, new MetadataStorage, Factory are originated. Aditionaly, for testnets two new pairs are deployed.
@@ -113,8 +102,8 @@ Addresses of deployed contracts are displayed in terminal. At this stage, new Me
 For other networks:
 
 ```
-npm run migrate-delphinet
-npm run migrate-carthagenet
+yarn run migrate-delphinet
+yarn run migrate-carthagenet
 ```
 
 # Entrypoints
@@ -396,11 +385,14 @@ type storage_action is
 ```
 
 # Testing
+If you'd like to run tests on the local environment, you might want to run `ganache-cli` for Tezos using the following command:
+```
+yarn start-sandbox
+```
 
 Truffle framework is used for testing. Run:
-
 ```
-npm test
+yarn test
 ```
 
 NOTE: if you want to use a different network, configure `truffle-config.js`. If you need to use a different standard, configure `$npm_package_config_standard` in `package.json`
