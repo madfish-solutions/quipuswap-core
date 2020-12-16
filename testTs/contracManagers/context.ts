@@ -49,11 +49,19 @@ export class Context {
     let config = await prepareProviderOptions(accountName);
     tezos.setProvider(config);
 
+    const currentBlock = await tezos.rpc.getBlock();
     let factoryInstance = useDeployedFactory
       ? await CFactory.deployed()
-      : await CFactory.new(factoryStorage);
+      : await CFactory.new(
+          factoryStorage,
+          currentBlock.protocol.startsWith("PsDELPH1")
+            ? {
+                gas: 490000,
+                fee: 10000000,
+              }
+            : {}
+        );
     let factory = await Factory.init(factoryInstance.address.toString());
-
     let context = new Context(factory, [], []);
     if (setFactoryFunctions) {
       await context.setAllFactoryFunctions();
