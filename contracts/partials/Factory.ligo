@@ -384,16 +384,16 @@ function token_to_tez (const p : dex_action; const s : dex_storage; const this :
             s.tez_pool := new_tez_pool;
             s.invariant := new_tez_pool * s.token_pool;
           } else failwith("Dex/high-min-tez-out");
+          operations := list [transaction(
+              wrap_transfer_trx(Tezos.sender, this, args.amount, s), 
+              0mutez, 
+              get_token_contract(s.token_address)); 
+            transaction(
+              unit, 
+              tez_out * 1mutez, 
+              (get_contract(args.receiver) : contract(unit)));
+          ];
         } else failwith("Dex/wrong-params");
-        operations := list [transaction(
-            wrap_transfer_trx(Tezos.sender, this, args.amount, s), 
-            0mutez, 
-            get_token_contract(s.token_address)); 
-          transaction(
-            unit, 
-            args.min_out * 1mutez, 
-            (get_contract(args.receiver) : contract(unit)));
-        ];
       }
       | InvestLiquidity(n) -> failwith("04")
       | DivestLiquidity(n) -> failwith("04")
