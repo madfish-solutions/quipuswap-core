@@ -99,7 +99,7 @@ type dex_action is
 | WithdrawProfit          of (address)
 
 type default_params is unit
-type use_params is (nat * dex_action)
+type use_params is dex_action
 
 #if FA2_STANDARD_ENABLED
 #include "./ActionFA2.ligo"

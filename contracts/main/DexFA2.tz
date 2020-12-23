@@ -11,16 +11,15 @@
         (or (list %update_operators
                (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
                    (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))
-            (pair %use
-               nat
-               (or (or (or (pair %divestLiquidity (pair (nat %min_tez) (nat %min_tokens)) (nat %shares))
-                           (nat %initializeExchange))
-                       (or (nat %investLiquidity)
-                           (pair %tezToTokenPayment (nat %amount) (address %receiver))))
-                   (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %min_out)) (address %receiver))
-                           (pair %veto (nat %value) (address %voter)))
-                       (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
-                           (address %withdrawProfit))))))) ;
+            (or %use
+               (or (or (pair %divestLiquidity (pair (nat %min_tez) (nat %min_tokens)) (nat %shares))
+                       (nat %initializeExchange))
+                   (or (nat %investLiquidity)
+                       (pair %tezToTokenPayment (nat %amount) (address %receiver))))
+               (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %min_out)) (address %receiver))
+                       (pair %veto (nat %value) (address %voter)))
+                   (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
+                       (address %withdrawProfit)))))) ;
   storage
     (pair (pair (big_map %dex_lambdas
                    nat
@@ -175,10 +174,11 @@
                                   (big_map %votes key_hash nat))))))) ;
   code { DUP ;
          CDR ;
+         SWAP ;
+         CAR ;
          SELF ;
          ADDRESS ;
-         DIG 2 ;
-         CAR ;
+         SWAP ;
          IF_LEFT
            { IF_LEFT
                { IF_LEFT
@@ -189,38 +189,21 @@
                      LEFT (contract address) ;
                      LEFT (or (list (pair address (list (pair address (pair nat nat)))))
                               (list (or (pair address (pair address nat)) (pair address (pair address nat))))) ;
-                     PAIR ;
-                     PAIR ;
-                     DUP ;
-                     CDR ;
-                     CDR ;
-                     DUP ;
-                     CDR ;
-                     CDR ;
                      DIG 2 ;
                      DUP ;
-                     DUG 3 ;
                      CDR ;
+                     SWAP ;
                      CAR ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     CDR ;
+                     SWAP ;
                      GET ;
                      IF_NONE
-                       { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
-                       { DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CAR ;
-                         CDR ;
-                         DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CDR ;
-                         CAR ;
-                         DIG 4 ;
-                         CAR ;
-                         CAR ;
-                         PAIR ;
-                         PAIR ;
-                         EXEC } ;
+                       { SWAP ; DROP ; SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                       { DIG 3 ; DIG 2 ; DUP ; DUG 3 ; CDR ; CAR ; DIG 4 ; PAIR ; PAIR ; EXEC } ;
                      SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -284,38 +267,21 @@
                      RIGHT (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))) ;
                      LEFT (or (list (pair address (list (pair address (pair nat nat)))))
                               (list (or (pair address (pair address nat)) (pair address (pair address nat))))) ;
-                     PAIR ;
-                     PAIR ;
-                     DUP ;
-                     CDR ;
-                     CDR ;
-                     DUP ;
-                     CDR ;
-                     CDR ;
                      DIG 2 ;
                      DUP ;
-                     DUG 3 ;
                      CDR ;
+                     SWAP ;
                      CAR ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     CDR ;
+                     SWAP ;
                      GET ;
                      IF_NONE
-                       { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
-                       { DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CAR ;
-                         CDR ;
-                         DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CDR ;
-                         CAR ;
-                         DIG 4 ;
-                         CAR ;
-                         CAR ;
-                         PAIR ;
-                         PAIR ;
-                         EXEC } ;
+                       { SWAP ; DROP ; SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                       { DIG 3 ; DIG 2 ; DUP ; DUG 3 ; CDR ; CAR ; DIG 4 ; PAIR ; PAIR ; EXEC } ;
                      SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -340,38 +306,21 @@
                      RIGHT
                        (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
                            (contract address)) ;
-                     PAIR ;
-                     PAIR ;
-                     DUP ;
-                     CDR ;
-                     CDR ;
-                     DUP ;
-                     CDR ;
-                     CDR ;
                      DIG 2 ;
                      DUP ;
-                     DUG 3 ;
                      CDR ;
+                     SWAP ;
                      CAR ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     CDR ;
+                     SWAP ;
                      GET ;
                      IF_NONE
-                       { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
-                       { DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CAR ;
-                         CDR ;
-                         DIG 2 ;
-                         DUP ;
-                         DUG 3 ;
-                         CDR ;
-                         CAR ;
-                         DIG 4 ;
-                         CAR ;
-                         CAR ;
-                         PAIR ;
-                         PAIR ;
-                         EXEC } ;
+                       { SWAP ; DROP ; SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                       { DIG 3 ; DIG 2 ; DUP ; DUG 3 ; CDR ; CAR ; DIG 4 ; PAIR ; PAIR ; EXEC } ;
                      SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -397,38 +346,21 @@
                  RIGHT
                    (or (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat))))
                        (contract address)) ;
-                 PAIR ;
-                 PAIR ;
-                 DUP ;
-                 CDR ;
-                 CDR ;
-                 DUP ;
-                 CDR ;
-                 CDR ;
                  DIG 2 ;
                  DUP ;
-                 DUG 3 ;
                  CDR ;
+                 SWAP ;
                  CAR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 CDR ;
+                 SWAP ;
                  GET ;
                  IF_NONE
-                   { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
-                   { DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     CAR ;
-                     CDR ;
-                     DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     CDR ;
-                     CAR ;
-                     DIG 4 ;
-                     CAR ;
-                     CAR ;
-                     PAIR ;
-                     PAIR ;
-                     EXEC } ;
+                   { SWAP ; DROP ; SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                   { DIG 3 ; DIG 2 ; DUP ; DUG 3 ; CDR ; CAR ; DIG 4 ; PAIR ; PAIR ; EXEC } ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -446,45 +378,24 @@
                  CAR ;
                  PAIR }
                { DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CAR ;
+                 CAR ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
-                 CAR ;
-                 PAIR ;
-                 DUG 2 ;
-                 CDR ;
-                 PAIR ;
-                 PAIR ;
-                 DUP ;
-                 CDR ;
-                 CDR ;
-                 DUP ;
-                 CAR ;
-                 CAR ;
-                 DIG 2 ;
-                 DUP ;
-                 DUG 3 ;
-                 CDR ;
-                 CAR ;
+                 IF_LEFT
+                   { IF_LEFT
+                       { IF_LEFT { DROP ; PUSH nat 5 } { DROP ; PUSH nat 0 } }
+                       { IF_LEFT { DROP ; PUSH nat 4 } { DROP ; PUSH nat 1 } } }
+                   { IF_LEFT
+                       { IF_LEFT { DROP ; PUSH nat 2 } { DROP ; PUSH nat 7 } }
+                       { IF_LEFT { DROP ; PUSH nat 6 } { DROP ; PUSH nat 3 } } } ;
                  GET ;
                  IF_NONE
-                   { SWAP ; DROP ; PUSH string "Dex/function-not-set" ; FAILWITH }
-                   { DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     CAR ;
-                     CDR ;
-                     DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     CDR ;
-                     CAR ;
-                     DIG 4 ;
-                     CAR ;
-                     CAR ;
-                     PAIR ;
-                     PAIR ;
-                     EXEC } ;
+                   { DROP 2 ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                   { DIG 2 ; DIG 3 ; DUP ; DUG 4 ; CDR ; CAR ; DIG 3 ; PAIR ; PAIR ; EXEC } ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;

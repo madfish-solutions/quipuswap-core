@@ -1,7 +1,17 @@
 #include "./IDex.ligo"
 
-[@inline] function middle_dex (const p : dex_action; const this : address; const idx : nat; const s : full_dex_storage) :  full_return is
+[@inline] function middle_dex (const p : dex_action; const this : address; const s : full_dex_storage) :  full_return is
 block {
+    const idx : nat = case p of
+      | InitializeExchange(n) -> 0n
+      | TezToTokenPayment(n) -> 1n
+      | TokenToTezPayment(n) -> 2n
+      | InvestLiquidity(n) -> 4n
+      | DivestLiquidity(n) -> 5n
+      | Vote(n) -> 6n
+      | Veto(voter) -> 7n
+      | WithdrawProfit(receiver) -> 3n
+    end;
   const res : return = case s.dex_lambdas[idx] of 
     Some(f) -> f(p, s.storage, this) 
     | None -> (failwith("Dex/function-not-set") : return) 
