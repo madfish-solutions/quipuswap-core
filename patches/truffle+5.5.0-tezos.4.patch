@@ -1,0 +1,31 @@
+diff --git a/node_modules/truffle/build/cli.bundled.js b/node_modules/truffle/build/cli.bundled.js
+index a84a254..a57e95c 100755
+--- a/node_modules/truffle/build/cli.bundled.js
++++ b/node_modules/truffle/build/cli.bundled.js
+@@ -209261,7 +209261,7 @@ var contract_sources_1 = __importDefault(__webpack_require__(111));
+ var profiler_1 = __importDefault(__webpack_require__(151));
+ var compiler = {
+     name: "ligo",
+-    version: "next"
++    version: "0.4.0"
+ };
+ var LIGO_PATTERN = "**/*.{ligo,mligo,religo}";
+ var compile = {};
+@@ -209312,7 +209312,7 @@ compile.display = function (paths, _a, entryPoint) {
+ // -------- End of common with truffle-compile --------
+ // Check that ligo is available
+ function checkLigo(callback) {
+-    child_process_1.exec("docker run --rm -i ligolang/ligo:next --help", function (err, stdout, stderr) {
++    child_process_1.exec("docker run --rm -i ligolang/ligo:0.4.0 --help", function (err, stdout, stderr) {
+         if (err)
+             return callback(colors_1.default.red("Error executing ligo:") + "\n" + stderr);
+         callback(null);
+@@ -209343,7 +209343,7 @@ function execLigo(sourcePath, entryPoint) {
+             currentWorkingDirectory + ":/project",
+             "--rm",
+             "-i",
+-            "ligolang/ligo:next",
++            "ligolang/ligo:0.4.0",
+             "compile-contract",
+             "--michelson-format=json",
+             fullInternalSourcePath,
