@@ -62,9 +62,10 @@ export class Dex extends TokenFA12 {
   }
   async initializeExchange(
     tokenAmount: number,
-    tezAmount: number
+    tezAmount: number,
+    approve: boolean = true
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
+    if (approve) await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use("initializeExchange", tokenAmount)
       .send({ amount: tezAmount / tezPrecision });

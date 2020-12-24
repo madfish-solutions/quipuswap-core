@@ -68,6 +68,7 @@ export class Context {
     }
 
     await context.createPairs(pairsConfigs);
+
     return context;
   }
 
@@ -98,6 +99,13 @@ export class Context {
     }
     await this.factory.updateStorage({
       dex_lambdas: [...Array(9).keys()],
+    });
+  }
+
+  async setDexFactoryFunction(index: number, name: string): Promise<void> {
+    await this.factory.setDexFunction(index, name);
+    await this.factory.updateStorage({
+      dex_lambdas: [index],
     });
   }
 

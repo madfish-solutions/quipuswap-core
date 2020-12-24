@@ -29,11 +29,13 @@ function getLigo(isDockerizedLigo) {
 }
 
 module.exports = async (deployer, network, accounts) => {
+  if (network === "development") return;
+
   if (network === "development") {
     Factory = TestFactory;
     prefix = "Test";
   }
-  
+
   await deployer.deploy(Factory, factoryStorage, {
     gas: 490000,
     fee: 10000000,
