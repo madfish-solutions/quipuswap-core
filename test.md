@@ -41,7 +41,7 @@ Scenario 2: Test initialize after liquidity withdrawn when
 3. Minimal shares are specified by the user.
 4. The rewards for the previous period if any should be distributed.
 5. The rewards to the user if any should be distributed.
-6. The rewards should be withdrawn.
+6. The tokens should be withdrawn from user.
 7. Prices are calculated as :
 
 ```
@@ -56,8 +56,8 @@ Verification Steps: Verify the investment fails if the pool isn't launched.
 
 Scenario 1: Test the investment
 
-- [ ] with provided liquidity
-- [ ] without provided liquidity
+- [x] without provided liquidity
+- [x] with provided liquidity
 
 Scope: Test various min shared.
 Action: Invoke the InvestLiquidity entrypoint.
@@ -66,8 +66,23 @@ Verification Steps: Verify the investment fails if the the min shares are in the
 
 Scenario 1: Test the investment with minimal shares of
 
-- [ ] 0
-- [ ] 1
-- [ ] enough
-- [ ] exact
-- [ ] too many
+- [x] 0
+- [x] 1
+- [x] enough
+- [x] exact
+- [x] too many
+
+Scenario 2: Test purchased shares
+
+- [x] 0
+- [x] > 0
+
+Scope: Test the user's reward distribution.
+Action: Invoke the InvestLiquidity entrypoint.
+Test Notes and Preconditions: The exchange should be launched before.
+Verification Steps: Verify the investment fails if the the min shares are in the range.
+
+Scenario 1: Test user rewards distribution of
+
+- [ ] no reward.
+- [ ] reward is accomulated.

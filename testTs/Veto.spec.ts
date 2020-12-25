@@ -817,7 +817,7 @@ contract("Veto()", function () {
     strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
   });
 
-  it("should fail veto without shares", async function () {
+  it("should revert veto without shares", async function () {
     this.timeout(5000000);
     // reset pairs
     await context.flushPairs();
@@ -835,11 +835,11 @@ contract("Veto()", function () {
         strictEqual(err.message, "Dex/no-shares", "Error message mismatch");
         return true;
       },
-      "Veto should fail"
+      "Veto should revert"
     );
   });
 
-  it("should fail veto without enough shares", async function () {
+  it("should revert veto without enough shares", async function () {
     this.timeout(5000000);
     // reset pairs
     await context.flushPairs();
@@ -881,11 +881,11 @@ contract("Veto()", function () {
         );
         return true;
       },
-      "Vote should fail"
+      "Vote should revert"
     );
   });
 
-  it("should fail veto without allowance", async function () {
+  it("should revert veto without allowance", async function () {
     this.timeout(5000000);
     // reset pairs
     await context.flushPairs();
@@ -907,7 +907,7 @@ contract("Veto()", function () {
         );
         return true;
       },
-      "Vote should fail"
+      "Vote should revert"
     );
   });
 });

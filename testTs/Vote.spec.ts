@@ -742,7 +742,7 @@ contract("Vote()", function () {
     );
   });
 
-  it("should fail voting without shares", async function () {
+  it("should revert voting without shares", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -762,13 +762,13 @@ contract("Vote()", function () {
         strictEqual(err.message, "Dex/no-shares", "Error message mismatch");
         return true;
       },
-      "Vote should fail"
+      "Vote should revert"
     );
   });
 
-  it("should fail voting for veto candidate", async function () {});
+  it("should revert voting for veto candidate", async function () {});
 
-  it("should fail voting with shares exeeded liquid balance", async function () {
+  it("should revert voting with shares exeeded liquid balance", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -790,11 +790,11 @@ contract("Vote()", function () {
         );
         return true;
       },
-      "Vote should fail"
+      "Vote should revert"
     );
   });
 
-  it("should fail voting with shares exeeded liquid & frozen balance", async function () {
+  it("should revert voting with shares exeeded liquid & frozen balance", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -819,11 +819,11 @@ contract("Vote()", function () {
         );
         return true;
       },
-      "Vote should fail"
+      "Vote should revert"
     );
   });
 
-  it("should fail voting with low allowance", async function () {
+  it("should revert voting with low allowance", async function () {
     // reset pairs
     await context.flushPairs();
     await context.createPairs();
@@ -846,7 +846,7 @@ contract("Vote()", function () {
         );
         return true;
       },
-      "Vote should fail"
+      "Vote should revert"
     );
   });
 });

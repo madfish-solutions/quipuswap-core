@@ -206,7 +206,7 @@ contract("DivestLiquidity()", function () {
     );
   });
 
-  it("should fail divestment if not enough shares to burn", async function () {
+  it("should revert divestment if not enough shares to burn", async function () {
     this.timeout(5000000);
 
     let tezAmount = 10000;
@@ -220,11 +220,11 @@ contract("DivestLiquidity()", function () {
         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
         return true;
       },
-      "Investment to Dex should fail"
+      "Investment to Dex should revert"
     );
   });
 
-  it("should fail divestment if required shares to burn is zero", async function () {
+  it("should revert divestment if required shares to burn is zero", async function () {
     this.timeout(5000000);
 
     let tezAmount = 1000;
@@ -238,7 +238,7 @@ contract("DivestLiquidity()", function () {
         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
         return true;
       },
-      "Investment to Dex should fail"
+      "Investment to Dex should revert"
     );
   });
 });
