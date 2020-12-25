@@ -102,8 +102,8 @@ Verification Steps: Verify the divestment fails if the pool isn't launched.
 
 Scenario 1: Test the divestment
 
-- [ ] without provided liquidity
-- [ ] with provided liquidity
+- [x] without provided liquidity
+- [x] with provided liquidity
 
 Scope: Test various burnt shared.
 Action: Invoke the DivestLiquidity entrypoint.
@@ -112,11 +112,17 @@ Verification Steps: Verify the divestment fails if the the burnt shares aren't i
 
 Scenario 1: Test the divestment with burnt shares of
 
-- [ ] 0
+- [x] 0
 - [ ] 1
 - [ ] enough
 - [ ] exact
 - [ ] too many
+
+Scenario 2: Test calculated received amount
+
+- [ ] Received tez are zero
+- [ ] Reseived tokens are zero
+- [ ] Non zero output
 
 Scope: Test the user's reward distribution.
 Action: Invoke the DivestLiquidity entrypoint.

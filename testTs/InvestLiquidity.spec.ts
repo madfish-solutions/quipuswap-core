@@ -276,7 +276,7 @@ contract("InvestLiquidity()", function () {
       );
     });
 
-    it("success in case the exchange is launched", async function () {
+    it("success in case of medium min shares", async function () {
       await context.pairs[0].updateStorage();
       const initialStorage = await context.pairs[0].storage;
       const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
