@@ -456,6 +456,9 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       | TokenToTezPayment(n) -> failwith("06")
       | InvestLiquidity(min_shares) -> failwith("06")
       | DivestLiquidity(args) -> {
+        if s.invariant > 0n then 
+          skip 
+        else failwith("Dex/not-launched");
         var account : account_info := get_account(Tezos.sender, s);
         const share : nat = account.balance;
         if args.shares > 0n and args.shares <= share then block {

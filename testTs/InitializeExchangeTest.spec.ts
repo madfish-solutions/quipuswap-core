@@ -35,7 +35,7 @@ contract("InitializeExchange()", function () {
       tokenAddress = await context.createToken();
     });
 
-    it("fail in case the amount of tokens isn't approved", async function () {
+    it("revert in case the amount of tokens isn't approved", async function () {
       await rejects(
         context.factory.launchExchange(
           tokenAddress,
@@ -51,11 +51,11 @@ contract("InitializeExchange()", function () {
           );
           return true;
         },
-        "Adding Dex should fail"
+        "Adding Dex should revert"
       );
     });
 
-    it("fail in case the amount of XTZ is zero", async function () {
+    it("revert in case the amount of XTZ is zero", async function () {
       await rejects(
         context.createPair({
           tokenAddress,
@@ -66,11 +66,11 @@ contract("InitializeExchange()", function () {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
         },
-        "Adding Dex should fail"
+        "Adding Dex should revert"
       );
     });
 
-    it("fail in case the amount of tokens is zero", async function () {
+    it("revert in case the amount of tokens is zero", async function () {
       await rejects(
         context.createPair({
           tokenAddress,
@@ -81,7 +81,7 @@ contract("InitializeExchange()", function () {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
         },
-        "Adding Dex should fail"
+        "Adding Dex should revert"
       );
     });
 
@@ -170,7 +170,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail in case the pair exists", async function () {
+    it("revert in case the pair exists", async function () {
       const tokenAddress = context.factory.storage.token_list[0];
       await rejects(
         context.createPair({
@@ -186,24 +186,24 @@ contract("InitializeExchange()", function () {
           );
           return true;
         },
-        "Adding Dex should fail"
+        "Adding Dex should revert"
       );
     });
   });
 
   describe("Test initialize after liquidity withdrawn when", () => {
-    it("fail in case liquidity isn't zero", async function () {
+    it("revert in case liquidity isn't zero", async function () {
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, tezAmount),
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
         },
-        "Adding Dex should fail"
+        "Adding Dex should revert"
       );
     });
 
-    it("fail in case the amount of tokens isn't approved", async function () {
+    it("revert in case the amount of tokens isn't approved", async function () {
       await context.pairs[0].divestLiquidity(0, 1, initialSharesCount);
       await context.pairs[0].approveToken(0, context.pairs[0].contract.address);
       await rejects(
@@ -217,7 +217,7 @@ contract("InitializeExchange()", function () {
           );
           return true;
         },
-        "Adding Dex should fail"
+        "Adding Dex should revert"
       );
     });
 
@@ -304,25 +304,25 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail in case the amount of token is zero", async function () {
+    it("revert in case the amount of token is zero", async function () {
       await rejects(
         context.pairs[0].initializeExchange(0, tezAmount),
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
         },
-        "Initializing Dex should fail"
+        "Initializing Dex should revert"
       );
     });
 
-    it("fail in case the amount of XTZ is zero", async function () {
+    it("revert in case the amount of XTZ is zero", async function () {
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, 0),
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
         },
-        "Initializing Dex should fail"
+        "Initializing Dex should revert"
       );
     });
   });

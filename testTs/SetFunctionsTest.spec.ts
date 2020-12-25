@@ -40,7 +40,7 @@ contract("SetXFunctions()", function () {
     });
   });
 
-  it("should fail replacement of Dex functions to Factory", async function () {
+  it("should revert replacement of Dex functions to Factory", async function () {
     // ensure code added
     Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Dex function not set");
@@ -57,11 +57,11 @@ contract("SetXFunctions()", function () {
         );
         return true;
       },
-      "Replacement of dex function should fail"
+      "Replacement of dex function should revert"
     );
   });
 
-  it("should fail replacement of Token functions to Factory", async function () {
+  it("should revert replacement of Token functions to Factory", async function () {
     // ensure code added
     Object.values(context.factory.storage.token_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Token function not set");
@@ -78,11 +78,11 @@ contract("SetXFunctions()", function () {
         );
         return true;
       },
-      "Replacement of Token function should fail"
+      "Replacement of Token function should revert"
     );
   });
 
-  it("should fail adding more than 9 Dex functions to Factory", async function () {
+  it("should revert adding more than 9 Dex functions to Factory", async function () {
     // ensure code added
     Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Dex function not set");
@@ -99,11 +99,11 @@ contract("SetXFunctions()", function () {
         );
         return true;
       },
-      "Adding more dex functions should fail"
+      "Adding more dex functions should revert"
     );
   });
 
-  it("should fail adding more than 5 Token functions to Factory", async function () {
+  it("should revert adding more than 5 Token functions to Factory", async function () {
     // ensure code added
     Object.values(context.factory.storage.token_lambdas).forEach((value) => {
       notStrictEqual(value, null, "Token function not set");
@@ -120,7 +120,7 @@ contract("SetXFunctions()", function () {
         );
         return true;
       },
-      "Adding more token functions should fail"
+      "Adding more token functions should revert"
     );
   });
 });

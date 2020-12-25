@@ -42,7 +42,7 @@ Scenario 2: Test initialize after liquidity withdrawn when
 4. The rewards for the previous period if any should be distributed.
 5. The rewards to the user if any should be distributed.
 6. The tokens should be withdrawn from user.
-7. Prices are calculated as :
+7. Shares are calculated as :
 
 ```
 shares_purchased = xtz_amount * total_supply / tez_pool
@@ -62,7 +62,7 @@ Scenario 1: Test the investment
 Scope: Test various min shared.
 Action: Invoke the InvestLiquidity entrypoint.
 Test Notes and Preconditions: The exchange should be launched before.
-Verification Steps: Verify the investment fails if the the min shares are in the range.
+Verification Steps: Verify the investment fails if the min shares aren't in the range.
 
 Scenario 1: Test the investment with minimal shares of
 
@@ -77,10 +77,51 @@ Scenario 2: Test purchased shares
 - [x] 0
 - [x] > 0
 
-Scope: Test the user's reward distribution.
-Action: Invoke the InvestLiquidity entrypoint.
+### Test Item: DivestLiquidity Entrypoint
+
+## General Requirements:
+
+1. Divestment is only possible after initialization.
+2. At least 1 share should be burnt.
+3. Minimal shares are specified by the user.
+4. Burnt shares can't be smaller than the user's balance.
+5. The rewards for the previous period if any should be distributed.
+6. The rewards to the user if any should be distributed.
+7. The tokens should be sent to user.
+8. Amounts are calculated as :
+
+```
+tez_divested = tez_pool * burnt_shares / total_supply
+tokens_divested = token_pool * burnt_shares / total_supply
+```
+
+Scope: Test if the divestment is allowed.
+Action: Invoke the DivestLiquidity entrypoint.
+Test Notes and Preconditions: Ensure the divestment is only possible after initialization.
+Verification Steps: Verify the divestment fails if the pool isn't launched.
+
+Scenario 1: Test the divestment
+
+- [ ] without provided liquidity
+- [ ] with provided liquidity
+
+Scope: Test various burnt shared.
+Action: Invoke the DivestLiquidity entrypoint.
 Test Notes and Preconditions: The exchange should be launched before.
-Verification Steps: Verify the investment fails if the the min shares are in the range.
+Verification Steps: Verify the divestment fails if the the burnt shares aren't in the range.
+
+Scenario 1: Test the divestment with burnt shares of
+
+- [ ] 0
+- [ ] 1
+- [ ] enough
+- [ ] exact
+- [ ] too many
+
+Scope: Test the user's reward distribution.
+Action: Invoke the DivestLiquidity entrypoint.
+Test Notes and Preconditions: The exchange should be launched before.
+Verification Steps: Verify the divestment fails if the the burnt shares are in the range.
 
 Scenario 1: Test user rewards distribution of
 

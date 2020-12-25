@@ -88,7 +88,7 @@ contract("TezToTokenSwap()", function () {
     );
   });
 
-  it("should fail in case min tokens amount is too low", async function () {
+  it("should revert in case min tokens amount is too low", async function () {
     // create new pair
     await context.flushPairs();
     await context.createPairs();
@@ -103,11 +103,11 @@ contract("TezToTokenSwap()", function () {
         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
         return true;
       },
-      "Swap Dex should fail"
+      "Swap Dex should revert"
     );
   });
 
-  it("should fail in case min tokens amount is too high", async function () {
+  it("should revert in case min tokens amount is too high", async function () {
     let tezAmount = 1000;
     let minTokens = 90663;
 
@@ -118,11 +118,11 @@ contract("TezToTokenSwap()", function () {
         strictEqual(err.message, "Dex/high-min-out", "Error message mismatch");
         return true;
       },
-      "Swap Dex should fail"
+      "Swap Dex should revert"
     );
   });
 
-  it("should fail in case tez amount is too low", async function () {
+  it("should revert in case tez amount is too low", async function () {
     let tezAmount = 0;
     let minTokens = 1000;
 
@@ -133,7 +133,7 @@ contract("TezToTokenSwap()", function () {
         strictEqual(err.message, "Dex/wrong-params", "Error message mismatch");
         return true;
       },
-      "Swap Dex should fail"
+      "Swap Dex should revert"
     );
   });
 });

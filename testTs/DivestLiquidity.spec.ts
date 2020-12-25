@@ -1,15 +1,30 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
+import accounts from "./accounts/accounts";
+import { defaultAccountInfo, initialSharesCount } from "./constants";
 
-contract("DivestLiquidity()", function () {
+// 133.036
+contract.only("DivestLiquidity()", function () {
   let context: Context;
+  let tokenAddress: string;
+  let pairAddress: string;
+  const aliceAddress: string = accounts.alice.pkh;
+  const bobAddress: string = accounts.bob.pkh;
+  const tezAmount: number = 1000;
+  const tokenAmount: number = 100000;
+  const newShares: number = 100;
 
   before(async () => {
-    context = await Context.init([]);
+    context = await Context.init([], false, "alice", false);
+    await context.setDexFactoryFunction(0, "initialize_exchange");
+    await context.setDexFactoryFunction(4, "invest_liquidity");
+    await context.setDexFactoryFunction(5, "divest_liquidity");
+    pairAddress = await context.createPair();
+    tokenAddress = await context.pairs[0].contract.address;
   });
 
-  it("should divest liquidity and burn shares by current provider", async function () {
+  it.skip("should divest liquidity and burn shares by current provider", async function () {
     this.timeout(5000000);
 
     // reset pairs
@@ -102,7 +117,7 @@ contract("DivestLiquidity()", function () {
     );
   });
 
-  it("should divest liquidity and burn shares transfered from another user", async function () {
+  it.skip("should divest liquidity and burn shares transfered from another user", async function () {
     this.timeout(5000000);
 
     let tezAmount = 1000;
@@ -206,7 +221,7 @@ contract("DivestLiquidity()", function () {
     );
   });
 
-  it("should revert divestment if not enough shares to burn", async function () {
+  it.skip("should revert divestment if not enough shares to burn", async function () {
     this.timeout(5000000);
 
     let tezAmount = 10000;
@@ -224,7 +239,7 @@ contract("DivestLiquidity()", function () {
     );
   });
 
-  it("should revert divestment if required shares to burn is zero", async function () {
+  it.skip("should revert divestment if required shares to burn is zero", async function () {
     this.timeout(5000000);
 
     let tezAmount = 1000;

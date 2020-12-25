@@ -3,8 +3,11 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo, initialSharesCount } from "./constants";
 
-//  142.995 (5 tests)
-contract.only("InvestLiquidity()", function () {
+// 142.995 (5 tests)
+// ->
+// 183.648 (9 tests)
+
+contract("InvestLiquidity()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
@@ -29,7 +32,7 @@ contract.only("InvestLiquidity()", function () {
 
     before(async () => {});
 
-    it("fail in case no liquidity is provided", async function () {
+    it("revert in case no liquidity is provided", async function () {
       await context.pairs[0].divestLiquidity(0, 1, initialSharesCount);
       await rejects(
         context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares),
@@ -37,7 +40,7 @@ contract.only("InvestLiquidity()", function () {
           ok(err.message == "Dex/not-launched", "Error message mismatch");
           return true;
         },
-        "Investment should fail"
+        "Investment should revert"
       );
     });
 
@@ -113,25 +116,25 @@ contract.only("InvestLiquidity()", function () {
   describe("Test various min shared", () => {
     before(async () => {});
 
-    it("fail in case of 0 min shares", async function () {
+    it("revert in case of 0 min shares", async function () {
       await rejects(
         context.pairs[0].investLiquidity(tokenAmount, tezAmount, 0),
         (err) => {
           ok(err.message == "Dex/wrong-params", "Error message mismatch");
           return true;
         },
-        "Investment should fail"
+        "Investment should revert"
       );
     });
 
-    it("fail in case of too high expected min shares", async function () {
+    it("revert in case of too high expected min shares", async function () {
       await rejects(
         context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares * 2),
         (err) => {
           ok(err.message == "Dex/wrong-params", "Error message mismatch");
           return true;
         },
-        "Investment should fail"
+        "Investment should revert"
       );
     });
 
@@ -346,14 +349,14 @@ contract.only("InvestLiquidity()", function () {
   describe("Test purchased shares", () => {
     before(async () => {});
 
-    it("fail in case of 0 purchased shares", async function () {
+    it("revert in case of 0 purchased shares", async function () {
       await rejects(
         context.pairs[0].investLiquidity(100, 1, 1),
         (err) => {
           ok(err.message == "Dex/wrong-params", "Error message mismatch");
           return true;
         },
-        "Investment should fail"
+        "Investment should revert"
       );
     });
 
