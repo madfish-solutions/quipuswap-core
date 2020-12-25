@@ -1,6 +1,5 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
-import { textSpanContainsTextSpan } from "typescript";
 import { BigNumber } from "bignumber.js";
 
 const defaultAccountTnfo = {
@@ -9,11 +8,11 @@ const defaultAccountTnfo = {
   allowances: {},
 };
 
-// 275.851 s
+// 275.851s
+// ->
+// 133.092s
 
-// 122.500 s
-
-contract.only("InitializeExchange()", function () {
+contract("InitializeExchange()", function () {
   let context: Context;
 
   before(async () => {
@@ -247,7 +246,10 @@ contract.only("InitializeExchange()", function () {
     it("fail if the amount of tokens isn't approved", async function () {
       // create token
       let tezAmount = 1000;
-      let tokenAmount = 1000000;
+      let tokenAmount = 10000000;
+
+      // withdraw all liquidity
+      await context.pairs[0].divestLiquidity(0, 1, 1000);
 
       // add new exchange pair
       await context.pairs[0].approveToken(0, context.pairs[0].contract.address);
@@ -268,9 +270,6 @@ contract.only("InitializeExchange()", function () {
     it("success if liquidity is zero", async function () {
       let tezAmount = 10000;
       let tokenAmount = 1000000;
-
-      // withdraw all liquidity
-      await context.pairs[0].divestLiquidity(1, 1, 1000);
 
       // store user & pair prev balances
       let tokenAddress = context.tokens[0].contract.address;

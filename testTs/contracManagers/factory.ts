@@ -165,16 +165,16 @@ export class Factory {
     address: string
   ): Promise<void> {
     return standard === "FA2"
-      ? await this.approveTokenFA2(tokenAddress, address)
+      ? await this.approveTokenFA2(tokenAddress, tokenAmount, address)
       : await this.approveTokenFA12(tokenAddress, tokenAmount, address);
   }
 
-  async approveTokenFA2(tokenAddress: string, address: string): Promise<void> {
+  async approveTokenFA2(tokenAddress: string, tokenAmount: number,  address: string): Promise<void> {
     let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods
-      .update_operators([
+      .update_operators([ 
         {
-          add_operator: {
+          [(tokenAmount) ? "add_operator" : "remove_operator"]: {
             owner: await tezos.signer.publicKeyHash(),
             operator: address,
             token_id: defaultTokenId,
