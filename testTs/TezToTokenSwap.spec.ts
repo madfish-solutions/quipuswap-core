@@ -88,7 +88,7 @@ contract("TezToTokenSwap()", function () {
     );
   });
 
-  it("should fail if min tokens amount is too low", async function () {
+  it("should fail in case min tokens amount is too low", async function () {
     // create new pair
     await context.flushPairs();
     await context.createPairs();
@@ -107,7 +107,7 @@ contract("TezToTokenSwap()", function () {
     );
   });
 
-  it("should fail if min tokens amount is too high", async function () {
+  it("should fail in case min tokens amount is too high", async function () {
     let tezAmount = 1000;
     let minTokens = 90663;
 
@@ -122,7 +122,7 @@ contract("TezToTokenSwap()", function () {
     );
   });
 
-  it("should fail if tez amount is too low", async function () {
+  it("should fail in case tez amount is too low", async function () {
     let tezAmount = 0;
     let minTokens = 1000;
 

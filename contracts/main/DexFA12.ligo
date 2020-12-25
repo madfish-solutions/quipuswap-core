@@ -11,6 +11,6 @@ function main (const p : full_action; const s : full_dex_storage) : full_return 
       | GetBalance(params) -> middle_token(IGetBalance(params), this, 2n, s)
       | GetAllowance(params) -> middle_token(IGetAllowance(params), this, 3n, s)
       | GetTotalSupply(params) -> middle_token(IGetTotalSupply(params), this, 4n, s)
-      // | GetPrices(params) -> ((nil : list(operation)), s) 
+      | GetPrices(params) -> ((nil : list(operation)), s) 
       // | GetReserves(params) -> ((nil : list(operation)), s)
     end

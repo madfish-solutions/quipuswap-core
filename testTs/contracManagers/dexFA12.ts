@@ -193,7 +193,6 @@ export class Dex extends TokenFA12 {
     tezAmount: number,
     sharesBurned: number
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .use("divestLiquidity", tezAmount, tokenAmount, sharesBurned)
       .send();

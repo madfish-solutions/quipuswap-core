@@ -3,7 +3,7 @@ type approve_params is michelson_pair(address, "spender", nat, "value")
 type balance_params is michelson_pair(address, "owner", contract(nat), "")
 type allowance_params is michelson_pair(michelson_pair(address, "owner", address, "spender"), "", contract(nat), "")
 type total_supply_params is (unit * contract(nat))
-// type prices_params is (unit * contract(nat * nat))
+type prices_params is (unit * contract(nat * nat))
 // type reserve_params is (unit * contract(nat * nat))
 
 type token_action is
@@ -21,5 +21,5 @@ type full_action is
 | GetBalance            of balance_params
 | GetAllowance          of allowance_params
 | GetTotalSupply        of total_supply_params
-// | GetPrices             of prices_params
+| GetPrices             of prices_params
 // | GetReserves            of reserve_params

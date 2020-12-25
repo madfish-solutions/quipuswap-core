@@ -3,9 +3,9 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo, initialSharesCount } from "./constants";
 
-// 275.851s
+// 275.851s (7 tests)
 // ->
-// 133.092s
+// 133.092s (11 tests)
 
 contract("InitializeExchange()", function () {
   let context: Context;
@@ -35,7 +35,7 @@ contract("InitializeExchange()", function () {
       tokenAddress = await context.createToken();
     });
 
-    it("fail if the amount of tokens isn't approved", async function () {
+    it("fail in case the amount of tokens isn't approved", async function () {
       await rejects(
         context.factory.launchExchange(
           tokenAddress,
@@ -55,7 +55,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail if the amount of XTZ is zero", async function () {
+    it("fail in case the amount of XTZ is zero", async function () {
       await rejects(
         context.createPair({
           tokenAddress,
@@ -70,7 +70,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail if the amount of tokens is zero", async function () {
+    it("fail in case the amount of tokens is zero", async function () {
       await rejects(
         context.createPair({
           tokenAddress,
@@ -85,7 +85,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("success if the pair doesn't exist", async function () {
+    it("success in case the pair doesn't exist", async function () {
       await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
       const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
       const aliceInitTokenBalance = (
@@ -170,7 +170,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail if the pair exists", async function () {
+    it("fail in case the pair exists", async function () {
       const tokenAddress = context.factory.storage.token_list[0];
       await rejects(
         context.createPair({
@@ -192,7 +192,7 @@ contract("InitializeExchange()", function () {
   });
 
   describe("Test initialize after liquidity withdrawn when", () => {
-    it("fail if liquidity isn't zero", async function () {
+    it("fail in case liquidity isn't zero", async function () {
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, tezAmount),
         (err) => {
@@ -203,12 +203,13 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail if the amount of tokens isn't approved", async function () {
+    it("fail in case the amount of tokens isn't approved", async function () {
       await context.pairs[0].divestLiquidity(0, 1, initialSharesCount);
       await context.pairs[0].approveToken(0, context.pairs[0].contract.address);
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, tezAmount, false),
         (err) => {
+          console.log(err.message);
           ok(
             err.message == "FA2_NOT_OPERATOR" ||
               err.message == "NotEnoughAllowance",
@@ -220,7 +221,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("success if liquidity is zero", async function () {
+    it("success in case liquidity is zero", async function () {
       const tokenAddress = context.tokens[0].contract.address;
       const pairAddress = context.pairs[0].contract.address;
       await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
@@ -303,7 +304,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail if the amount of token is zero", async function () {
+    it("fail in case the amount of token is zero", async function () {
       await rejects(
         context.pairs[0].initializeExchange(0, tezAmount),
         (err) => {
@@ -314,7 +315,7 @@ contract("InitializeExchange()", function () {
       );
     });
 
-    it("fail if the amount of XTZ is zero", async function () {
+    it("fail in case the amount of XTZ is zero", async function () {
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, 0),
         (err) => {

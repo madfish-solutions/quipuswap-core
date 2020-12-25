@@ -1,7 +1,7 @@
 type transfer_params is list (transfer_param)
 type token_metadata_registry_params is contract (address)
 type update_operator_params is list (update_operator_param)
-// type prices_params is (unit * contract(nat * nat))
+type prices_params is (unit * contract(nat * nat))
 // type reserve_params is (unit * contract(nat * nat))
 
 type token_action is
@@ -17,5 +17,5 @@ type full_action is
 | Balance_of              of balance_params
 | Token_metadata_registry of token_metadata_registry_params
 | Update_operators        of update_operator_params
-// | GetPrices              of prices_params
+| GetPrices              of prices_params
 // | GetReserves            of reserve_params

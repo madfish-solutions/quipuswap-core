@@ -114,7 +114,7 @@ contract("TezToTokenPayment()", function () {
     );
   });
 
-  it("should fail if min tokens amount is too low", async function () {
+  it("should fail in case min tokens amount is too low", async function () {
     // create new pair
     await context.flushPairs();
     await context.createPairs();
@@ -135,7 +135,7 @@ contract("TezToTokenPayment()", function () {
     );
   });
 
-  it("should fail if min tokens amount is too high", async function () {
+  it("should fail in case min tokens amount is too high", async function () {
     let aliceAddress = await tezos.signer.publicKeyHash();
     await context.updateActor("bob");
     let tezAmount = 1000;
@@ -152,7 +152,7 @@ contract("TezToTokenPayment()", function () {
     );
   });
 
-  it("should fail if tez amount is too low", async function () {
+  it("should fail in case tez amount is too low", async function () {
     let aliceAddress = await tezos.signer.publicKeyHash();
     await context.updateActor("bob");
     let tezAmount = 0;
