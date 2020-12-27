@@ -113,16 +113,24 @@ Verification Steps: Verify the divestment fails if the the burnt shares aren't i
 Scenario 1: Test the divestment with burnt shares of
 
 - [x] 0
-- [ ] 1
-- [ ] enough
-- [ ] exact
-- [ ] too many
+- [x] 1
+- [x] enough
+- [x] exact
+- [x] too many
 
 Scenario 2: Test calculated received amount
 
-- [ ] Received tez are zero
-- [ ] Reseived tokens are zero
-- [ ] Non zero output
+- [x] Received tez are zero
+- [x] Reseived tokens are zero
+
+Scenario 2: Test expected amount when
+
+- [ ] Expected tez are smaller
+- [ ] Expected tokens are smaller
+- [ ] Expected tez are exact
+- [ ] Expected tokens are exact
+- [ ] Expected tez are higher
+- [ ] Expected tokens are higher
 
 Scope: Test the user's reward distribution.
 Action: Invoke the DivestLiquidity entrypoint.
