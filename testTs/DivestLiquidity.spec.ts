@@ -369,8 +369,7 @@ contract.only("DivestLiquidity()", function () {
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, share),
         (err) => {
-          console.log(err.message);
-          ok(err.message == "Dex/wrong-params", "Error message mismatch");
+          ok(err.message == "Dex/dust-output", "Error message mismatch");
           return true;
         },
         "Investment should revert"
@@ -380,13 +379,13 @@ contract.only("DivestLiquidity()", function () {
     it("revert in case of calculated tokens are zero", async function () {
       const initTez = 1000000;
       const initToken = 100;
-      context.pairs[0].divestLiquidity(1, 1, initialSharesCount);
+      await context.pairs[0].divestLiquidity(1, 1, initialSharesCount);
       await context.pairs[0].initializeExchange(initToken, initTez);
       const share = 1;
       await rejects(
-        context.pairs[0].divestLiquidity(1, 1, 1000),
+        context.pairs[0].divestLiquidity(1, 1, share),
         (err) => {
-          ok(err.message == "Dex/wrong-params", "Error message mismatch");
+          ok(err.message == "Dex/dust-output", "Error message mismatch");
           return true;
         },
         "Investment should revert"
