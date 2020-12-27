@@ -7,7 +7,7 @@ import { defaultAccountInfo, initialSharesCount } from "./constants";
 // ->
 // 183.648 (9 tests)
 
-contract("InvestLiquidity()", function () {
+contract.only("InvestLiquidity()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;

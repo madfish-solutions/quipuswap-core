@@ -5,6 +5,9 @@ import accounts from "./accounts/accounts";
 import { defaultAccountInfo, initialSharesCount } from "./constants";
 
 // 133.036
+// ->
+// 315.984
+
 contract("DivestLiquidity()", function () {
   let context: Context;
   let tokenAddress: string;
@@ -456,7 +459,6 @@ contract("DivestLiquidity()", function () {
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
       ).balance;
-      console.log(await context.pairs[0].storage);
       await context.pairs[0].divestLiquidity(
         expectedToken,
         expectedTez,

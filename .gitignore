@@ -7,3 +7,4 @@ faucet*
 deploy
 test/contracManagers/*.js
 test/
+.vscode/
