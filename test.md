@@ -140,10 +140,10 @@ tokens_divested = token_pool * burnt_shares / total_supply
 
 **Scenario 3**:: Test expected amount when
 
-- [ ] Expected tez are smaller
-- [ ] Expected tokens are smaller
-- [ ] Expected tez are exact
-- [ ] Expected tokens are exact
+- [x] Expected tez are smaller
+- [x] Expected tokens are smaller
+- [x] Expected tez are exact
+- [x] Expected tokens are exact
 - [x] Expected tez are higher
 - [x] Expected tokens are higher
 - [x] Expected tez are 0
