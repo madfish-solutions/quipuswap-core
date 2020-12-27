@@ -392,4 +392,54 @@ contract.only("DivestLiquidity()", function () {
       );
     });
   });
+
+  describe("Test expected amount when", () => {
+    it("revert in case of expected tez are higher", async function () {
+      const share = 100;
+      await rejects(
+        context.pairs[0].divestLiquidity(1, 100000000, share),
+        (err) => {
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
+          return true;
+        },
+        "Investment should revert"
+      );
+    });
+
+    it("revert in case of expected tokens are higher", async function () {
+      const share = 100;
+      await rejects(
+        context.pairs[0].divestLiquidity(100000000, 1, share),
+        (err) => {
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
+          return true;
+        },
+        "Investment should revert"
+      );
+    });
+
+    it("revert in case of expected tez are 0", async function () {
+      const share = 1;
+      await rejects(
+        context.pairs[0].divestLiquidity(1, 0, share),
+        (err) => {
+          ok(err.message == "Dex/dust-output", "Error message mismatch");
+          return true;
+        },
+        "Investment should revert"
+      );
+    });
+
+    it("revert in case of expected tokens are 0", async function () {
+      const share = 1;
+      await rejects(
+        context.pairs[0].divestLiquidity(0, 1, share),
+        (err) => {
+          ok(err.message == "Dex/dust-output", "Error message mismatch");
+          return true;
+        },
+        "Investment should revert"
+      );
+    });
+  });
 });

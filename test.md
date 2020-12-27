@@ -129,8 +129,10 @@ Scenario 2: Test expected amount when
 - [ ] Expected tokens are smaller
 - [ ] Expected tez are exact
 - [ ] Expected tokens are exact
-- [ ] Expected tez are higher
-- [ ] Expected tokens are higher
+- [x] Expected tez are higher
+- [x] Expected tokens are higher
+- [x] Expected tez are 0
+- [x] Expected tokens are 0
 
 Scope: Test the user's reward distribution.
 Action: Invoke the DivestLiquidity entrypoint.
