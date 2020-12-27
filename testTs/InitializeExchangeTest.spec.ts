@@ -7,7 +7,7 @@ import { defaultAccountInfo, initialSharesCount } from "./constants";
 // ->
 // 133.092s (11 tests)
 
-contract.only("InitializeExchange()", function () {
+contract("InitializeExchange()", function () {
   let context: Context;
   let aliceAddress: string = accounts.alice.pkh;
   let bobAddress: string = accounts.bob.pkh;
@@ -223,7 +223,6 @@ contract.only("InitializeExchange()", function () {
     it("success in case liquidity is zero", async function () {
       const tokenAddress = context.tokens[0].contract.address;
       const pairAddress = context.pairs[0].contract.address;
-      // await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
       await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
       const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
       const aliceInitTokenBalance = (

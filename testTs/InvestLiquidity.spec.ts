@@ -33,7 +33,7 @@ contract.only("InvestLiquidity()", function () {
     before(async () => {});
 
     it("revert in case no liquidity is provided", async function () {
-      await context.pairs[0].divestLiquidity(0, 1, initialSharesCount);
+      await context.pairs[0].divestLiquidity(1, 1, initialSharesCount);
       await rejects(
         context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares),
         (err) => {

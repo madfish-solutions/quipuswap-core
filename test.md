@@ -149,6 +149,27 @@ tokens_divested = token_pool * burnt_shares / total_supply
 - [x] Expected tez are 0
 - [x] Expected tokens are 0
 
+## Test Item: SetXFunctions Entrypoint
+
+### General Requirements:
+
+1. The function can be set only once.
+2. Only functions with index between 0 and 8 can be set as exchange functions.
+3. Only functions with index between 0 and 4 can be set as token functions.
+
+**Scope**: Test if the divestment is allowed.
+
+**Action**:: Invoke the SetXFunctions entrypoint.
+
+**Test Notes and Preconditions**:: Ensure the divestment is only possible after initialization.
+
+**Verification Steps**:: Verify the divestment fails if the pool isn't launched.
+
+**Scenario 1**:: Test the divestment
+
+- [x] without provided liquidity
+- [x] with provided liquidity
+
 **Scope**: Test the user's reward distribution.
 
 **Action**:: Invoke the DivestLiquidity entrypoint.
