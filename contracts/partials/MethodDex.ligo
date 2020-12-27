@@ -472,13 +472,14 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
           const tez_divested : nat = s.tez_pool * args.shares / s.total_supply;
           const tokens_divested : nat = s.token_pool * args.shares / s.total_supply;
 
+
+          if args.min_tez > 0n and args.min_tokens > 0n then 
+            skip 
+          else failwith("Dex/dust-output");
+
           if tez_divested >= args.min_tez and tokens_divested >= args.min_tokens then 
             skip 
           else failwith("Dex/high-expectation");
-
-          if tez_divested > 0n and tokens_divested > 0n then 
-            skip 
-          else failwith("Dex/dust-output");
 
           s.total_supply := abs(s.total_supply - args.shares);
           s.tez_pool := abs(s.tez_pool - tez_divested);

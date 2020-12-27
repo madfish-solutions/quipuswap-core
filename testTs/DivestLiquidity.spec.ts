@@ -369,7 +369,7 @@ contract.only("DivestLiquidity()", function () {
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, share),
         (err) => {
-          ok(err.message == "Dex/dust-output", "Error message mismatch");
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
           return true;
         },
         "Investment should revert"
@@ -385,7 +385,7 @@ contract.only("DivestLiquidity()", function () {
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, share),
         (err) => {
-          ok(err.message == "Dex/dust-output", "Error message mismatch");
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
           return true;
         },
         "Investment should revert"
@@ -418,10 +418,10 @@ contract.only("DivestLiquidity()", function () {
       );
     });
 
-    it("revert in case of expected tez are 0", async function () {
+    it("revert in case of expected tokens are 0", async function () {
       const share = 1;
       await rejects(
-        context.pairs[0].divestLiquidity(1, 0, share),
+        context.pairs[0].divestLiquidity(0, 1, share),
         (err) => {
           ok(err.message == "Dex/dust-output", "Error message mismatch");
           return true;
@@ -430,10 +430,10 @@ contract.only("DivestLiquidity()", function () {
       );
     });
 
-    it("revert in case of expected tokens are 0", async function () {
+    it("revert in case of expected tez are 0", async function () {
       const share = 1;
       await rejects(
-        context.pairs[0].divestLiquidity(0, 1, share),
+        context.pairs[0].divestLiquidity(1, 0, share),
         (err) => {
           ok(err.message == "Dex/dust-output", "Error message mismatch");
           return true;
