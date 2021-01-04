@@ -36,3 +36,12 @@ block {
   end;
   s.storage := res.1;
 } with (res.0, s)
+
+[@inline] function get_prices (const receiver : contract(nat * nat); const s : dex_storage) : list(operation) is
+  list [
+    Tezos.transaction((
+      s.tez_pool,
+      s.token_pool),
+    0tez, 
+    receiver)
+  ]

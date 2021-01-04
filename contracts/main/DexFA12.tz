@@ -2,18 +2,17 @@
     (or (or (or (pair %approve (address %spender) (nat %value)) (unit %default))
             (or (pair %getAllowance (pair (address %owner) (address %spender)) (contract nat))
                 (pair %getBalance (address %owner) (contract nat))))
-        (or (or (pair %getPrices unit (contract (pair nat nat)))
-                (pair %getTotalSupply unit (contract nat)))
-            (or (pair %transfer (address %from) (pair (address %to) (nat %value)))
-                (or %use
-                   (or (or (pair %divestLiquidity (pair (nat %min_tez) (nat %min_tokens)) (nat %shares))
-                           (nat %initializeExchange))
-                       (or (nat %investLiquidity)
-                           (pair %tezToTokenPayment (nat %amount) (address %receiver))))
-                   (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %min_out)) (address %receiver))
-                           (pair %veto (nat %value) (address %voter)))
-                       (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
-                           (address %withdrawProfit))))))) ;
+        (or (or (pair %getTotalSupply unit (contract nat))
+                (pair %transfer (address %from) (pair (address %to) (nat %value))))
+            (or %use
+               (or (or (pair %divestLiquidity (pair (nat %min_tez) (nat %min_tokens)) (nat %shares))
+                       (nat %initializeExchange))
+                   (or (nat %investLiquidity)
+                       (pair %tezToTokenPayment (nat %amount) (address %receiver))))
+               (or (or (pair %tokenToTezPayment (pair (nat %amount) (nat %min_out)) (address %receiver))
+                       (pair %veto (nat %value) (address %voter)))
+                   (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
+                       (address %withdrawProfit)))))) ;
   storage
     (pair (pair (big_map %dex_lambdas
                    nat
@@ -321,7 +320,6 @@
                      PAIR } } }
            { IF_LEFT
                { IF_LEFT
-                   { DROP 2 ; NIL operation ; PAIR }
                    { DIG 2 ;
                      PUSH nat 4 ;
                      PAIR ;
@@ -359,8 +357,7 @@
                      PAIR ;
                      SWAP ;
                      CAR ;
-                     PAIR } }
-               { IF_LEFT
+                     PAIR }
                    { DIG 2 ;
                      PUSH nat 0 ;
                      PAIR ;
@@ -398,40 +395,40 @@
                      PAIR ;
                      SWAP ;
                      CAR ;
-                     PAIR }
-                   { DIG 2 ;
-                     DUP ;
-                     DUG 3 ;
-                     CAR ;
-                     CAR ;
-                     SWAP ;
-                     DUP ;
-                     DUG 2 ;
-                     IF_LEFT
-                       { IF_LEFT
-                           { IF_LEFT { DROP ; PUSH nat 5 } { DROP ; PUSH nat 0 } }
-                           { IF_LEFT { DROP ; PUSH nat 4 } { DROP ; PUSH nat 1 } } }
-                       { IF_LEFT
-                           { IF_LEFT { DROP ; PUSH nat 2 } { DROP ; PUSH nat 7 } }
-                           { IF_LEFT { DROP ; PUSH nat 6 } { DROP ; PUSH nat 3 } } } ;
-                     GET ;
-                     IF_NONE
-                       { DROP 2 ; PUSH string "Dex/function-not-set" ; FAILWITH }
-                       { DIG 2 ; DIG 3 ; DUP ; DUG 4 ; CDR ; CAR ; DIG 3 ; PAIR ; PAIR ; EXEC } ;
-                     SWAP ;
-                     DUP ;
-                     DUG 2 ;
-                     CDR ;
-                     CDR ;
-                     SWAP ;
-                     DUP ;
-                     DUG 2 ;
-                     CDR ;
-                     PAIR ;
-                     DIG 2 ;
-                     CAR ;
-                     PAIR ;
-                     SWAP ;
-                     CAR ;
-                     PAIR } } } } }
+                     PAIR } }
+               { DIG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CAR ;
+                 CAR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 IF_LEFT
+                   { IF_LEFT
+                       { IF_LEFT { DROP ; PUSH nat 5 } { DROP ; PUSH nat 0 } }
+                       { IF_LEFT { DROP ; PUSH nat 4 } { DROP ; PUSH nat 1 } } }
+                   { IF_LEFT
+                       { IF_LEFT { DROP ; PUSH nat 2 } { DROP ; PUSH nat 7 } }
+                       { IF_LEFT { DROP ; PUSH nat 6 } { DROP ; PUSH nat 3 } } } ;
+                 GET ;
+                 IF_NONE
+                   { DROP 2 ; PUSH string "Dex/function-not-set" ; FAILWITH }
+                   { DIG 2 ; DIG 3 ; DUP ; DUG 4 ; CDR ; CAR ; DIG 3 ; PAIR ; PAIR ; EXEC } ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 CDR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 PAIR ;
+                 DIG 2 ;
+                 CAR ;
+                 PAIR ;
+                 SWAP ;
+                 CAR ;
+                 PAIR } } } }
 

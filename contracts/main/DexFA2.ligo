@@ -11,6 +11,6 @@ function main (const p : full_action; const s : full_dex_storage) : full_return 
       | Balance_of(params) -> middle_token(IBalance_of(params), this, 2n, s)
       | Token_metadata_registry(params) -> middle_token(IToken_metadata_registry(params), this, 3n, s)
       | Update_operators(params) -> middle_token(IUpdate_operators(params), this, 1n, s)
-      | GetPrices(params) -> ((nil : list(operation)), s)
-      // | GetReserves(params) -> ((nil : list(operation)), s)
+      // | GetPrices(params) -> (get_prices(params.0, params.1, s.storage), s)
+      // | GetReserves(params) -> (get_prices(params.1, s.storage), s)
     end

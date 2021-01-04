@@ -119,3 +119,5 @@ type full_dex_storage is record
 end
 
 type full_return is list (operation) * full_dex_storage
+
+const fee_rate : nat = 333n;

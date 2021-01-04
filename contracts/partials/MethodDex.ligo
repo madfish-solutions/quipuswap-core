@@ -141,7 +141,7 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           s.tez_pool := Tezos.amount / 1mutez;
           s.invariant := s.tez_pool * s.token_pool;
           s.ledger[Tezos.sender] := record [
-              balance    = 1000n;
+              balance    = Tezos.amount / 1mutez;
               frozen_balance    = 0n;
 #if FA2_STANDARD_ENABLED
               allowances = (set [] : set(address));
@@ -149,7 +149,7 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
               allowances = (map [] : map(address, nat));
 #endif
             ];
-          s.total_supply := 1000n; 
+          s.total_supply := Tezos.amount / 1mutez; 
 
           (* update rewards info *)
           s.reward_info := record [
@@ -347,7 +347,7 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
           s.tez_pool := s.tez_pool + Tezos.amount / 1mutez;
           const new_token_pool : nat = s.invariant / abs(s.tez_pool - Tezos.amount / 1mutez / fee_rate);
           const tokens_out : nat = abs(s.token_pool - new_token_pool);
-            if tokens_out >= args.amount then {
+            if tokens_out >= args.amount and tokens_out <= s.token_pool / 3n then {
               s.token_pool := new_token_pool;
               s.invariant := s.tez_pool * new_token_pool;
               operations := transaction(
@@ -355,7 +355,7 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
                 0mutez, 
                 get_token_contract(s.token_address)
               ) # operations;
-          } else failwith("Dex/high-min-out");
+            } else failwith("Dex/wrong-out");
         } else failwith("Dex/wrong-params")
       }
       | TokenToTezPayment(n) -> failwith("03")

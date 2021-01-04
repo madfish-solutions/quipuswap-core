@@ -31,14 +31,14 @@ function launch_exchange (const self : address; const token : token_identifier; 
       tez_pool = Tezos.amount / 1mutez;      
       token_pool = token_amount;      
       invariant = Tezos.amount / 1mutez * token_amount;      
-      total_supply = 1000n; 
+      total_supply = Tezos.amount / 1mutez; 
 #if FA2_STANDARD_ENABLED
       token_address = token.0;      
 #else
       token_address = token;      
 #endif
       ledger = big_map[Tezos.sender -> record [
-          balance = 1000n;
+          balance = Tezos.amount / 1mutez;
           frozen_balance = 0n;
 #if FA2_STANDARD_ENABLED
           allowances = (set [] : set(address));
