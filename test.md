@@ -13,13 +13,13 @@
 
 **Scope**: Test various ways to initialize the contract.
 
-**Action**:: Invoke the InitializeExchange entrypoint.
+**Action**: Invoke the InitializeExchange entrypoint.
 
-**Test Notes and Preconditions**:: Ensure all the initialize approaches work.
+**Test Notes and Preconditions**: Ensure all the initialize approaches work.
 
-**Verification Steps**:: Verify the exchange is initialized and the initial state is correct.
+**Verification Steps**: Verify the exchange is initialized and the initial state is correct.
 
-**Scenario 1**:: Test initialize during the deployment when
+**Scenario 1**: Test initialize during the deployment when
 
 - [x] the pair doesn't exist
 - [x] the amount of XTZ is zero
@@ -27,7 +27,7 @@
 - [x] the token isn't approved
 - [x] the pair exists
 
-**Scenario 2**:: Test initialize after liquidity withdrawn when
+**Scenario 2**: Test initialize after liquidity withdrawn when
 
 - [x] liquidity is zero
 - [x] liquidity isn't zero
@@ -54,26 +54,26 @@ tokens_amount = shares_purchased * token_pool / total_supply
 
 **Scope**: Test if the investment is allowed.
 
-**Action**:: Invoke the InvestLiquidity entrypoint.
+**Action**: Invoke the InvestLiquidity entrypoint.
 
-**Test Notes and Preconditions**:: Ensure the investment is only possible after initialization.
+**Test Notes and Preconditions**: Ensure the investment is only possible after initialization.
 
-**Verification Steps**:: Verify the investment fails if the pool isn't launched.
+**Verification Steps**: Verify the investment fails if the pool isn't launched.
 
-**Scenario 1**:: Test the investment
+**Scenario 1**: Test the investment
 
 - [x] without provided liquidity
 - [x] with provided liquidity
 
 **Scope**: Test various min shared.
 
-**Action**:: Invoke the InvestLiquidity entrypoint.
+**Action**: Invoke the InvestLiquidity entrypoint.
 
-**Test Notes and Preconditions**:: The exchange should be launched before.
+**Test Notes and Preconditions**: The exchange should be launched before.
 
-**Verification Steps**:: Verify the investment fails if the min shares aren't in the range.
+**Verification Steps**: Verify the investment fails if the min shares aren't in the range.
 
-**Scenario 1**:: Test the investment with minimal shares of
+**Scenario 1**: Test the investment with minimal shares of
 
 - [x] 0
 - [x] 1
@@ -81,7 +81,7 @@ tokens_amount = shares_purchased * token_pool / total_supply
 - [x] exact
 - [x] too many
 
-**Scenario 2**:: Test purchased shares
+**Scenario 2**: Test purchased shares
 
 - [x] 0
 - [x] > 0
@@ -106,26 +106,26 @@ tokens_divested = token_pool * burnt_shares / total_supply
 
 **Scope**: Test if the divestment is allowed.
 
-**Action**:: Invoke the DivestLiquidity entrypoint.
+**Action**: Invoke the DivestLiquidity entrypoint.
 
-**Test Notes and Preconditions**:: Ensure the divestment is only possible after initialization.
+**Test Notes and Preconditions**: Ensure the divestment is only possible after initialization.
 
-**Verification Steps**:: Verify the divestment fails if the pool isn't launched.
+**Verification Steps**: Verify the divestment fails if the pool isn't launched.
 
-**Scenario 1**:: Test the divestment
+**Scenario 1**: Test the divestment
 
 - [x] without provided liquidity
 - [x] with provided liquidity
 
 **Scope**: Test various burnt shared.
 
-**Action**:: Invoke the DivestLiquidity entrypoint.
+**Action**: Invoke the DivestLiquidity entrypoint.
 
-**Test Notes and Preconditions**:: The exchange should be launched before.
+**Test Notes and Preconditions**: The exchange should be launched before.
 
-**Verification Steps**:: Verify the divestment fails if the the burnt shares aren't in the range.
+**Verification Steps**: Verify the divestment fails if the the burnt shares aren't in the range.
 
-**Scenario 1**:: Test the divestment with burnt shares of
+**Scenario 1**: Test the divestment with burnt shares of
 
 - [x] 0
 - [x] 1
@@ -133,12 +133,12 @@ tokens_divested = token_pool * burnt_shares / total_supply
 - [x] exact
 - [x] too many
 
-**Scenario 2**:: Test calculated received amount
+**Scenario 2**: Test calculated received amount
 
 - [x] Received tez are zero
 - [x] Reseived tokens are zero
 
-**Scenario 3**:: Test expected amount when
+**Scenario 3**: Test expected amount when
 
 - [x] Expected tez are smaller
 - [x] Expected tokens are smaller
@@ -157,28 +157,103 @@ tokens_divested = token_pool * burnt_shares / total_supply
 2. Only functions with index between 0 and 8 can be set as exchange functions.
 3. Only functions with index between 0 and 4 can be set as token functions.
 
-**Scope**: Test if the divestment is allowed.
+**Scope**: Test the all functions can be added.
 
-**Action**:: Invoke the SetXFunctions entrypoint.
+**Action**: Invoke the SetXFunctions entrypoint.
 
-**Test Notes and Preconditions**:: Ensure the divestment is only possible after initialization.
+**Test Notes and Preconditions**: Create new empty factory.
 
-**Verification Steps**:: Verify the divestment fails if the pool isn't launched.
+**Verification Steps**: Verify the function can be set only once.
 
-**Scenario 1**:: Test the divestment
+**Scenario 1**: Test adding of all
 
-- [x] without provided liquidity
-- [x] with provided liquidity
+- [x] exchange fuctions
+- [x] token functions
+
+**Scope**: Test the function replacement.
+
+**Action**: Invoke the SetXFunctions entrypoint.
+
+**Test Notes and Preconditions**: Create new empty factory.
+
+**Verification Steps**: Verify the function can be set only once.
+
+**Scenario 1**: Test the replacement of
+
+- [x] exchange fuction
+- [x] token function
+
+**Scope**: Test the function count.
+
+**Action**: Invoke the SetXFunctions entrypoint.
+
+**Test Notes and Preconditions**: Create new empty factory.
+
+**Verification Steps**: Verify only 9 exchange and 4 token functions can be set.
+
+**Scenario 1**: Test the function setting
+
+- [x] of 5th token function
+- [x] of 9th token function
+
+## Test Item: TezToToken Entrypoint
+
+### General Requirements:
+
+1. Amount of XTZ to swap should be non-zero and received tokens cann't be bigger than 30% of reserved.
+1. Amount of received tokens should be non-zero and received XTZ cann't be bigger than 30% of reserved.
+1. Desirable minimal received amount of tokens should be non-zero.
+1. The received amount of tokens can't be smaller then minimal decirable amount.
+1. All bought tokens should be sent to user.
+1. Tez and token pool should be updated accordingly.
+1. The output amount is calculated as:
+
+```
+fee = tez_in * fee_rate
+tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
+```
+
+**Scope**: Test different amount of XTZ to be swapped.
+
+**Action**: Invoke the TezToToken entrypoint.
+
+**Test Notes and Preconditions**: Create new pair, provide liquidity.
+
+**Verification Steps**: Ensure the amount to be swapped cannot be zero.
+
+**Scenario 1**: Test swap of
+
+- [ ] 0 XTZ
+- [ ] 0.01% of reserves
+- [ ] 30% of reserves
+- [ ] 100% of reserves
+- [ ] 10000% of reserves
+
+**Scope**: Test different minimal desirable output amount.
+
+**Action**: Invoke the TezToToken entrypoint.
+
+**Test Notes and Preconditions**: Create new pair, provide liquidity.
+
+**Verification Steps**: Ensure the received amount cannot be zero and is taken into account during the swap, the real output is still equal to the calculated amount.
+
+**Scenario 1**: Test swap of
+
+- [ ] 0 tokens
+- [ ] too many tokens
+- [ ] exact tokens
+
+## Test Item: Rewards distribution
 
 **Scope**: Test the user's reward distribution.
 
-**Action**:: Invoke the DivestLiquidity entrypoint.
+**Action**: Invoke the DivestLiquidity entrypoint.
 
-**Test Notes and Preconditions**:: The exchange should be launched before.
+**Test Notes and Preconditions**: The exchange should be launched before.
 
-**Verification Steps**:: Verify the divestment fails if the the burnt shares are in the range.
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
 
-**Scenario 1**:: Test user rewards distribution of
+**Scenario 1**: Test user rewards distribution of
 
 - [ ] no reward.
 - [ ] reward is accomulated.
