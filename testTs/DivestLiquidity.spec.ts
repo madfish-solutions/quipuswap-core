@@ -2,13 +2,13 @@ import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
-import { defaultAccountInfo, initialSharesCount } from "./constants";
+import { defaultAccountInfo } from "./constants";
 
 // 133.036
 // ->
 // 315.984
 
-contract("DivestLiquidity()", function () {
+contract.only("DivestLiquidity()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
@@ -19,11 +19,12 @@ contract("DivestLiquidity()", function () {
   const receivedTezAmount: number = 200;
   const receivedTokenAmount: number = 20000;
   const newShares: number = 100;
-  const burntShares: number = 20;
+  const burntShares: number = 200;
 
   before(async () => {
     context = await Context.init([], false, "alice", false);
     await context.setDexFactoryFunction(0, "initialize_exchange");
+    await context.setDexFactoryFunction(1, "tez_to_token");
     await context.setDexFactoryFunction(4, "invest_liquidity");
     await context.setDexFactoryFunction(5, "divest_liquidity");
     pairAddress = await context.createPair();
@@ -34,10 +35,8 @@ contract("DivestLiquidity()", function () {
     const initToken = 1000000;
     const initTez = 10000;
 
-    before(async () => {});
-
     it("revert in case no liquidity is provided", async function () {
-      await context.pairs[0].divestLiquidity(1, 1, initialSharesCount);
+      await context.pairs[0].divestLiquidity(1, 1, initTez);
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, burntShares),
         (err) => {
@@ -91,12 +90,12 @@ contract("DivestLiquidity()", function () {
       );
       strictEqual(
         context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-        initialSharesCount - burntShares,
+        initTez - burntShares,
         "Alice should burn the shares"
       );
       strictEqual(
         context.pairs[0].storage.total_supply.toNumber(),
-        initialSharesCount - burntShares,
+        initTez - burntShares,
         "Alice tokens should be all supply"
       );
       strictEqual(
@@ -133,7 +132,7 @@ contract("DivestLiquidity()", function () {
 
     it("revert in case of too high expected burnt shares", async function () {
       await rejects(
-        context.pairs[0].divestLiquidity(1, 1, initialSharesCount * 2),
+        context.pairs[0].divestLiquidity(1, 1, 20000),
         (err) => {
           ok(err.message == "Dex/wrong-params", "Error message mismatch");
           return true;
@@ -143,7 +142,7 @@ contract("DivestLiquidity()", function () {
     });
 
     it("success in case of burnt shares of 1", async function () {
-      const minBurntShares = 1;
+      const minBurntShares = 10;
       const minReceivedTezAmount: number = 10;
       const minReceivedTokenAmount: number = 1000;
       await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
@@ -216,7 +215,7 @@ contract("DivestLiquidity()", function () {
     });
 
     it("success in case the medium burnt shares", async function () {
-      const minBurntShares = 10;
+      const minBurntShares = 100;
       const minReceivedTezAmount: number = 100;
       const minReceivedTokenAmount: number = 10000;
       await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
@@ -295,8 +294,8 @@ contract("DivestLiquidity()", function () {
       const minBurntShares = initialStorage.ledger[
         aliceAddress
       ].balance.toNumber();
-      const minReceivedTezAmount: number = minBurntShares * 10;
-      const minReceivedTokenAmount: number = minBurntShares * 1000;
+      const minReceivedTezAmount: number = minBurntShares;
+      const minReceivedTokenAmount: number = minBurntShares;
       const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
       const aliceInitTokenBalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
@@ -315,6 +314,8 @@ contract("DivestLiquidity()", function () {
         pairAddress
       ].balance;
       const pairTezBalance = await tezos.tz.getBalance(pairAddress);
+      console.log(aliceInitTokenBalance.toNumber());
+      console.log(minReceivedTokenAmount);
       strictEqual(
         aliceInitTokenBalance.toNumber() + minReceivedTokenAmount,
         aliceFinalTokenBalance.toNumber(),
@@ -369,10 +370,11 @@ contract("DivestLiquidity()", function () {
       const initTez = 100;
       const share = 1;
       await context.pairs[0].initializeExchange(initToken, initTez);
+      await context.pairs[0].tezToTokenPayment(1, 100, bobAddress);
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, share),
         (err) => {
-          ok(err.message == "Dex/high-expectation", "Error message mismatch");
+          ok(err.message == "Dex/wrong-out", "Error message mismatch");
           return true;
         },
         "Investment should revert"
@@ -382,8 +384,9 @@ contract("DivestLiquidity()", function () {
     it("revert in case of calculated tokens are zero", async function () {
       const initTez = 1000000;
       const initToken = 100;
-      await context.pairs[0].divestLiquidity(1, 1, initialSharesCount);
+      await context.pairs[0].divestLiquidity(1, 1, initToken);
       await context.pairs[0].initializeExchange(initToken, initTez);
+      await context.pairs[0].tezToTokenPayment(1, 100, bobAddress);
       const share = 1;
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, share),
@@ -448,7 +451,7 @@ contract("DivestLiquidity()", function () {
     it("success in case the of the expected amount smaller than calculated", async function () {
       const expectedTez = 100000;
       const expectedToken = 10;
-      const minBurntShares = 500;
+      const minBurntShares = 500000;
       const minReceivedTezAmount: number = 500000;
       const minReceivedTokenAmount: number = 50;
       await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
@@ -525,7 +528,7 @@ contract("DivestLiquidity()", function () {
     });
 
     it("success in case the of the exact expected tez and tokens", async function () {
-      const minBurntShares = 500;
+      const minBurntShares = 500000;
       const minReceivedTezAmount: number = 500000;
       const minReceivedTokenAmount: number = 50;
       await context.pairs[0].updateStorage({ ledger: [aliceAddress] });

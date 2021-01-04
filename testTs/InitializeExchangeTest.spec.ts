@@ -1,7 +1,7 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
-import { defaultAccountInfo, initialSharesCount } from "./constants";
+import { defaultAccountInfo } from "./constants";
 
 // 275.851s (7 tests)
 // ->
@@ -140,12 +140,12 @@ contract("InitializeExchange()", function () {
       );
       strictEqual(
         context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-        initialSharesCount,
+        tezAmount,
         "Alice should receive initial shares"
       );
       strictEqual(
         context.pairs[0].storage.total_supply.toNumber(),
-        initialSharesCount,
+        tezAmount,
         "Alice tokens should be all supply"
       );
       strictEqual(
@@ -204,7 +204,7 @@ contract("InitializeExchange()", function () {
     });
 
     it("revert in case the amount of tokens isn't approved", async function () {
-      await context.pairs[0].divestLiquidity(1, 1, initialSharesCount);
+      await context.pairs[0].divestLiquidity(1, 1, tezAmount);
       await context.pairs[0].approveToken(0, context.pairs[0].contract.address);
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, tezAmount, false),
@@ -273,12 +273,12 @@ contract("InitializeExchange()", function () {
       );
       strictEqual(
         context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-        initialSharesCount,
+        tezAmount,
         "Alice should receive initial shares"
       );
       strictEqual(
         context.pairs[0].storage.total_supply.toNumber(),
-        initialSharesCount,
+        tezAmount,
         "Alice tokens should be all supply"
       );
       strictEqual(

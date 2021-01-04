@@ -1,13 +1,13 @@
 import { Context } from "./contracManagers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
-import { defaultAccountInfo, initialSharesCount } from "./constants";
+import { defaultAccountInfo } from "./constants";
 
 // 142.995 (5 tests)
 // ->
 // 183.648 (9 tests)
 
-contract.only("InvestLiquidity()", function () {
+contract("InvestLiquidity()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
@@ -15,11 +15,12 @@ contract.only("InvestLiquidity()", function () {
   const bobAddress: string = accounts.bob.pkh;
   const tezAmount: number = 1000;
   const tokenAmount: number = 100000;
-  const newShares: number = 100;
+  const newShares: number = 1000;
 
   before(async () => {
     context = await Context.init([], false, "alice", false);
     await context.setDexFactoryFunction(0, "initialize_exchange");
+    await context.setDexFactoryFunction(1, "tez_to_token");
     await context.setDexFactoryFunction(4, "invest_liquidity");
     await context.setDexFactoryFunction(5, "divest_liquidity");
     pairAddress = await context.createPair();
@@ -33,7 +34,7 @@ contract.only("InvestLiquidity()", function () {
     before(async () => {});
 
     it("revert in case no liquidity is provided", async function () {
-      await context.pairs[0].divestLiquidity(1, 1, initialSharesCount);
+      await context.pairs[0].divestLiquidity(1, 1, initTez);
       await rejects(
         context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares),
         (err) => {
@@ -87,12 +88,12 @@ contract.only("InvestLiquidity()", function () {
       );
       strictEqual(
         context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-        initialSharesCount + newShares,
+        initTez + newShares,
         "Alice should receive 1000 shares"
       );
       strictEqual(
         context.pairs[0].storage.total_supply.toNumber(),
-        initialSharesCount + newShares,
+        initTez + newShares,
         "Alice tokens should be all supply"
       );
       strictEqual(
@@ -349,17 +350,6 @@ contract.only("InvestLiquidity()", function () {
   describe("Test purchased shares", () => {
     before(async () => {});
 
-    it("revert in case of 0 purchased shares", async function () {
-      await rejects(
-        context.pairs[0].investLiquidity(100, 1, 1),
-        (err) => {
-          ok(err.message == "Dex/wrong-params", "Error message mismatch");
-          return true;
-        },
-        "Investment should revert"
-      );
-    });
-
     it("success in case of more then 0 tokens purchesed", async function () {
       await context.pairs[0].updateStorage();
       const initialStorage = await context.pairs[0].storage;
@@ -426,6 +416,18 @@ contract.only("InvestLiquidity()", function () {
         (initialStorage.token_pool.toNumber() + tokenAmount) *
           (initialStorage.tez_pool.toNumber() + tezAmount),
         "Inveriant should be calculated properly"
+      );
+    });
+
+    it("revert in case of 0 purchased shares", async function () {
+      await context.pairs[0].tezToTokenPayment(1, 100, bobAddress);
+      await rejects(
+        context.pairs[0].investLiquidity(1, 1, 1),
+        (err) => {
+          ok(err.message == "Dex/wrong-params", "Error message mismatch");
+          return true;
+        },
+        "Investment should revert"
       );
     });
   });

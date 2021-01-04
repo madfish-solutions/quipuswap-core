@@ -6,7 +6,7 @@
 
 1. Initialization is only possible during deployment or if there is no shares.
 2. The assets amount cannot be zero during initialization.
-3. The user receives 1000 shares.
+3. The user receives the amount of shares equal to provided XTZ.
 4. Each token can have the only pair.
 5. Info about previous rewards (if any) should be reset.
 6. The tokens should be withdrawn from user.
@@ -200,8 +200,8 @@ tokens_divested = token_pool * burnt_shares / total_supply
 
 ### General Requirements:
 
-1. Amount of XTZ to swap should be non-zero and received tokens cann't be bigger than 30% of reserved.
-1. Amount of received tokens should be non-zero and received XTZ cann't be bigger than 30% of reserved.
+1. Amount of XTZ to swap should be non-zero and received tokens cann't be bigger than 1/3 of reserves.
+1. Amount of received tokens should be non-zero and received XTZ cann't be bigger than 1/3 of reserves.
 1. Desirable minimal received amount of tokens should be non-zero.
 1. The received amount of tokens can't be smaller then minimal decirable amount.
 1. All bought tokens should be sent to user.
@@ -242,6 +242,53 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 - [ ] 0 tokens
 - [ ] too many tokens
 - [ ] exact tokens
+
+## Test Item: TokenToTez Entrypoint
+
+### General Requirements:
+
+1. Amount of tokens to swap should be non-zero and received XTZ cann't be bigger than 1/3 of reserves.
+1. Amount of received tokens should be non-zero and received XTZ cann't be bigger than 1/3 of reserves.
+1. Desirable minimal received amount of XTZ should be non-zero.
+1. The received amount of XTZ can't be smaller then minimal decirable amount.
+1. All bought XTZ should be sent to user.
+1. Tez and token pool should be updated accordingly.
+1. The output amount is calculated as:
+
+```
+fee = tez_in * fee_rate
+tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
+```
+
+**Scope**: Test different amount of XTZ to be swapped.
+
+**Action**: Invoke the TokenToTez entrypoint.
+
+**Test Notes and Preconditions**: Create new pair, provide liquidity.
+
+**Verification Steps**: Ensure the amount to be swapped cannot be zero.
+
+**Scenario 1**: Test swap of
+
+- [ ] 0 tokens
+- [ ] 0.01% of reserves
+- [ ] 30% of reserves
+- [ ] 100% of reserves
+- [ ] 10000% of reserves
+
+**Scope**: Test different minimal desirable output amount.
+
+**Action**: Invoke the TokenToTez entrypoint.
+
+**Test Notes and Preconditions**: Create new pair, provide liquidity.
+
+**Verification Steps**: Ensure the received amount cannot be zero and is taken into account during the swap, the real output is still equal to the calculated amount.
+
+**Scenario 1**: Test swap of
+
+- [ ] 0 XTZ
+- [ ] too many XTZ
+- [ ] exact XTZ
 
 ## Test Item: Rewards distribution
 
