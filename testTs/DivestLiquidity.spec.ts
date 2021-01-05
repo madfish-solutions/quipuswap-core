@@ -8,7 +8,7 @@ import { defaultAccountInfo } from "./constants";
 // ->
 // 315.984
 
-contract.only("DivestLiquidity()", function () {
+contract("DivestLiquidity()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
@@ -25,6 +25,7 @@ contract.only("DivestLiquidity()", function () {
     context = await Context.init([], false, "alice", false);
     await context.setDexFactoryFunction(0, "initialize_exchange");
     await context.setDexFactoryFunction(1, "tez_to_token");
+    await context.setDexFactoryFunction(2, "token_to_tez");
     await context.setDexFactoryFunction(4, "invest_liquidity");
     await context.setDexFactoryFunction(5, "divest_liquidity");
     pairAddress = await context.createPair();
@@ -295,7 +296,7 @@ contract.only("DivestLiquidity()", function () {
         aliceAddress
       ].balance.toNumber();
       const minReceivedTezAmount: number = minBurntShares;
-      const minReceivedTokenAmount: number = minBurntShares;
+      const minReceivedTokenAmount: number = minBurntShares * 100;
       const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
       const aliceInitTokenBalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
@@ -314,8 +315,6 @@ contract.only("DivestLiquidity()", function () {
         pairAddress
       ].balance;
       const pairTezBalance = await tezos.tz.getBalance(pairAddress);
-      console.log(aliceInitTokenBalance.toNumber());
-      console.log(minReceivedTokenAmount);
       strictEqual(
         aliceInitTokenBalance.toNumber() + minReceivedTokenAmount,
         aliceFinalTokenBalance.toNumber(),
@@ -370,11 +369,11 @@ contract.only("DivestLiquidity()", function () {
       const initTez = 100;
       const share = 1;
       await context.pairs[0].initializeExchange(initToken, initTez);
-      await context.pairs[0].tezToTokenPayment(1, 100, bobAddress);
+      await context.pairs[0].tokenToTezPayment(100000, 1, bobAddress);
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, share),
         (err) => {
-          ok(err.message == "Dex/wrong-out", "Error message mismatch");
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
           return true;
         },
         "Investment should revert"
@@ -386,7 +385,7 @@ contract.only("DivestLiquidity()", function () {
       const initToken = 100;
       await context.pairs[0].divestLiquidity(1, 1, initToken);
       await context.pairs[0].initializeExchange(initToken, initTez);
-      await context.pairs[0].tezToTokenPayment(1, 100, bobAddress);
+      await context.pairs[0].tezToTokenPayment(1, 100000, bobAddress);
       const share = 1;
       await rejects(
         context.pairs[0].divestLiquidity(1, 1, share),
@@ -400,6 +399,13 @@ contract.only("DivestLiquidity()", function () {
   });
 
   describe("Test expected amount when", () => {
+    before(async () => {
+      const initTez = 1000000;
+      const initToken = 100;
+      await context.pairs[0].divestLiquidity(1, 1, initTez);
+      await context.pairs[0].initializeExchange(initToken, initTez);
+    });
+
     it("revert in case of expected tez are higher", async function () {
       const share = 100;
       await rejects(
