@@ -11,16 +11,12 @@ jobs:
   compile-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-      - name: Use Node.js 12.16.1
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
         with:
-          node-version: 12.16.1
-      - name: Install git
-        run: apt update && apt install git -y
-      - name: Install yarn
-        run: npm i -g yarn
+          node-version: "12"
+      - name: Install Git
+        run: apt install git -y
       - name: Install modules
         run: yarn
       - name: Run the ganache-cli in background
