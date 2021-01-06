@@ -2,25 +2,35 @@ import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import { calculateFee } from "./helpers/utils";
+import accounts from "./accounts/accounts";
 
-contract("TokenToTokenPayment()", function () {
+contract.only("TokenToTokenPayment()", function () {
   let context: Context;
+  let tokenAddress: string;
+  let pairAddress: string;
+  const aliceAddress: string = accounts.alice.pkh;
+  const bobAddress: string = accounts.bob.pkh;
+  const tezInitAmount0 = 10000;
+  const tezInitAmount1 = 20000;
+  const tokenInitAmount0 = 1000000;
+  const tokenInitAmount1 = 10000;
 
   before(async () => {
-    context = await Context.init([]);
+    context = await Context.init([], false, "alice", false);
+    await context.setDexFactoryFunction(0, "initialize_exchange");
+    await context.setDexFactoryFunction(1, "tez_to_token");
+    await context.setDexFactoryFunction(2, "token_to_tez");
+    await context.setDexFactoryFunction(4, "invest_liquidity");
+    await context.setDexFactoryFunction(5, "divest_liquidity");
+    await context.createPairs([
+      { tezAmount: tezInitAmount0, tokenAmount: tokenInitAmount0 },
+      { tezAmount: tezInitAmount1, tokenAmount: tokenInitAmount1 },
+    ]);
+    tokenAddress = await context.pairs[0].contract.address;
   });
 
   it("should exchnge token to token and update dex state", async function () {
     this.timeout(5000000);
-    // create context with exchange
-
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs([
-      { tezAmount: 10000, tokenAmount: 1000000 },
-      { tezAmount: 20000, tokenAmount: 10000 },
-    ]);
-
     let tokenAmount = 1000;
     let middleTezAmount = 10;
     let minTokensOut = 5;
@@ -116,12 +126,12 @@ contract("TokenToTokenPayment()", function () {
     );
     strictEqual(
       firstPairTezBalance.toNumber(),
-      10000 - middleTezAmount,
+      tezInitAmount0 - middleTezAmount,
       "Tez not withdrawn"
     );
     strictEqual(
       secondPairTezBalance.toNumber(),
-      20000 + middleTezAmount,
+      tezInitAmount1 + middleTezAmount,
       "Tez not received"
     );
 
@@ -143,12 +153,12 @@ contract("TokenToTokenPayment()", function () {
     );
     strictEqual(
       firstPairTokenBalance.toNumber(),
-      1000000 + tokenAmount,
+      tokenInitAmount0 + tokenAmount,
       "Tokens not received"
     );
     strictEqual(
       secondPairTokenBalance.toNumber(),
-      10000 - minTokensOut,
+      tokenInitAmount1 - minTokensOut,
       "Tokens not received"
     );
 
@@ -157,32 +167,32 @@ contract("TokenToTokenPayment()", function () {
     await context.pairs[1].updateStorage();
     strictEqual(
       context.pairs[0].storage.tez_pool.toNumber(),
-      10000 - middleTezAmount,
+      tezInitAmount0 - middleTezAmount,
       "Tez pool should decrement by sent amount"
     );
     strictEqual(
       context.pairs[0].storage.token_pool.toNumber(),
-      1000000 + tokenAmount,
+      tokenInitAmount0 + tokenAmount,
       "Token pool should decrement by withdrawn amount"
     );
     strictEqual(
       context.pairs[1].storage.tez_pool.toNumber(),
-      20000 + middleTezAmount,
+      tezInitAmount1 + middleTezAmount,
       "Tez pool should decrement by sent amount"
     );
     strictEqual(
       context.pairs[1].storage.token_pool.toNumber(),
-      10000 - minTokensOut,
+      tezInitAmount0 - minTokensOut,
       "Token pool should decrement by withdrawn amount"
     );
     strictEqual(
       context.pairs[0].storage.invariant.toNumber(),
-      (1000000 + tokenAmount) * (10000 - middleTezAmount),
+      (tokenInitAmount0 + tokenAmount) * (tezInitAmount0 - middleTezAmount),
       "Inveriant should be calculated properly"
     );
     strictEqual(
       context.pairs[1].storage.invariant.toNumber(),
-      (20000 + middleTezAmount) * (10000 - minTokensOut),
+      (tezInitAmount1 + middleTezAmount) * (tokenInitAmount1 - minTokensOut),
       "Inveriant should be calculated properly"
     );
   });
