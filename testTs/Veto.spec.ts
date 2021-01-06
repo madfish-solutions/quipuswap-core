@@ -1,4 +1,4 @@
-import { Context } from "./contracManagers/context";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 

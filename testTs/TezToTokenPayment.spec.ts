@@ -1,9 +1,9 @@
-import { Context } from "./contracManagers/context";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 
-contract.only("TezToTokenPayment()", function () {
+contract("TezToTokenPayment()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;

@@ -5,6 +5,6 @@ build/
 package-lock.json
 faucet*
 deploy
-test/contracManagers/*.js
+test/helpers/*.js
 test/
 .vscode/

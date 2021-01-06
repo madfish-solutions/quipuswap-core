@@ -1,7 +1,7 @@
-import { Context } from "./contracManagers/context";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { calculateFee } from "./contracManagers/utils";
+import { calculateFee } from "./helpers/utils";
 
 contract("TokenToTezPayment()", function () {
   let context: Context;
