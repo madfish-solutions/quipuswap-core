@@ -201,12 +201,12 @@ tokens_divested = token_pool * burnt_shares / total_supply
 ### General Requirements:
 
 1. Amount of XTZ to swap should be non-zero and received tokens cann't be bigger than 1/3 of reserves.
-1. Amount of received tokens should be non-zero and received XTZ cann't be bigger than 1/3 of reserves.
-1. Desirable minimal received amount of tokens should be non-zero.
-1. The received amount of tokens can't be smaller then minimal decirable amount.
-1. All bought tokens should be sent to user.
-1. Tez and token pool should be updated accordingly.
-1. The output amount is calculated as:
+2. Amount of received tokens should be non-zero and received XTZ cann't be bigger than 1/3 of reserves.
+3. Desirable minimal received amount of tokens should be non-zero.
+4. The received amount of tokens can't be smaller then minimal decirable amount.
+5. All bought tokens should be sent to user.
+6. Tez and token pool should be updated accordingly.
+7. The output amount is calculated as:
 
 ```
 fee = tez_in * fee_rate
@@ -271,11 +271,11 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 tokens
-- [ ] 0.01% of reserves
-- [ ] 30% of reserves
-- [ ] 100% of reserves
-- [ ] 10000% of reserves
+- [x] 0 tokens
+- [x] 0.01% of reserves
+- [x] 30% of reserves
+- [x] 100% of reserves
+- [x] 10000% of reserves
 
 **Scope**: Test different minimal desirable output amount.
 
@@ -290,6 +290,22 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 - [ ] 0 XTZ
 - [ ] too many XTZ
 - [ ] exact XTZ
+
+## Test Item: Token To Token Exchange
+
+### General Requirements:
+
+1. Should be possibel to exchange token to token via batch.
+
+**Scope**: Test correct requied amounts.
+
+**Action**: Invoke the TokenToTez and TezToToken entrypoints.
+
+**Test Notes and Preconditions**: Create 2 new pairs, provide liquidity.
+
+**Verification Steps**: Ensure the received amount is taken into account during the swap, the real output is still equal to the calculated amount.
+
+**Scenario 1**: Test swap of 1000 tokens
 
 ## Test Item: Rewards distribution
 

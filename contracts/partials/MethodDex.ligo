@@ -379,10 +379,10 @@ function token_to_tez (const p : dex_action; const s : dex_storage; const this :
           s.token_pool := s.token_pool + args.amount;
           const new_tez_pool : nat = s.invariant / abs(s.token_pool - args.amount / fee_rate);
           const tez_out : nat = abs(s.tez_pool - new_tez_pool);
-          if tez_out >= args.min_out then {
+          if tez_out >= args.min_out and tez_out <= s.tez_pool / 3n then {
             s.tez_pool := new_tez_pool;
             s.invariant := new_tez_pool * s.token_pool;
-          } else failwith("Dex/high-min-tez-out");
+          } else failwith("Dex/wrong-out");
           operations := list [transaction(
               wrap_transfer_trx(Tezos.sender, this, args.amount, s), 
               0mutez, 
