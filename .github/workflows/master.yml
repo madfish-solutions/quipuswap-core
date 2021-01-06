@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: "12"
       - name: Install Git
-        run: apt install git -y
+        run: sudo apt install git -y
       - name: Install modules
         run: yarn
       - name: Run the ganache-cli in background
