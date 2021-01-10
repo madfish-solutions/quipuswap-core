@@ -1,3 +1,3 @@
 #!/bin/sh
-npm run start-sandbox &
+yarn start-sandbox &
 sleep 10
