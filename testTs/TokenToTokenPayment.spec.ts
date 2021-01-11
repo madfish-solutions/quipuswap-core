@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { calculateFee } from "./helpers/utils";
 import accounts from "./accounts/accounts";
 
-contract.only("TokenToTokenPayment()", function () {
+contract("TokenToTokenPayment()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;

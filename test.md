@@ -287,9 +287,9 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 XTZ
-- [ ] too many XTZ
-- [ ] exact XTZ
+- [x] 0 XTZ
+- [x] too many XTZ
+- [x] exact XTZ
 
 ## Test Item: Token To Token Exchange
 
@@ -306,6 +306,84 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 **Verification Steps**: Ensure the received amount is taken into account during the swap, the real output is still equal to the calculated amount.
 
 **Scenario 1**: Test swap of 1000 tokens
+
+## Test Item: Vote Exchange
+
+### General Requirements:
+
+1. Vote is only possible if the user has shares in the pool.
+2. The user cannot vote for the banned candidate.
+3. The user cannot exceed the share balance (including the amount of voted tokens).
+4. The other user can vote instead of shares owner if there are enough allowances.
+5. The previous votes should be removed if the user voted before.
+6. Total votes, user liquid balance and candidate should be updated.
+7. Zero vote should be interpreted as removing any candidate.
+8. If the amount of vote for the candidate is higher than the previous, baker is updated.
+
+**Scope**: Test the user's vote power.
+
+**Action**: Invoke the Vote entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the amount of votes can't be higher than the liquid balance.
+
+**Scenario 1**: Test voting with:
+
+- [ ] no shares.
+- [ ] 0 shares with no candidate.
+- [ ] more than liquid shares.
+- [ ] exactly equal to liquid balance.
+- [ ] enough liquid shares.
+- [ ] enough liquid shares for revoting.
+- [ ] remove candidate with 0 shares to vote.
+
+**Scope**: Test different candidates.
+
+**Action**: Invoke the Vote entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
+
+**Verification Steps**: Verify the candidate of votes can't be higher than the liquid balance.
+
+**Scenario 1**: Test voting for:
+
+- [ ] unregistered candidate with power that makes him delegate.
+- [ ] unregistered candidate with power that won't makes him delegate.
+- [ ] new candidate.
+- [ ] candidate with votes.
+- [ ] banned candidate.
+
+**Scope**: Test candidate replacement.
+
+**Action**: Invoke the Vote entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
+
+**Verification Steps**: Verify the candidate of votes can't be higher than the liquid balance.
+
+**Scenario 1**: Test voting for:
+
+- [ ] new candidate if there is no delegate.
+- [ ] new candidate if there is delegate with lower votes.
+- [ ] new candidate if there is delegate with higher votes.
+- [ ] the delegate.
+- [ ] delegate by remove votes for him.
+
+**Scope**: Test candidate .
+
+**Action**: Invoke the Vote entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
+
+**Verification Steps**: Verify the candidate of votes can't be higher than the liquid balance.
+
+**Scenario 1**: Test voting for:
+
+- [ ] unregistered candidate with power that makes him delegate.
+- [ ] unregistered candidate with power that won't makes him delegate.
+- [ ] new candidate.
+- [ ] candidate with votes.
 
 ## Test Item: Rewards distribution
 
