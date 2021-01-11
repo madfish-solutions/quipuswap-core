@@ -320,6 +320,17 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 7. Zero vote should be interpreted as removing any candidate.
 8. If the amount of vote for the candidate is higher than the previous, baker is updated.
 
+check:
+
+1. voter balance
+2. voter frozen balance
+3. voter candidate
+4. voter vote
+5. candidate votes
+6. current delegated
+7. current candidate
+8. total votes
+
 **Scope**: Test the user's vote power.
 
 **Action**: Invoke the Vote entrypoint.
@@ -330,13 +341,13 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test voting with:
 
-- [ ] no shares.
-- [ ] 0 shares with no candidate.
-- [ ] more than liquid shares.
-- [ ] exactly equal to liquid balance.
-- [ ] enough liquid shares.
-- [ ] enough liquid shares for revoting.
-- [ ] remove candidate with 0 shares to vote.
+- [x] no shares.
+- [x] 0 shares with no candidate.
+- [x] more than liquid shares.
+- [x] enough liquid shares.
+- [x] exactly equal to liquid balance.
+- [x] enough liquid shares for revoting.
+- [x] 0 shares to remove candidate.
 
 **Scope**: Test voting permissions.
 
@@ -348,9 +359,9 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test voting by:
 
-- [ ] the user.
-- [ ] the approved user.
-- [ ] the unapproved user.
+- [x] the user.
+- [x] the approved user.
+- [x] the unapproved user.
 
 **Scope**: Test different candidates.
 
@@ -362,11 +373,11 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test voting for:
 
-- [ ] unregistered candidate with power that makes him delegate.
-- [ ] unregistered candidate with power that won't makes him delegate.
-- [ ] new candidate.
-- [ ] candidate with votes.
-- [ ] banned candidate.
+- [x] unregistered candidate with power that makes him delegate.
+- [x] unregistered candidate with power that won't makes him delegate.
+- [x] new candidate.
+- [x] candidate with votes.
+- [x] banned candidate.
 
 **Scope**: Test candidate replacement.
 
@@ -378,7 +389,7 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test voting for:
 
-- [ ] new candidate if there is no delegate.
+- [ ] new candidate if there if no delegate.
 - [ ] new candidate if there is delegate with lower votes.
 - [ ] new candidate if there is delegate with higher votes.
 - [ ] the delegate.
@@ -398,6 +409,18 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 - [ ] unregistered candidate with power that won't makes him delegate.
 - [ ] new candidate.
 - [ ] candidate with votes.
+
+## Test Item: Veto entrypoint
+
+### General Requirements:
+
+1.  Vote is only possible if the user has shares in the pool.
+2.  The user cannot exceed the share balance (including the amount of voted tokens).
+3.  The other user can veto instead of shares owner if there are enough allowances.
+4.  The previous vetos should be removed if the user set veto before for the current delegate.
+5.  Total vetos, user liquid balance and last.veto should be updated.
+6.  If the amount of vetos for the delegate is higher than the previous, baker is replaced.
+7.  If the delegate is reset the vetos should be rest.
 
 ## Test Item: Rewards distribution
 
