@@ -338,6 +338,20 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 - [ ] enough liquid shares for revoting.
 - [ ] remove candidate with 0 shares to vote.
 
+**Scope**: Test voting permissions.
+
+**Action**: Invoke the Vote entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
+
+**Verification Steps**: Verify the voting for user can only be done by approved users or user by himself.
+
+**Scenario 1**: Test voting by:
+
+- [ ] the user.
+- [ ] the approved user.
+- [ ] the unapproved user.
+
 **Scope**: Test different candidates.
 
 **Action**: Invoke the Vote entrypoint.
