@@ -1,20 +1,18 @@
 {
   "name": "quipuswap",
   "version": "0.0.1",
-  "config": {
-    "standard": "FA2"
-  },
+  "license": "MIT",
   "scripts": {
     "clean": "rm -rf ./build",
-    "migrate": "npm run clean && truffle migrate",
+    "migrate": "yarn clean && truffle migrate",
     "migrate-carthagenet": "truffle migrate --network carthagenet",
-    "migrate-delphinet": "npm run clean && truffle migrate --network delphinet",
-    "migrate-delphinet-reset": "npm run clean && truffle migrate --network delphinet --reset",
-    "compile-dex": "node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts",
-    "compile": "npm run clean && node scripts/cli.js build ./main/Dex$npm_package_config_standard --no-json -o contracts && truffle compile",
+    "migrate-delphinet": "yarn clean && truffle migrate --network delphinet",
+    "migrate-delphinet-reset": "yarn clean && truffle migrate --network delphinet --reset",
+    "compile-dex": "node scripts/cli.js build-dex --no-json -o contracts",
+    "compile": "yarn clean && yarn compile-dex && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",
-    "test": "tsc  && npm run clean && npm run compile && truffle test",
-    "test:quick": "tsc && truffle test",
+    "test": "yarn clean && yarn compile && truffle test",
+    "test:quick": "truffle test",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -22,10 +20,10 @@
     "bignumber.js": "^9.0.0",
     "commander": "^5.1.0",
     "dotenv": "^8.2.0",
-    "patch-package": "^6.2.2",
-    "typescript": "^4.0.3",
     "ganache-cli": "6.11.0-tezos.0",
-    "truffle": "5.5.0-tezos.4"
+    "patch-package": "^6.2.2",
+    "truffle": "5.5.0-tezos.4",
+    "typescript": "^4.0.3"
   },
   "directories": {
     "test": "./test"

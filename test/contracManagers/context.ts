@@ -1,4 +1,4 @@
-const standard = process.env.npm_package_config_standard;
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 import { Dex as DexFA12 } from "./dexFA12";
 import { Dex as DexFA2 } from "./dexFA2";

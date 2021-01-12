@@ -5,7 +5,7 @@ import { TokenFA2 } from "./tokenFA2";
 import { defaultTokenId } from "./tokenFA2";
 import { DexStorage } from "./types";
 import { tezPrecision } from "./utils";
-const standard = process.env.npm_package_config_standard;
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 export class Dex extends TokenFA2 {
   public contract: ContractAbstraction<ContractProvider>;

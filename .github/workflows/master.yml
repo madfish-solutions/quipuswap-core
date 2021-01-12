@@ -1,0 +1,48 @@
+name: Testing Pipeline
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  fa12-compile-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "12"
+      - name: Install Git
+        run: sudo apt install git -y
+      - name: Install modules
+        run: yarn
+      - name: Run the ganache-cli in background
+        run: ./ci/flextesa.sh
+      - name: Remove existing .env
+        run: rm .env
+      - name: Compile and test the contracts
+        run: yarn compile && yarn test
+        env:
+          EXCHANGE_TOKEN_STANDARD: FA12
+  fa2-compile-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "12"
+      - name: Install Git
+        run: sudo apt install git -y
+      - name: Install modules
+        run: yarn
+      - name: Run the ganache-cli in background
+        run: ./ci/flextesa.sh
+      - name: Remove existing .env
+        run: rm .env
+      - name: Compile and test the contracts
+        run: yarn compile && yarn test
+        env:
+          EXCHANGE_TOKEN_STANDARD: FA2

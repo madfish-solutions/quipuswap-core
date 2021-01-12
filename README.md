@@ -55,7 +55,7 @@ cd quipuswap-core && yarn
 
 To compile and deploy contracts to Delphinet
 
-1. Chose configure the version - `FA12` or `FA2` - by setting `npm_package_config_standard` in package.json and run:
+1. Chose configure the version - `FA12` or `FA2` - by setting `EXCHANGE_TOKEN_STANDARD` in `.env` and run:
 
 ```
 yarn run migrate-delphinet
@@ -77,7 +77,7 @@ Contracts are processed in the following stages:
 3. Configuration
 4. Interactions on-chain
 
-As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the intercontract communication between Dex and external tokens, the shared code base is used. There for to work with the spesific standard the version - `FA12` or `FA2` - should be configured by setting `npm_package_config_standard` in package.json
+As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the intercontract communication between Dex and external tokens, the shared code base is used. There for to work with the spesific standard the version - `FA12` or `FA2` - should be configured by setting `EXCHANGE_TOKEN_STANDARD` in `.env`
 
 ## Compilation
 
@@ -395,4 +395,4 @@ Truffle framework is used for testing. Run:
 yarn test
 ```
 
-NOTE: if you want to use a different network, configure `truffle-config.js`. If you need to use a different standard, configure `$npm_package_config_standard` in `package.json`
+NOTE: if you want to use a different network, configure `truffle-config.js`. If you need to use a different standard, configure `$EXCHANGE_TOKEN_STANDARD` in `.env`

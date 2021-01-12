@@ -111,7 +111,7 @@ contract("Veto()", function () {
     strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
   });
 
-  if (process.env.npm_package_config_standard === "FA12") {
+  if (process.env.EXCHANGE_TOKEN_STANDARD === "FA12") {
     it("should set veto by approved user", async function () {
       this.timeout(5000000);
       // reset pairs
