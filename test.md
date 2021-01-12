@@ -381,7 +381,7 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 - [x] new candidate if there if no delegate.
 - [x] new candidate if there is delegate with lower votes.
 - [x] keep candidate if there is delegate with the same votes.
-- [ ] new candidate if there is delegate with higher votes.
+- [x] new candidate if there is delegate with higher votes.
 - [x] the delegate.
 - [x] delegate by remove votes for him.
 
@@ -394,26 +394,123 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 3.  The other user can set veto instead of shares owner if there are enough allowances.
 4.  The previous vetos should be removed if the user set veto before for the current delegate.
 5.  Total vetos, user liquid balance and last veto should be updated.
-6.  If the amount of vetos for the delegate is higher than the previous, baker is replaced.
+6.  If the amount of vetos is at least 1/3 of all the votes the delegate receiveddelegate is changed.
 7.  If the delegate is reset the vetos should be reset.
 
 **Scope**: Test the user's veto power.
 
-**Action**: Invoke the Vote entrypoint.
+**Action**: Invoke the Veto entrypoint.
 
 **Test Notes and Preconditions**: The exchange should be launched before.
 
 **Verification Steps**: Verify the amount of votes can't be higher than the liquid balance.
 
-**Scenario 1**: Test voting with:
+**Scenario 1**: Test veto with:
 
 - [ ] no shares.
-- [ ] 0 shares with no candidate.
+- [ ] 0 shares.
 - [ ] more than liquid shares.
 - [ ] enough liquid shares.
 - [ ] exactly equal to liquid balance.
-- [ ] enough liquid shares for revoting.
-- [ ] 0 shares to remove candidate.
+- [ ] enough after delegate removal.
+
+**Scope**: Test veto permissions.
+
+**Action**: Invoke the Veto entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to veto.
+
+**Verification Steps**: Verify the veto agains the delegator can only be done by approved users or user by himself.
+
+**Scenario 1**: Test veto by:
+
+- [ ] the user.
+- [ ] the approved user.
+- [ ] the unapproved user.
+
+**Scope**: Test different candidates.
+
+**Action**: Invoke the Veto entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
+
+**Verification Steps**: Verify the candidate of votes can't be higher than the liquid balance.
+
+**Scenario 1**: Test veto for:
+
+- [ ] no delegate.
+- [ ] delegate.
+
+**Scope**: Test the veto limit.
+
+**Action**: Invoke the Veto entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
+
+**Verification Steps**: Verify the amount of votes can't be higher than the liquid balance.
+
+**Scenario 1**: Test veto with:
+
+- [ ] too little vetos.
+- [ ] exactly 1/3 vetos.
+- [ ] more than 1/3 vetos.
+
+              const voter_info : vote_info = get_voter(args.voter, s);
+              if account.balance + voter_info.veto < args.value then
+                failwith("Dex/not-enough-balance")
+              else skip;
+
+              (* Check permissions *)
+
+  #if FA2_STANDARD_ENABLED
+  if args.voter = Tezos.sender or account.allowances contains Tezos.sender then
+  skip
+  else failwith("Dex/not-enough-allowance");
+  #else
+  if args.voter =/= Tezos.sender then block {
+  const spender_allowance : nat = get_allowance(account, Tezos.sender, s);
+  if spender_allowance < args.value then
+  failwith("Dex/not-enough-allowance")
+  else skip;
+  account.allowances[Tezos.sender] := abs(spender_allowance - args.value);
+  } else skip;
+  #endif
+
+              account.balance := abs(account.balance + voter_info.veto - args.value);
+              account.frozen_balance := abs(account.frozen_balance - voter_info.veto + args.value);
+              s.ledger[args.voter] := account;
+
+              if s.last_veto >= voter_info.last_veto then
+                voter_info.veto := 0n
+              else skip;
+
+              s.veto := abs(s.veto + args.value - voter_info.veto);
+              voter_info.veto := args.value;
+              voter_info.last_veto := Tezos.now;
+              s.voters[args.voter] := voter_info;
+
+              if s.veto > s.total_votes / 3n then {
+                s.veto := 0n;
+                s.last_veto := Tezos.now;
+
+                case s.current_delegated of None -> skip
+                | Some(d) -> {
+                  s.vetos[d] := Tezos.now + veto_period;
+                  case s.current_candidate of None ->
+                    s.current_delegated := s.current_candidate
+                  | Some(c) -> {
+                    s.current_delegated := if d = c then (None: option(key_hash))
+                      else s.current_candidate;
+                    s.current_candidate := (None: option(key_hash));
+                  }
+                  end;
+                }
+                end;
+                operations := set_delegate(s.current_delegated) # operations;
+              } else skip;
+            }
+          end
+        }
 
 ## Test Item: Rewards distribution
 

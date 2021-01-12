@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 const standard = process.env.npm_package_config_standard;
 
-contract.only("Vote()", function () {
+contract("Vote()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
