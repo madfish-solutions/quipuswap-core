@@ -8,7 +8,7 @@ on:
     branches:
       - master
 jobs:
-  fa12-compile-and-test-fa12:
+  fa12-compile-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
