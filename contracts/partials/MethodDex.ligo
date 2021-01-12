@@ -239,17 +239,26 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
             voter_info.vote := args.value;
             s.voters[args.voter] := voter_info;
 
+            if case s.current_delegated of
+              | None -> False 
+              | Some(delegate) -> args.candidate = delegate
+              end 
+            then skip 
+            else {
+              operations := list [set_delegate(Some(args.candidate)); set_delegate(s.current_delegated)];
+            };
+
             const new_votes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + args.value;
             s.votes[args.candidate] := new_votes;
             if args.value =/= 0n and (case s.current_candidate of None -> True 
-              | Some(candidate) -> (case s.votes[candidate] of None -> 0n | Some(v) -> v end) < new_votes
+              | Some(candidate) -> (case s.votes[candidate] of None -> 0n | Some(v) -> v end) < new_votes or candidate = args.candidate
               end) then if case s.current_delegated of
                 | None -> True
                 | Some(current) -> (case s.votes[current] of None -> 0n | Some(v) -> v end) < new_votes
               end then {
                 s.current_candidate := s.current_delegated;
                 s.current_delegated := Some(args.candidate);
-                operations := set_delegate(s.current_delegated) # operations;
+                operations := list [set_delegate(s.current_delegated)];
               } else s.current_candidate := Some(args.candidate);
             else skip;
           }

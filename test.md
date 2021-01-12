@@ -320,17 +320,6 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 7. Zero vote should be interpreted as removing any candidate.
 8. If the amount of vote for the candidate is higher than the previous, baker is updated.
 
-check:
-
-1. voter balance
-2. voter frozen balance
-3. voter candidate
-4. voter vote
-5. candidate votes
-6. current delegated
-7. current candidate
-8. total votes
-
 **Scope**: Test the user's vote power.
 
 **Action**: Invoke the Vote entrypoint.
@@ -389,38 +378,42 @@ check:
 
 **Scenario 1**: Test voting for:
 
-- [ ] new candidate if there if no delegate.
-- [ ] new candidate if there is delegate with lower votes.
+- [x] new candidate if there if no delegate.
+- [x] new candidate if there is delegate with lower votes.
+- [x] keep candidate if there is delegate with the same votes.
 - [ ] new candidate if there is delegate with higher votes.
-- [ ] the delegate.
-- [ ] delegate by remove votes for him.
-
-**Scope**: Test candidate .
-
-**Action**: Invoke the Vote entrypoint.
-
-**Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
-
-**Verification Steps**: Verify the candidate of votes can't be higher than the liquid balance.
-
-**Scenario 1**: Test voting for:
-
-- [ ] unregistered candidate with power that makes him delegate.
-- [ ] unregistered candidate with power that won't makes him delegate.
-- [ ] new candidate.
-- [ ] candidate with votes.
+- [x] the delegate.
+- [x] delegate by remove votes for him.
 
 ## Test Item: Veto entrypoint
 
 ### General Requirements:
 
-1.  Vote is only possible if the user has shares in the pool.
-2.  The user cannot exceed the share balance (including the amount of voted tokens).
-3.  The other user can veto instead of shares owner if there are enough allowances.
+1.  Veto is only possible if the user has shares in the pool.
+2.  The user cannot exceed the share balance (including the amount of tokens veted before).
+3.  The other user can set veto instead of shares owner if there are enough allowances.
 4.  The previous vetos should be removed if the user set veto before for the current delegate.
-5.  Total vetos, user liquid balance and last.veto should be updated.
+5.  Total vetos, user liquid balance and last veto should be updated.
 6.  If the amount of vetos for the delegate is higher than the previous, baker is replaced.
-7.  If the delegate is reset the vetos should be rest.
+7.  If the delegate is reset the vetos should be reset.
+
+**Scope**: Test the user's veto power.
+
+**Action**: Invoke the Vote entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the amount of votes can't be higher than the liquid balance.
+
+**Scenario 1**: Test voting with:
+
+- [ ] no shares.
+- [ ] 0 shares with no candidate.
+- [ ] more than liquid shares.
+- [ ] enough liquid shares.
+- [ ] exactly equal to liquid balance.
+- [ ] enough liquid shares for revoting.
+- [ ] 0 shares to remove candidate.
 
 ## Test Item: Rewards distribution
 
