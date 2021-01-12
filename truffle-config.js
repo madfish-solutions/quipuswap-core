@@ -1,3 +1,8 @@
+require('dotenv').config();
+require("ts-node").register({
+  files: true,
+});
+
 const { alice } = require("./scripts/sandbox/accounts");
 
 module.exports = {

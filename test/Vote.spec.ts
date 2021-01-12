@@ -445,7 +445,7 @@ contract("Vote()", function () {
     );
   });
 
-  if (process.env.npm_package_config_standard === "FA12") {
+  if (process.env.EXCHANGE_TOKEN_STANDARD === "FA12") {
     it("should allow to vote and set candidate by approved user", async function () {
       this.timeout(5000000);
 

@@ -1,4 +1,4 @@
-const standard = process.env.npm_package_config_standard;
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 let Factory = artifacts.require("Factory" + standard);
 let TestFactory = artifacts.require("TestFactory" + standard);
 const factoryStorage = require("../storage/Factory");

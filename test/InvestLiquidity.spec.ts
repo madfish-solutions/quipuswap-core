@@ -241,7 +241,7 @@ contract("InvestLiquidity()", function () {
     );
   });
 
-  if (process.env.npm_package_config_standard === "FA12") {
+  if (process.env.EXCHANGE_TOKEN_STANDARD === "FA12") {
     it("should fail investment if too little tokens are sent", async function () {
       // reset pairs
       await context.flushPairs();

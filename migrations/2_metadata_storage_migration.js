@@ -1,4 +1,4 @@
-const standard = process.env.npm_package_config_standard;
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 let prefix = "";
 const MetadataStorage = artifacts.require("MetadataStorage");
 const metadataStorage = require("../storage/MetadataStorage");

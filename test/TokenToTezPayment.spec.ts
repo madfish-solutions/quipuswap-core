@@ -152,7 +152,7 @@ contract("TokenToTezPayment()", function () {
     );
   });
 
-  if (process.env.npm_package_config_standard === "FA12") {
+  if (process.env.EXCHANGE_TOKEN_STANDARD === "FA12") {
     it("should fail if not enough tokens are approved", async function () {
       let tokenAmount = 1000;
       let minTezOut = 10;

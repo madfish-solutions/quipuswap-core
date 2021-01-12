@@ -5,7 +5,7 @@ import { execSync } from "child_process";
 import { getLigo, prepareProviderOptions, tezPrecision } from "./utils";
 import { defaultTokenId } from "./tokenFA2";
 import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
-const standard = process.env.npm_package_config_standard;
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 export class Factory {
   public contract: ContractAbstraction<ContractProvider>;

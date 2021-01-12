@@ -1,7 +1,13 @@
 {
   "compilerOptions": {
+    "moduleResolution": "node",
+    "allowJs": true,
     "noImplicitAny": false,
     "downlevelIteration": true,
-    "outDir": "./test/",
-  }
+    "esModuleInterop": true,
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "types": ["node", "@types/mocha", "@types/chai"]
+  },
+  "exclude": ["node_modules", "build", "cache", "artifacts", "scripts"],
+  "include": ["./**/*.ts"]
 }
