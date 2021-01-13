@@ -250,7 +250,10 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
 
             const new_votes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + args.value;
             s.votes[args.candidate] := new_votes;
-            if args.value =/= 0n and (case s.current_candidate of None -> True 
+            if args.value =/= 0n and (case s.current_candidate of None -> case s.current_delegated of
+                  | None -> True
+                  | Some(current) -> current =/= args.candidate
+                end
               | Some(candidate) -> (case s.votes[candidate] of None -> 0n | Some(v) -> v end) < new_votes or candidate = args.candidate
               end) then if case s.current_delegated of
                 | None -> True

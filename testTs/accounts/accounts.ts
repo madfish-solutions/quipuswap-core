@@ -10,7 +10,7 @@ export default {
     pk: "edpkurPsQ8eUApnLUJ9ZPDvu98E8VNj4KtJa1aZr16Cr5ow5VHKnz4",
   },
   carol: {
-    pkh: "tz1aSkwEot3L2kmUvcoxzjMomb9mvBNuzFK6",
+    pkh: "tz1MnmtP4uAcgMpeZN6JtyziXeFqqwQG6yn6",
     sk: "edsk3Sb16jcx9KrgMDsbZDmKnuN11v4AbTtPBgBSBTqYftd8Cq3i1e",
     pk: "edpku9qEgcyfNNDK6EpMvu5SqXDqWRLuxdMxdyH12ivTUuB1KXfGP4",
   },
