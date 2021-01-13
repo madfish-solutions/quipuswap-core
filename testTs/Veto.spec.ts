@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 const standard = process.env.npm_package_config_standard;
 
-contract.only("Veto()", function () {
+contract("Veto()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
@@ -19,7 +19,6 @@ contract.only("Veto()", function () {
     context = await Context.init([], false, "alice", false);
     await context.setDexFactoryFunction(0, "initialize_exchange");
     await context.setDexFactoryFunction(4, "invest_liquidity");
-    await context.setDexFactoryFunction(5, "divest_liquidity");
     await context.setDexFactoryFunction(6, "vote");
     await context.setDexFactoryFunction(7, "veto");
     await context.factory.setTokenFunction(0, "transfer");
@@ -93,6 +92,8 @@ contract.only("Veto()", function () {
       const finalVeto = context.pairs[0].storage.veto;
       const finalCurrentCandidate = context.pairs[0].storage.current_candidate;
       const finalCurrentDelegated = context.pairs[0].storage.current_delegated;
+      console.log(finalCurrentDelegated);
+      console.log(finalCurrentCandidate);
       strictEqual(
         voterFinalSharesInfo.balance.toNumber(),
         voterInitSharesInfo.balance.plus(voterInitVoteInfo.veto).toNumber() -
@@ -147,6 +148,7 @@ contract.only("Veto()", function () {
       await rejects(
         context.pairs[0].veto(vetor, value),
         (err) => {
+          console.log(err.message);
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         },
@@ -155,7 +157,7 @@ contract.only("Veto()", function () {
     });
   }
 
-  describe.only("Test the user's veto power", () => {
+  describe("Test the user's veto power", () => {
     vetoSuccessCase(
       "success in case of enough liquid shares",
       "alice",
@@ -208,7 +210,7 @@ contract.only("Veto()", function () {
     );
   });
 
-  describe.only("Test veto permissions", () => {
+  describe("Test veto permissions", () => {
     before(async () => {
       await context.updateActor("alice");
       await context.pairs[0].approve(bobAddress, 5000);
@@ -232,7 +234,7 @@ contract.only("Veto()", function () {
       100
     );
     vetoFailCase(
-      "revert in case of no shares",
+      "revert in case of not approved user",
       "carol",
       aliceAddress,
       100,
@@ -240,905 +242,54 @@ contract.only("Veto()", function () {
     );
   });
 
-  it("should add veto and set none delegator", async function () {
-    this.timeout(5000000);
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("bob");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 500;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegator not set"
-    );
-
-    // store prev balances
-    let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-    let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceInitCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-
-    // veto
-    await context.pairs[0].veto(aliceAddress, value);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let aliceFinalVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-    let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
-      aliceAddress
-    ] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceFinalCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-    let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-    // 1. tokens frozen
-    strictEqual(
-      aliceFinalSharesInfo.balance.toNumber(),
-      aliceInitSharesInfo.balance.toNumber() - value,
-      "Tokens not removed"
-    );
-    strictEqual(
-      aliceFinalSharesInfo.frozen_balance.toNumber(),
-      aliceInitSharesInfo.frozen_balance.toNumber() + value,
-      "Tokens not frozen"
-    );
-    // 2. voter info updated
-    notStrictEqual(
-      aliceFinalVoteInfo.last_veto,
-      aliceInitVoteInfo.last_veto,
-      "User last veto time wasn't updated"
-    );
-    strictEqual(
-      aliceFinalVoteInfo.veto.toNumber(),
-      value,
-      "User veto wasn't updated"
-    );
-    // 3. veto time set
-    notStrictEqual(aliceFinalCandidateVeto, 0, "Delegate wasn't locked");
-
-    // 4. global state updated
-    strictEqual(0, finalVetos.toNumber(), "Total votes weren't updated");
-    strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
-  });
-
-  if (process.env.npm_package_config_standard === "FA12") {
-    it("should set veto by approved user", async function () {
-      this.timeout(5000000);
-      // reset pairs
-      await context.flushPairs();
-      await context.createPairs();
-
-      // get gelegate address
-      await context.updateActor("bob");
-      let carolAddress = await tezos.signer.publicKeyHash();
-      await context.updateActor();
-      let delegate = carolAddress;
-      let value = 500;
-      let reward = 1000;
-
-      // vote for the candidate
-      let aliceAddress = await tezos.signer.publicKeyHash();
-      await context.pairs[0].vote(aliceAddress, delegate, value);
-
-      // update delegator
-      await context.pairs[0].sendReward(reward);
-      await context.pairs[0].updateStorage({
-        ledger: [aliceAddress],
-        voters: [aliceAddress],
-        vetos: [delegate],
-      });
-      strictEqual(
-        context.pairs[0].storage.current_delegated,
-        delegate,
-        "Delegator not set"
-      );
-
-      // approve tokens
-      await context.updateActor("bob");
-      let bobAddress = await tezos.signer.publicKeyHash();
-      await context.updateActor();
-      await context.pairs[0].approve(bobAddress, value);
-      await context.updateActor("bob");
-
-      // store prev balances
-      let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-        candidate: undefined,
-        vote: new BigNumber(0),
-        veto: new BigNumber(0),
-        last_veto: 0,
-      };
-      let aliceInitSharesInfo = context.pairs[0].storage.ledger[
-        aliceAddress
-      ] || {
-        balance: new BigNumber(0),
-        frozen_balance: new BigNumber(0),
-        allowances: {},
-      };
-      let aliceInitCandidateVeto =
-        context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-
-      // veto
-      await context.pairs[0].veto(aliceAddress, value);
-
-      // checks
-      await context.pairs[0].updateStorage({
-        ledger: [aliceAddress],
-        voters: [aliceAddress],
-        vetos: [delegate],
-      });
-      let aliceFinalVoteInfo = context.pairs[0].storage.voters[
-        aliceAddress
-      ] || {
-        candidate: undefined,
-        vote: new BigNumber(0),
-        veto: new BigNumber(0),
-        last_veto: 0,
-      };
-      let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
-        aliceAddress
-      ] || {
-        balance: new BigNumber(0),
-        frozen_balance: new BigNumber(0),
-        allowances: {},
-      };
-      let aliceFinalCandidateVeto =
-        context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-      let finalVetos = context.pairs[0].storage.veto;
-      let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-      // 1. tokens frozen
-      strictEqual(
-        aliceFinalSharesInfo.balance.toNumber(),
-        aliceInitSharesInfo.balance.toNumber() - value,
-        "Tokens not removed"
-      );
-      strictEqual(
-        aliceFinalSharesInfo.frozen_balance.toNumber(),
-        aliceInitSharesInfo.frozen_balance.toNumber() + value,
-        "Tokens not frozen"
-      );
-      // 2. voter info updated
-      notStrictEqual(
-        aliceFinalVoteInfo.last_veto,
-        aliceInitVoteInfo.last_veto,
-        "User last veto time wasn't updated"
-      );
-      strictEqual(
-        aliceFinalVoteInfo.veto.toNumber(),
-        value,
-        "User vetj wasn't updated"
-      );
-      // 3. veto time set
-      notStrictEqual(aliceFinalCandidateVeto, 0, "Delegate wasn't locked");
-
-      // 4. global state updated
-      strictEqual(0, finalVetos.toNumber(), "Total votes weren't updated");
-      strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
-    });
-  }
-
-  it("should remove veto", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("carol");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 500;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegator not set"
-    );
-
-    // set veto that is not enough to replace delegator
-    value = 10;
-    await context.pairs[0].veto(aliceAddress, value);
-
-    // store prev balances
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-
-    let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-    let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceInitCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-
-    // remove veto votes
-    await context.pairs[0].veto(aliceAddress, 0);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let aliceFinalVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-    let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
-      aliceAddress
-    ] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceFinalCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-    let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-    // 1. tokens frozen
-    strictEqual(
-      aliceFinalSharesInfo.balance.toNumber(),
-      aliceInitSharesInfo.balance.toNumber() + value,
-      "Tokens not removed"
-    );
-    strictEqual(
-      aliceFinalSharesInfo.frozen_balance.toNumber(),
-      aliceInitSharesInfo.frozen_balance.toNumber() - value,
-      "Tokens not frozen"
-    );
-    // 2. voter info updated
-    notStrictEqual(
-      aliceFinalVoteInfo.last_veto,
-      aliceInitVoteInfo.last_veto,
-      "User last veto time wasn't updated"
-    );
-    strictEqual(
-      aliceFinalVoteInfo.veto.toNumber(),
-      0,
-      "User veto wasn't updated"
-    );
-    // 3. veto time set
-    // strictEqual(
-    //   aliceFinalCandidateVeto.toNumber(),
-    //   0,
-    //   "Delegate wasn't locked"
-    // );
-    // 4. global state updated
-    strictEqual(0, finalVetos.toNumber(), "Total vetos weren't updated");
-    strictEqual(finalCurrentDelegate, delegate, "Delegate updated");
-  });
-
-  it("should increment veto", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("carol");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 500;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegator not set"
-    );
-
-    // set veto that is not enough to replace delegator
-    value = 10;
-    await context.pairs[0].veto(aliceAddress, value);
-
-    // store prev balances
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-
-    let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-    let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceInitCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-
-    // remove veto votes
-    await context.pairs[0].veto(aliceAddress, value * 2);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let aliceFinalVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-    let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
-      aliceAddress
-    ] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceFinalCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-    let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-    // 1. tokens frozen
-    strictEqual(
-      aliceFinalSharesInfo.balance.toNumber() + value,
-      aliceInitSharesInfo.balance.toNumber(),
-      "Tokens not removed"
-    );
-    strictEqual(
-      aliceFinalSharesInfo.frozen_balance.toNumber(),
-      aliceInitSharesInfo.frozen_balance.toNumber() + value,
-      "Tokens not frozen"
-    );
-    // 2. voter info updated
-    notStrictEqual(
-      aliceFinalVoteInfo.last_veto,
-      aliceInitVoteInfo.last_veto,
-      "User last veto time wasn't updated"
-    );
-    strictEqual(
-      aliceFinalVoteInfo.veto.toNumber(),
-      value * 2,
-      "User veto wasn't updated"
-    );
-    // 3. veto time set
-    // strictEqual(
-    //   aliceFinalCandidateVeto.toNumber(),
-    //   0,
-    //   "Delegate wasn't locked"
-    // );
-    // 4. global state updated
-    strictEqual(
-      value * 2,
-      finalVetos.toNumber(),
-      "Total vetos weren't updated"
-    );
-    strictEqual(finalCurrentDelegate, delegate, "Delegate updated");
-  });
-
-  it("should replace delegator", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("bob");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 200;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegator not set"
-    );
-
-    // approve tokens
-    await context.updateActor("bob");
-    let bobAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    await context.pairs[0].approve(bobAddress, value);
-    await context.updateActor("bob");
-
-    // veto
-    await context.pairs[0].veto(aliceAddress, value);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-
-    strictEqual(0, finalVetos.toNumber(), "Total votes weren't updated");
-    strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
-  });
-
-  it("should not replace delegator if it is None", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("carol");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 200;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegator not set"
-    );
-
-    // veto
-    await context.pairs[0].veto(aliceAddress, value);
-    await context.pairs[0].veto(aliceAddress, value);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-
-    strictEqual(0, finalVetos.toNumber(), "Total votes weren't updated");
-    strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
-  });
-
-  it("should set delegator to None if candidate and delegator are the same", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("carol");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 500;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegated and real delegated doesn't match"
-    );
-    strictEqual(
-      context.pairs[0].storage.current_candidate,
-      null,
-      "Candidate doesn't match"
-    );
-
-    // veto
-    await context.pairs[0].veto(aliceAddress, value);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
-    strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
-    strictEqual(finalCurrentCandidate, null, "Candidate wasn't updated");
-  });
-
-  it("should set delegator to next candidate if candidate and delegator are different", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("carol");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 100;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegated and real delegated doesn't match"
-    );
-    strictEqual(
-      context.pairs[0].storage.current_candidate,
-      null,
-      "Candidate doesn't match"
-    );
-
-    // update candidate
-    await context.updateActor("bob");
-    let bobAddress = await tezos.signer.publicKeyHash();
-    let tezAmount = 1000;
-    let tokenAmount = 100000;
-    let newShares = 100;
-    await context.updateActor();
-    await context.tokens[0].transfer(aliceAddress, bobAddress, tokenAmount);
-
-    await context.updateActor("bob");
-    await context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares);
-
-    await context.pairs[0].vote(
+  describe("Test different delegates", () => {
+    vetoSuccessCase(
+      "success in case of veto against delegate",
+      "alice",
+      "alice",
+      aliceAddress,
       bobAddress,
+      1000,
+      4000
+    );
+    vetoSuccessCase(
+      "success in case of veto against no delegate",
+      "alice",
+      "alice",
       aliceAddress,
-      Math.floor(value / 2)
+      bobAddress,
+      0,
+      4000
     );
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    notStrictEqual(
-      context.pairs[0].storage.current_delegated,
-      context.pairs[0].storage.current_candidate,
-      "Delegator and candidate match"
-    );
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegated doesn't match after voting"
-    );
-    strictEqual(
+  });
+
+  describe("Test the veto limit", () => {
+    vetoSuccessCase(
+      "success in case of too little votes for veto",
+      "alice",
+      "alice",
       aliceAddress,
-      context.pairs[0].storage.current_candidate,
-      "Current candidate wrong"
+      aliceAddress,
+      3000,
+      10
     );
-
-    // veto
-    await context.updateActor();
-    await context.pairs[0].veto(aliceAddress, Math.floor(value / 2) + 1);
-
-    // checks
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-    let finalCurrentCandidate = context.pairs[0].storage.current_candidate;
-    strictEqual(
-      context.pairs[0].storage.veto.toNumber(),
-      0,
-      "Total veto isn't updated"
+    vetoSuccessCase(
+      "success in case of exctly 1/3 of votes",
+      "alice",
+      "alice",
+      aliceAddress,
+      aliceAddress,
+      3000,
+      1000
     );
-    strictEqual(finalCurrentDelegate, aliceAddress, "Delegate wasn't updated");
-    strictEqual(finalCurrentCandidate, null, "Candidate was updated");
-  });
-
-  it("should withdraw veto if delegator was removed by veto", async function () {
-    this.timeout(5000000);
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("bob");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 500;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegator not set"
-    );
-
-    // veto
-    await context.pairs[0].veto(aliceAddress, value);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      0,
-      context.pairs[0].storage.veto.toNumber(),
-      "Total votes weren't updated"
-    );
-
-    // store prev balances
-    let aliceInitVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-    let aliceInitSharesInfo = context.pairs[0].storage.ledger[aliceAddress] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-    let aliceInitCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-
-    // checks
-    await context.pairs[0].veto(aliceAddress, 0);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    let aliceFinalVoteInfo = context.pairs[0].storage.voters[aliceAddress] || {
-      candidate: undefined,
-      vote: new BigNumber(0),
-      veto: new BigNumber(0),
-      last_veto: 0,
-    };
-
-    let aliceFinalSharesInfo = context.pairs[0].storage.ledger[
-      aliceAddress
-    ] || {
-      balance: new BigNumber(0),
-      frozen_balance: new BigNumber(0),
-      allowances: {},
-    };
-
-    let aliceFinalCandidateVeto =
-      context.pairs[0].storage.vetos[delegate] || new BigNumber(0);
-    let finalVetos = context.pairs[0].storage.veto;
-    let finalCurrentDelegate = context.pairs[0].storage.current_delegated;
-    // 1. tokens frozen
-    strictEqual(
-      aliceFinalSharesInfo.balance.toNumber(),
-      aliceInitSharesInfo.balance.toNumber() + value,
-      "Tokens not unfrozen"
-    );
-    strictEqual(
-      aliceFinalSharesInfo.frozen_balance.toNumber(),
-      aliceInitSharesInfo.frozen_balance.toNumber() - value,
-      "Frozen tokens not removed"
-    );
-    // 2. voter info updated
-    notStrictEqual(
-      aliceFinalVoteInfo.last_veto,
-      aliceInitVoteInfo.last_veto,
-      "User last veto time wasn't updated"
-    );
-    strictEqual(
-      aliceFinalVoteInfo.veto.toNumber(),
-      0,
-      "User vetj wasn't updated"
-    );
-    // 3. veto time set
-    notStrictEqual(aliceFinalCandidateVeto, 0, "Delegate wasn't locked");
-
-    // 4. global state updated
-    strictEqual(0, finalVetos.toNumber(), "Total votes weren't updated");
-    strictEqual(finalCurrentDelegate, null, "Delegate wasn't updated");
-  });
-
-  it("should revert veto without shares", async function () {
-    this.timeout(5000000);
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // change actor
-    await context.updateActor("bob");
-    let value = 500;
-    let bobAddress = await tezos.signer.publicKeyHash();
-
-    // veto
-    await rejects(
-      context.pairs[0].veto(bobAddress, value),
-      (err) => {
-        strictEqual(err.message, "Dex/no-shares", "Error message mismatch");
-        return true;
-      },
-      "Veto should revert"
-    );
-  });
-
-  it("should revert veto without enough shares", async function () {
-    this.timeout(5000000);
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // get gelegate address
-    await context.updateActor("bob");
-    let carolAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor();
-    let delegate = carolAddress;
-    let value = 600;
-    let reward = 1000;
-
-    // vote for the candidate
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.pairs[0].vote(aliceAddress, delegate, value);
-
-    // update delegator
-    await context.pairs[0].sendReward(reward);
-    await context.pairs[0].updateStorage({
-      ledger: [aliceAddress],
-      voters: [aliceAddress],
-      vetos: [delegate],
-    });
-    strictEqual(
-      context.pairs[0].storage.current_delegated,
-      delegate,
-      "Delegator not set"
-    );
-
-    // veto
-    await rejects(
-      context.pairs[0].veto(aliceAddress, value),
-      (err) => {
-        strictEqual(
-          err.message,
-          "Dex/not-enough-balance",
-          "Error message mismatch"
-        );
-        return true;
-      },
-      "Vote should revert"
-    );
-  });
-
-  it("should revert veto without allowance", async function () {
-    this.timeout(5000000);
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    await context.updateActor("carol");
-    let value = 200;
-
-    // veto
-    await context.updateActor("bob");
-    await rejects(
-      context.pairs[0].veto(aliceAddress, value),
-      (err) => {
-        strictEqual(
-          err.message,
-          "Dex/not-enough-allowance",
-          "Error message mismatch"
-        );
-        return true;
-      },
-      "Vote should revert"
+    vetoSuccessCase(
+      "success in case of enough votes for veto",
+      "alice",
+      "alice",
+      aliceAddress,
+      aliceAddress,
+      3000,
+      2000
     );
   });
 });

@@ -428,18 +428,18 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 - [x] the approved user.
 - [x] the unapproved user.
 
-**Scope**: Test different candidates.
+**Scope**: Test different delegates.
 
 **Action**: Invoke the Veto entrypoint.
 
 **Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
 
-**Verification Steps**: Verify the candidate of votes can't be higher than the liquid balance.
+**Verification Steps**: Verify the veto can be executed only if there is any delegate.
 
 **Scenario 1**: Test veto for:
 
-- [ ] no delegate.
-- [ ] delegate.
+- [x] delegate.
+- [x] no delegate.
 
 **Scope**: Test the veto limit.
 
@@ -447,15 +447,19 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Test Notes and Preconditions**: The exchange should be launched before, the user should have shares to vote.
 
-**Verification Steps**: Verify the amount of votes can't be higher than the liquid balance.
+**Verification Steps**: Verify the delegate is banned only if the vote is higher than 1/3 of all votes.
 
 **Scenario 1**: Test veto with:
 
-- [ ] too little vetos.
-- [ ] exactly 1/3 vetos.
-- [ ] more than 1/3 vetos.
+- [x] too little vetos.
+- [x] exactly 1/3 vetos.
+- [x] more than 1/3 vetos.
 
 ## Test Item: Rewards distribution
+
+### General Requirements:
+
+1. Loyalty represents the share of the baker's reward
 
 **Scope**: Test the user's reward distribution.
 
