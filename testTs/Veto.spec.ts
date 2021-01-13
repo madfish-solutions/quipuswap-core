@@ -92,8 +92,6 @@ contract("Veto()", function () {
       const finalVeto = context.pairs[0].storage.veto;
       const finalCurrentCandidate = context.pairs[0].storage.current_candidate;
       const finalCurrentDelegated = context.pairs[0].storage.current_delegated;
-      console.log(finalCurrentDelegated);
-      console.log(finalCurrentCandidate);
       strictEqual(
         voterFinalSharesInfo.balance.toNumber(),
         voterInitSharesInfo.balance.plus(voterInitVoteInfo.veto).toNumber() -

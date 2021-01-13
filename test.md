@@ -459,11 +459,62 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 ### General Requirements:
 
-1. Loyalty represents the share of the baker's reward
+1. Reward should be collected everytime the simple payment to the contract is done.
+2. Loyalty represents the share of the reward claimable by the user.
+3. Loyalty depend both of stake duration and amout of the provided liquidity.
+4. Reward is distributed once in the period.
+5. Reward can be withdrawn any time and sent to any address.
+6. The reward should be destributed only if there are any investment.
+
+**Scope**: Test the rewards assessment.
+
+**Action**: Invoke the Default entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+
+**Scenario 1**: Test user rewards assesment if
+
+- [ ] 0 XTZ sent.
+- [ ] 100 mutez sent.
+- [ ] 100 mutez sent but there are no shares in the pool.
+
+**Scope**: Test the rewards assessment.
+
+**Action**: Invoke the few entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+
+**Scenario 1**: Test user loyalty assesment if
+
+- [ ] some shares.
+- [ ] all shares withdrawn.
+- [ ] tokens transfered.
+- [ ] user votes.
+- [ ] user makes vetos.
+- [ ] new investment.
+- [ ] reward withdrawn.
+
+**Scope**: Test the reward distribution.
+
+**Action**: Invoke the Default entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+
+**Scenario 1**: Test rewards distribution of
+
+- [ ] before period finished.
+- [ ] after period finished.
+- [ ] in the middle of the second period.
 
 **Scope**: Test the user's reward distribution.
 
-**Action**: Invoke the DivestLiquidity entrypoint.
+**Action**: Invoke the WithdrawProfit entrypoint.
 
 **Test Notes and Preconditions**: The exchange should be launched before.
 
@@ -473,3 +524,4 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 - [ ] no reward.
 - [ ] reward is accomulated.
+- [ ] shares withdrawn but reward assest.
