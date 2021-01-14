@@ -21,10 +21,10 @@
     "bignumber.js": "^9.0.0",
     "commander": "^5.1.0",
     "dotenv": "^8.2.0",
-    "patch-package": "^6.2.2",
-    "typescript": "^4.0.3",
     "ganache-cli": "6.11.0-tezos.0",
-    "truffle": "5.5.0-tezos.4"
+    "patch-package": "^6.2.2",
+    "truffle": "5.5.0-tezos.4",
+    "typescript": "^4.0.3"
   },
   "directories": {
     "test": "./test"

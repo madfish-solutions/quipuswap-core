@@ -455,6 +455,54 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 - [x] exactly 1/3 vetos.
 - [x] more than 1/3 vetos.
 
+## Test Item: Default
+
+### General Requirements:
+
+1. Reward should be collected everytime the simple payment to the contract is done.
+2. Reward is distributed once in the period.
+3. Rewards is assessed only if thre are some shares in the pool.
+
+**Scope**: Test the rewards assessment in case of differrent deposits.
+
+**Action**: Invoke the Default entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+
+**Scenario 1**: Test user rewards assesment if
+
+- [x] 0 shares.
+- [x] some shares.
+
+**Scope**: Test the rewards assessment based on the sent amount.
+
+**Action**: Invoke the Default entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before, shares should be in the pool.
+
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+
+**Scenario 1**: Test user rewards assesment if
+
+- [x] 0 XTZ sent.
+- [x] 1 XTZ sent.
+
+**Scope**: Test the total rewards assessments in case of different periods.
+
+**Action**: Invoke the Default entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+
+**Scenario 1**: Test rewards distribution of
+
+- [ ] before period finished.
+- [ ] after period finished.
+- [ ] in the middle of the second period.
+
 ## Test Item: Rewards distribution
 
 ### General Requirements:
@@ -465,20 +513,6 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 4. Reward is distributed once in the period.
 5. Reward can be withdrawn any time and sent to any address.
 6. The reward should be destributed only if there are any investment.
-
-**Scope**: Test the rewards assessment.
-
-**Action**: Invoke the Default entrypoint.
-
-**Test Notes and Preconditions**: The exchange should be launched before.
-
-**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
-
-**Scenario 1**: Test user rewards assesment if
-
-- [ ] 0 XTZ sent.
-- [ ] 100 mutez sent.
-- [ ] 100 mutez sent but there are no shares in the pool.
 
 **Scope**: Test the rewards assessment.
 

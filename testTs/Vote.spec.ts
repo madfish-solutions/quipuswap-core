@@ -79,16 +79,6 @@ contract("Vote()", function () {
       const finalCurrentCandidate = context.pairs[0].storage.current_candidate;
       const finalCurrentDelegated = context.pairs[0].storage.current_delegated;
 
-      // check:
-      // 1. voter balance
-      // 2. voter frozen balance
-      // 3. voter candidate
-      // 4. voter vote
-      // 5. candidate votes
-      // 6. current delegated
-      // 7. current candidate
-      // 8. total votes
-
       strictEqual(
         voterFinalSharesInfo.balance.toNumber(),
         voterInitSharesInfo.balance.plus(voterInitVoteInfo.vote).toNumber() -

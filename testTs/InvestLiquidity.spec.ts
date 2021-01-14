@@ -3,10 +3,6 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 
-// 142.995 (5 tests)
-// ->
-// 183.648 (9 tests)
-
 contract("InvestLiquidity()", function () {
   let context: Context;
   let tokenAddress: string;
