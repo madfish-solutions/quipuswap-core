@@ -109,7 +109,7 @@ contract("Default()", function () {
     });
   }
 
-  describe.only("Test the rewards assessment in case of differrent shares", () => {
+  describe("Test the rewards assessment in case of differrent shares", () => {
     defaultSuccessCase("success in case of some shares", "alice", 0, 1000);
     describe("", async function () {
       before(async function () {
@@ -124,12 +124,12 @@ contract("Default()", function () {
     });
   });
 
-  describe.only("Test the rewards assessment in case of differrent reward sent", () => {
+  describe("Test the rewards assessment in case of differrent reward sent", () => {
     defaultSuccessCase("success in case of some xtz sent", "alice", 0, 1000);
     defaultSuccessCase("success in case of no xtz sent", "alice", 0, 0);
   });
 
-  describe.only("Test the total rewards assessments in case of different periods", () => {
+  describe("Test the total rewards assessments in case of different periods", () => {
     defaultSuccessCase(
       "success in case of before period finished",
       "alice",

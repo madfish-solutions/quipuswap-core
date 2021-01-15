@@ -499,22 +499,21 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test rewards distribution of
 
-- [ ] before period finished.
-- [ ] after period finished.
-- [ ] in the middle of the second period.
+- [x] before period finished.
+- [x] after period finished.
+- [x] in the middle of the second period.
 
 ## Test Item: Rewards distribution
 
 ### General Requirements:
 
-1. Reward should be collected everytime the simple payment to the contract is done.
-2. Loyalty represents the share of the reward claimable by the user.
-3. Loyalty depend both of stake duration and amout of the provided liquidity.
-4. Reward is distributed once in the period.
-5. Reward can be withdrawn any time and sent to any address.
-6. The reward should be destributed only if there are any investment.
+1. Loyalty represents the share of the reward claimable by the user.
+2. Loyalty depend both of stake duration and amout of the provided liquidity.
+3. Reward is distributed once in the period.
+4. Reward can be withdrawn any time and sent to any address.
+5. The reward should be destributed only if there are any investment.
 
-**Scope**: Test the rewards assessment.
+**Scope**: Test the loyalty assessment.
 
 **Action**: Invoke the few entrypoint.
 
@@ -524,15 +523,13 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test user loyalty assesment if
 
-- [ ] some shares.
-- [ ] all shares withdrawn.
-- [ ] tokens transfered.
-- [ ] user votes.
-- [ ] user makes vetos.
-- [ ] new investment.
-- [ ] reward withdrawn.
+- [x] user own some shares.
+- [x] user makes new investment.
+- [x] reward withdrawn.
+- [x] tokens transfered.
+- [x] shares withdrawn.
 
-**Scope**: Test the reward distribution.
+**Scope**: Test the user's reward distribution.
 
 **Action**: Invoke the Default entrypoint.
 
@@ -542,11 +539,11 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test rewards distribution of
 
-- [ ] before period finished.
-- [ ] after period finished.
-- [ ] in the middle of the second period.
+- [x] before period finished.
+- [x] after period finished.
+- [x] in the middle of the second period.
 
-**Scope**: Test the user's reward distribution.
+**Scope**: Test the user's reward distribution with different total rewards.
 
 **Action**: Invoke the WithdrawProfit entrypoint.
 
@@ -556,6 +553,32 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test user rewards distribution of
 
-- [ ] no reward.
-- [ ] reward is accomulated.
-- [ ] shares withdrawn but reward assest.
+- [x] no reward.
+- [x] reward is accomulated.
+- [x] shares withdrawn but reward assest after.
+
+## Test Item: Update_owners
+
+### General Requirements:
+
+1. Only new owner can be added
+1. Only existed owner can be removed
+1. The owner status can be changed only by one of the owners
+
+**Scope**: Test the loyalty assessment.
+
+**Action**: Invoke the few entrypoint.
+
+**Test Notes and Preconditions**: The exchange should be launched before.
+
+**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+
+**Scenario 1**: Test user loyalty assesment if
+
+- [ ] user own some shares.
+- [ ] user makes new investment.
+- [ ] user votes.
+- [ ] user makes vetos.
+- [ ] reward withdrawn.
+- [ ] tokens transfered.
+- [ ] shares withdrawn.

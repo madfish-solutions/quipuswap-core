@@ -63,7 +63,7 @@ function get_user_reward_info (const addr : address; const s : dex_storage) : us
     var acct : user_reward_info :=
       record [
         reward         = 0n;
-        reward_paid    = 0n;
+        reward_paid    = s.reward_info.reward_per_token;
         loyalty        = 0n;
         loyalty_paid   = 0n;
         update_time    = Tezos.now;
