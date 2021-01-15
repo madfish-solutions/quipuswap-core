@@ -41,10 +41,10 @@ function transfer (const p : token_action; const s : dex_storage; const this : a
       dest_account.balance := dest_account.balance + value;
       s.ledger[params.1.0] := dest_account;
     }
-    | IApprove(params) -> failwith("00")
-    | IGetBalance(params) -> failwith("00")
-    | IGetAllowance(params) -> failwith("00")
-    | IGetTotalSupply(params) -> failwith("00")
+    | IApprove(params) -> skip
+    | IGetBalance(params) -> skip
+    | IGetAllowance(params) -> skip
+    | IGetTotalSupply(params) -> skip
     end
   } with (operations, s)
 
@@ -52,7 +52,7 @@ function transfer (const p : token_action; const s : dex_storage; const this : a
 function approve (const p : token_action; const s : dex_storage; const this : address) : return is
   block {
     case p of
-    | ITransfer(params) -> failwith("00")
+    | ITransfer(params) -> skip
     | IApprove(params) -> {
       if params.0 = Tezos.sender then
         failwith("Dex/selt-approval")
@@ -62,9 +62,9 @@ function approve (const p : token_action; const s : dex_storage; const this : ad
       sender_account.allowances[params.0] := params.1;
       s.ledger[Tezos.sender] := sender_account;
     }
-    | IGetBalance(params) -> failwith("00")
-    | IGetAllowance(params) -> failwith("00")
-    | IGetTotalSupply(params) -> failwith("00")
+    | IGetBalance(params) -> skip
+    | IGetAllowance(params) -> skip
+    | IGetTotalSupply(params) -> skip
     end
   } with ((nil  : list(operation)), s)
 
@@ -73,14 +73,14 @@ function get_balance (const p : token_action; const s : dex_storage; const this 
   block {
     var operations : list(operation) := list[];
     case p of
-    | ITransfer(params) -> failwith("00")
-    | IApprove(params) -> failwith("00")
+    | ITransfer(params) -> skip
+    | IApprove(params) -> skip
     | IGetBalance(params) -> {
       const owner_account : account_info = get_account(params.0, s);
       operations := list [transaction(owner_account.balance, 0tz, params.1)];
     }
-    | IGetAllowance(params) -> failwith("00")
-    | IGetTotalSupply(params) -> failwith("00")
+    | IGetAllowance(params) -> skip
+    | IGetTotalSupply(params) -> skip
     end
   } with (operations, s)
 
@@ -89,10 +89,10 @@ function get_total_supply (const p : token_action; const s : dex_storage; const 
   block {
     var operations : list(operation) := list[];
     case p of
-    | ITransfer(params) -> failwith("00")
-    | IApprove(params) -> failwith("00")
-    | IGetBalance(params) -> failwith("00")
-    | IGetAllowance(params) -> failwith("00")
+    | ITransfer(params) -> skip
+    | IApprove(params) -> skip
+    | IGetBalance(params) -> skip
+    | IGetAllowance(params) -> skip
     | IGetTotalSupply(params) -> {
       operations := list [transaction(s.total_supply, 0tz, params.1)];
     }
@@ -104,14 +104,14 @@ function get_allowance_to_contract (const p : token_action; const s : dex_storag
   block {
     var operations : list(operation) := list[];
     case p of
-    | ITransfer(params) -> failwith("00")
-    | IApprove(params) -> failwith("00")
-    | IGetBalance(params) -> failwith("00")
+    | ITransfer(params) -> skip
+    | IApprove(params) -> skip
+    | IGetBalance(params) -> skip
     | IGetAllowance(params) -> {
       const owner_account : account_info = get_account(params.0.0, s);
       const spender_allowance : nat = get_allowance(owner_account, params.0.1, s);
       operations := list [transaction(spender_allowance, 0tz, params.1)];
     }
-    | IGetTotalSupply(params) -> failwith("00")
+    | IGetTotalSupply(params) -> skip
     end
   } with (operations, s)

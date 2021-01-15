@@ -14,7 +14,7 @@ const create_dex : create_dex_func =
            : create_dex_func)];
   
 (* Create the pool contract for Tez-Token pair *)
-function launch_exchange (const self : address; const token : token_identifier; const token_amount : nat; var s : exchange_storage) :  full_factory_return is
+[@inline] function launch_exchange (const self : address; const token : token_identifier; const token_amount : nat; var s : exchange_storage) :  full_factory_return is
   block {
     if s.token_list contains token then 
       failwith("Factory/exchange-launched") 
@@ -88,7 +88,7 @@ function launch_exchange (const self : address; const token : token_identifier; 
   ], s)
 
 (* Set the dex function code to factory storage *)
-function set_dex_function (const idx : nat; const f : dex_func; const s : exchange_storage) : exchange_storage is
+[@inline] function set_dex_function (const idx : nat; const f : dex_func; const s : exchange_storage) : exchange_storage is
 block {
   case s.dex_lambdas[idx] of 
     Some(n) -> failwith("Factory/function-set") 
@@ -97,7 +97,7 @@ block {
 } with s
 
 (* Set the token function code to factory storage *)
-function set_token_function (const idx : nat; const f : token_func; const s : exchange_storage) : exchange_storage is
+[@inline] function set_token_function (const idx : nat; const f : token_func; const s : exchange_storage) : exchange_storage is
 block {
   case s.token_lambdas[idx] of 
     Some(n) -> failwith("Factory/function-set") 
