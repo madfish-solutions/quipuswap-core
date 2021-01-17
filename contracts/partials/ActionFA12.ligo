@@ -1,3 +1,4 @@
+(* Main function parameter types specific for FA1.2 standard*)
 type transfer_params is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type approve_params is michelson_pair(address, "spender", nat, "value")
 type balance_params is michelson_pair(address, "owner", contract(nat), "")

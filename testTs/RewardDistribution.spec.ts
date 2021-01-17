@@ -175,7 +175,6 @@ contract("RewardsDistribution()", function () {
       await rejects(
         context.pairs[0].sendReward(amount),
         (err) => {
-          console.log(err.message);
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         },

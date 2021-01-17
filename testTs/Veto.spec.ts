@@ -146,7 +146,6 @@ contract("Veto()", function () {
       await rejects(
         context.pairs[0].veto(vetor, value),
         (err) => {
-          console.log(err.message);
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         },

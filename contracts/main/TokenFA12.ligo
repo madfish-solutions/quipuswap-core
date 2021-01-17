@@ -111,14 +111,14 @@ function getTotalSupply (const contr : contract(amt); var s : storage) : return 
     skip
   } with (list [transaction(s.total_supply, 0tz, contr)], s)
 
-(* Main entrypoint *)
+(* TokenFA1.2 - Mock FA1.2 token for tests *)
 function main (const action : tokenAction; var s : storage) : return is
   block {
     skip
   } with case action of
-    | Transfer(params) -> transfer(params.0, params.1.0, params.1.1, s)
-    | Approve(params) -> approve(params.0, params.1, s)
-    | GetBalance(params) -> getBalance(params.0, params.1, s)
-    | GetAllowance(params) -> getAllowance(params.0.0, params.0.1, params.1, s)
-    | GetTotalSupply(params) -> getTotalSupply(params.1, s)
+    | Transfer(params)        -> transfer(params.0, params.1.0, params.1.1, s)
+    | Approve(params)         -> approve(params.0, params.1, s)
+    | GetBalance(params)      -> getBalance(params.0, params.1, s)
+    | GetAllowance(params)    -> getAllowance(params.0.0, params.0.1, params.1, s)
+    | GetTotalSupply(params)  -> getTotalSupply(params.1, s)
   end;
