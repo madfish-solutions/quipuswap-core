@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { calculateFee, bakeBlocks } from "./helpers/utils";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo, accuracy } from "./constants";
-const standard = process.env.npm_package_config_standard;
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("RewardsDistribution()", function () {
   let context: Context;
