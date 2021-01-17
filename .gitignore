@@ -5,6 +5,4 @@ build/
 package-lock.json
 faucet*
 deploy
-test/helpers/*.js
-test/
 .vscode/

@@ -14,7 +14,8 @@
     "compile": "npm run clean && node scripts/cli.js build ./main/DexFA2 --no-json -o contracts && node scripts/cli.js build ./main/DexFA12 --no-json -o contracts && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice",
     "test": "tsc  && npm run clean && npm run compile && truffle test",
-    "test:quick": "tsc && truffle test"
+    "test:quick": "tsc && truffle test",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@taquito/taquito": "^6.3.4-beta.0",
