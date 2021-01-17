@@ -1,3 +1,4 @@
+(* Main function parameter types specific for FA2 standard*)
 type transfer_params is list (transfer_param)
 type token_metadata_registry_params is contract (address)
 type update_operator_params is list (update_operator_param)

@@ -62,11 +62,12 @@ export class Dex extends TokenFA12 {
   }
   async initializeExchange(
     tokenAmount: number,
-    tezAmount: number
+    tezAmount: number,
+    approve: boolean = true
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
+    if (approve) await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
-      .use(0, "initializeExchange", tokenAmount)
+      .use("initializeExchange", tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     return operation;
@@ -78,7 +79,7 @@ export class Dex extends TokenFA12 {
     receiver: string
   ): Promise<TransactionOperation> {
     const operation = await this.contract.methods
-      .use(1, "tezToTokenPayment", minTokens, receiver)
+      .use("tezToTokenPayment", minTokens, receiver)
       .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     return operation;
@@ -105,7 +106,7 @@ export class Dex extends TokenFA12 {
       this.contract.address
     );
     const operation = await this.contract.methods
-      .use(2, "tokenToTezPayment", tokenAmount, minTezOut, receiver)
+      .use("tokenToTezPayment", tokenAmount, minTezOut, receiver)
       .send();
     await operation.confirmation();
     return [tokensOperation, operation];
@@ -142,7 +143,6 @@ export class Dex extends TokenFA12 {
       .withTransfer(
         this.contract.methods
           .use(
-            2,
             "tokenToTezPayment",
             tokenAmount,
             middleTezAmount ? middleTezAmount : 1,
@@ -152,7 +152,7 @@ export class Dex extends TokenFA12 {
       )
       .withTransfer(
         secondDexContract.methods
-          .use(1, "tezToTokenPayment", minTokensOut, receiver)
+          .use("tezToTokenPayment", minTokensOut, receiver)
           .toTransferParams({ amount: middleTezAmount / tezPrecision })
       );
     const operation = await batch.send();
@@ -182,7 +182,7 @@ export class Dex extends TokenFA12 {
   ): Promise<TransactionOperation> {
     await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
-      .use(4, "investLiquidity", minShares)
+      .use("investLiquidity", minShares)
       .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     return operation;
@@ -193,9 +193,8 @@ export class Dex extends TokenFA12 {
     tezAmount: number,
     sharesBurned: number
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
-      .use(5, "divestLiquidity", tezAmount, tokenAmount, sharesBurned)
+      .use("divestLiquidity", tezAmount, tokenAmount, sharesBurned)
       .send();
     await operation.confirmation();
     return operation;
@@ -207,7 +206,7 @@ export class Dex extends TokenFA12 {
     value: number
   ): Promise<TransactionOperation> {
     const operation = await this.contract.methods
-      .use(6, "vote", delegate, value, voter)
+      .use("vote", delegate, value, voter)
       .send();
     await operation.confirmation();
     return operation;
@@ -215,7 +214,7 @@ export class Dex extends TokenFA12 {
 
   async veto(voter: string, value: number): Promise<TransactionOperation> {
     const operation = await this.contract.methods
-      .use(7, "veto", value, voter)
+      .use("veto", value, voter)
       .send();
     await operation.confirmation();
     return operation;
@@ -223,7 +222,7 @@ export class Dex extends TokenFA12 {
 
   async withdrawProfit(receiver: string): Promise<TransactionOperation> {
     const operation = await this.contract.methods
-      .use(3, "withdrawProfit", receiver)
+      .use("withdrawProfit", receiver)
       .send();
     await operation.confirmation();
     return operation;

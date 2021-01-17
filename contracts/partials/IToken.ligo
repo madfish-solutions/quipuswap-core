@@ -32,8 +32,8 @@ type totalSupplyParams is (unit * contract(amt))
 
 (* Valid entry points *)
 type tokenAction is
-| Transfer of transferParams
-| Approve of approveParams
-| GetBalance of balanceParams
-| GetAllowance of allowanceParams
-| GetTotalSupply of totalSupplyParams
+| Transfer        of transferParams
+| Approve         of approveParams
+| GetBalance      of balanceParams
+| GetAllowance    of allowanceParams
+| GetTotalSupply  of totalSupplyParams

@@ -132,13 +132,14 @@ function get_balance_of (const balance_params : balance_params; const s : storag
 function get_token_metadata_registry (const receiver : contract(address); const s : storage) : list(operation) is
   list [transaction(Tezos.self_address, 0tz, receiver)]
 
+(* TokenFA2 - Mock FA2 token for tests *)
 function main (const action : token_action; var s : storage) : return is
   block {
     skip
   } with case action of
-    | Transfer(params) -> ((nil : list (operation)), List.fold(iterate_transfer, params, s))
-    | Balance_of(params) -> (get_balance_of(params, s), s)
-    | Token_metadata_registry(params) -> (get_token_metadata_registry(params, s), s)
-    | Update_operators(params) -> ((nil : list (operation)), List.fold(iterate_update_operator, params, s))
+    | Transfer(params)                  -> ((nil : list (operation)), List.fold(iterate_transfer, params, s))
+    | Balance_of(params)                -> (get_balance_of(params, s), s)
+    | Token_metadata_registry(params)   -> (get_token_metadata_registry(params, s), s)
+    | Update_operators(params)          -> ((nil : list (operation)), List.fold(iterate_update_operator, params, s))
   end;
   

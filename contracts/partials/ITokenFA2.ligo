@@ -15,8 +15,6 @@ type token_metadata_info is
     decimals  : nat;
     extras    : map (string, string);
   ]
-
-// type token_metadata_info is michelson_pair_right_comb(token_metadata_info_r)
   
 const default_token_id : token_id = 0n;
 
@@ -44,8 +42,6 @@ type transfer_param is
     from_   : address;
     txs     : list (transfer_destination);
   ]
-
-// type transfer_param is michelson_pair_right_comb(transfer_param_r)
 
 type balance_of_request is 
   [@layout:comb]

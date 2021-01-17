@@ -14,6 +14,6 @@ type return is list (operation) * storage
 
 (* Valid entry points *)
 type storage_action is 
-| Update_owners of update_owner_type
-| Update_storage of metadata_type
-| Get_metadata of contract (metadata_type)
+| Update_owners     of update_owner_type
+| Update_storage    of metadata_type
+| Get_metadata      of contract (metadata_type)

@@ -75,19 +75,32 @@ export class Factory {
   async launchExchange(
     tokenAddress: string,
     tokenAmount: number,
-    tezAmount: number
+    tezAmount: number,
+    approve: boolean = true
   ): Promise<TransactionOperation> {
     return standard === "FA2"
-      ? await this.launchExchangeFA2(tokenAddress, tokenAmount, tezAmount)
-      : await this.launchExchangeFA12(tokenAddress, tokenAmount, tezAmount);
+      ? await this.launchExchangeFA2(
+          tokenAddress,
+          tokenAmount,
+          tezAmount,
+          approve
+        )
+      : await this.launchExchangeFA12(
+          tokenAddress,
+          tokenAmount,
+          tezAmount,
+          approve
+        );
   }
 
   async launchExchangeFA2(
     tokenAddress: string,
     tokenAmount: number,
-    tezAmount: number
+    tezAmount: number,
+    approve: boolean = true
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
+    if (approve)
+      await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, defaultTokenId, tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
@@ -99,9 +112,11 @@ export class Factory {
   async launchExchangeFA12(
     tokenAddress: string,
     tokenAmount: number,
-    tezAmount: number
+    tezAmount: number,
+    approve: boolean = true
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
+    if (approve)
+      await this.approveToken(tokenAddress, tokenAmount, this.contract.address);
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
@@ -150,16 +165,16 @@ export class Factory {
     address: string
   ): Promise<void> {
     return standard === "FA2"
-      ? await this.approveTokenFA2(tokenAddress, address)
+      ? await this.approveTokenFA2(tokenAddress, tokenAmount, address)
       : await this.approveTokenFA12(tokenAddress, tokenAmount, address);
   }
 
-  async approveTokenFA2(tokenAddress: string, address: string): Promise<void> {
+  async approveTokenFA2(tokenAddress: string, tokenAmount: number,  address: string): Promise<void> {
     let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods
-      .update_operators([
+      .update_operators([ 
         {
-          add_operator: {
+          [(tokenAmount) ? "add_operator" : "remove_operator"]: {
             owner: await tezos.signer.publicKeyHash(),
             operator: address,
             token_id: defaultTokenId,

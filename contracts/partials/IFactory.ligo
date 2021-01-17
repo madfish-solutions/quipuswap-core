@@ -45,6 +45,5 @@ const voting_period : int = 2592000;
 #endif
 const accurancy_multiplier : nat = 1000000000000000n;
 const veto_period : int = 7889229;
-const fee_rate : nat = 333n;
 
 type transfer_type is TransferType of transfer_params

@@ -8,7 +8,7 @@ export declare type DexStorage = {
   total_supply: BigNumber;
   ledger: { [key: string]: AccountInfo };
   voters: { [key: string]: VoteInfo };
-  vetos: { [key: string]: BigNumber };
+  vetos: { [key: string]: string };
   votes: { [key: string]: BigNumber };
   veto: BigNumber;
   current_delegated: string | null | undefined;

@@ -1,369 +1,328 @@
-import { Context } from "./contracManagers/context";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
+import accounts from "./accounts/accounts";
+import { defaultAccountInfo } from "./constants";
+
+// 275.851s (7 tests)
+// ->
+// 133.092s (11 tests)
 
 contract("InitializeExchange()", function () {
   let context: Context;
+  let aliceAddress: string = accounts.alice.pkh;
+  let bobAddress: string = accounts.bob.pkh;
+  const tezAmount: number = 10000;
+  const tokenAmount: number = 1000;
 
   before(async () => {
-    context = await Context.init([], true, "alice", false);
+    context = await Context.init([], false, "alice", false);
+    await context.setDexFactoryFunction(0, "initialize_exchange");
+    await context.setDexFactoryFunction(5, "divest_liquidity");
   });
 
-  it("should initialize & deploy 1 exchange and set initial stage", async function () {
-    // ensure no token pairs added
+  it("should have an empty token list after deployment", async function () {
     await context.factory.updateStorage();
     strictEqual(
       context.factory.storage.token_list.length,
       0,
-      "Factory tokenList should be empty"
-    );
-
-    // create token
-    let tokenAddress = await context.createToken();
-    let tezAmount = 10000;
-    let tokenAmount = 1000000;
-
-    // store user & pair prev balances
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    let aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
-    await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
-    let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
-      aliceAddress
-    ].balance;
-
-    // add new exchange pair
-    let pairAddress = await context.createPair({
-      tokenAddress,
-      tezAmount,
-      tokenAmount,
-    });
-
-    // checks:
-
-    // 1.1 tokens/tez withdrawn
-    let aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
-    await context.tokens[0].updateStorage({
-      ledger: [aliceAddress, pairAddress],
-    });
-    let aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
-      aliceAddress
-    ].balance;
-
-    let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
-      .balance;
-    let pairTezBalance = await tezos.tz.getBalance(pairAddress);
-
-    strictEqual(
-      aliceInitTokenBalance.toNumber() - tokenAmount,
-      aliceFinalTokenBalance.toNumber(),
-      "Tokens not sent"
-    );
-    ok(
-      aliceInitTezBalance.toNumber() - tezAmount >=
-        aliceFinalTezBalance.toNumber(),
-      "Tez not sent"
-    );
-
-    // 1.2 tokens/tez send to token pair
-    strictEqual(
-      pairTokenBalance.toNumber(),
-      tokenAmount,
-      "Tokens not received"
-    );
-    strictEqual(pairTezBalance.toNumber(), tezAmount, "Tez not received");
-
-    // 2. factory state
-    strictEqual(
-      context.factory.storage.token_list.length,
-      1,
-      "Factory tokenList should contain 1 entity"
-    );
-    notStrictEqual(
-      context.factory.storage.token_to_exchange[
-        context.factory.storage.token_list[0]
-      ],
-      null,
-      "Factory token_to_exchange should contain DexPair contract address"
-    );
-
-    // 3. new pair state
-    await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-    strictEqual(
-      context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-      1000,
-      "Alice should receive 1000 shares"
-    );
-    strictEqual(
-      context.pairs[0].storage.total_supply.toNumber(),
-      1000,
-      "Alice tokens should be all supply"
-    );
-    strictEqual(
-      context.pairs[0].storage.tez_pool.toNumber(),
-      tezAmount,
-      "Tez pool should be fully funded by sent amount"
-    );
-    strictEqual(
-      context.pairs[0].storage.token_pool.toNumber(),
-      tokenAmount,
-      "Token pool should be fully funded by sent amount"
-    );
-    strictEqual(
-      context.pairs[0].storage.invariant.toNumber(),
-      tokenAmount * tezAmount,
-      "Inveriant should be calculated properly"
-    );
-    strictEqual(
-      context.pairs[0].storage.token_address,
-      tokenAddress,
-      "Token address should match the created token"
+      "Factory token_list should be empty"
     );
   });
 
-  it("should initialize existing pair if there are no shares", async function () {
-    let tezAmount = 10000;
-    let tokenAmount = 1000000;
-
-    // ensure pair added
-    await context.factory.updateStorage();
-    strictEqual(
-      context.factory.storage.token_list.length,
-      1,
-      "Factory tokenList should contain 1 exchange"
-    );
-
-    // withdraw all liquidity
-    await context.pairs[0].divestLiquidity(1, 1, 1000);
-
-    // store user & pair prev balances
-    let tokenAddress = context.tokens[0].contract.address;
-    let pairAddress = context.pairs[0].contract.address;
-    let aliceAddress = await tezos.signer.publicKeyHash();
-    let aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
-    await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
-    let aliceInitTokenBalance = await context.tokens[0].storage.ledger[
-      aliceAddress
-    ].balance;
-
-    // initialize exchange
-    await context.pairs[0].initializeExchange(tokenAmount, tezAmount);
-
-    // checks:
-
-    let aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
-    await context.tokens[0].updateStorage({
-      ledger: [aliceAddress, pairAddress],
+  describe("Test initialize during the deployment", () => {
+    let tokenAddress: string;
+    before(async () => {
+      tokenAddress = await context.createToken();
     });
-    let aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
-      aliceAddress
-    ].balance;
 
-    let pairTokenBalance = await context.tokens[0].storage.ledger[pairAddress]
-      .balance;
-    let pairTezBalance = await tezos.tz.getBalance(pairAddress);
+    it("revert in case the amount of tokens isn't approved", async function () {
+      await rejects(
+        context.factory.launchExchange(
+          tokenAddress,
+          tokenAmount,
+          tezAmount,
+          false
+        ),
+        (err) => {
+          ok(
+            err.message == "FA2_NOT_OPERATOR" ||
+              err.message == "NotEnoughAllowance",
+            "Error message mismatch"
+          );
+          return true;
+        },
+        "Adding Dex should revert"
+      );
+    });
 
-    // 1.1 tokens/tez withdrawn
-    strictEqual(
-      aliceInitTokenBalance.toNumber() - tokenAmount,
-      aliceFinalTokenBalance.toNumber(),
-      "Tokens not sent"
-    );
-    ok(
-      aliceInitTezBalance.toNumber() - tezAmount >=
-        aliceFinalTezBalance.toNumber(),
-      "Tez not sent"
-    );
+    it("revert in case the amount of XTZ is zero", async function () {
+      await rejects(
+        context.createPair({
+          tokenAddress,
+          tezAmount: 0,
+          tokenAmount,
+        }),
+        (err) => {
+          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          return true;
+        },
+        "Adding Dex should revert"
+      );
+    });
 
-    // 1.2 tokens/tez send to token pair
-    strictEqual(
-      pairTokenBalance.toNumber(),
-      tokenAmount,
-      "Tokens not received"
-    );
-    strictEqual(pairTezBalance.toNumber(), tezAmount, "Tez not received");
+    it("revert in case the amount of tokens is zero", async function () {
+      await rejects(
+        context.createPair({
+          tokenAddress,
+          tezAmount,
+          tokenAmount: 0,
+        }),
+        (err) => {
+          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          return true;
+        },
+        "Adding Dex should revert"
+      );
+    });
 
-    // 2. factory state
-    strictEqual(
-      context.factory.storage.token_list.length,
-      1,
-      "Factory tokenList should contain 1 entity"
-    );
-    notStrictEqual(
-      context.factory.storage.token_to_exchange[
-        context.factory.storage.token_list[0]
-      ],
-      null,
-      "Factory token_to_exchange should contain DexPair contract address"
-    );
-
-    // 3. new pair state
-    await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-    strictEqual(
-      context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-      1000,
-      "Alice should receive 1000 shares"
-    );
-    strictEqual(
-      context.pairs[0].storage.total_supply.toNumber(),
-      1000,
-      "Alice tokens should be all supply"
-    );
-    strictEqual(
-      context.pairs[0].storage.tez_pool.toNumber(),
-      tezAmount,
-      "Tez pool should be fully funded by sent amount"
-    );
-    strictEqual(
-      context.pairs[0].storage.token_pool.toNumber(),
-      tokenAmount,
-      "Token pool should be fully funded by sent amount"
-    );
-    strictEqual(
-      context.pairs[0].storage.invariant.toNumber(),
-      tokenAmount * tezAmount,
-      "Inveriant should be calculated properly"
-    );
-    strictEqual(
-      context.pairs[0].storage.token_address,
-      tokenAddress,
-      "Token address should match the created token"
-    );
-  });
-
-  it("should fail initialization & deployment if exchange pair exist", async function () {
-    let tezAmount = 10000;
-    let tokenAmount = 1000000;
-
-    // ensure pair added
-    await context.factory.updateStorage();
-    strictEqual(
-      context.factory.storage.token_list.length,
-      1,
-      "Factory tokenList should contain 1 exchange"
-    );
-
-    // ensure attempt to add the pair again fails Factory/exchange-launched
-    let tokenAddress = context.factory.storage.token_list[0];
-    await rejects(
-      context.createPair({
+    it("success in case the pair doesn't exist", async function () {
+      await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
+      const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
+      const aliceInitTokenBalance = (
+        (await context.tokens[0].storage.ledger[aliceAddress]) ||
+        defaultAccountInfo
+      ).balance;
+      const pairAddress = await context.createPair({
         tokenAddress,
         tezAmount,
         tokenAmount,
-      }),
-      (err) => {
-        strictEqual(
-          err.message,
-          "Factory/exchange-launched",
-          "Error message mismatch"
-        );
-        return true;
-      },
-      "Adding Dex should fail"
-    );
-  });
+      });
+      const aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
+      await context.tokens[0].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
+      const aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
+        aliceAddress
+      ].balance;
+      const pairTokenBalance = await context.tokens[0].storage.ledger[
+        pairAddress
+      ].balance;
+      const pairTezBalance = await tezos.tz.getBalance(pairAddress);
 
-  it("should fail initialization & deployment if no tokens are sent", async function () {
-    // create token
-    let tokenAddress = await context.createToken();
-    let tezAmount = 10000;
-    let tokenAmount = 0;
-
-    // add new exchange pair
-    await rejects(
-      context.createPair({
-        tokenAddress,
-        tezAmount,
+      strictEqual(
+        aliceInitTokenBalance.toNumber() - tokenAmount,
+        aliceFinalTokenBalance.toNumber(),
+        "Tokens not sent"
+      );
+      ok(
+        aliceInitTezBalance.toNumber() - tezAmount >=
+          aliceFinalTezBalance.toNumber(),
+        "Tez not sent"
+      );
+      strictEqual(
+        pairTokenBalance.toNumber(),
         tokenAmount,
-      }),
-      (err) => {
-        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
-        return true;
-      },
-      "Adding Dex should fail"
-    );
-  });
-
-  it("should fail initialization & deployment if no tez are sent", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    // create token
-    let tokenAddress = await context.createToken();
-    let tezAmount = 0;
-    let tokenAmount = 1000000;
-
-    // add new exchange pair
-    await rejects(
-      context.createPair({
-        tokenAddress,
+        "Tokens not received"
+      );
+      strictEqual(pairTezBalance.toNumber(), tezAmount, "Tez not received");
+      strictEqual(
+        context.factory.storage.token_list.length,
+        1,
+        "Factory tokenList should contain 1 entity"
+      );
+      notStrictEqual(
+        context.factory.storage.token_to_exchange[
+          context.factory.storage.token_list[0]
+        ],
+        null,
+        "Factory token_to_exchange should contain DexPair contract address"
+      );
+      strictEqual(
+        context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
         tezAmount,
+        "Alice should receive initial shares"
+      );
+      strictEqual(
+        context.pairs[0].storage.total_supply.toNumber(),
+        tezAmount,
+        "Alice tokens should be all supply"
+      );
+      strictEqual(
+        context.pairs[0].storage.tez_pool.toNumber(),
+        tezAmount,
+        "Tez pool should be fully funded by sent amount"
+      );
+      strictEqual(
+        context.pairs[0].storage.token_pool.toNumber(),
         tokenAmount,
-      }),
-      (err) => {
-        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
-        return true;
-      },
-      "Adding Dex should fail"
-    );
+        "Token pool should be fully funded by sent amount"
+      );
+      strictEqual(
+        context.pairs[0].storage.invariant.toNumber(),
+        tokenAmount * tezAmount,
+        "Inveriant should be calculated properly"
+      );
+      strictEqual(
+        context.pairs[0].storage.token_address,
+        tokenAddress,
+        "Token address should match the created token"
+      );
+    });
+
+    it("revert in case the pair exists", async function () {
+      const tokenAddress = context.factory.storage.token_list[0];
+      await rejects(
+        context.createPair({
+          tokenAddress,
+          tezAmount,
+          tokenAmount,
+        }),
+        (err) => {
+          strictEqual(
+            err.message,
+            "Factory/exchange-launched",
+            "Error message mismatch"
+          );
+          return true;
+        },
+        "Adding Dex should revert"
+      );
+    });
   });
 
-  it("should fail initialization if no tokens are sent", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
+  describe("Test initialize after liquidity withdrawn when", () => {
+    it("revert in case liquidity isn't zero", async function () {
+      await rejects(
+        context.pairs[0].initializeExchange(tokenAmount, tezAmount),
+        (err) => {
+          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          return true;
+        },
+        "Adding Dex should revert"
+      );
+    });
 
-    let tezAmount = 10000;
-    let tokenAmount = 1000000;
+    it("revert in case the amount of tokens isn't approved", async function () {
+      await context.pairs[0].divestLiquidity(1, 1, tezAmount);
+      await context.pairs[0].approveToken(0, context.pairs[0].contract.address);
+      await rejects(
+        context.pairs[0].initializeExchange(tokenAmount, tezAmount, false),
+        (err) => {
+          ok(
+            err.message == "FA2_NOT_OPERATOR" ||
+              err.message == "NotEnoughAllowance",
+            "Error message mismatch"
+          );
+          return true;
+        },
+        "Adding Dex should revert"
+      );
+    });
 
-    // ensure pair added
-    await context.factory.updateStorage();
-    // strictEqual(
-    //   context.factory.storage.tokenList.length,
-    //   1,
-    //   "Factory tokenList should contain 1 exchange"
-    // );
+    it("success in case liquidity is zero", async function () {
+      const tokenAddress = context.tokens[0].contract.address;
+      const pairAddress = context.pairs[0].contract.address;
+      await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
+      const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
+      const aliceInitTokenBalance = (
+        (await context.tokens[0].storage.ledger[aliceAddress]) ||
+        defaultAccountInfo
+      ).balance;
+      await context.pairs[0].initializeExchange(tokenAmount, tezAmount);
+      const aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
+      await context.tokens[0].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
+      const aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
+        aliceAddress
+      ].balance;
+      const pairTokenBalance = await context.tokens[0].storage.ledger[
+        pairAddress
+      ].balance;
+      const pairTezBalance = await tezos.tz.getBalance(pairAddress);
 
-    // withdraw all liquidity
-    await context.pairs[0].divestLiquidity(1, 1, 1000);
+      strictEqual(
+        aliceInitTokenBalance.toNumber() - tokenAmount,
+        aliceFinalTokenBalance.toNumber(),
+        "Tokens not sent"
+      );
+      ok(
+        aliceInitTezBalance.toNumber() - tezAmount >=
+          aliceFinalTezBalance.toNumber(),
+        "Tez not sent"
+      );
+      strictEqual(
+        pairTokenBalance.toNumber(),
+        tokenAmount,
+        "Tokens not received"
+      );
+      strictEqual(pairTezBalance.toNumber(), tezAmount, "Tez not received");
+      strictEqual(
+        context.factory.storage.token_list.length,
+        1,
+        "Factory tokenList should contain 1 entity"
+      );
+      notStrictEqual(
+        context.factory.storage.token_to_exchange[
+          context.factory.storage.token_list[0]
+        ],
+        null,
+        "Factory token_to_exchange should contain DexPair contract address"
+      );
+      strictEqual(
+        context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
+        tezAmount,
+        "Alice should receive initial shares"
+      );
+      strictEqual(
+        context.pairs[0].storage.total_supply.toNumber(),
+        tezAmount,
+        "Alice tokens should be all supply"
+      );
+      strictEqual(
+        context.pairs[0].storage.tez_pool.toNumber(),
+        tezAmount,
+        "Tez pool should be fully funded by sent amount"
+      );
+      strictEqual(
+        context.pairs[0].storage.token_pool.toNumber(),
+        tokenAmount,
+        "Token pool should be fully funded by sent amount"
+      );
+      strictEqual(
+        context.pairs[0].storage.invariant.toNumber(),
+        tokenAmount * tezAmount,
+        "Inveriant should be calculated properly"
+      );
+      strictEqual(
+        context.pairs[0].storage.token_address,
+        tokenAddress,
+        "Token address should match the created token"
+      );
+    });
 
-    // attempt to initialize exchange
-    await rejects(
-      context.pairs[0].initializeExchange(0, tezAmount),
-      (err) => {
-        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
-        return true;
-      },
-      "Initializing Dex should fail"
-    );
-  });
+    it("revert in case the amount of token is zero", async function () {
+      await rejects(
+        context.pairs[0].initializeExchange(0, tezAmount),
+        (err) => {
+          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          return true;
+        },
+        "Initializing Dex should revert"
+      );
+    });
 
-  it("should fail initialization if no tez are sent", async function () {
-    // reset pairs
-    await context.flushPairs();
-    await context.createPairs();
-
-    let tezAmount = 10000;
-    let tokenAmount = 1000000;
-
-    // ensure pair added
-    await context.factory.updateStorage();
-    // strictEqual(
-    //   context.factory.storage.tokenList.length,
-    //   1,
-    //   "Factory tokenList should contain 1 exchange"
-    // );
-
-    // withdraw all liquidity
-    await context.pairs[0].divestLiquidity(1, 1, 1000);
-
-    // attempt to initialize exchange
-    await rejects(
-      context.pairs[0].initializeExchange(tokenAmount, 0),
-      (err) => {
-        strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
-        return true;
-      },
-      "Initializing Dex should fail"
-    );
+    it("revert in case the amount of XTZ is zero", async function () {
+      await rejects(
+        context.pairs[0].initializeExchange(tokenAmount, 0),
+        (err) => {
+          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          return true;
+        },
+        "Initializing Dex should revert"
+      );
+    });
   });
 });
