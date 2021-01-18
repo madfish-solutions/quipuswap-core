@@ -1,7 +1,7 @@
 (* contract storage *)
 type update_owner_type is record [
-    owner : address; (* account *)
     add : bool; (* wether add or remove account from owners *)
+    owner : address; (* account *)
 ]
 type metadata_type is big_map (string, bytes)
 
