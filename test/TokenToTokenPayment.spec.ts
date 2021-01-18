@@ -1,15 +1,10 @@
 import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { calculateFee } from "./helpers/utils";
-import accounts from "./accounts/accounts";
 
 contract("TokenToTokenPayment()", function () {
   let context: Context;
   let tokenAddress: string;
-  let pairAddress: string;
-  const aliceAddress: string = accounts.alice.pkh;
-  const bobAddress: string = accounts.bob.pkh;
   const tezInitAmount0 = 10000;
   const tezInitAmount1 = 20000;
   const tokenInitAmount0 = 1000000;
@@ -120,46 +115,36 @@ contract("TokenToTokenPayment()", function () {
     );
 
     // 1. check tez balances
-    ok(
-      bobInitTezBalance.toNumber() > bobFinalTezBalance.toNumber(),
-      "Tez should be spent to fee"
-    );
+    ok(bobInitTezBalance.toNumber() > bobFinalTezBalance.toNumber());
     strictEqual(
       firstPairTezBalance.toNumber(),
-      tezInitAmount0 - middleTezAmount,
-      "Tez not withdrawn"
+      tezInitAmount0 - middleTezAmount
     );
     strictEqual(
       secondPairTezBalance.toNumber(),
-      tezInitAmount1 + middleTezAmount,
-      "Tez not received"
+      tezInitAmount1 + middleTezAmount
     );
 
     // 2. check tokens balances
     strictEqual(
       bobInitFirstTokenBalance.toNumber() - tokenAmount,
-      bobFinalFirstTokenBalance.toNumber(),
-      "Tokens not sent"
+      bobFinalFirstTokenBalance.toNumber()
     );
     strictEqual(
       bobInitSecondTokenBalance.toNumber(),
-      bobFinalSecondTokenBalance.toNumber(),
-      "Sender tokens should stay the same"
+      bobFinalSecondTokenBalance.toNumber()
     );
     strictEqual(
       carolInitSecondTokenBalance.toNumber() + minTokensOut,
-      carolFinalSecondTokenBalance.toNumber(),
-      "Tokens not sent"
+      carolFinalSecondTokenBalance.toNumber()
     );
     strictEqual(
       firstPairTokenBalance.toNumber(),
-      tokenInitAmount0 + tokenAmount,
-      "Tokens not received"
+      tokenInitAmount0 + tokenAmount
     );
     strictEqual(
       secondPairTokenBalance.toNumber(),
-      tokenInitAmount1 - minTokensOut,
-      "Tokens not received"
+      tokenInitAmount1 - minTokensOut
     );
 
     // 3. new pairs state
@@ -167,33 +152,27 @@ contract("TokenToTokenPayment()", function () {
     await context.pairs[1].updateStorage();
     strictEqual(
       context.pairs[0].storage.tez_pool.toNumber(),
-      tezInitAmount0 - middleTezAmount,
-      "Tez pool should decrement by sent amount"
+      tezInitAmount0 - middleTezAmount
     );
     strictEqual(
       context.pairs[0].storage.token_pool.toNumber(),
-      tokenInitAmount0 + tokenAmount,
-      "Token pool should decrement by withdrawn amount"
+      tokenInitAmount0 + tokenAmount
     );
     strictEqual(
       context.pairs[1].storage.tez_pool.toNumber(),
-      tezInitAmount1 + middleTezAmount,
-      "Tez pool should decrement by sent amount"
+      tezInitAmount1 + middleTezAmount
     );
     strictEqual(
       context.pairs[1].storage.token_pool.toNumber(),
-      tezInitAmount0 - minTokensOut,
-      "Token pool should decrement by withdrawn amount"
+      tezInitAmount0 - minTokensOut
     );
     strictEqual(
       context.pairs[0].storage.invariant.toNumber(),
-      (tokenInitAmount0 + tokenAmount) * (tezInitAmount0 - middleTezAmount),
-      "Inveriant should be calculated properly"
+      (tokenInitAmount0 + tokenAmount) * (tezInitAmount0 - middleTezAmount)
     );
     strictEqual(
       context.pairs[1].storage.invariant.toNumber(),
-      (tezInitAmount1 + middleTezAmount) * (tokenInitAmount1 - minTokensOut),
-      "Inveriant should be calculated properly"
+      (tezInitAmount1 + middleTezAmount) * (tokenInitAmount1 - minTokensOut)
     );
   });
 });

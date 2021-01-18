@@ -3,14 +3,9 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 
-// 275.851s (7 tests)
-// ->
-// 133.092s (11 tests)
-
 contract("InitializeExchange()", function () {
   let context: Context;
   let aliceAddress: string = accounts.alice.pkh;
-  let bobAddress: string = accounts.bob.pkh;
   const tezAmount: number = 10000;
   const tokenAmount: number = 1000;
 
@@ -22,11 +17,7 @@ contract("InitializeExchange()", function () {
 
   it("should have an empty token list after deployment", async function () {
     await context.factory.updateStorage();
-    strictEqual(
-      context.factory.storage.token_list.length,
-      0,
-      "Factory token_list should be empty"
-    );
+    strictEqual(context.factory.storage.token_list.length, 0);
   });
 
   describe("Test initialize during the deployment", () => {
@@ -50,8 +41,7 @@ contract("InitializeExchange()", function () {
             "Error message mismatch"
           );
           return true;
-        },
-        "Adding Dex should revert"
+        }
       );
     });
 
@@ -65,8 +55,7 @@ contract("InitializeExchange()", function () {
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
-        },
-        "Adding Dex should revert"
+        }
       );
     });
 
@@ -80,8 +69,7 @@ contract("InitializeExchange()", function () {
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
-        },
-        "Adding Dex should revert"
+        }
       );
     });
 
@@ -112,62 +100,33 @@ contract("InitializeExchange()", function () {
 
       strictEqual(
         aliceInitTokenBalance.toNumber() - tokenAmount,
-        aliceFinalTokenBalance.toNumber(),
-        "Tokens not sent"
+        aliceFinalTokenBalance.toNumber()
       );
       ok(
         aliceInitTezBalance.toNumber() - tezAmount >=
-          aliceFinalTezBalance.toNumber(),
-        "Tez not sent"
+          aliceFinalTezBalance.toNumber()
       );
-      strictEqual(
-        pairTokenBalance.toNumber(),
-        tokenAmount,
-        "Tokens not received"
-      );
-      strictEqual(pairTezBalance.toNumber(), tezAmount, "Tez not received");
-      strictEqual(
-        context.factory.storage.token_list.length,
-        1,
-        "Factory tokenList should contain 1 entity"
-      );
+      strictEqual(pairTokenBalance.toNumber(), tokenAmount);
+      strictEqual(pairTezBalance.toNumber(), tezAmount);
+      strictEqual(context.factory.storage.token_list.length, 1);
       notStrictEqual(
         context.factory.storage.token_to_exchange[
           context.factory.storage.token_list[0]
         ],
-        null,
-        "Factory token_to_exchange should contain DexPair contract address"
+        null
       );
       strictEqual(
         context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-        tezAmount,
-        "Alice should receive initial shares"
+        tezAmount
       );
-      strictEqual(
-        context.pairs[0].storage.total_supply.toNumber(),
-        tezAmount,
-        "Alice tokens should be all supply"
-      );
-      strictEqual(
-        context.pairs[0].storage.tez_pool.toNumber(),
-        tezAmount,
-        "Tez pool should be fully funded by sent amount"
-      );
-      strictEqual(
-        context.pairs[0].storage.token_pool.toNumber(),
-        tokenAmount,
-        "Token pool should be fully funded by sent amount"
-      );
+      strictEqual(context.pairs[0].storage.total_supply.toNumber(), tezAmount);
+      strictEqual(context.pairs[0].storage.tez_pool.toNumber(), tezAmount);
+      strictEqual(context.pairs[0].storage.token_pool.toNumber(), tokenAmount);
       strictEqual(
         context.pairs[0].storage.invariant.toNumber(),
-        tokenAmount * tezAmount,
-        "Inveriant should be calculated properly"
+        tokenAmount * tezAmount
       );
-      strictEqual(
-        context.pairs[0].storage.token_address,
-        tokenAddress,
-        "Token address should match the created token"
-      );
+      strictEqual(context.pairs[0].storage.token_address, tokenAddress);
     });
 
     it("revert in case the pair exists", async function () {
@@ -185,8 +144,7 @@ contract("InitializeExchange()", function () {
             "Error message mismatch"
           );
           return true;
-        },
-        "Adding Dex should revert"
+        }
       );
     });
   });
@@ -198,8 +156,7 @@ contract("InitializeExchange()", function () {
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
-        },
-        "Adding Dex should revert"
+        }
       );
     });
 
@@ -215,8 +172,7 @@ contract("InitializeExchange()", function () {
             "Error message mismatch"
           );
           return true;
-        },
-        "Adding Dex should revert"
+        }
       );
     });
 
@@ -245,62 +201,33 @@ contract("InitializeExchange()", function () {
 
       strictEqual(
         aliceInitTokenBalance.toNumber() - tokenAmount,
-        aliceFinalTokenBalance.toNumber(),
-        "Tokens not sent"
+        aliceFinalTokenBalance.toNumber()
       );
       ok(
         aliceInitTezBalance.toNumber() - tezAmount >=
-          aliceFinalTezBalance.toNumber(),
-        "Tez not sent"
+          aliceFinalTezBalance.toNumber()
       );
-      strictEqual(
-        pairTokenBalance.toNumber(),
-        tokenAmount,
-        "Tokens not received"
-      );
-      strictEqual(pairTezBalance.toNumber(), tezAmount, "Tez not received");
-      strictEqual(
-        context.factory.storage.token_list.length,
-        1,
-        "Factory tokenList should contain 1 entity"
-      );
+      strictEqual(pairTokenBalance.toNumber(), tokenAmount);
+      strictEqual(pairTezBalance.toNumber(), tezAmount);
+      strictEqual(context.factory.storage.token_list.length, 1);
       notStrictEqual(
         context.factory.storage.token_to_exchange[
           context.factory.storage.token_list[0]
         ],
-        null,
-        "Factory token_to_exchange should contain DexPair contract address"
+        null
       );
       strictEqual(
         context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-        tezAmount,
-        "Alice should receive initial shares"
+        tezAmount
       );
-      strictEqual(
-        context.pairs[0].storage.total_supply.toNumber(),
-        tezAmount,
-        "Alice tokens should be all supply"
-      );
-      strictEqual(
-        context.pairs[0].storage.tez_pool.toNumber(),
-        tezAmount,
-        "Tez pool should be fully funded by sent amount"
-      );
-      strictEqual(
-        context.pairs[0].storage.token_pool.toNumber(),
-        tokenAmount,
-        "Token pool should be fully funded by sent amount"
-      );
+      strictEqual(context.pairs[0].storage.total_supply.toNumber(), tezAmount);
+      strictEqual(context.pairs[0].storage.tez_pool.toNumber(), tezAmount);
+      strictEqual(context.pairs[0].storage.token_pool.toNumber(), tokenAmount);
       strictEqual(
         context.pairs[0].storage.invariant.toNumber(),
-        tokenAmount * tezAmount,
-        "Inveriant should be calculated properly"
+        tokenAmount * tezAmount
       );
-      strictEqual(
-        context.pairs[0].storage.token_address,
-        tokenAddress,
-        "Token address should match the created token"
-      );
+      strictEqual(context.pairs[0].storage.token_address, tokenAddress);
     });
 
     it("revert in case the amount of token is zero", async function () {
@@ -309,8 +236,7 @@ contract("InitializeExchange()", function () {
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
-        },
-        "Initializing Dex should revert"
+        }
       );
     });
 
@@ -320,8 +246,7 @@ contract("InitializeExchange()", function () {
         (err) => {
           strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
           return true;
-        },
-        "Initializing Dex should revert"
+        }
       );
     });
   });

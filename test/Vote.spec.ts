@@ -11,9 +11,6 @@ contract("Vote()", function () {
   const aliceAddress: string = accounts.alice.pkh;
   const bobAddress: string = accounts.bob.pkh;
   const carolAddress: string = accounts.carol.pkh;
-  const tezAmount: number = 10000;
-  const tokenAmount: number = 1000000;
-  const newShares: number = 100;
 
   before(async () => {
     context = await Context.init([], false, "alice", false);
@@ -82,68 +79,47 @@ contract("Vote()", function () {
       strictEqual(
         voterFinalSharesInfo.balance.toNumber(),
         voterInitSharesInfo.balance.plus(voterInitVoteInfo.vote).toNumber() -
-          value,
-        "Tokens not removed"
+          value
       );
       strictEqual(
         voterFinalSharesInfo.frozen_balance.toNumber(),
         voterInitSharesInfo.frozen_balance
           .minus(voterInitVoteInfo.vote)
-          .toNumber() + value,
-        "Tokens not frozen"
+          .toNumber() + value
       );
-      strictEqual(
-        voterFinalVoteInfo.candidate,
-        value ? candidate : null,
-        "User candidate wasn't updated"
-      );
-      strictEqual(
-        voterFinalVoteInfo.vote.toNumber(),
-        value,
-        "User vote wasn't updated"
-      );
+      strictEqual(voterFinalVoteInfo.candidate, value ? candidate : null);
+      strictEqual(voterFinalVoteInfo.vote.toNumber(), value);
 
       if (value) {
         if (voterInitVoteInfo.candidate == candidate) {
           strictEqual(
             voterFinalCandidateVotes.toNumber(),
             voterInitCandidateVotes.minus(voterInitVoteInfo.vote).toNumber() +
-              value,
-            "Candidate didn't receive tokens"
+              value
           );
         } else {
           strictEqual(
             voterFinalCandidateVotes.toNumber(),
-            voterInitCandidateVotes.toNumber() + value,
-            "Candidate didn't receive tokens"
+            voterInitCandidateVotes.toNumber() + value
           );
         }
       }
       strictEqual(
         initVotes.minus(voterInitVoteInfo.vote).toNumber() + value,
-        finalVotes.toNumber(),
-        "Total votes weren't updated"
+        finalVotes.toNumber()
       );
       if (value > prevDelegateFinalCandidateVotes.toNumber())
-        strictEqual(
-          finalCurrentDelegated,
-          candidate,
-          "Delegated wasn't updated"
-        );
+        strictEqual(finalCurrentDelegated, candidate);
     });
   }
 
   function voteFailCase(decription, sender, voter, candidate, value, errorMsg) {
     it(decription, async function () {
       await context.updateActor(sender);
-      await rejects(
-        context.pairs[0].vote(voter, candidate, value),
-        (err) => {
-          ok(err.message == errorMsg, "Error message mismatch");
-          return true;
-        },
-        "Investment should revert"
-      );
+      await rejects(context.pairs[0].vote(voter, candidate, value), (err) => {
+        ok(err.message == errorMsg, "Error message mismatch");
+        return true;
+      });
     });
   }
 

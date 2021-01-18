@@ -17,7 +17,7 @@ contract("SetXFunctions()", function () {
       // ensure no functions are stored
       await context.factory.updateStorage();
       Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
-        strictEqual(value, null, "Dex function set");
+        strictEqual(value, null);
       });
 
       // set all Dex functions
@@ -25,7 +25,7 @@ contract("SetXFunctions()", function () {
 
       // ensure code added
       Object.values(context.factory.storage.dex_lambdas).forEach((value) => {
-        notStrictEqual(value, null, "Dex function not set");
+        notStrictEqual(value, null);
       });
     });
 
@@ -33,7 +33,7 @@ contract("SetXFunctions()", function () {
       // ensure no functions are stored
       await context.factory.updateStorage();
       Object.values(context.factory.storage.token_lambdas).forEach((value) => {
-        strictEqual(value, null, "Token function set");
+        strictEqual(value, null);
       });
 
       // set all Token functions
@@ -41,7 +41,7 @@ contract("SetXFunctions()", function () {
 
       // ensure code added
       Object.values(context.factory.storage.token_lambdas).forEach((value) => {
-        notStrictEqual(value, null, "Token function not set");
+        notStrictEqual(value, null);
       });
     });
   });
@@ -57,24 +57,19 @@ contract("SetXFunctions()", function () {
             "Error message mismatch"
           );
           return true;
-        },
-        "Replacement of dex function should revert"
+        }
       );
     });
 
     it("revert replacement of Token functions to Factory", async function () {
-      await rejects(
-        context.factory.setTokenFunction(1, "transfer"),
-        (err) => {
-          strictEqual(
-            err.message,
-            "Factory/function-set",
-            "Error message mismatch"
-          );
-          return true;
-        },
-        "Replacement of dex function should revert"
-      );
+      await rejects(context.factory.setTokenFunction(1, "transfer"), (err) => {
+        strictEqual(
+          err.message,
+          "Factory/function-set",
+          "Error message mismatch"
+        );
+        return true;
+      });
     });
   });
 
@@ -89,24 +84,19 @@ contract("SetXFunctions()", function () {
             "Error message mismatch"
           );
           return true;
-        },
-        "Adding more dex functions should revert"
+        }
       );
     });
 
     it("revert adding more than 5 token functions to Factory", async function () {
-      await rejects(
-        context.factory.setTokenFunction(5, "transfer"),
-        (err) => {
-          strictEqual(
-            err.message,
-            "Factory/wrong-index",
-            "Error message mismatch"
-          );
-          return true;
-        },
-        "Adding more token functions should revert"
-      );
+      await rejects(context.factory.setTokenFunction(5, "transfer"), (err) => {
+        strictEqual(
+          err.message,
+          "Factory/wrong-index",
+          "Error message mismatch"
+        );
+        return true;
+      });
     });
   });
 });

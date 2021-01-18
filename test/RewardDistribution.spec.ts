@@ -12,9 +12,6 @@ contract("RewardsDistribution()", function () {
   let pairAddress: string;
   const aliceAddress: string = accounts.alice.pkh;
   const bobAddress: string = accounts.bob.pkh;
-  const tezAmount: number = 100;
-  const tokenAmount: number = 100;
-  const newShares: number = 100;
 
   before(async () => {
     context = await Context.init([], false, "alice", false);
@@ -106,16 +103,14 @@ contract("RewardsDistribution()", function () {
                 initTokenRecord.balance.plus(initTokenRecord.frozen_balance)
               )
               .minus(initUserRewards.loyalty_paid)
-          ),
-        "Loyalty wrong"
+          )
       );
       ok(
         finalUserRewards.loyalty_paid.eq(
           finalRewardInfo.loyalty_per_share.multipliedBy(
             finalRecord.balance.plus(finalRecord.frozen_balance)
           )
-        ),
-        "Loyalty wroсng"
+        )
       );
       ok(
         finalRewardInfo.loyalty_per_share
@@ -124,25 +119,21 @@ contract("RewardsDistribution()", function () {
             accomulatedLoyalty
               .div(initTotalSupply)
               .integerValue(BigNumber.ROUND_DOWN)
-          ),
-        "Loyalty per share after Carol investment is wrong"
+          )
       );
       ok(
         finalRewardInfo.total_accomulated_loyalty
           .minus(initRewardInfo.total_accomulated_loyalty)
-          .eq(accomulatedLoyalty),
-        "Loyalty per share after  is wrong"
+          .eq(accomulatedLoyalty)
       );
       if (initUserRewards.update_time == finalUserRewards.update_time) {
         strictEqual(
           finalUserRewards.reward.toString(),
-          rewardWithdrawn ? "0" : initUserRewards.reward.toString(),
-          "Loyalty 6"
+          rewardWithdrawn ? "0" : initUserRewards.reward.toString()
         );
         strictEqual(
           finalUserRewards.reward_paid.toString(),
-          initUserRewards.reward_paid.toString(),
-          "Loyalty 4"
+          initUserRewards.reward_paid.toString()
         );
       } else {
         const loyalty = initUserRewards.loyalty.plus(
@@ -157,13 +148,11 @@ contract("RewardsDistribution()", function () {
         );
         strictEqual(
           finalUserRewards.reward.toString(),
-          rewardWithdrawn ? "0" : newRewards.toString(),
-          "Loyalty 4"
+          rewardWithdrawn ? "0" : newRewards.toString()
         );
         strictEqual(
           finalUserRewards.reward_paid.toString(),
-          finalRewardInfo.reward_per_token.toString(),
-          "Loyalty "
+          finalRewardInfo.reward_per_token.toString()
         );
       }
     });
@@ -172,14 +161,10 @@ contract("RewardsDistribution()", function () {
   function defaultFailCase(decription, sender, amount, errorMsg) {
     it(decription, async function () {
       await context.updateActor(sender);
-      await rejects(
-        context.pairs[0].sendReward(amount),
-        (err) => {
-          ok(err.message == errorMsg, "Error message mismatch");
-          return true;
-        },
-        "Investment should revert"
-      );
+      await rejects(context.pairs[0].sendReward(amount), (err) => {
+        ok(err.message == errorMsg, "Error message mismatch");
+        return true;
+      });
     });
   }
 
