@@ -126,5 +126,5 @@ function main (const p : exchange_action; const s : exchange_storage) : full_fac
   case p of
     | LaunchExchange(params)    -> launch_exchange(Tezos.self_address, params.token, params.token_amount, s)
     | SetDexFunction(params)    -> ((nil:list(operation)), if params.index > 8n then (failwith("Factory/wrong-index") : exchange_storage) else set_dex_function(params.index, params.func, s))
-    | SetTokenFunction(params)  -> ((nil:list(operation)), if params.index > 4n then (failwith("Factory/wrong-index") : exchange_storage) else set_token_function(params.index, params.func, s))
+    | SetTokenFunction(params)  -> ((nil:list(operation)), if params.index > token_func_count then (failwith("Factory/wrong-index") : exchange_storage) else set_token_function(params.index, params.func, s))
   end
