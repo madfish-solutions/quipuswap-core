@@ -1,4 +1,8 @@
-import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
+import {
+  ContractAbstraction,
+  ContractProvider,
+  MichelsonMap,
+} from "@taquito/taquito";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { MetadataStorage } from "./types";
 import { prepareProviderOptions } from "./utils";
@@ -58,9 +62,9 @@ export class Metadata {
     return operation;
   }
 
-  async updateMetadata(metadata: {
-    [key: string]: Buffer;
-  }): Promise<TransactionOperation> {
+  async updateMetadata(
+    metadata: MichelsonMap<any, any>
+  ): Promise<TransactionOperation> {
     let operation = await this.contract.methods.update_storage(metadata).send();
     await operation.confirmation();
     return operation;

@@ -576,8 +576,8 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test update owner status by:
 
-- [ ] owner.
-- [ ] unprivileged user.
+- [x] owner.
+- [x] unprivileged user.
 
 **Scope**: Test permissions for update metadata.
 
@@ -589,8 +589,8 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test update metadata status by:
 
-- [ ] owner.
-- [ ] unprivileged user.
+- [x] owner.
+- [x] unprivileged user.
 
 **Scope**: Test owner status update.
 
@@ -602,7 +602,7 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test update owner status by:
 
-- [ ] adding existed owner.
-- [ ] removing unxisted owner.
-- [ ] adding new owner.
-- [ ] removing existed owner.
+- [x] adding existed owner.
+- [x] removing unxisted owner.
+- [x] adding new owner.
+- [x] removing existed owner.
