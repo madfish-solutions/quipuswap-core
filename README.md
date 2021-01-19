@@ -80,7 +80,7 @@ Contracts are processed in the following stages:
 3. Configuration
 4. Interactions on-chain
 
-As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the intercontract communication between Dex and external tokens, the shared code base is used. Therefor to work with the spesific standard the version - `FA12` or `FA2` - should be configured by setting `EXCHANGE_TOKEN_STANDARD` in `.env`
+As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the inter contract communication between Dex and external tokens, the shared codebase is used. Therefore to work with the specific standard version, you should configure it by setting `EXCHANGE_TOKEN_STANDARD` in `.env` to either `FA12` or `FA2`.
 
 ## Compilation
 

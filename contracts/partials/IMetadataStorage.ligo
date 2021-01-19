@@ -1,6 +1,6 @@
 (* contract storage *)
 type update_owner_type is record [
-    add : bool; (* wether add or remove account from owners *)
+    add : bool; (* whether add or remove account from owners *)
     owner : address; (* account *)
 ]
 type metadata_type is big_map (string, bytes)
@@ -16,4 +16,4 @@ type return is list (operation) * storage
 type storage_action is 
 | Update_owners     of update_owner_type (* manage owner permissions *)
 | Update_storage    of metadata_type (* update storage *)
-| Get_metadata      of contract (metadata_type) (* send the srorage data to the account *)
+| Get_metadata      of contract (metadata_type) (* send the storage data to the account *)

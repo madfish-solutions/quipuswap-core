@@ -26,28 +26,28 @@ type vote_info is record [
 (* record that represents account baker rewards info *)
 type user_reward_info is record [
   reward        : nat; (* collected rewards *)
-  reward_paid   : nat; (* last reward accomulator calculated as user_loyalty * reward_per_loyalty *)
+  reward_paid   : nat; (* last reward accumulator calculated as user_loyalty * reward_per_loyalty *)
   loyalty       : nat; (* total loyalty score deriven from the duration of the investment and its share in the pool *)
-  loyalty_paid  : nat; (* last loyalty accomulator calculated as user_share * loyalty_per_share *)
+  loyalty_paid  : nat; (* last loyalty accumulator calculated as user_share * loyalty_per_share *)
   update_time   : timestamp; (* last time the data was updated *)
 ]
 
 (* record that represents general baker reward stats *)
 type reward_info is record [
   reward                      : nat; (* collected rewards *)
-  loyalty_per_share           : nat; (* loyaty score per each share *)
+  loyalty_per_share           : nat; (* loyalty score per each share *)
   total_accomulated_loyalty   : nat; (* aggregated loyalty *)
   last_update_time            : timestamp; (* last time the data was updated *)
   last_period_finish          : timestamp; (* last time the voting period has been finished *)
   period_finish               : timestamp; (* time current period ends *)
-  last_loyalty_per_share      : nat; (* loyaty score per each share per the previous epoch *)
-  reward_per_token            : nat; (* loyaty score per each share per the previous epoch *)
+  last_loyalty_per_share      : nat; (* loyalty score per each share per the previous epoch *)
+  reward_per_token            : nat; (* loyalty score per each share per the previous epoch *)
 ]
 
 (* record for the dex storage *)
 type dex_storage is record [
 #if FA2_STANDARD_ENABLED
-  token_id            : token_id; (* token idetifier *)
+  token_id            : token_id; (* token identifier *)
 #endif
   tez_pool            : nat; (* tez reserves in the pool *)
   token_pool          : nat; (* token reserves in the pool *)
