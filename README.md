@@ -8,7 +8,7 @@ The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/
 
 ![Architecture](Architecture.png)
 
-The solution consists of 3 types of contracts:
+The solution consists of 4 types of contracts:
 
 1. `Factory` - singleton used to deploy new exchange pair;
 2. `Dex` - contract for TokenX-XTZ pair exchanges;
@@ -19,13 +19,16 @@ The solution consists of 3 types of contracts:
 
 ```
 .
+├──  ci/ # scripts for continues integration
 ├──  contracts/ # contracts
 |──────── main/ # the contracts to be compiled
 |──────── partial/ # the code parts imported by main contracts
-├──  testTs/ # test cases
-├──  storage/ # initial storage for contract origination
+├──  test/ # test cases
+├──  storage/ # initial storage for contract originations
 ├──  scripts/ # cli for dex/factory actions
+├──  test.md # cases covered by tests
 ├──  README.md # current file
+├──  .env
 ├──  .gitignore
 ├──  package.json
 └──  Architecture.png
@@ -34,8 +37,8 @@ The solution consists of 3 types of contracts:
 # Prerequisites
 
 - Installed NodeJS (tested with NodeJS v12+)
-- Installed Yarn (NPM isn't working properly with `ganache-cli@6.11.0-tezos.0`)
 
+- Installed Yarn (NPM isn't working properly with `ganache-cli@6.11.0-tezos.0`)
 
 - Installed Ligo:
 
@@ -65,7 +68,7 @@ For other networks:
 
 ```
 yarn run migrate # development
-yarn run migrate-carthagenet # carthagenet
+yarn run migrate --network NAME # other networks
 ```
 
 # Usage
@@ -77,14 +80,14 @@ Contracts are processed in the following stages:
 3. Configuration
 4. Interactions on-chain
 
-As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the intercontract communication between Dex and external tokens, the shared code base is used. There for to work with the spesific standard the version - `FA12` or `FA2` - should be configured by setting `EXCHANGE_TOKEN_STANDARD` in `.env`
+As the Quipuswap supports 2 token standards that vary only in the token interface implementation and the intercontract communication between Dex and external tokens, the shared code base is used. Therefor to work with the spesific standard the version - `FA12` or `FA2` - should be configured by setting `EXCHANGE_TOKEN_STANDARD` in `.env`
 
 ## Compilation
 
 To compile the contracts run:
 
 ```
-yarn run compile
+yarn compile
 ```
 
 Artifacts are stored in the `build/contracts` directory.
@@ -94,17 +97,10 @@ Artifacts are stored in the `build/contracts` directory.
 For deployment step the following command should be used:
 
 ```
-yarn run migrate
+yarn migrate
 ```
 
 Addresses of deployed contracts are displayed in terminal. At this stage, new MetadataStorage, Factory are originated. Aditionaly, for testnets two new pairs are deployed.
-
-For other networks:
-
-```
-yarn run migrate-delphinet
-yarn run migrate-carthagenet
-```
 
 # Entrypoints
 
@@ -224,7 +220,7 @@ type dex_action is
 | WithdrawProfit          of (address)
 
 type default_params is unit
-type use_params is (nat * dex_action)
+type use_params is dex_action
 ```
 
 For FA1.2 standard compatibility the following entrypoints are implemented:
@@ -377,7 +373,6 @@ type storage is record [
     owners : set(address);
 ]
 
-(* Valid entry points *)
 type storage_action is
 | Update_owners of update_owner_type
 | Update_storage of metadata_type
@@ -385,12 +380,15 @@ type storage_action is
 ```
 
 # Testing
+
 If you'd like to run tests on the local environment, you might want to run `ganache-cli` for Tezos using the following command:
+
 ```
 yarn start-sandbox
 ```
 
 Truffle framework is used for testing. Run:
+
 ```
 yarn test
 ```
