@@ -7,7 +7,7 @@ import { MichelsonMap } from "@taquito/michelson-encoder";
 
 const CMetadataStorage = artifacts.require("MetadataStorage");
 
-contract.only("MetadataStorage()", function () {
+contract("MetadataStorage()", function () {
   let metadataStorage: Metadata;
   const aliceAddress: string = accounts.alice.pkh;
   const bobAddress: string = accounts.bob.pkh;
