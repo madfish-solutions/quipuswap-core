@@ -20,6 +20,7 @@ declare interface Contract<T> {
 }
 
 declare interface Artifacts {
+  require(name: "MetadataStorage"): Contract<MetadataStorageContractInstance>;
   require(name: "TokenFA12"): Contract<TokenContractInstance>;
   require(name: "TokenFA2"): Contract<TokenContractInstance>;
   require(name: "TestFactoryFA12"): Contract<FactoryContractInstance>;
@@ -35,6 +36,13 @@ declare interface TokenContractInstance {
   getBalance(owner: string, contract: any): any;
   getAllowance(owner: string, spender: string, contract: any): any;
   getTotalSupply(unit: any, contract: any): any;
+}
+
+declare interface MetadataStorageContractInstance {
+  address: string;
+  update_storage(storage: any): any;
+  update_owners(amount: boolean, spender: string): any;
+  get_metadata(contract: any): any;
 }
 
 declare interface FactoryContractInstance {

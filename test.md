@@ -562,23 +562,47 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 ### General Requirements:
 
 1. Only new owner can be added
-1. Only existed owner can be removed
-1. The owner status can be changed only by one of the owners
+2. Only existed owner can be removed
+3. The owner status can be changed only by one of the owners
+4. The metadate can be changed only by one of the owners
 
-**Scope**: Test the loyalty assessment.
+**Scope**: Test permissions for update owner status.
 
-**Action**: Invoke the few entrypoint.
+**Action**: Invoke the Update_owners entrypoint.
 
-**Test Notes and Preconditions**: The exchange should be launched before.
+**Test Notes and Preconditions**: The contract should be deployed.
 
-**Verification Steps**: Verify the divestment fails if the the burnt shares are in the range.
+**Verification Steps**: Verify the action is only permitted by owner.
 
-**Scenario 1**: Test user loyalty assesment if
+**Scenario 1**: Test update owner status by:
 
-- [ ] user own some shares.
-- [ ] user makes new investment.
-- [ ] user votes.
-- [ ] user makes vetos.
-- [ ] reward withdrawn.
-- [ ] tokens transfered.
-- [ ] shares withdrawn.
+- [x] owner.
+- [x] unprivileged user.
+
+**Scope**: Test permissions for update metadata.
+
+**Action**: Invoke the Update_storage entrypoint.
+
+**Test Notes and Preconditions**: The contract should be deployed.
+
+**Verification Steps**: Verify the action is only permitted by owner.
+
+**Scenario 1**: Test update metadata status by:
+
+- [x] owner.
+- [x] unprivileged user.
+
+**Scope**: Test owner status update.
+
+**Action**: Invoke the Update_owners entrypoint.
+
+**Test Notes and Preconditions**: The contract should be deployed.
+
+**Verification Steps**: Verify the action is only permitted by owner.
+
+**Scenario 1**: Test update owner status by:
+
+- [x] adding existed owner.
+- [x] removing unxisted owner.
+- [x] adding new owner.
+- [x] removing existed owner.

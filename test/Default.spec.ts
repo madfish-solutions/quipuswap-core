@@ -9,11 +9,6 @@ contract("Default()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
-  const aliceAddress: string = accounts.alice.pkh;
-  const bobAddress: string = accounts.bob.pkh;
-  const tezAmount: number = 100;
-  const tokenAmount: number = 100;
-  const newShares: number = 100;
 
   before(async () => {
     context = await Context.init([], false, "alice", false);
@@ -32,7 +27,6 @@ contract("Default()", function () {
   function defaultSuccessCase(decription, sender, wait, amount) {
     it(decription, async function () {
       await context.updateActor(sender);
-      const senderAddress: string = accounts[sender].pkh;
       await context.pairs[0].updateStorage();
       const initRewardInfo = context.pairs[0].storage.reward_info;
       const initTotalSupply = context.pairs[0].storage.total_supply;
@@ -57,27 +51,20 @@ contract("Default()", function () {
             accomulatedLoyalty
               .div(initTotalSupply)
               .integerValue(BigNumber.ROUND_DOWN)
-          ),
-        "Loyalty per share after Carol investment is wrong"
+          )
       );
       ok(
         finalRewardInfo.total_accomulated_loyalty
           .minus(initRewardInfo.total_accomulated_loyalty)
-          .eq(accomulatedLoyalty),
-        "Loyalty per share after  is wrong"
+          .eq(accomulatedLoyalty)
       );
       if (initRewardInfo.period_finish == finalRewardInfo.period_finish) {
         strictEqual(
           finalRewardInfo.reward.toNumber(),
-          initRewardInfo.reward.toNumber() + amount,
-          "Tokens not removed"
+          initRewardInfo.reward.toNumber() + amount
         );
       } else {
-        strictEqual(
-          finalRewardInfo.reward.toNumber(),
-          amount,
-          "Tokens not removed"
-        );
+        strictEqual(finalRewardInfo.reward.toNumber(), amount);
         strictEqual(
           finalRewardInfo.reward_per_token
             .minus(initRewardInfo.reward_per_token)
@@ -87,8 +74,7 @@ contract("Default()", function () {
             .multipliedBy(accuracy)
             .div(finalRewardInfo.total_accomulated_loyalty)
             .integerValue(BigNumber.ROUND_DOWN)
-            .toNumber(),
-          "Loyalty per share after  is wrong"
+            .toNumber()
         );
       }
     });
@@ -97,14 +83,10 @@ contract("Default()", function () {
   function defaultFailCase(decription, sender, amount, errorMsg) {
     it(decription, async function () {
       await context.updateActor(sender);
-      await rejects(
-        context.pairs[0].sendReward(amount),
-        (err) => {
-          ok(err.message == errorMsg, "Error message mismatch");
-          return true;
-        },
-        "Investment should revert"
-      );
+      await rejects(context.pairs[0].sendReward(amount), (err) => {
+        ok(err.message == errorMsg, "Error message mismatch");
+        return true;
+      });
     });
   }
 

@@ -1,7 +1,6 @@
 import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
-import { calculateFee } from "./helpers/utils";
 import accounts from "./accounts/accounts";
 
 contract("TokenToTezPayment()", function () {
@@ -10,9 +9,6 @@ contract("TokenToTezPayment()", function () {
   let pairAddress: string;
   const aliceAddress: string = accounts.alice.pkh;
   const bobAddress: string = accounts.bob.pkh;
-  const tezAmount: number = 1000;
-  const tokenAmount: number = 100000;
-  const newShares: number = 100;
 
   before(async () => {
     context = await Context.init([], false, "alice", false);
@@ -83,44 +79,34 @@ contract("TokenToTezPayment()", function () {
       const pairTezBalance = await tezos.tz.getBalance(pairAddress);
       strictEqual(
         bobInitTezBalance.toNumber() + xtzAmount + tezLeftover,
-        bobFinalTezBalance.toNumber(),
-        "Tokens not received"
+        bobFinalTezBalance.toNumber()
       );
       strictEqual(
         aliceInitTokenBalance.toNumber() - tokensAmount,
-        aliceFinalTokenBalance.toNumber(),
-        "Sender token balance should stay the same"
+        aliceFinalTokenBalance.toNumber()
       );
       strictEqual(
         pairTokenBalance.toNumber(),
-        prevPairTokenBalance.toNumber() + tokensAmount,
-        "Tokens not sent"
+        prevPairTokenBalance.toNumber() + tokensAmount
       );
-      ok(
-        aliceInitTezBalance.toNumber() > aliceFinalTezBalance.toNumber(),
-        "Tez not sent"
-      );
+      ok(aliceInitTezBalance.toNumber() > aliceFinalTezBalance.toNumber());
       strictEqual(
         pairTezBalance.toNumber(),
-        prevPairTezBalance.toNumber() - xtzAmount - tezLeftover,
-        "Tez not received"
+        prevPairTezBalance.toNumber() - xtzAmount - tezLeftover
       );
       await context.pairs[0].updateStorage();
       strictEqual(
         context.pairs[0].storage.tez_pool.toNumber(),
-        prevStorage.tez_pool.toNumber() - xtzAmount - tezLeftover,
-        "Tez pool should increment by sent amount"
+        prevStorage.tez_pool.toNumber() - xtzAmount - tezLeftover
       );
       strictEqual(
         context.pairs[0].storage.token_pool.toNumber(),
-        prevStorage.token_pool.toNumber() + tokensAmount,
-        "Token pool should decrement by withdrawn amount"
+        prevStorage.token_pool.toNumber() + tokensAmount
       );
       strictEqual(
         context.pairs[0].storage.invariant.toNumber(),
         (prevStorage.token_pool.toNumber() + tokensAmount) *
-          (prevStorage.tez_pool.toNumber() - xtzAmount - tezLeftover),
-        "Inveriant should be calculated properly"
+          (prevStorage.tez_pool.toNumber() - xtzAmount - tezLeftover)
       );
     });
   }
@@ -132,8 +118,7 @@ contract("TokenToTezPayment()", function () {
         (err) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
-        },
-        "Investment should revert"
+        }
       );
     });
   }

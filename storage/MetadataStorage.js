@@ -1,12 +1,11 @@
 const { MichelsonMap } = require("@taquito/michelson-encoder");
+const { alice } = require("../scripts/sandbox/accounts");
 
 module.exports = {
-  owners: [],
+  owners: [alice.pkh],
   metadata: MichelsonMap.fromLiteral({
-    "": Buffer("tezos-storage:here",
-    "ascii"
-  ).toString("hex"),
-    "here": Buffer(
+    "": Buffer("tezos-storage:here", "ascii").toString("hex"),
+    here: Buffer(
       JSON.stringify({
         token_id: 0,
         symbol: "QPS",

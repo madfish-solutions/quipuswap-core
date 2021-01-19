@@ -19,6 +19,11 @@ export declare type DexStorage = {
   last_veto: number;
 };
 
+export declare type MetadataStorage = {
+  metadata: { [key: string]: Buffer };
+  owners: string[];
+};
+
 export declare type RewardInfo = {
   reward: BigNumber;
   loyalty_per_share: BigNumber;

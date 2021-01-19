@@ -11,9 +11,6 @@ contract("Veto()", function () {
   const aliceAddress: string = accounts.alice.pkh;
   const bobAddress: string = accounts.bob.pkh;
   const carolAddress: string = accounts.carol.pkh;
-  const tezAmount: number = 10000;
-  const tokenAmount: number = 1000000;
-  const newShares: number = 100;
 
   before(async () => {
     context = await Context.init([], false, "alice", false);
@@ -95,15 +92,13 @@ contract("Veto()", function () {
       strictEqual(
         voterFinalSharesInfo.balance.toNumber(),
         voterInitSharesInfo.balance.plus(voterInitVoteInfo.veto).toNumber() -
-          veto,
-        "Tokens not removed"
+          veto
       );
       strictEqual(
         voterFinalSharesInfo.frozen_balance.toNumber(),
         voterInitSharesInfo.frozen_balance
           .minus(voterInitVoteInfo.veto)
-          .toNumber() + veto,
-        "Tokens not frozen"
+          .toNumber() + veto
       );
       if (
         initVeto
@@ -111,46 +106,29 @@ contract("Veto()", function () {
           .plus(new BigNumber(veto))
           .gt(initVotes.div(new BigNumber(3)))
       ) {
-        notStrictEqual(prevDelegateFinalVetos, 0, "Veto wasn't updated");
-        strictEqual(finalVeto.toNumber(), 0, "Veto is wrong");
-        strictEqual(finalCurrentCandidate, null, "Delegated wasn't updated");
+        notStrictEqual(prevDelegateFinalVetos, 0);
+        strictEqual(finalVeto.toNumber(), 0);
+        strictEqual(finalCurrentCandidate, null);
         strictEqual(
           finalCurrentDelegated,
-          prevCurrentCandidate == prevDelegated ? null : prevCurrentCandidate,
-          "Delegated wasn't updated"
+          prevCurrentCandidate == prevDelegated ? null : prevCurrentCandidate
         );
       } else {
-        strictEqual(prevDelegateFinalVetos, 0, "Veto was updated");
-        strictEqual(
-          finalCurrentCandidate,
-          prevCurrentCandidate,
-          "Delegated wasn't updated"
-        );
-        strictEqual(
-          finalCurrentDelegated,
-          prevDelegated,
-          "Delegated wasn't updated"
-        );
+        strictEqual(prevDelegateFinalVetos, 0);
+        strictEqual(finalCurrentCandidate, prevCurrentCandidate);
+        strictEqual(finalCurrentDelegated, prevDelegated);
       }
-      strictEqual(
-        voterFinalVoteInfo.veto.toNumber(),
-        veto,
-        "User vote wasn't updated"
-      );
+      strictEqual(voterFinalVoteInfo.veto.toNumber(), veto);
     });
   }
 
   function vetoFailCase(decription, sender, vetor, value, errorMsg) {
     it(decription, async function () {
       await context.updateActor(sender);
-      await rejects(
-        context.pairs[0].veto(vetor, value),
-        (err) => {
-          ok(err.message == errorMsg, "Error message mismatch");
-          return true;
-        },
-        "Investment should revert"
-      );
+      await rejects(context.pairs[0].veto(vetor, value), (err) => {
+        ok(err.message == errorMsg, "Error message mismatch");
+        return true;
+      });
     });
   }
 

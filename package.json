@@ -5,7 +5,6 @@
   "scripts": {
     "clean": "rm -rf ./build",
     "migrate": "yarn clean && truffle migrate",
-    "migrate-carthagenet": "truffle migrate --network carthagenet",
     "migrate-delphinet": "yarn clean && truffle migrate --network delphinet",
     "migrate-delphinet-reset": "yarn clean && truffle migrate --network delphinet --reset",
     "compile-dex": "node scripts/cli.js build-dex --no-json -o contracts",
