@@ -629,6 +629,7 @@ function receive_reward (const p : dex_action; const s : dex_storage; const this
     s := update_reward(s);
   
     (* update collected rewards amount *)
+    s.tez_pool := (Tezos.balance - Tezos.amount) / 1mutez;
     s.reward_info.reward := s.reward_info.reward + Tezos.amount / 1mutez;
   } with ((nil : list(operation)), s)
 
