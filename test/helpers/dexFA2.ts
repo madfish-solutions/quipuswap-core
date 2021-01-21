@@ -192,7 +192,7 @@ export class Dex extends TokenFA2 {
   ): Promise<TransactionOperation> {
     await this.approveToken(tokenAmount, this.contract.address);
     const operation = await this.contract.methods
-      .use("investLiquidity", minShares)
+      .use("investLiquidity", tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
     await operation.confirmation();
     return operation;
@@ -258,7 +258,7 @@ export class Dex extends TokenFA2 {
     let operation = await token.methods
       .update_operators([
         {
-          [(tokenAmount) ? "add_operator" : "remove_operator"]: {
+          [tokenAmount ? "add_operator" : "remove_operator"]: {
             owner: await tezos.signer.publicKeyHash(),
             operator: address,
             token_id: defaultTokenId,

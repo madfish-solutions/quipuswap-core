@@ -97,26 +97,6 @@ contract("InvestLiquidity()", function () {
   describe("Test various min shared", () => {
     before(async () => {});
 
-    it("revert in case of 0 min shares", async function () {
-      await rejects(
-        context.pairs[0].investLiquidity(tokenAmount, tezAmount, 0),
-        (err) => {
-          ok(err.message == "Dex/wrong-params", "Error message mismatch");
-          return true;
-        }
-      );
-    });
-
-    it("revert in case of too high expected min shares", async function () {
-      await rejects(
-        context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares * 2),
-        (err) => {
-          ok(err.message == "Dex/wrong-params", "Error message mismatch");
-          return true;
-        }
-      );
-    });
-
     it("success in case of min shares of 1", async function () {
       await context.pairs[0].updateStorage();
       const initialStorage = await context.pairs[0].storage;
