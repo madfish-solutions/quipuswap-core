@@ -493,17 +493,21 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
       | InitializeExchange(n) -> skip
       | TezToTokenPayment(n) -> skip
       | TokenToTezPayment(n) -> skip
-      | InvestLiquidity(min_shares) -> {
+      | InvestLiquidity(max_tokens) -> {
         (* ensure there is liquidity *)
         if s.invariant > 0n then 
           skip 
         else failwith("Dex/not-launched");
 
-        const shares_purchased : nat = (Tezos.amount / 1mutez) * s.total_supply / s.tez_pool;
+        const shares_via_tez : nat = Tezos.amount / 1mutez * s.total_supply / s.tez_pool;
+        const shares_purchased : nat = max_tokens * s.total_supply / s.token_pool;
+
+        if shares_via_tez < shares_purchased then
+          shares_purchased := shares_via_tez;
+        else skip;
  
         (* ensure *)
-        if min_shares > 0n (* minimal required shares are non-zero *)
-        and shares_purchased >= min_shares (* purchsed shares satisfy required minimum *)
+        if shares_purchased > 0n (* purchsed shares satisfy required minimum *)
         then skip 
         else failwith("Dex/wrong-params");
 
@@ -512,9 +516,15 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
 
         (* calculate tokens to be withdrawn *)
         const tokens_required : nat = shares_purchased * s.token_pool / s.total_supply;
+        const tez_required : nat = shares_purchased * s.tez_pool / s.total_supply;
         
-        (* ensure providing liquidity won't impact on price *)
-        if tokens_required = 0n then failwith("Dex/dangerous-rate") 
+        (* ensure *)
+        if tokens_required = 0n (* providing liquidity won't impact on price *)
+        or tez_required = 0n (* providing liquidity won't impact on price *)
+        or tokens_required > max_tokens (* required tokens doesn't exceed max allowed by user *)
+        or tez_required > Tezos.amount / 1mutez (* required tez doesn't exceed max allowed by user *)
+        then 
+          failwith("Dex/dangerous-rate") 
         else {
           var account : account_info := get_account(Tezos.sender, s);
           const share : nat = account.balance;
@@ -522,12 +532,19 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
           (* update user's loyalty and shares *)
           s := update_user_reward(Tezos.sender, account, share + shares_purchased + account.frozen_balance, s);
 
+          (* update user rewards *)
+          if tez_required < Tezos.amount / 1mutez then {
+            var user_reward_info : user_reward_info := get_user_reward_info(Tezos.sender, s);
+            user_reward_info.reward := user_reward_info.reward + abs(Tezos.amount / 1mutez - tez_required);
+            s.user_rewards[Tezos.sender] := user_reward_info;
+          } else skip;
+
           (* update user's shares *)
           account.balance := share + shares_purchased;
           s.ledger[Tezos.sender] := account;
 
           (* update reserves *)
-          s.tez_pool := s.tez_pool + Tezos.amount / 1mutez;
+          s.tez_pool := s.tez_pool + tez_required;
           s.token_pool := s.token_pool + tokens_required;
           
           (* update invarianе *)

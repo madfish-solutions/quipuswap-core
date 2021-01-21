@@ -319,7 +319,7 @@ Withdraws delegation reward of the sender to `receiver` address.
 
 Mints `min_shares` by investing tokens and XTZ; the corresponding amount of XTZ has to be sent via transaction and max amount of tokens to be spent should be approved for `Dex`.
 
-`min_shares` : the minimal shares amount to be minted;
+`max_tokens` : the max amount of tokens to be invested;
 
 `tez_amount`(not an argument) : the XTZ to be provided as liquidity.
 
