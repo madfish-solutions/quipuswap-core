@@ -30,11 +30,11 @@ function getLigo(isDockerizedLigo) {
 
 module.exports = async (deployer, network, accounts) => {
   if (network === "development") return;
-
-  if (network === "development") {
-    Factory = TestFactory;
-    prefix = "Test";
-  }
+  tezos.setProvider({
+    config: {
+      confirmationPollingTimeoutSecond: 500,
+    },
+  });
 
   await deployer.deploy(Factory, factoryStorage, {
     gas: 490000,

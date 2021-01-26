@@ -535,7 +535,7 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
           (* update user rewards *)
           if tez_required < Tezos.amount / 1mutez then {
             var user_reward_info : user_reward_info := get_user_reward_info(Tezos.sender, s);
-            user_reward_info.reward := user_reward_info.reward + abs(Tezos.amount / 1mutez - tez_required);
+            user_reward_info.reward := user_reward_info.reward + abs(Tezos.amount / 1mutez - tez_required) * accurancy_multiplier;
             s.user_rewards[Tezos.sender] := user_reward_info;
           } else skip;
 
