@@ -55,7 +55,7 @@ const veto_period : int = 7889229; (* seconds to ban the user for *)
 type transfer_type is TransferType of transfer_params 
 
 #if FA2_STANDARD_ENABLED
-const token_func_count : nat = 3n;
+const token_func_count : nat = 2n;
 #else
 const token_func_count : nat = 4n;
 #endif

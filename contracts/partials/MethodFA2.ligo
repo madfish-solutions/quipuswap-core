@@ -104,7 +104,6 @@ function transfer (const p : token_action; var s : dex_storage; const this : add
       s := List.fold(iterate_transfer, params, s);
     }
     | IBalance_of(params) -> skip
-    | IToken_metadata_registry(params) -> skip
     | IUpdate_operators(params) -> skip
     end
   } with (operations, s)
@@ -136,21 +135,6 @@ function get_balance_of (const p : token_action; const s : dex_storage; const th
       (* Collect balances info *)
       const accomulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
     }
-    | IToken_metadata_registry(params) -> skip
-    | IUpdate_operators(params) -> skip
-    end
-  } with (operations, s)
-
-
-function get_token_metadata_registry (const p : token_action; const s : dex_storage; const this : address) : return is
-  block {
-    var operations: list(operation) := list[];
-    case p of
-    | ITransfer(params) -> skip
-    | IBalance_of(params) -> skip
-    | IToken_metadata_registry(receiver) -> {
-      operations := list [transaction(this, 0tz, receiver)];
-    }
     | IUpdate_operators(params) -> skip
     end
   } with (operations, s)
@@ -161,7 +145,6 @@ function update_operators (const p : token_action; const s : dex_storage; const 
     case p of
     | ITransfer(params) -> skip
     | IBalance_of(params) -> skip
-    | IToken_metadata_registry(receiver) -> skip
     | IUpdate_operators(params) -> {
       s := List.fold(iterate_update_operator, params, s);
     }

@@ -7,23 +7,19 @@ type account is
   ]
 
 type token_metadata_info is 
-  [@layout:comb]
   record [
     token_id  : token_id;
-    symbol    : string;
-    name      : string;
-    decimals  : nat;
-    extras    : map (string, string);
+    extras    : map (string, bytes);
   ]
   
 const default_token_id : token_id = 0n;
-
 (* contract storage *)
 type storage is
   record [
     total_supply              : nat;
     ledger                    : big_map (address, account);
     token_metadata            : big_map (token_id, token_metadata_info);
+    metadata                  : big_map(string, bytes);
   ]
 
 type return is list (operation) * storage
@@ -78,11 +74,9 @@ type update_operator_param is
 
 type transfer_params is list (transfer_param)
 // type balance_params is michelson_pair_right_comb(balance_params_r)
-type token_metadata_registry_params is contract (address)
 type update_operator_params is list (update_operator_param)
 
 type token_action is
 | Transfer                of transfer_params
 | Balance_of              of balance_params
-| Token_metadata_registry of token_metadata_registry_params
 | Update_operators        of update_operator_params

@@ -4,10 +4,7 @@ type token_metadata_info is
   [@layout:comb] 
   record [
     token_id  : token_id;
-    symbol    : string;
-    name      : string;
-    decimals  : nat;
-    extras    : map (string, string);
+    extras    : map (string, bytes);
   ]
   
 const default_token_id : token_id = 0n;
