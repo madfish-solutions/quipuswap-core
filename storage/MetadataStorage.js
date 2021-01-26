@@ -7,10 +7,25 @@ module.exports = {
     "": Buffer("tezos-storage:here", "ascii").toString("hex"),
     here: Buffer(
       JSON.stringify({
-        token_id: 0,
-        symbol: "QPS",
-        name: "QuipuSwap Pool Share",
-        decimals: 3,
+        version: "v0.0.1",
+        description: "Quipuswap Share Pool Token",
+        name: "Quipu Token",
+        authors: ["Madfish.Solutions"],
+        homepage: "https://quipuswap.com/",
+        source: {
+          tools: ["Ligo", "Flextesa"],
+          location: "https://ligolang.org/",
+        },
+        interfaces: ["TZIP-12", "TZIP-16"],
+        errors: [],
+        views: [],
+        tokens: {
+          dynamic: [
+            {
+              big_map: "token_metadata",
+            },
+          ],
+        },
       }),
       "ascii"
     ).toString("hex"),

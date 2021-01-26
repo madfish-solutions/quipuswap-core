@@ -73,10 +73,6 @@ let tokenFunctionsFA2 = [
     index: 2,
     name: "get_balance_of",
   },
-  {
-    index: 3,
-    name: "get_token_metadata_registry",
-  },
 ];
 export let tokenFunctions = {
   FA12: tokenFunctionsFA12,
