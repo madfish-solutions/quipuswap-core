@@ -109,6 +109,7 @@ type dex_action is
 
 type default_params is unit
 type use_params is dex_action
+type get_reserves_params is contract(nat * nat)
 
 #if FA2_STANDARD_ENABLED
 #include "./ActionFA2.ligo"

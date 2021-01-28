@@ -82,11 +82,11 @@ But function still waits for its time in future protocols
 over there.
 
 *)
-[@inline] function get_reserves (const receiver : contract(nat * nat); const s : dex_storage) : list(operation) is
-  list [
+[@inline] function get_reserves (const receiver : contract(nat * nat); const s : full_dex_storage) : full_return is
+  (list [
     Tezos.transaction((
-      s.tez_pool,
-      s.token_pool),
+      s.storage.tez_pool,
+      s.storage.token_pool),
     0tez, 
     receiver)
-  ]
+  ], s)

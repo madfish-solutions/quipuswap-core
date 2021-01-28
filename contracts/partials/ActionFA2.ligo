@@ -13,3 +13,4 @@ type full_action is
 | Transfer                of transfer_params
 | Balance_of              of balance_params
 | Update_operators        of update_operator_params
+| Get_reserves            of get_reserves_params
