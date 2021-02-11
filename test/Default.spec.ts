@@ -5,7 +5,7 @@ import { calculateFee, bakeBlocks } from "./helpers/utils";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo, accuracy } from "./constants";
 
-contract("Default()", function () {
+contract.only("Default()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
