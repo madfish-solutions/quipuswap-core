@@ -63,8 +63,9 @@ function get_user_reward_info (const addr : address; const s : dex_storage) : us
   block {
     var acct : user_reward_info :=
       record [
+        cycle          = 0n;
         reward         = 0n;
-        reward_paid    = s.reward_info.reward_per_token;
+        reward_paid    = 0n;
         loyalty        = 0n;
         loyalty_paid   = 0n;
         update_time    = Tezos.now;
@@ -87,8 +88,8 @@ function update_reward (const s : dex_storage) : dex_storage is
 
     (* update reward info *)
     if Tezos.now > s.reward_info.period_finish then block {
-      s.reward_info.reward_per_token := s.reward_info.reward_per_token + s.reward_info.reward * accurancy_multiplier * accurancy_multiplier / s.reward_info.total_accomulated_loyalty;
-      s.reward_info.last_loyalty_per_share :=  s.reward_info.loyalty_per_share;
+      // s.reward_info.reward_per_token := s.reward_info.reward_per_token + s.reward_info.reward * accurancy_multiplier * accurancy_multiplier / s.reward_info.total_accomulated_loyalty;
+      // s.reward_info.last_loyalty_per_share :=  s.reward_info.loyalty_per_share;
       s.reward_info.last_period_finish := Tezos.now;
       s.reward_info.period_finish := Tezos.now + voting_period;
       s.reward_info.reward := 0n;
@@ -102,13 +103,14 @@ function update_user_reward (const addr : address; const account: account_info; 
 
     (* update user's reward *)
     if s.reward_info.last_period_finish >= user_reward_info.update_time then {
-      const prev_loyalty : nat = user_reward_info.loyalty + abs((account.balance + account.frozen_balance) * s.reward_info.last_loyalty_per_share - user_reward_info.loyalty_paid);
-      const current_reward : nat = prev_loyalty * abs(s.reward_info.reward_per_token - user_reward_info.reward_paid) / accurancy_multiplier;
+      const prev_loyalty : nat = user_reward_info.loyalty + abs((account.balance + account.frozen_balance) - user_reward_info.loyalty_paid);
+      const current_reward : nat = prev_loyalty * abs(10000n - user_reward_info.reward_paid) / accurancy_multiplier;
       user_reward_info := record [
+        cycle          = 0n;
         reward         = user_reward_info.reward + current_reward;
-        reward_paid    = s.reward_info.reward_per_token;
+        reward_paid    = 0n;
         loyalty        = prev_loyalty;
-        loyalty_paid   = (account.balance + account.frozen_balance) * s.reward_info.last_loyalty_per_share;
+        loyalty_paid   = 0n; //(account.balance + account.frozen_balance) * s.reward_info.last_loyalty_per_share;
         update_time    = Tezos.now;
       ];
     } else skip;
@@ -164,8 +166,9 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
               period_finish = Tezos.now;
               last_period_finish = Tezos.now;
               total_accomulated_loyalty = 0n;
-              reward_per_token = 0n;    
-              last_loyalty_per_share = 0n;    
+              // reward_per_token = 0n;    
+              // last_loyalty_per_share = 0n;    
+              cycle = 0n;
             ];
           
           (* prepare operations to get initial liquidity *)

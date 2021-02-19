@@ -75,10 +75,12 @@ const create_dex : create_dex_func =
           period_finish = Tezos.now;
           last_period_finish = Tezos.now;
           total_accomulated_loyalty = 0n;
-          reward_per_token = 0n;    
-          last_loyalty_per_share = 0n;    
+          // reward_per_token = 0n;    
+          // last_loyalty_per_share = 0n;    
+          cycle = 0n;    
         ];
       user_rewards = (big_map [] : big_map(address, user_reward_info));      
+      reward_accumulators = (big_map [] : big_map(nat, cycle_info));      
     ]; 
 
     (* prepare theoperation to originate the Pair contract; note: the XTZ for initial liquidity are sent *)

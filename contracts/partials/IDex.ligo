@@ -25,6 +25,7 @@ type vote_info is record [
 
 (* record that represents account baker rewards info *)
 type user_reward_info is record [
+  cycle         : nat; (* collected rewards *)
   reward        : nat; (* collected rewards *)
   reward_paid   : nat; (* last reward accumulator calculated as user_loyalty * reward_per_loyalty *)
   loyalty       : nat; (* total loyalty score deriven from the duration of the investment and its share in the pool *)
@@ -40,8 +41,15 @@ type reward_info is record [
   last_update_time            : timestamp; (* last time the data was updated *)
   last_period_finish          : timestamp; (* last time the voting period has been finished *)
   period_finish               : timestamp; (* time current period ends *)
+  // last_loyalty_per_share      : nat; (* loyalty score per each share per the previous epoch *)
+  // reward_per_token            : nat; (* loyalty score per each share per the previous epoch *)
+  cycle                       : nat; (* loyalty score per each share per the previous epoch *)
+]
+
+type cycle_info is record [
   last_loyalty_per_share      : nat; (* loyalty score per each share per the previous epoch *)
   reward_per_token            : nat; (* loyalty score per each share per the previous epoch *)
+  accumulator                 : nat;
 ]
 
 (* record for the dex storage *)
@@ -65,6 +73,7 @@ type dex_storage is record [
   total_votes         : nat; (* total votes participated in voting*)
   reward_info         : reward_info; (* all the info related to baler rewards*)
   user_rewards        : big_map(address, user_reward_info); (* rawards info per account *)
+  reward_accumulators : big_map(nat, cycle_info); (* rawards info per account *)
 ]
 
 (* Entrypoint arguments *)

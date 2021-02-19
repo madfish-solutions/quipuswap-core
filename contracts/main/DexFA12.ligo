@@ -12,5 +12,5 @@ function main (const p : full_action; const s : full_dex_storage) : full_return 
       | GetBalance(params)        -> middle_token(IGetBalance(params), this, 2n, s)
       | GetAllowance(params)      -> middle_token(IGetAllowance(params), this, 3n, s)
       | GetTotalSupply(params)    -> middle_token(IGetTotalSupply(params), this, 4n, s)
-      | GetReserves(params)       -> get_reserves(params, s)
+      // | GetReserves(params)       -> get_reserves(params, s)
     end

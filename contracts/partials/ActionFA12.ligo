@@ -20,4 +20,4 @@ type full_action is
 | GetBalance            of balance_params
 | GetAllowance          of allowance_params
 | GetTotalSupply        of total_supply_params
-| GetReserves           of get_reserves_params
+// | GetReserves           of get_reserves_params

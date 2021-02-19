@@ -29,7 +29,7 @@ function getLigo(isDockerizedLigo) {
 }
 
 module.exports = async (deployer, network, accounts) => {
-  if (network === "development") return;
+  // if (network === "development") return;
   tezos.setProvider({
     config: {
       confirmationPollingTimeoutSecond: 500,
