@@ -67,17 +67,12 @@ const create_dex : create_dex_func =
       current_delegated = (None: option(key_hash));      
       current_candidate = (None: option(key_hash));      
       total_votes = 0n;      
-      reward_info = 
-        record [
-          reward = 0n;
-          loyalty_per_share = 0n;
-          last_update_time = Tezos.now;
-          period_finish = Tezos.now;
-          last_period_finish = Tezos.now;
-          total_accomulated_loyalty = 0n;
-          reward_per_token = 0n;    
-          last_loyalty_per_share = 0n;    
-        ];
+      total_reward = 0n;    
+      reward = 0n;
+      reward_per_share = 0n;
+      last_update_time = Tezos.now;
+      period_finish = Tezos.now;
+      reward_per_sec = 0n;
       user_rewards = (big_map [] : big_map(address, user_reward_info));      
     ]; 
 

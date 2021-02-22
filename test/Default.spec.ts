@@ -28,14 +28,14 @@ contract("Default()", function () {
     it(decription, async function () {
       await context.updateActor(sender);
       await context.pairs[0].updateStorage();
-      const initRewardInfo = context.pairs[0].storage.reward_info;
+      const initRewardInfo = context.pairs[0].storage;
       const initTotalSupply = context.pairs[0].storage.total_supply;
       if (wait) {
         await bakeBlocks(wait);
       }
       await context.pairs[0].sendReward(amount);
       await context.pairs[0].updateStorage();
-      const finalRewardInfo = context.pairs[0].storage.reward_info;
+      const finalRewardInfo = context.pairs[0].storage;
       const finalTotalSupply = context.pairs[0].storage.total_supply;
       const accomulatedLoyalty = new BigNumber(1e15).multipliedBy(
         Math.floor(
@@ -45,18 +45,13 @@ contract("Default()", function () {
         )
       );
       ok(
-        finalRewardInfo.loyalty_per_share
-          .minus(initRewardInfo.loyalty_per_share)
+        finalRewardInfo.reward_per_share
+          .minus(initRewardInfo.reward_per_share)
           .eq(
             accomulatedLoyalty
               .div(initTotalSupply)
               .integerValue(BigNumber.ROUND_DOWN)
           )
-      );
-      ok(
-        finalRewardInfo.total_accomulated_loyalty
-          .minus(initRewardInfo.total_accomulated_loyalty)
-          .eq(accomulatedLoyalty)
       );
       if (initRewardInfo.period_finish == finalRewardInfo.period_finish) {
         strictEqual(
@@ -65,17 +60,17 @@ contract("Default()", function () {
         );
       } else {
         strictEqual(finalRewardInfo.reward.toNumber(), amount);
-        strictEqual(
-          finalRewardInfo.reward_per_token
-            .minus(initRewardInfo.reward_per_token)
-            .toNumber(),
-          initRewardInfo.reward
-            .multipliedBy(accuracy)
-            .multipliedBy(accuracy)
-            .div(finalRewardInfo.total_accomulated_loyalty)
-            .integerValue(BigNumber.ROUND_DOWN)
-            .toNumber()
-        );
+        // strictEqual(
+        //   finalRewardInfo.reward_per_token
+        //     .minus(initRewardInfo.reward_per_token)
+        //     .toNumber(),
+        //   initRewardInfo.reward
+        //     .multipliedBy(accuracy)
+        //     .multipliedBy(accuracy)
+        //     .div(finalRewardInfo.total_accomulated_loyalty)
+        //     .integerValue(BigNumber.ROUND_DOWN)
+        //     .toNumber()
+        // );
       }
     });
   }

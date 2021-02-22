@@ -42,7 +42,12 @@ export class Dex extends TokenFA12 {
       current_delegated: storage.storage.current_delegated,
       current_candidate: storage.storage.current_candidate,
       total_votes: storage.storage.total_votes,
-      reward_info: storage.storage.reward_info,
+      reward: storage.storage.reward,
+      total_reward: storage.storage.total_reward,
+      reward_per_share: storage.storage.reward_per_share,
+      reward_per_sec: storage.storage.reward_per_sec,
+      last_update_time: storage.storage.last_update_time,
+      period_finish: storage.storage.period_finish,
       user_rewards: {},
     };
     for (let key in maps) {

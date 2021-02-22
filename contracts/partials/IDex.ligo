@@ -27,21 +27,6 @@ type vote_info is record [
 type user_reward_info is record [
   reward        : nat; (* collected rewards *)
   reward_paid   : nat; (* last reward accumulator calculated as user_loyalty * reward_per_loyalty *)
-  loyalty       : nat; (* total loyalty score deriven from the duration of the investment and its share in the pool *)
-  loyalty_paid  : nat; (* last loyalty accumulator calculated as user_share * loyalty_per_share *)
-  update_time   : timestamp; (* last time the data was updated *)
-]
-
-(* record that represents general baker reward stats *)
-type reward_info is record [
-  reward                      : nat; (* collected rewards *)
-  loyalty_per_share           : nat; (* loyalty score per each share *)
-  total_accomulated_loyalty   : nat; (* aggregated loyalty *)
-  last_update_time            : timestamp; (* last time the data was updated *)
-  last_period_finish          : timestamp; (* last time the voting period has been finished *)
-  period_finish               : timestamp; (* time current period ends *)
-  last_loyalty_per_share      : nat; (* loyalty score per each share per the previous epoch *)
-  reward_per_token            : nat; (* loyalty score per each share per the previous epoch *)
 ]
 
 (* record for the dex storage *)
@@ -63,7 +48,12 @@ type dex_storage is record [
   current_delegated   : option(key_hash); (* the account XTZ are currently delegated for *)
   current_candidate   : option(key_hash); (* the best candidate to become next delegated *)
   total_votes         : nat; (* total votes participated in voting*)
-  reward_info         : reward_info; (* all the info related to baler rewards*)
+  reward              : nat; (* collected rewards *)
+  total_reward        : nat; (* total collected rewards *)
+  reward_per_share    : nat; (* loyalty score per each share *)
+  reward_per_sec      : nat; (* loyalty score per each share *)
+  last_update_time    : timestamp; (* last time the data was updated *)
+  period_finish       : timestamp; (* time current period ends *)
   user_rewards        : big_map(address, user_reward_info); (* rawards info per account *)
 ]
 

@@ -50,7 +50,7 @@ contract("RewardsDistribution()", function () {
         ledger: [senderAddress],
         user_rewards: [senderAddress],
       });
-      const initRewardInfo = context.pairs[0].storage.reward_info;
+      const initRewardInfo = context.pairs[0].storage;
       const initTokenRecord =
         (await context.pairs[0].storage.ledger[senderAddress]) ||
         defaultAccountInfo;
@@ -62,7 +62,7 @@ contract("RewardsDistribution()", function () {
         reward_paid: new BigNumber(0),
         loyalty: new BigNumber(0),
         loyalty_paid: new BigNumber(0),
-        update_time: context.pairs[0].storage.reward_info.last_update_time,
+        update_time: context.pairs[0].storage.last_update_time,
       };
       if (wait) {
         await bakeBlocks(wait);
@@ -72,7 +72,7 @@ contract("RewardsDistribution()", function () {
         user_rewards: [senderAddress],
         ledger: [senderAddress],
       });
-      const finalRewardInfo = context.pairs[0].storage.reward_info;
+      const finalRewardInfo = context.pairs[0].storage;
       const finalTotalSupply = context.pairs[0].storage.total_supply;
       const finalUserRewards = context.pairs[0].storage.user_rewards[
         senderAddress
@@ -81,7 +81,7 @@ contract("RewardsDistribution()", function () {
         reward_paid: new BigNumber(0),
         loyalty: new BigNumber(0),
         loyalty_paid: new BigNumber(0),
-        update_time: context.pairs[0].storage.reward_info.last_update_time,
+        update_time: context.pairs[0].storage.last_update_time,
       };
       const finalRecord =
         (await context.pairs[0].storage.ledger[senderAddress]) ||
@@ -95,66 +95,48 @@ contract("RewardsDistribution()", function () {
         )
       );
       ok(
-        finalUserRewards.loyalty
-          .minus(initUserRewards.loyalty)
-          .eq(
-            finalRewardInfo.loyalty_per_share
-              .multipliedBy(
-                initTokenRecord.balance.plus(initTokenRecord.frozen_balance)
-              )
-              .minus(initUserRewards.loyalty_paid)
-          )
-      );
-      ok(
-        finalUserRewards.loyalty_paid.eq(
-          finalRewardInfo.loyalty_per_share.multipliedBy(
-            finalRecord.balance.plus(finalRecord.frozen_balance)
-          )
-        )
-      );
-      ok(
-        finalRewardInfo.loyalty_per_share
-          .minus(initRewardInfo.loyalty_per_share)
+        finalRewardInfo.reward_per_share
+          .minus(initRewardInfo.reward_per_share)
           .eq(
             accomulatedLoyalty
               .div(initTotalSupply)
               .integerValue(BigNumber.ROUND_DOWN)
           )
       );
-      ok(
-        finalRewardInfo.total_accomulated_loyalty
-          .minus(initRewardInfo.total_accomulated_loyalty)
-          .eq(accomulatedLoyalty)
-      );
-      if (initUserRewards.update_time == finalUserRewards.update_time) {
-        strictEqual(
-          finalUserRewards.reward.toString(),
-          rewardWithdrawn ? "0" : initUserRewards.reward.toString()
-        );
-        strictEqual(
-          finalUserRewards.reward_paid.toString(),
-          initUserRewards.reward_paid.toString()
-        );
-      } else {
-        const loyalty = initUserRewards.loyalty.plus(
-          finalRewardInfo.last_loyalty_per_share
-            .multipliedBy(
-              initTokenRecord.balance.plus(initTokenRecord.frozen_balance)
-            )
-            .minus(initUserRewards.loyalty_paid)
-        );
-        const newRewards = loyalty.multipliedBy(
-          finalRewardInfo.reward_per_token.minus(finalUserRewards.reward_paid)
-        );
-        strictEqual(
-          finalUserRewards.reward.toString(),
-          rewardWithdrawn ? "0" : newRewards.toString()
-        );
-        strictEqual(
-          finalUserRewards.reward_paid.toString(),
-          finalRewardInfo.reward_per_token.toString()
-        );
-      }
+      // ok(
+      //   finalRewardInfo.total_accomulated_loyalty
+      //     .minus(initRewardInfo.total_accomulated_loyalty)
+      //     .eq(accomulatedLoyalty)
+      // );
+      // if (initUserRewards.update_time == finalUserRewards.update_time) {
+      //   strictEqual(
+      //     finalUserRewards.reward.toString(),
+      //     rewardWithdrawn ? "0" : initUserRewards.reward.toString()
+      //   );
+      //   strictEqual(
+      //     finalUserRewards.reward_paid.toString(),
+      //     initUserRewards.reward_paid.toString()
+      //   );
+      // } else {
+      //   const loyalty = initUserRewards.loyalty.plus(
+      //     finalRewardInfo.last_loyalty_per_share
+      //       .multipliedBy(
+      //         initTokenRecord.balance.plus(initTokenRecord.frozen_balance)
+      //       )
+      //       .minus(initUserRewards.loyalty_paid)
+      //   );
+      //   const newRewards = loyalty.multipliedBy(
+      //     finalRewardInfo.reward_per_token.minus(finalUserRewards.reward_paid)
+      //   );
+      //   strictEqual(
+      //     finalUserRewards.reward.toString(),
+      //     rewardWithdrawn ? "0" : newRewards.toString()
+      //   );
+      //   strictEqual(
+      //     finalUserRewards.reward_paid.toString(),
+      //     finalRewardInfo.reward_per_token.toString()
+      //   );
+      // }
     });
   }
 
