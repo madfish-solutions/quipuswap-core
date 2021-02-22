@@ -80,7 +80,7 @@ function update_reward (const s : dex_storage) : dex_storage is
     const rewards_time : timestamp = if Tezos.now > s.period_finish then
       s.period_finish
     else Tezos.now;
-    const new_reward : nat = abs(rewards_time - s.last_update_time) * s.reward_per_sec * accurancy_multiplier;
+    const new_reward : nat = abs(rewards_time - s.last_update_time) * s.reward_per_sec;
     s.reward_per_share := s.reward_per_share + new_reward / s.total_supply;
     s.last_update_time := Tezos.now;
 
