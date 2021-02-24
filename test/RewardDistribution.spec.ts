@@ -6,7 +6,7 @@ import accounts from "./accounts/accounts";
 import { defaultAccountInfo, accuracy } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-contract.only("RewardsDistribution()", function () {
+contract("RewardsDistribution()", function () {
   let context: Context;
   let tokenAddress: string;
   let pairAddress: string;
@@ -217,35 +217,6 @@ contract.only("RewardsDistribution()", function () {
             .toString()
         );
       }
-      // if (initUserRewards.update_time == finalUserRewards.update_time) {
-      //   strictEqual(
-      //     finalUserRewards.reward.toString(),
-      //     rewardWithdrawn ? "0" : initUserRewards.reward.toString()
-      //   );
-      //   strictEqual(
-      //     finalUserRewards.reward_paid.toString(),
-      //     initUserRewards.reward_paid.toString()
-      //   );
-      // } else {
-      //   const loyalty = initUserRewards.loyalty.plus(
-      //     finalRewardInfo.last_loyalty_per_share
-      //       .multipliedBy(
-      //         initTokenRecord.balance.plus(initTokenRecord.frozen_balance)
-      //       )
-      //       .minus(initUserRewards.loyalty_paid)
-      //   );
-      //   const newRewards = loyalty.multipliedBy(
-      //     finalRewardInfo.reward_per_token.minus(finalUserRewards.reward_paid)
-      //   );
-      //   strictEqual(
-      //     finalUserRewards.reward.toString(),
-      //     rewardWithdrawn ? "0" : newRewards.toString()
-      //   );
-      //   strictEqual(
-      //     finalUserRewards.reward_paid.toString(),
-      //     finalRewardInfo.reward_per_token.toString()
-      //   );
-      // }
     });
   }
 

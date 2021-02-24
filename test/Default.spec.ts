@@ -47,12 +47,17 @@ contract("Default()", function () {
         .multipliedBy(initRewardInfo.reward_per_sec);
       if (initRewardInfo.period_finish == finalRewardInfo.period_finish) {
         strictEqual(
+          finalRewardInfo.reward.toString(),
+          initRewardInfo.reward.plus(amount).toString()
+        );
+
+        strictEqual(
           finalRewardInfo.reward.toNumber(),
           initRewardInfo.reward.toNumber() + amount
         );
         strictEqual(
           finalRewardInfo.reward_per_share.toString(),
-          initRewardInfo.total_reward
+          initRewardInfo.reward_per_share
             .plus(
               accomulatedReward
                 .div(initRewardInfo.total_supply)
@@ -70,16 +75,46 @@ contract("Default()", function () {
           finalRewardInfo.total_reward.toString(),
           initRewardInfo.reward.plus(initRewardInfo.total_reward).toString()
         );
-        strictEqual(
-          finalRewardInfo.reward_per_sec.toString(),
-          initRewardInfo.reward.plus(initRewardInfo.total_reward).toString()
-        );
+        const periodDuration = 10;
         strictEqual(
           finalRewardInfo.reward_per_sec.toString(),
           initRewardInfo.reward
             .multipliedBy(accuracy)
-            .div(initRewardInfo.total_supply)
+            .div(periodDuration)
             .integerValue(BigNumber.ROUND_DOWN)
+            .toString()
+        );
+        const accomulatedReward = new BigNumber(1)
+          .multipliedBy(
+            Math.floor(
+              (Date.parse(initRewardInfo.period_finish) -
+                Date.parse(initRewardInfo.last_update_time)) /
+                1000
+            )
+          )
+          .multipliedBy(initRewardInfo.reward_per_sec);
+        const accomulatedThisCycleReward = new BigNumber(1)
+          .multipliedBy(
+            Math.floor(
+              (Date.parse(finalRewardInfo.last_update_time) -
+                Date.parse(initRewardInfo.period_finish)) /
+                1000
+            )
+          )
+          .multipliedBy(finalRewardInfo.reward_per_sec);
+        strictEqual(
+          finalRewardInfo.reward_per_share.toString(),
+          initRewardInfo.reward_per_share
+            .plus(
+              accomulatedReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
+            .plus(
+              accomulatedThisCycleReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
             .toString()
         );
       }
