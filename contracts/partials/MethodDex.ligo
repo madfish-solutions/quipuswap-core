@@ -86,13 +86,13 @@ function update_reward (const s : dex_storage) : dex_storage is
 
     (* update reward info *)
     if Tezos.now > s.period_finish then block {
-      const periods_duration : int = (Tezos.now - s.period_finish + 1) * voting_period;
+      const periods_duration : int = ((Tezos.now - s.period_finish) / voting_period + 1) * voting_period;
       s.reward_per_sec :=  s.reward * accurancy_multiplier / abs(periods_duration);
-      const new_reward : nat = abs(Tezos.now - s.period_finish) * s.reward_per_sec * accurancy_multiplier;
+      const new_reward : nat = abs(Tezos.now - s.period_finish) * s.reward_per_sec;
       s.period_finish := s.period_finish + periods_duration;
       s.reward_per_share := s.reward_per_share + new_reward / s.total_supply;
       s.reward := 0n;
-      s.total_reward := s.total_reward + s.reward_per_sec * abs(periods_duration);
+      s.total_reward := s.total_reward + s.reward_per_sec * abs(periods_duration) / accurancy_multiplier;
     } else skip;
   } with s
 
@@ -632,7 +632,7 @@ function receive_reward (const p : dex_action; const s : dex_storage; const this
   
     (* update collected rewards amount *)
     s.reward := s.reward + Tezos.amount / 1mutez;
-    s.tez_pool := abs(Tezos.balance / 1mutez - s.reward - s.total_reward);
+    s.tez_pool := abs(Tezos.balance / 1mutez + s.reward_paid - s.reward - s.total_reward);
   } with ((nil : list(operation)), s)
 
 (* Withdraw reward from baker *)
@@ -663,6 +663,9 @@ function withdraw_profit (const p : dex_action; const s : dex_storage; const thi
         (* reset user's reward *)
         user_reward_info.reward := 0n;
         s.user_rewards[Tezos.sender] := user_reward_info;
+
+        (* update total paid rewards *)
+        s.reward_paid := s.reward_paid + reward / accurancy_multiplier;
         
         (* prepare transfer operations if there are tokens to sent *)
         if reward >= accurancy_multiplier then {

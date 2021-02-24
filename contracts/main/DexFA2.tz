@@ -39,17 +39,18 @@
                                                                    address
                                                                    (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance))))
                                                           (pair (timestamp %period_finish) (nat %reward))))
-                                              (pair (pair (pair (nat %reward_per_sec) (nat %reward_per_share))
-                                                          (pair (nat %tez_pool) (address %token_address)))
-                                                    (pair (pair (nat %token_id) (nat %token_pool))
-                                                          (pair (nat %total_reward) (nat %total_supply)))))
-                                        (pair (pair (pair (nat %total_votes)
-                                                          (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid))))
-                                                    (pair (nat %veto) (big_map %vetos key_hash timestamp)))
-                                              (pair (big_map %voters
-                                                       address
-                                                       (pair (pair (option %candidate key_hash) (timestamp %last_veto))
-                                                             (pair (nat %veto) (nat %vote))))
+                                              (pair (pair (pair (nat %reward_paid) (nat %reward_per_sec))
+                                                          (pair (nat %reward_per_share) (nat %tez_pool)))
+                                                    (pair (pair (address %token_address) (nat %token_id))
+                                                          (pair (nat %token_pool) (nat %total_reward)))))
+                                        (pair (pair (pair (nat %total_supply) (nat %total_votes))
+                                                    (pair (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid)))
+                                                          (nat %veto)))
+                                              (pair (pair (big_map %vetos key_hash timestamp)
+                                                          (big_map %voters
+                                                             address
+                                                             (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                                   (pair (nat %veto) (nat %vote)))))
                                                     (big_map %votes key_hash nat)))))
                             address)
                       (pair (list operation)
@@ -60,17 +61,18 @@
                                                              address
                                                              (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance))))
                                                     (pair (timestamp %period_finish) (nat %reward))))
-                                        (pair (pair (pair (nat %reward_per_sec) (nat %reward_per_share))
-                                                    (pair (nat %tez_pool) (address %token_address)))
-                                              (pair (pair (nat %token_id) (nat %token_pool))
-                                                    (pair (nat %total_reward) (nat %total_supply)))))
-                                  (pair (pair (pair (nat %total_votes)
-                                                    (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid))))
-                                              (pair (nat %veto) (big_map %vetos key_hash timestamp)))
-                                        (pair (big_map %voters
-                                                 address
-                                                 (pair (pair (option %candidate key_hash) (timestamp %last_veto))
-                                                       (pair (nat %veto) (nat %vote))))
+                                        (pair (pair (pair (nat %reward_paid) (nat %reward_per_sec))
+                                                    (pair (nat %reward_per_share) (nat %tez_pool)))
+                                              (pair (pair (address %token_address) (nat %token_id))
+                                                    (pair (nat %token_pool) (nat %total_reward)))))
+                                  (pair (pair (pair (nat %total_supply) (nat %total_votes))
+                                              (pair (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid)))
+                                                    (nat %veto)))
+                                        (pair (pair (big_map %vetos key_hash timestamp)
+                                                    (big_map %voters
+                                                       address
+                                                       (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                             (pair (nat %veto) (nat %vote)))))
                                               (big_map %votes key_hash nat)))))))
                 (big_map %metadata string bytes))
           (pair (pair %storage
@@ -81,17 +83,18 @@
                                               address
                                               (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance))))
                                      (pair (timestamp %period_finish) (nat %reward))))
-                         (pair (pair (pair (nat %reward_per_sec) (nat %reward_per_share))
-                                     (pair (nat %tez_pool) (address %token_address)))
-                               (pair (pair (nat %token_id) (nat %token_pool))
-                                     (pair (nat %total_reward) (nat %total_supply)))))
-                   (pair (pair (pair (nat %total_votes)
-                                     (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid))))
-                               (pair (nat %veto) (big_map %vetos key_hash timestamp)))
-                         (pair (big_map %voters
-                                  address
-                                  (pair (pair (option %candidate key_hash) (timestamp %last_veto))
-                                        (pair (nat %veto) (nat %vote))))
+                         (pair (pair (pair (nat %reward_paid) (nat %reward_per_sec))
+                                     (pair (nat %reward_per_share) (nat %tez_pool)))
+                               (pair (pair (address %token_address) (nat %token_id))
+                                     (pair (nat %token_pool) (nat %total_reward)))))
+                   (pair (pair (pair (nat %total_supply) (nat %total_votes))
+                               (pair (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid)))
+                                     (nat %veto)))
+                         (pair (pair (big_map %vetos key_hash timestamp)
+                                     (big_map %voters
+                                        address
+                                        (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                              (pair (nat %veto) (nat %vote)))))
                                (big_map %votes key_hash nat))))
                 (big_map %token_lambdas
                    nat
@@ -113,17 +116,18 @@
                                                                    address
                                                                    (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance))))
                                                           (pair (timestamp %period_finish) (nat %reward))))
-                                              (pair (pair (pair (nat %reward_per_sec) (nat %reward_per_share))
-                                                          (pair (nat %tez_pool) (address %token_address)))
-                                                    (pair (pair (nat %token_id) (nat %token_pool))
-                                                          (pair (nat %total_reward) (nat %total_supply)))))
-                                        (pair (pair (pair (nat %total_votes)
-                                                          (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid))))
-                                                    (pair (nat %veto) (big_map %vetos key_hash timestamp)))
-                                              (pair (big_map %voters
-                                                       address
-                                                       (pair (pair (option %candidate key_hash) (timestamp %last_veto))
-                                                             (pair (nat %veto) (nat %vote))))
+                                              (pair (pair (pair (nat %reward_paid) (nat %reward_per_sec))
+                                                          (pair (nat %reward_per_share) (nat %tez_pool)))
+                                                    (pair (pair (address %token_address) (nat %token_id))
+                                                          (pair (nat %token_pool) (nat %total_reward)))))
+                                        (pair (pair (pair (nat %total_supply) (nat %total_votes))
+                                                    (pair (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid)))
+                                                          (nat %veto)))
+                                              (pair (pair (big_map %vetos key_hash timestamp)
+                                                          (big_map %voters
+                                                             address
+                                                             (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                                   (pair (nat %veto) (nat %vote)))))
                                                     (big_map %votes key_hash nat)))))
                             address)
                       (pair (list operation)
@@ -134,17 +138,18 @@
                                                              address
                                                              (pair (pair (set %allowances address) (nat %balance)) (nat %frozen_balance))))
                                                     (pair (timestamp %period_finish) (nat %reward))))
-                                        (pair (pair (pair (nat %reward_per_sec) (nat %reward_per_share))
-                                                    (pair (nat %tez_pool) (address %token_address)))
-                                              (pair (pair (nat %token_id) (nat %token_pool))
-                                                    (pair (nat %total_reward) (nat %total_supply)))))
-                                  (pair (pair (pair (nat %total_votes)
-                                                    (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid))))
-                                              (pair (nat %veto) (big_map %vetos key_hash timestamp)))
-                                        (pair (big_map %voters
-                                                 address
-                                                 (pair (pair (option %candidate key_hash) (timestamp %last_veto))
-                                                       (pair (nat %veto) (nat %vote))))
+                                        (pair (pair (pair (nat %reward_paid) (nat %reward_per_sec))
+                                                    (pair (nat %reward_per_share) (nat %tez_pool)))
+                                              (pair (pair (address %token_address) (nat %token_id))
+                                                    (pair (nat %token_pool) (nat %total_reward)))))
+                                  (pair (pair (pair (nat %total_supply) (nat %total_votes))
+                                              (pair (big_map %user_rewards address (pair (nat %reward) (nat %reward_paid)))
+                                                    (nat %veto)))
+                                        (pair (pair (big_map %vetos key_hash timestamp)
+                                                    (big_map %voters
+                                                       address
+                                                       (pair (pair (option %candidate key_hash) (timestamp %last_veto))
+                                                             (pair (nat %veto) (nat %vote)))))
                                               (big_map %votes key_hash nat))))))))) ;
   code { DUP ;
          CDR ;
@@ -249,8 +254,8 @@
                      CAR ;
                      CDR ;
                      CDR ;
-                     CAR ;
                      CDR ;
+                     CAR ;
                      DIG 5 ;
                      CDR ;
                      CAR ;
@@ -258,7 +263,7 @@
                      CDR ;
                      CAR ;
                      CDR ;
-                     CAR ;
+                     CDR ;
                      PAIR ;
                      TRANSFER_TOKENS ;
                      CONS ;

@@ -68,6 +68,7 @@ const create_dex : create_dex_func =
       current_candidate = (None: option(key_hash));      
       total_votes = 0n;      
       total_reward = 0n;    
+      reward_paid = 0n;
       reward = 0n;
       reward_per_share = 0n;
       last_update_time = Tezos.now;

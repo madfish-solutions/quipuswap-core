@@ -50,6 +50,7 @@ type dex_storage is record [
   total_votes         : nat; (* total votes participated in voting*)
   reward              : nat; (* collected rewards *)
   total_reward        : nat; (* total collected rewards *)
+  reward_paid         : nat; (* total paid rewards *)
   reward_per_share    : nat; (* loyalty score per each share *)
   reward_per_sec      : nat; (* loyalty score per each share *)
   last_update_time    : timestamp; (* last time the data was updated *)
