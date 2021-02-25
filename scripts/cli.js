@@ -1,31 +1,9 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const { program } = require("commander");
-const { exec, execSync } = require("child_process");
+const { exec } = require("child_process");
 const fs = require("fs");
-
-const getLigo = (isDockerizedLigo) => {
-  let path = "ligo";
-  if (isDockerizedLigo) {
-    path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
-    try {
-      execSync(`${path}  --help`);
-    } catch (err) {
-      console.log("Trying to use global version...");
-      path = "ligo";
-      execSync(`${path}  --help`);
-    }
-  } else {
-    try {
-      execSync(`${path}  --help`);
-    } catch (err) {
-      console.log("Trying to use Dockerized version...");
-      path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
-      execSync(`${path}  --help`);
-    }
-  }
-  return path;
-};
+const { getLigo } = require("../scripts/utils");
 
 const buildContract = (
   contractName,
@@ -87,7 +65,9 @@ program
 
 program
   .command("build-dex")
-  .description("builds core contracts of the QuipuSwap (standard is selected based on EXCHANGE_TOKEN_STANDARD env variable)")
+  .description(
+    "builds core contracts of the QuipuSwap (standard is selected based on EXCHANGE_TOKEN_STANDARD env variable)"
+  )
   .option("-o, --output_dir <dir>", "Where store builds", "build")
   .option("-i, --input_dir <dir>", "Where files are located", "contracts")
   .option("-j, --no-json", "The format of output file")

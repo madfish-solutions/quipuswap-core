@@ -41,17 +41,22 @@ contract("RewardsDistribution()", function () {
     sender,
     wait,
     action,
-    rewardWithdrawn = false
+    rewardWithdrawn = false,
+    receiver = undefined
   ) {
     it(decription, async function () {
       await context.updateActor(sender);
       const senderAddress: string = accounts[sender].pkh;
+      receiver = receiver || senderAddress;
+      const aliceInitTezBalance = new BigNumber(
+        await tezos.tz.getBalance(receiver)
+      );
       await context.pairs[0].updateStorage({
         ledger: [senderAddress],
         user_rewards: [senderAddress],
       });
-      const initRewardInfo = context.pairs[0].storage.reward_info;
-      const initTokenRecord =
+      const initRewardInfo = context.pairs[0].storage;
+      const initRecord =
         (await context.pairs[0].storage.ledger[senderAddress]) ||
         defaultAccountInfo;
       const initTotalSupply = context.pairs[0].storage.total_supply;
@@ -60,9 +65,6 @@ contract("RewardsDistribution()", function () {
       ] || {
         reward: new BigNumber(0),
         reward_paid: new BigNumber(0),
-        loyalty: new BigNumber(0),
-        loyalty_paid: new BigNumber(0),
-        update_time: context.pairs[0].storage.reward_info.last_update_time,
       };
       if (wait) {
         await bakeBlocks(wait);
@@ -72,87 +74,147 @@ contract("RewardsDistribution()", function () {
         user_rewards: [senderAddress],
         ledger: [senderAddress],
       });
-      const finalRewardInfo = context.pairs[0].storage.reward_info;
+      const finalRewardInfo = context.pairs[0].storage;
       const finalTotalSupply = context.pairs[0].storage.total_supply;
       const finalUserRewards = context.pairs[0].storage.user_rewards[
         senderAddress
       ] || {
         reward: new BigNumber(0),
         reward_paid: new BigNumber(0),
-        loyalty: new BigNumber(0),
-        loyalty_paid: new BigNumber(0),
-        update_time: context.pairs[0].storage.reward_info.last_update_time,
       };
       const finalRecord =
         (await context.pairs[0].storage.ledger[senderAddress]) ||
         defaultAccountInfo;
-
-      const accomulatedLoyalty = new BigNumber(1e15).multipliedBy(
-        Math.floor(
-          (Date.parse(finalRewardInfo.last_update_time) -
-            Date.parse(initRewardInfo.last_update_time)) /
-            1000
-        )
+      const aliceFinalTezBalance = new BigNumber(
+        await tezos.tz.getBalance(receiver)
       );
-      ok(
-        finalUserRewards.loyalty
-          .minus(initUserRewards.loyalty)
-          .eq(
-            finalRewardInfo.loyalty_per_share
-              .multipliedBy(
-                initTokenRecord.balance.plus(initTokenRecord.frozen_balance)
-              )
-              .minus(initUserRewards.loyalty_paid)
-          )
-      );
-      ok(
-        finalUserRewards.loyalty_paid.eq(
-          finalRewardInfo.loyalty_per_share.multipliedBy(
-            finalRecord.balance.plus(finalRecord.frozen_balance)
+      const accomulatedReward = new BigNumber(1)
+        .multipliedBy(
+          Math.floor(
+            (Date.parse(finalRewardInfo.last_update_time) -
+              Date.parse(initRewardInfo.last_update_time)) /
+              1000
           )
         )
+        .multipliedBy(initRewardInfo.reward_per_sec);
+      const expectedUserReward = initUserRewards.reward.plus(
+        initRecord.balance
+          .plus(initRecord.frozen_balance)
+          .multipliedBy(finalRewardInfo.reward_per_share)
+          .minus(initUserRewards.reward_paid)
       );
-      ok(
-        finalRewardInfo.loyalty_per_share
-          .minus(initRewardInfo.loyalty_per_share)
-          .eq(
-            accomulatedLoyalty
-              .div(initTotalSupply)
-              .integerValue(BigNumber.ROUND_DOWN)
-          )
+      const expectedRewardPaid = finalRecord.balance
+        .plus(finalRecord.frozen_balance)
+        .multipliedBy(finalRewardInfo.reward_per_share);
+      strictEqual(
+        finalUserRewards.reward_paid.toString(),
+        expectedRewardPaid.toString()
       );
-      ok(
-        finalRewardInfo.total_accomulated_loyalty
-          .minus(initRewardInfo.total_accomulated_loyalty)
-          .eq(accomulatedLoyalty)
-      );
-      if (initUserRewards.update_time == finalUserRewards.update_time) {
-        strictEqual(
-          finalUserRewards.reward.toString(),
-          rewardWithdrawn ? "0" : initUserRewards.reward.toString()
-        );
-        strictEqual(
-          finalUserRewards.reward_paid.toString(),
-          initUserRewards.reward_paid.toString()
+      if (rewardWithdrawn) {
+        strictEqual(finalUserRewards.reward.toString(), "0");
+        const realReward = expectedUserReward
+          .div(accuracy)
+          .integerValue(BigNumber.ROUND_DOWN);
+        ok(
+          aliceFinalTezBalance
+            .minus(aliceInitTezBalance)
+            .lte(expectedUserReward) &&
+            (!realReward.toNumber() ||
+              aliceFinalTezBalance
+                .minus(aliceInitTezBalance)
+                .gte(
+                  realReward
+                    .multipliedBy(8)
+                    .div(10)
+                    .integerValue(BigNumber.ROUND_DOWN)
+                ))
         );
       } else {
-        const loyalty = initUserRewards.loyalty.plus(
-          finalRewardInfo.last_loyalty_per_share
-            .multipliedBy(
-              initTokenRecord.balance.plus(initTokenRecord.frozen_balance)
-            )
-            .minus(initUserRewards.loyalty_paid)
-        );
-        const newRewards = loyalty.multipliedBy(
-          finalRewardInfo.reward_per_token.minus(finalUserRewards.reward_paid)
-        );
         strictEqual(
           finalUserRewards.reward.toString(),
-          rewardWithdrawn ? "0" : newRewards.toString()
+          expectedUserReward.toString()
+        );
+        ok(
+          aliceFinalTezBalance
+            .minus(aliceInitTezBalance)
+            .lte(expectedUserReward)
+        );
+      }
+      if (initRewardInfo.period_finish == finalRewardInfo.period_finish) {
+        const accomulatedReward = new BigNumber(1)
+          .multipliedBy(
+            Math.floor(
+              (Date.parse(finalRewardInfo.last_update_time) -
+                Date.parse(initRewardInfo.last_update_time)) /
+                1000
+            )
+          )
+          .multipliedBy(initRewardInfo.reward_per_sec);
+        strictEqual(
+          finalRewardInfo.reward.toNumber(),
+          initRewardInfo.reward.toNumber()
         );
         strictEqual(
-          finalUserRewards.reward_paid.toString(),
-          finalRewardInfo.reward_per_token.toString()
+          finalRewardInfo.total_reward.toNumber(),
+          initRewardInfo.total_reward.toNumber()
+        );
+        strictEqual(
+          finalRewardInfo.reward_per_share.toString(),
+          initRewardInfo.reward_per_share
+            .plus(
+              accomulatedReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
+            .toString()
+        );
+      } else {
+        strictEqual(finalRewardInfo.reward.toString(), "0");
+        strictEqual(
+          finalRewardInfo.total_reward.toString(),
+          initRewardInfo.reward.plus(initRewardInfo.total_reward).toString()
+        );
+        const periodDuration = 10;
+        strictEqual(
+          finalRewardInfo.reward_per_sec.toString(),
+          initRewardInfo.reward
+            .multipliedBy(accuracy)
+            .div(periodDuration)
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toString()
+        );
+        const accomulatedReward = new BigNumber(1)
+          .multipliedBy(
+            Math.floor(
+              (Date.parse(initRewardInfo.period_finish) -
+                Date.parse(initRewardInfo.last_update_time)) /
+                1000
+            )
+          )
+          .multipliedBy(initRewardInfo.reward_per_sec);
+        const accomulatedThisCycleReward = new BigNumber(1)
+          .multipliedBy(
+            Math.floor(
+              (Date.parse(finalRewardInfo.last_update_time) -
+                Date.parse(initRewardInfo.period_finish)) /
+                1000
+            )
+          )
+          .multipliedBy(finalRewardInfo.reward_per_sec);
+        strictEqual(
+          finalRewardInfo.reward_per_share.toString(),
+          initRewardInfo.reward_per_share
+            .plus(
+              accomulatedReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
+            .plus(
+              accomulatedThisCycleReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
+            .toString()
         );
       }
     });
@@ -175,7 +237,8 @@ contract("RewardsDistribution()", function () {
       0,
       async function () {
         await context.pairs[0].withdrawProfit(aliceAddress);
-      }
+      },
+      true
     );
     defaultSuccessCase(
       "success in case of user makes new investment",
@@ -210,7 +273,8 @@ contract("RewardsDistribution()", function () {
       0,
       async function () {
         await context.pairs[0].withdrawProfit(aliceAddress);
-      }
+      },
+      true
     );
     defaultSuccessCase(
       "success in case of reward is claimed after period finished",
@@ -218,15 +282,19 @@ contract("RewardsDistribution()", function () {
       7,
       async function () {
         await context.pairs[0].withdrawProfit(aliceAddress);
-      }
+      },
+      true,
+      accounts["alice"].pkh
     );
     defaultSuccessCase(
       "success in case of reward is claimed in the middle of the second period",
       "alice",
       3,
       async function () {
-        await context.pairs[0].withdrawProfit(aliceAddress);
-      }
+        await context.pairs[0].withdrawProfit(bobAddress);
+      },
+      true,
+      accounts["bob"].pkh
     );
   });
 
@@ -252,7 +320,8 @@ contract("RewardsDistribution()", function () {
         async function () {
           await context.pairs[0].withdrawProfit(aliceAddress);
         },
-        true
+        true,
+        accounts["alice"].pkh
       );
     });
     describe("", async function () {
@@ -265,9 +334,10 @@ contract("RewardsDistribution()", function () {
         "alice",
         0,
         async function () {
-          await context.pairs[0].withdrawProfit(aliceAddress);
+          await context.pairs[0].withdrawProfit(bobAddress);
         },
-        true
+        true,
+        accounts["bob"].pkh
       );
     });
   });

@@ -6,27 +6,8 @@ const { dexFunctions, tokenFunctions } = require("../storage/Functions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + standard);
 const tokenStorage = require("../storage/Token" + standard);
+const { getLigo } = require("../scripts/utils");
 let prefix = "";
-function getLigo(isDockerizedLigo) {
-  let path = "ligo";
-  if (isDockerizedLigo) {
-    path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
-    try {
-      execSync(`${path}  --help`);
-    } catch (err) {
-      path = "ligo";
-      execSync(`${path}  --help`);
-    }
-  } else {
-    try {
-      execSync(`${path}  --help`);
-    } catch (err) {
-      path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
-      execSync(`${path}  --help`);
-    }
-  }
-  return path;
-}
 
 module.exports = async (deployer, network, accounts) => {
   if (network === "development") return;

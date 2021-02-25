@@ -14,7 +14,12 @@ export declare type DexStorage = {
   current_delegated: string | null | undefined;
   current_candidate: string | null | undefined;
   total_votes: BigNumber;
-  reward_info: RewardInfo;
+  reward: BigNumber;
+  total_reward: BigNumber;
+  reward_per_share: BigNumber;
+  reward_per_sec: BigNumber;
+  last_update_time: string;
+  period_finish: string;
   user_rewards: { [key: string]: UserRewardInfo };
   last_veto: number;
 };
@@ -24,23 +29,9 @@ export declare type MetadataStorage = {
   owners: string[];
 };
 
-export declare type RewardInfo = {
-  reward: BigNumber;
-  loyalty_per_share: BigNumber;
-  last_loyalty_per_share: BigNumber;
-  total_accomulated_loyalty: BigNumber;
-  last_update_time: string;
-  last_period_finish: string;
-  period_finish: string;
-  reward_per_token: BigNumber;
-};
-
 export declare type UserRewardInfo = {
   reward: BigNumber;
   reward_paid: BigNumber;
-  loyalty: BigNumber;
-  loyalty_paid: BigNumber;
-  update_time: string;
 };
 
 export declare type AccountInfo = {

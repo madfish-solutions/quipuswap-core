@@ -64,10 +64,7 @@ function get_user_reward_info (const addr : address; const s : dex_storage) : us
     var acct : user_reward_info :=
       record [
         reward         = 0n;
-        reward_paid    = s.reward_info.reward_per_token;
-        loyalty        = 0n;
-        loyalty_paid   = 0n;
-        update_time    = Tezos.now;
+        reward_paid    = 0n;
       ];
     case s.user_rewards[addr] of
       None -> skip
@@ -80,18 +77,22 @@ function get_user_reward_info (const addr : address; const s : dex_storage) : us
 function update_reward (const s : dex_storage) : dex_storage is
   block {
     (* update loyalty info *)
-    const new_loyalty : nat = abs(Tezos.now - s.reward_info.last_update_time) * accurancy_multiplier;
-    s.reward_info.loyalty_per_share := s.reward_info.loyalty_per_share + new_loyalty / s.total_supply;
-    s.reward_info.total_accomulated_loyalty :=  s.reward_info.total_accomulated_loyalty + new_loyalty; 
-    s.reward_info.last_update_time := Tezos.now;
+    const rewards_time : timestamp = if Tezos.now > s.period_finish then
+      s.period_finish
+    else Tezos.now;
+    const new_reward : nat = abs(rewards_time - s.last_update_time) * s.reward_per_sec;
+    s.reward_per_share := s.reward_per_share + new_reward / s.total_supply;
+    s.last_update_time := Tezos.now;
 
     (* update reward info *)
-    if Tezos.now > s.reward_info.period_finish then block {
-      s.reward_info.reward_per_token := s.reward_info.reward_per_token + s.reward_info.reward * accurancy_multiplier * accurancy_multiplier / s.reward_info.total_accomulated_loyalty;
-      s.reward_info.last_loyalty_per_share :=  s.reward_info.loyalty_per_share;
-      s.reward_info.last_period_finish := Tezos.now;
-      s.reward_info.period_finish := Tezos.now + voting_period;
-      s.reward_info.reward := 0n;
+    if Tezos.now > s.period_finish then block {
+      const periods_duration : int = ((Tezos.now - s.period_finish) / voting_period + 1) * voting_period;
+      s.reward_per_sec :=  s.reward * accurancy_multiplier / abs(periods_duration);
+      const new_reward : nat = abs(Tezos.now - s.period_finish) * s.reward_per_sec;
+      s.period_finish := s.period_finish + periods_duration;
+      s.reward_per_share := s.reward_per_share + new_reward / s.total_supply;
+      s.reward := 0n;
+      s.total_reward := s.total_reward + s.reward_per_sec * abs(periods_duration) / accurancy_multiplier;
     } else skip;
   } with s
 
@@ -99,25 +100,13 @@ function update_reward (const s : dex_storage) : dex_storage is
 function update_user_reward (const addr : address; const account: account_info; const new_balance: nat; const s : dex_storage) : dex_storage is
   block {
     var user_reward_info : user_reward_info := get_user_reward_info(addr, s);
-
-    (* update user's reward *)
-    if s.reward_info.last_period_finish >= user_reward_info.update_time then {
-      const prev_loyalty : nat = user_reward_info.loyalty + abs((account.balance + account.frozen_balance) * s.reward_info.last_loyalty_per_share - user_reward_info.loyalty_paid);
-      const current_reward : nat = prev_loyalty * abs(s.reward_info.reward_per_token - user_reward_info.reward_paid) / accurancy_multiplier;
-      user_reward_info := record [
-        reward         = user_reward_info.reward + current_reward;
-        reward_paid    = s.reward_info.reward_per_token;
-        loyalty        = prev_loyalty;
-        loyalty_paid   = (account.balance + account.frozen_balance) * s.reward_info.last_loyalty_per_share;
-        update_time    = Tezos.now;
-      ];
-    } else skip;
     
-    (* update user's loyalty *)
-    const current_loyalty : nat = (account.balance + account.frozen_balance) * s.reward_info.loyalty_per_share;
-    user_reward_info.loyalty := user_reward_info.loyalty + abs(current_loyalty - user_reward_info.loyalty_paid);
-    user_reward_info.loyalty_paid := new_balance * s.reward_info.loyalty_per_share;
-
+    (* calculate user's reward *)
+    const current_reward : nat = (account.balance + account.frozen_balance) * s.reward_per_share;
+    user_reward_info.reward := user_reward_info.reward + abs(current_reward - user_reward_info.reward_paid);
+    user_reward_info.reward_paid := new_balance * s.reward_per_share;
+    
+    (* update user's reward *)
     s.user_rewards[addr] := user_reward_info;
   } with s
 
@@ -157,17 +146,13 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           s.total_supply := Tezos.amount / 1mutez; 
 
           (* update rewards info *)
-          s.reward_info := record [
-              reward = 0n;
-              loyalty_per_share = 0n;
-              last_update_time = Tezos.now;
-              period_finish = Tezos.now;
-              last_period_finish = Tezos.now;
-              total_accomulated_loyalty = 0n;
-              reward_per_token = 0n;    
-              last_loyalty_per_share = 0n;    
-            ];
-          
+          s.reward := 0n;
+          s.reward_per_share := 0n;
+          s.last_update_time := Tezos.now;
+          s.period_finish := Tezos.now;
+          s.reward_per_sec := 0n;
+          s.total_reward := 0n;
+
           (* prepare operations to get initial liquidity *)
           operations := list[ transaction(
             wrap_transfer_trx(Tezos.sender, this, token_amount, s), 
@@ -646,8 +631,8 @@ function receive_reward (const p : dex_action; const s : dex_storage; const this
     s := update_reward(s);
   
     (* update collected rewards amount *)
-    s.tez_pool := (Tezos.balance - Tezos.amount) / 1mutez;
-    s.reward_info.reward := s.reward_info.reward + Tezos.amount / 1mutez;
+    s.reward := s.reward + Tezos.amount / 1mutez;
+    s.tez_pool := abs(Tezos.balance / 1mutez + s.reward_paid - s.reward - s.total_reward);
   } with ((nil : list(operation)), s)
 
 (* Withdraw reward from baker *)
@@ -678,6 +663,9 @@ function withdraw_profit (const p : dex_action; const s : dex_storage; const thi
         (* reset user's reward *)
         user_reward_info.reward := 0n;
         s.user_rewards[Tezos.sender] := user_reward_info;
+
+        (* update total paid rewards *)
+        s.reward_paid := s.reward_paid + reward / accurancy_multiplier;
         
         (* prepare transfer operations if there are tokens to sent *)
         if reward >= accurancy_multiplier then {

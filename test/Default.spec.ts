@@ -28,53 +28,94 @@ contract("Default()", function () {
     it(decription, async function () {
       await context.updateActor(sender);
       await context.pairs[0].updateStorage();
-      const initRewardInfo = context.pairs[0].storage.reward_info;
+      const initRewardInfo = context.pairs[0].storage;
       const initTotalSupply = context.pairs[0].storage.total_supply;
       if (wait) {
         await bakeBlocks(wait);
       }
       await context.pairs[0].sendReward(amount);
       await context.pairs[0].updateStorage();
-      const finalRewardInfo = context.pairs[0].storage.reward_info;
-      const finalTotalSupply = context.pairs[0].storage.total_supply;
-      const accomulatedLoyalty = new BigNumber(1e15).multipliedBy(
-        Math.floor(
-          (Date.parse(finalRewardInfo.last_update_time) -
-            Date.parse(initRewardInfo.last_update_time)) /
-            1000
-        )
-      );
-      ok(
-        finalRewardInfo.loyalty_per_share
-          .minus(initRewardInfo.loyalty_per_share)
-          .eq(
-            accomulatedLoyalty
-              .div(initTotalSupply)
-              .integerValue(BigNumber.ROUND_DOWN)
+      const finalRewardInfo = context.pairs[0].storage;
+      const accomulatedReward = new BigNumber(1)
+        .multipliedBy(
+          Math.floor(
+            (Date.parse(finalRewardInfo.last_update_time) -
+              Date.parse(initRewardInfo.last_update_time)) /
+              1000
           )
-      );
-      ok(
-        finalRewardInfo.total_accomulated_loyalty
-          .minus(initRewardInfo.total_accomulated_loyalty)
-          .eq(accomulatedLoyalty)
-      );
+        )
+        .multipliedBy(initRewardInfo.reward_per_sec);
       if (initRewardInfo.period_finish == finalRewardInfo.period_finish) {
+        strictEqual(
+          finalRewardInfo.reward.toString(),
+          initRewardInfo.reward.plus(amount).toString()
+        );
+
         strictEqual(
           finalRewardInfo.reward.toNumber(),
           initRewardInfo.reward.toNumber() + amount
         );
-      } else {
-        strictEqual(finalRewardInfo.reward.toNumber(), amount);
         strictEqual(
-          finalRewardInfo.reward_per_token
-            .minus(initRewardInfo.reward_per_token)
-            .toNumber(),
+          finalRewardInfo.reward_per_share.toString(),
+          initRewardInfo.reward_per_share
+            .plus(
+              accomulatedReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
+            .toString()
+        );
+        strictEqual(
+          finalRewardInfo.total_reward.toNumber(),
+          initRewardInfo.total_reward.toNumber()
+        );
+      } else {
+        strictEqual(finalRewardInfo.reward.toString(), amount.toString());
+        strictEqual(
+          finalRewardInfo.total_reward.toString(),
+          initRewardInfo.reward.plus(initRewardInfo.total_reward).toString()
+        );
+        const periodDuration = 10;
+        strictEqual(
+          finalRewardInfo.reward_per_sec.toString(),
           initRewardInfo.reward
             .multipliedBy(accuracy)
-            .multipliedBy(accuracy)
-            .div(finalRewardInfo.total_accomulated_loyalty)
+            .div(periodDuration)
             .integerValue(BigNumber.ROUND_DOWN)
-            .toNumber()
+            .toString()
+        );
+        const accomulatedReward = new BigNumber(1)
+          .multipliedBy(
+            Math.floor(
+              (Date.parse(initRewardInfo.period_finish) -
+                Date.parse(initRewardInfo.last_update_time)) /
+                1000
+            )
+          )
+          .multipliedBy(initRewardInfo.reward_per_sec);
+        const accomulatedThisCycleReward = new BigNumber(1)
+          .multipliedBy(
+            Math.floor(
+              (Date.parse(finalRewardInfo.last_update_time) -
+                Date.parse(initRewardInfo.period_finish)) /
+                1000
+            )
+          )
+          .multipliedBy(finalRewardInfo.reward_per_sec);
+        strictEqual(
+          finalRewardInfo.reward_per_share.toString(),
+          initRewardInfo.reward_per_share
+            .plus(
+              accomulatedReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
+            .plus(
+              accomulatedThisCycleReward
+                .div(initRewardInfo.total_supply)
+                .integerValue(BigNumber.ROUND_DOWN)
+            )
+            .toString()
         );
       }
     });
