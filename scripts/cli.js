@@ -1,31 +1,9 @@
 require("dotenv").config();
 
 const { program } = require("commander");
-const { exec, execSync } = require("child_process");
+const { exec } = require("child_process");
 const fs = require("fs");
-
-const getLigo = (isDockerizedLigo) => {
-  let path = "ligo";
-  if (isDockerizedLigo) {
-    path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:0.9.0";
-    try {
-      execSync(`${path}  --help`);
-    } catch (err) {
-      console.log("Trying to use global version...");
-      path = "ligo";
-      execSync(`${path}  --help`);
-    }
-  } else {
-    try {
-      execSync(`${path}  --help`);
-    } catch (err) {
-      console.log("Trying to use Dockerized version...");
-      path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:0.9.0";
-      execSync(`${path}  --help`);
-    }
-  }
-  return path;
-};
+const { getLigo } = require("../scripts/utils");
 
 const buildContract = (
   contractName,
