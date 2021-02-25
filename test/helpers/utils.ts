@@ -7,7 +7,7 @@ export const tezPrecision = 1e6;
 export function getLigo(isDockerizedLigo: boolean): string {
   let path = "ligo";
   if (isDockerizedLigo) {
-    path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
+    path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:0.9.0";
     try {
       execSync(`${path}  --help`);
     } catch (err) {
@@ -18,7 +18,7 @@ export function getLigo(isDockerizedLigo: boolean): string {
     try {
       execSync(`${path}  --help`);
     } catch (err) {
-      path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:next";
+      path = "docker run -v $PWD:$PWD --rm -i ligolang/ligo:0.9.0";
       execSync(`${path}  --help`);
     }
   }
