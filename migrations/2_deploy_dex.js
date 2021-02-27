@@ -2,19 +2,25 @@ const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 let Factory = artifacts.require("Factory" + standard);
 let TestFactory = artifacts.require("TestFactory" + standard);
 const factoryStorage = require("../storage/Factory");
+const { TezosToolkit } = require("@taquito/taquito");
+const { InMemorySigner } = require("@taquito/signer");
 const { dexFunctions, tokenFunctions } = require("../storage/Functions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + standard);
 const tokenStorage = require("../storage/Token" + standard);
 const { getLigo } = require("../scripts/utils");
+const accounts = require("../scripts/sandbox/accounts");
 let prefix = "";
 
-module.exports = async (deployer, network, accounts) => {
+module.exports = async (deployer, network, _accounts) => {
+  tezos = new TezosToolkit(tezos.rpc.url);
   if (network === "development") return;
+  const secretKey = accounts.alice.sk.trim();
   tezos.setProvider({
     config: {
       confirmationPollingTimeoutSecond: 500,
     },
+    signer: await InMemorySigner.fromSecretKey(secretKey),
   });
 
   await deployer.deploy(Factory, factoryStorage, {
