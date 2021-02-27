@@ -10,8 +10,9 @@
     "compile-dex": "node scripts/cli.js build-dex --no-json -o contracts",
     "compile": "yarn clean && yarn compile-dex && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice --hardfork edo",
-    "test": "yarn clean && yarn compile && truffle test",
-    "test:quick": "truffle test"
+    "test": "yarn clean && yarn compile && truffle test --bail",
+    "test:quick": "truffle test",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@taquito/signer": "^8.0.4-beta.0",

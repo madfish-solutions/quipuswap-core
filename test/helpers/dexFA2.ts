@@ -247,7 +247,8 @@ export class Dex extends TokenFA2 {
   async sendReward(amount: number): Promise<TransactionOperation> {
     const operation = await tezos.contract.transfer({
       to: this.contract.address,
-      amount: amount / tezPrecision,
+      amount: amount,
+      mutez: true,
     });
     await operation.confirmation();
     return operation;
