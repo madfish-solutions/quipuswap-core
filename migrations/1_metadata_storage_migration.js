@@ -16,7 +16,10 @@ module.exports = async (deployer, network, accounts) => {
   let factory = JSON.parse(rawdata);
   factory.michelson = factory.michelson.replace(
     "7b7d",
-    Buffer(metadataStorageInstance.address.toString() + "/metadata", "ascii").toString("hex")
+    Buffer(
+      metadataStorageInstance.address.toString() + "/metadata",
+      "ascii"
+    ).toString("hex")
   );
   let data = JSON.stringify(factory);
   fs.writeFileSync(fileName, data);

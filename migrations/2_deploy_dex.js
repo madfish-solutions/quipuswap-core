@@ -2,19 +2,25 @@ const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 let Factory = artifacts.require("Factory" + standard);
 let TestFactory = artifacts.require("TestFactory" + standard);
 const factoryStorage = require("../storage/Factory");
+const { TezosToolkit } = require("@taquito/taquito");
+const { InMemorySigner } = require("@taquito/signer");
 const { dexFunctions, tokenFunctions } = require("../storage/Functions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + standard);
 const tokenStorage = require("../storage/Token" + standard);
 const { getLigo } = require("../scripts/utils");
+const accountsStored = require("../scripts/sandbox/accounts");
 let prefix = "";
 
 module.exports = async (deployer, network, accounts) => {
+  tezos = new TezosToolkit(tezos.rpc.url);
   if (network === "development") return;
+  const secretKey = accountsStored.alice.sk.trim();
   tezos.setProvider({
     config: {
       confirmationPollingTimeoutSecond: 500,
     },
+    signer: await InMemorySigner.fromSecretKey(secretKey),
   });
 
   await deployer.deploy(Factory, factoryStorage, {
@@ -57,22 +63,26 @@ module.exports = async (deployer, network, accounts) => {
     await operation.confirmation();
   }
 
-  if (network !== "development") {
-    let token0Instance = await Token.new(tokenStorage);
-    let token1Instance = await Token.new(tokenStorage);
+  if (network !== "mainnet") {
+    let token0Instance = await tezos.contract.at(
+      (await Token.new(tokenStorage)).address.toString()
+    );
+    let token1Instance = await tezos.contract.at(
+      (await Token.new(tokenStorage)).address.toString()
+    );
     console.log(`Token 1 address: ${token0Instance.address}`);
     console.log(`Token 2 address: ${token1Instance.address}`);
     let tezAmount = 1;
     let tokenAmount = 1000000;
     if (standard === "FA12") {
-      await token0Instance.approve(
-        factoryInstance.address.toString(),
-        tokenAmount
-      );
-      await token1Instance.approve(
-        factoryInstance.address.toString(),
-        tokenAmount
-      );
+      let operation = await token0Instance.methods
+        .approve(factoryInstance.address.toString(), tokenAmount)
+        .send();
+      await operation.confirmation();
+      operation = await token1Instance.methods
+        .approve(factoryInstance.address.toString(), tokenAmount)
+        .send();
+      await operation.confirmation();
       await factoryInstance.launchExchange(
         token0Instance.address.toString(),
         tokenAmount,
@@ -85,24 +95,30 @@ module.exports = async (deployer, network, accounts) => {
       );
     } else {
       let defaultTokenId = 0;
-      await token0Instance.update_operators([
-        {
-          add_operator: {
-            owner: accounts[0],
-            operator: factoryInstance.address.toString(),
-            token_id: defaultTokenId,
+      let operation = await token0Instance.methods
+        .update_operators([
+          {
+            add_operator: {
+              owner: accounts[0],
+              operator: factoryInstance.address.toString(),
+              token_id: defaultTokenId,
+            },
           },
-        },
-      ]);
-      await token1Instance.update_operators([
-        {
-          add_operator: {
-            owner: accounts[0],
-            operator: factoryInstance.address.toString(),
-            token_id: defaultTokenId,
+        ])
+        .send();
+      await operation.confirmation();
+      operation = await token1Instance.methods
+        .update_operators([
+          {
+            add_operator: {
+              owner: accounts[0],
+              operator: factoryInstance.address.toString(),
+              token_id: defaultTokenId,
+            },
           },
-        },
-      ]);
+        ])
+        .send();
+      await operation.confirmation();
       await factoryInstance.launchExchange(
         token0Instance.address.toString(),
         defaultTokenId,

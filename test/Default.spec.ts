@@ -71,17 +71,31 @@ contract("Default()", function () {
         );
       } else {
         strictEqual(finalRewardInfo.reward.toString(), amount.toString());
-        strictEqual(
-          finalRewardInfo.total_reward.toString(),
-          initRewardInfo.reward.plus(initRewardInfo.total_reward).toString()
-        );
-        const periodDuration = 10;
+        const periodDuration =
+          (Math.floor(
+            Math.floor(
+              (Date.parse(finalRewardInfo.last_update_time) -
+                Date.parse(initRewardInfo.period_finish)) /
+                1000
+            ) / 10
+          ) +
+            1) *
+          10;
         strictEqual(
           finalRewardInfo.reward_per_sec.toString(),
           initRewardInfo.reward
             .multipliedBy(accuracy)
             .div(periodDuration)
             .integerValue(BigNumber.ROUND_DOWN)
+            .toString()
+        );
+        strictEqual(
+          finalRewardInfo.total_reward.toString(),
+          finalRewardInfo.reward_per_sec
+            .multipliedBy(periodDuration)
+            .div(accuracy)
+            .integerValue(BigNumber.ROUND_DOWN)
+            .plus(initRewardInfo.total_reward)
             .toString()
         );
         const accomulatedReward = new BigNumber(1)

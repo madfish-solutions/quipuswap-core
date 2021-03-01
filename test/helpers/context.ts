@@ -12,6 +12,7 @@ import tokenFA2Storage from "../storage/TokenFA2";
 import { dexFunctions, tokenFunctions } from "../storage/Functions";
 import { TokenFA2 } from "./tokenFA2";
 import { Token } from "./token";
+import { TezosToolkit } from "@taquito/taquito";
 
 let tokenStorage, CDex, CToken, CFactory;
 type Dex = DexFA12 | DexFA2;
@@ -47,6 +48,7 @@ export class Context {
     useDeployedFactory: boolean = true
   ): Promise<Context> {
     let config = await prepareProviderOptions(accountName);
+    tezos = new TezosToolkit(tezos.rpc.url);
     tezos.setProvider(config);
 
     const currentBlock = await tezos.rpc.getBlock();

@@ -69,7 +69,9 @@ contract("RewardsDistribution()", function () {
       if (wait) {
         await bakeBlocks(wait);
       }
-      await action();
+      const op = await action();
+      const fee =
+        receiver == senderAddress ? await calculateFee([op], senderAddress) : 0;
       await context.pairs[0].updateStorage({
         user_rewards: [senderAddress],
         ledger: [senderAddress],
@@ -117,17 +119,9 @@ contract("RewardsDistribution()", function () {
           .integerValue(BigNumber.ROUND_DOWN);
         ok(
           aliceFinalTezBalance
+            .plus(fee)
             .minus(aliceInitTezBalance)
-            .lte(expectedUserReward) &&
-            (!realReward.toNumber() ||
-              aliceFinalTezBalance
-                .minus(aliceInitTezBalance)
-                .gte(
-                  realReward
-                    .multipliedBy(8)
-                    .div(10)
-                    .integerValue(BigNumber.ROUND_DOWN)
-                ))
+            .eq(realReward)
         );
       } else {
         strictEqual(
@@ -170,11 +164,25 @@ contract("RewardsDistribution()", function () {
         );
       } else {
         strictEqual(finalRewardInfo.reward.toString(), "0");
+        const periodDuration =
+          (Math.floor(
+            Math.floor(
+              (Date.parse(finalRewardInfo.last_update_time) -
+                Date.parse(initRewardInfo.period_finish)) /
+                1000
+            ) / 10
+          ) +
+            1) *
+          10;
         strictEqual(
           finalRewardInfo.total_reward.toString(),
-          initRewardInfo.reward.plus(initRewardInfo.total_reward).toString()
+          finalRewardInfo.reward_per_sec
+            .multipliedBy(periodDuration)
+            .div(accuracy)
+            .integerValue(BigNumber.ROUND_DOWN)
+            .plus(initRewardInfo.total_reward)
+            .toString()
         );
-        const periodDuration = 10;
         strictEqual(
           finalRewardInfo.reward_per_sec.toString(),
           initRewardInfo.reward
@@ -235,8 +243,8 @@ contract("RewardsDistribution()", function () {
       "success in case of update liquidity",
       "alice",
       0,
-      async function () {
-        await context.pairs[0].withdrawProfit(aliceAddress);
+      function () {
+        return context.pairs[0].withdrawProfit(aliceAddress);
       },
       true
     );
@@ -244,24 +252,24 @@ contract("RewardsDistribution()", function () {
       "success in case of user makes new investment",
       "bob",
       0,
-      async function () {
-        await context.pairs[0].investLiquidity(100, 100, 50);
+      function () {
+        return context.pairs[0].investLiquidity(100, 100, 50);
       }
     );
     defaultSuccessCase(
       "success in case of user withdraws shares",
       "alice",
       0,
-      async function () {
-        await context.pairs[0].divestLiquidity(10, 10, 10);
+      function () {
+        return context.pairs[0].divestLiquidity(10, 10, 10);
       }
     );
     defaultSuccessCase(
       "success in case of user transfers shares",
       "alice",
       0,
-      async function () {
-        await context.pairs[0].transfer(aliceAddress, bobAddress, 10);
+      function () {
+        return context.pairs[0].transfer(aliceAddress, bobAddress, 10);
       }
     );
   });
@@ -271,8 +279,8 @@ contract("RewardsDistribution()", function () {
       "success in case of reward is claimed before period finished",
       "alice",
       0,
-      async function () {
-        await context.pairs[0].withdrawProfit(aliceAddress);
+      function () {
+        return context.pairs[0].withdrawProfit(aliceAddress);
       },
       true
     );
@@ -280,8 +288,8 @@ contract("RewardsDistribution()", function () {
       "success in case of reward is claimed after period finished",
       "bob",
       7,
-      async function () {
-        await context.pairs[0].withdrawProfit(aliceAddress);
+      function () {
+        return context.pairs[0].withdrawProfit(aliceAddress);
       },
       true,
       accounts["alice"].pkh
@@ -290,8 +298,8 @@ contract("RewardsDistribution()", function () {
       "success in case of reward is claimed in the middle of the second period",
       "alice",
       3,
-      async function () {
-        await context.pairs[0].withdrawProfit(bobAddress);
+      function () {
+        return context.pairs[0].withdrawProfit(bobAddress);
       },
       true,
       accounts["bob"].pkh
@@ -303,8 +311,8 @@ contract("RewardsDistribution()", function () {
       "success in case of no reward",
       "alice",
       0,
-      async function () {
-        await context.pairs[0].withdrawProfit(aliceAddress);
+      function () {
+        return context.pairs[0].withdrawProfit(aliceAddress);
       },
       true
     );
@@ -317,8 +325,8 @@ contract("RewardsDistribution()", function () {
         "success in case of reward is accomulated",
         "bob",
         7,
-        async function () {
-          await context.pairs[0].withdrawProfit(aliceAddress);
+        function () {
+          return context.pairs[0].withdrawProfit(aliceAddress);
         },
         true,
         accounts["alice"].pkh
@@ -333,8 +341,8 @@ contract("RewardsDistribution()", function () {
         "success in case of reward is claimed in the middle of the second period",
         "alice",
         0,
-        async function () {
-          await context.pairs[0].withdrawProfit(bobAddress);
+        function () {
+          return context.pairs[0].withdrawProfit(bobAddress);
         },
         true,
         accounts["bob"].pkh
