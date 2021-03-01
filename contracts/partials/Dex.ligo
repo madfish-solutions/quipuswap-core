@@ -68,20 +68,7 @@ block {
 } with (res.0, s)
 
 
-(* Unreachable method to return the reserves to the contracts.
-
-Due to [{"kind":"permanent",
-  "id":"node.prevalidation.oversized_operation",
-  "size":16389,
-  "max_size":16384}
-] error such a demanded method isn't added to the entrypoints.
-Actually, the error means that Factory cannot be deplyed with 
-the preloaded Dex code if it includes the method.
-
-But function still waits for its time in future protocols
-over there.
-
-*)
+(* Return the reserves to the contracts. *)
 [@inline] function get_reserves (const receiver : contract(nat * nat); const s : full_dex_storage) : full_return is
   (list [
     Tezos.transaction((
