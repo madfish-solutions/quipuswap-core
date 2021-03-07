@@ -1,22 +1,18 @@
 
 (* Helper function to get account *)
 function get_account (const addr : address; const s : dex_storage) : account_info is
-  block {
-    var acct : account_info :=
-      record [
-        balance    = 0n;
-        frozen_balance   = 0n;
+  case s.ledger[addr] of
+    None -> record [
+      balance    = 0n;
+      frozen_balance   = 0n;
 #if FA2_STANDARD_ENABLED
-        allowances = (set [] : set (address));
+      allowances = (set [] : set (address));
 #else
-        allowances = (map [] : map(address, nat));
+      allowances = (map [] : map(address, nat));
 #endif
-      ];
-    case s.ledger[addr] of
-      None -> skip
-    | Some(instance) -> acct := instance
-    end;
-  } with acct
+    ]
+  | Some(instance) -> instance
+  end;
 
 (* Helper function to prepare the token transfer *)
 function wrap_transfer_trx(const owner : address; const receiver : address; const value : nat; const s : dex_storage) : transfer_type is 
