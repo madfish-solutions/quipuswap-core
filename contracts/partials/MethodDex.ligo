@@ -40,33 +40,25 @@ function get_token_contract(const token_address : address) : contract(transfer_t
 
 (* Helper function to get voter info *)
 function get_voter (const addr : address; const s : dex_storage) : vote_info is
-  block {
-    var acct : vote_info :=
-      record [
-        candidate    = (None : option(key_hash));
-        vote         = 0n;
-        veto         = 0n;
-        last_veto    = Tezos.now;
-      ];
-    case s.voters[addr] of
-      None -> skip
-    | Some(instance) -> acct := instance
-    end;
-  } with acct
+  case s.voters[addr] of
+    None -> record [
+      candidate    = (None : option(key_hash));
+      vote         = 0n;
+      veto         = 0n;
+      last_veto    = Tezos.now;
+    ]
+  | Some(instance) -> instance
+  end;
 
 (* Helper function to get user reward info *)
 function get_user_reward_info (const addr : address; const s : dex_storage) : user_reward_info is
-  block {
-    var acct : user_reward_info :=
-      record [
-        reward         = 0n;
-        reward_paid    = 0n;
-      ];
-    case s.user_rewards[addr] of
-      None -> skip
-    | Some(instance) -> acct := instance
-    end;
-  } with acct
+  case s.user_rewards[addr] of
+    None -> record [
+      reward         = 0n;
+      reward_paid    = 0n;
+    ]
+  | Some(instance) -> instance
+  end;
 
 
 (* Helper function to update global rewards info *)
@@ -231,8 +223,7 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
             s.total_votes := abs(s.total_votes + args.value - voter_info.vote);
 
             (* update user's candidate *)
-            if args.value = 0n then voter_info.candidate := (None : option(key_hash))
-            else voter_info.candidate := Some(args.candidate);
+            voter_info.candidate := if args.value = 0n then (None : option(key_hash)) else Some(args.candidate);
 
             (* update user's votes *)
             voter_info.vote := args.value;
