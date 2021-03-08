@@ -25,15 +25,17 @@ const create_dex : create_dex_func =
 [@inline] function launch_exchange (const self : address; const token : token_identifier; const token_amount : nat; var s : exchange_storage) :  full_factory_return is
   block {
     (* check requirements *)
-    if s.token_list contains token then 
-      failwith("Factory/exchange-launched") 
-    else skip;
+    case s.token_to_exchange[token] of 
+      Some(n) -> failwith("Factory/exchange-launched") 
+      | None -> skip 
+    end;
     if Tezos.amount < 1mutez or token_amount < 1n then 
       failwith("Dex/not-allowed") 
     else skip; 
 
     (* register in the supported assets list *)
-    s.token_list := Set.add (token, s.token_list);
+    s.token_list[s.counter] := token;
+    s.counter := s.counter + 1n;
 
     (* prepare storage traking into account the token standard *)
     const storage : dex_storage = record [
