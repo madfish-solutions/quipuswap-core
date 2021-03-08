@@ -554,7 +554,7 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 **Scenario 1**: Test user rewards distribution of
 
 - [x] no reward.
-- [x] reward is accomulated.
+- [x] reward is accumulated.
 - [x] shares withdrawn but reward assest after.
 
 ## Test Item: Update_owners
