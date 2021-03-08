@@ -2,17 +2,13 @@
 
 (* Helper function to get account *)
 function get_account (const addr : address; const s : storage) : account is
-  block {
-    var acct : account :=
-      record [
-        balance    = 0n;
-        allowances = (set [] : set (address));
-      ];
-    case s.ledger[addr] of
-      None -> skip
-    | Some(instance) -> acct := instance
-    end;
-  } with acct
+  case s.ledger[addr] of
+    None ->  record [
+      balance    = 0n;
+      allowances = (set [] : set (address));
+      ]
+    | Some(instance) -> instance
+  end;
 
 (* Perform transfers from one owner *)
 function iterate_transfer (const s : storage; const user_trx_params : transfer_param) : storage is

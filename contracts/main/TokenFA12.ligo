@@ -2,17 +2,13 @@
 
 (* Helper function to get account *)
 function getAccount (const addr : address; const s : storage) : account is
-  block {
-    var acct : account :=
-      record [
-        balance    = 0n;
-        allowances = (map [] : map (address, amt));
-      ];
-    case s.ledger[addr] of
-      None -> skip
-    | Some(instance) -> acct := instance
-    end;
-  } with acct
+  case s.ledger[addr] of
+    None ->  record [
+      balance    = 0n;
+      allowances = (map [] : map (address, amt));
+    ]
+  | Some(instance) -> instance
+  end;
 
 (* Helper function to get allowance for an account *)
 function getAllowance (const ownerAccount : account; const spender : address; const s : storage) : amt is
