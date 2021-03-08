@@ -133,7 +133,7 @@ function get_balance_of (const p : token_action; const s : dex_storage; const th
         } with response # l;
       
       (* Collect balances info *)
-      const accomulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
+      const accumulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
     }
     | IUpdate_operators(params) -> skip
     end

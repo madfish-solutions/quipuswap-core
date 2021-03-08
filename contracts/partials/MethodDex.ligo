@@ -368,7 +368,7 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
       | TezToTokenPayment(args) -> {
         (* ensure *)
         if Tezos.amount / 1mutez > 0n (* XTZ sent *)
-        and args.amount > 0n (* minimal amount is non-zero *)
+        and args.min_out > 0n (* minimal amount is non-zero *)
         then block {
           (* update XTZ reserves *)
           s.tez_pool := s.tez_pool + Tezos.amount / 1mutez;
@@ -380,7 +380,7 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
           const tokens_out : nat = abs(s.token_pool - new_token_pool);
 
           (* ensure requirements *)
-          if tokens_out >= args.amount (* sutisfy minimal requested amount *)
+          if tokens_out >= args.min_out (* sutisfy minimal requested amount *)
           and tokens_out <= s.token_pool / 3n (* not cause a high price impact *)
           then {
             (* update token reserves *)

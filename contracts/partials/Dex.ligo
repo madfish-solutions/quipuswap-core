@@ -11,7 +11,7 @@ The function is responsible for fiding the appropriate method
 based on the argument type. 
    
 *)
-[@inline] function middle_dex (const p : dex_action; const this : address; const s : full_dex_storage) :  full_return is
+[@inline] function call_dex (const p : dex_action; const this : address; const s : full_dex_storage) :  full_return is
 block {
     const idx : nat = case p of
       | InitializeExchange(n) -> 0n
@@ -41,7 +41,7 @@ The function is responsible for fiding the appropriate method
 based on the provided index. 
 
 *)
-[@inline] function middle_token (const p : token_action; const this : address; const idx : nat; const s : full_dex_storage) :  full_return is
+[@inline] function call_token (const p : token_action; const this : address; const idx : nat; const s : full_dex_storage) :  full_return is
 block {
   const res : return = case s.token_lambdas[idx] of 
     Some(f) -> f(p, s.storage, this) 

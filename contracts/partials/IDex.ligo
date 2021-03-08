@@ -61,7 +61,7 @@ type dex_storage is record [
 (* Entrypoint arguments *)
 
 type tez_to_token_payment_params is record [
-  amount    : nat; (* min amount of tokens received to accept exchange *)
+  min_out    : nat; (* min amount of tokens received to accept exchange *)
   receiver  : address; (* tokens receiver *)
 ]
 

@@ -36,7 +36,7 @@ contract("Default()", function () {
       await context.pairs[0].sendReward(amount);
       await context.pairs[0].updateStorage();
       const finalRewardInfo = context.pairs[0].storage;
-      const accomulatedReward = new BigNumber(1)
+      const accumulatedReward = new BigNumber(1)
         .multipliedBy(
           Math.floor(
             (Date.parse(finalRewardInfo.last_update_time) -
@@ -59,7 +59,7 @@ contract("Default()", function () {
           finalRewardInfo.reward_per_share.toString(),
           initRewardInfo.reward_per_share
             .plus(
-              accomulatedReward
+              accumulatedReward
                 .div(initRewardInfo.total_supply)
                 .integerValue(BigNumber.ROUND_DOWN)
             )
@@ -98,7 +98,7 @@ contract("Default()", function () {
             .plus(initRewardInfo.total_reward)
             .toString()
         );
-        const accomulatedReward = new BigNumber(1)
+        const accumulatedReward = new BigNumber(1)
           .multipliedBy(
             Math.floor(
               (Date.parse(initRewardInfo.period_finish) -
@@ -107,7 +107,7 @@ contract("Default()", function () {
             )
           )
           .multipliedBy(initRewardInfo.reward_per_sec);
-        const accomulatedThisCycleReward = new BigNumber(1)
+        const accumulatedThisCycleReward = new BigNumber(1)
           .multipliedBy(
             Math.floor(
               (Date.parse(finalRewardInfo.last_update_time) -
@@ -120,12 +120,12 @@ contract("Default()", function () {
           finalRewardInfo.reward_per_share.toString(),
           initRewardInfo.reward_per_share
             .plus(
-              accomulatedReward
+              accumulatedReward
                 .div(initRewardInfo.total_supply)
                 .integerValue(BigNumber.ROUND_DOWN)
             )
             .plus(
-              accomulatedThisCycleReward
+              accumulatedThisCycleReward
                 .div(initRewardInfo.total_supply)
                 .integerValue(BigNumber.ROUND_DOWN)
             )

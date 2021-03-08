@@ -59,6 +59,9 @@ function approve (const p : token_action; const s : dex_storage; const this : ad
       else skip;
       var sender_account : account_info := get_account(Tezos.sender, s);
       const spender_allowance : nat = get_allowance(sender_account, params.0, s);
+      if spender_allowance > 0n and value > 0n then
+        failwith("UnsafeAllowanceChange")
+      else skip;
       sender_account.allowances[params.0] := params.1;
       s.ledger[Tezos.sender] := sender_account;
     }
