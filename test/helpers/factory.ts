@@ -34,7 +34,7 @@ export class Factory {
   async convertTokensList(bigMap: any, counter: number): Promise<any> {
     let list = [];
     for (let i = 0; i < counter; i++) {
-      list = await bigMap.get(i);
+      list.push(await bigMap.get(i.toString()));
     }
     if (standard === "FA2") {
       return list.map((value) => {
