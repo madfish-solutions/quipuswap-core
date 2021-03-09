@@ -114,10 +114,13 @@ type token_func is (token_action * dex_storage * address) -> return
 
 (* real dex storage *)
 type full_dex_storage is record
-  storage        : dex_storage; (* real dex storage *)
-  dex_lambdas    : big_map(nat, dex_func); (* map with exchange-related functions code *)
-  metadata       : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
-  token_lambdas  : big_map(nat, token_func); (* map with token-related functions code *)
+  storage         : dex_storage; (* real dex storage *)
+  dex_lambdas     : big_map(nat, dex_func); (* map with exchange-related functions code *)
+#if FA2_STANDARD_ENABLED
+  token_metadata  : big_map (token_id, token_metadata_info); (* metadata storage according to TZIP-012 *)
+#endif
+  metadata        : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
+  token_lambdas   : big_map(nat, token_func); (* map with token-related functions code *)
 end
 
 type full_return is list (operation) * full_dex_storage
