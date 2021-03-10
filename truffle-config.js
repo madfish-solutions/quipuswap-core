@@ -17,6 +17,13 @@ module.exports = {
       secretKey: alice.sk,
       type: "tezos",
     },
+    testbug: {
+      host: "http://localhost",
+      port: 8732,
+      network_id: "*",
+      secretKey: alice.sk,
+      type: "tezos",
+    },
     delphinet: {
       host: "https://delphinet.smartpy.io",
       port: 443,
