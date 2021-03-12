@@ -231,7 +231,7 @@ contract("Vote()", function () {
       aliceAddress,
       "tz1gaRjULm9qy4D83VCvb4ABWLKpz4XXfqjx",
       1000,
-      "(permanent) proto.008-PtEdo2Zk.contract.manager.unregistered_delegate"
+      "(permanent) proto.008-PsDELPH1.contract.manager.unregistered_delegate"
     );
     voteFailCase(
       "revert in case of voting for unregistered candidate with power that makes him delegate",
@@ -239,7 +239,7 @@ contract("Vote()", function () {
       aliceAddress,
       "tz1gaRjULm9qy4D83VCvb4ABWLKpz4XXfqjx",
       5000,
-      "(permanent) proto.008-PtEdo2Zk.contract.manager.unregistered_delegate"
+      "(permanent) proto.008-PsDELPH1.contract.manager.unregistered_delegate"
     );
 
     describe("", async function () {
