@@ -115,11 +115,17 @@ const create_dex : create_dex_func =
   ], s)
 
 (* Set the dex function code to factory storage *)
-[@inline] function set_dex_function (const idx : nat; const f : dex_func; const s : exchange_storage) : exchange_storage is
+[@inline] function set_dex_function (const idx : nat; const f : bytes; const s : exchange_storage) : exchange_storage is
 block {
+  var maybe_func: option(dex_func) := Bytes.unpack(f);
+  var func: dex_func := case maybe_func of
+    None -> (failwith("Factory/bytes-not-a-function") : dex_func)
+    | Some(func)-> func
+  end;
+
   case s.dex_lambdas[idx] of 
     Some(n) -> failwith("Factory/function-set") 
-    | None -> s.dex_lambdas[idx] := f 
+    | None -> s.dex_lambdas[idx] := func
   end;
 } with s
 

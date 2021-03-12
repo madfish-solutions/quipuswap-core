@@ -36,7 +36,7 @@ type set_token_function_params is record [
 ]
 
 type set_dex_function_params is record [
-  func    : dex_func; (* code of the function *)
+  func    : bytes; (* code of the function packed as bytes *)
   index   : nat; (* the key in functions map *)
 ]
 
