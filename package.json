@@ -9,7 +9,7 @@
     "migrate-delphinet-reset": "yarn clean && truffle migrate --network delphinet --reset",
     "compile-dex": "node scripts/cli.js build-dex --no-json -o contracts",
     "compile": "yarn clean && yarn compile-dex && truffle compile",
-    "start-sandbox": "ganache-cli --flavor tezos --seed alice --hardfork edo",
+    "start-sandbox": "ganache-cli --flavor tezos --seed alice",
     "test": "yarn clean && yarn compile && truffle test --bail",
     "test:quick": "truffle test",
     "postinstall": "patch-package"

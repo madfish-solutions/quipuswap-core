@@ -18,7 +18,7 @@ module.exports = {
       type: "tezos",
     },
     delphinet: {
-      host: "https://delphinet.smartpy.io",
+      host: "https://api.tez.ie/rpc/delphinet",
       port: 443,
       network_id: "*",
       secretKey: alice.sk,
