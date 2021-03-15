@@ -83,19 +83,6 @@ const create_dex : create_dex_func =
     const res : (operation * address) = create_dex((None : option(key_hash)), Tezos.amount, record [
       storage = storage;
       dex_lambdas = s.dex_lambdas;
-#if FA2_STANDARD_ENABLED
-      token_metadata  = big_map[0n -> record [
-        token_id    = 0n;
-        token_info  = map[
-          "symbol" -> 0x515054;
-          "name" -> 0x5175697075204c5020546f6b656e;
-          "decimals" -> 0x36;
-          "shouldPreferSymbol" -> 0x74727565;
-          "description" -> 0x51756970757377617020536861726520506f6f6c20546f6b656e;
-          // "thumbnailUri" -> 0x00;
-        ]
-      ]];
-#endif
       metadata = big_map["" -> 0x7b7d];
       token_lambdas = s.token_lambdas;
     ]);
