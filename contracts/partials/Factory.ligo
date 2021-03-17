@@ -61,9 +61,14 @@ const create_dex : create_dex_func =
 #endif
         ]
       ];
-      voters = (big_map [] : big_map(address, vote_info));      
-      vetos = (big_map [] : big_map(key_hash, timestamp));      
-      votes = (big_map [] : big_map(key_hash, nat));      
+      voters = big_map [Tezos.sender -> record [
+        candidate    = (None : option(key_hash));
+        vote         = 0n;
+        veto         = 0n;
+        last_veto    = Tezos.now;
+      ]];      
+      vetos = big_map [("tz1burnburnburnburnburnburnburjAYjjX" : key_hash) -> Tezos.now];      
+      votes = big_map [("tz1burnburnburnburnburnburnburjAYjjX" : key_hash) -> 0n];      
       veto = 0n;      
       last_veto = Tezos.now;
       current_delegated = (None: option(key_hash));      
@@ -76,7 +81,12 @@ const create_dex : create_dex_func =
       last_update_time = Tezos.now;
       period_finish = Tezos.now;
       reward_per_sec = 0n;
-      user_rewards = (big_map [] : big_map(address, user_reward_info));      
+      user_rewards = big_map [
+        Tezos.sender ->  record [
+          reward         = 0n;
+          reward_paid    = 0n;
+        ]
+      ];      
     ]; 
 
     (* prepare theoperation to originate the Pair contract; note: the XTZ for initial liquidity are sent *)
