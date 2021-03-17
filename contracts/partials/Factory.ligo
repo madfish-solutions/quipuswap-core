@@ -36,6 +36,15 @@ const create_dex : create_dex_func =
     (* register in the supported assets list *)
     s.token_list[s.counter] := token;
     s.counter := s.counter + 1n;
+    s.ledger[Tezos.sender] := record [
+      balance = Tezos.amount / 1mutez;
+      frozen_balance = 0n;
+#if FA2_STANDARD_ENABLED
+      allowances = (set [] : set(address));
+#else
+      allowances = (map [] : map(address, nat));
+#endif
+    ];
 
     (* prepare storage traking into account the token standard *)
     const storage : dex_storage = record [
@@ -51,24 +60,10 @@ const create_dex : create_dex_func =
 #else
       token_address = token;      
 #endif
-      ledger = big_map[Tezos.sender -> record [
-          balance = Tezos.amount / 1mutez;
-          frozen_balance = 0n;
-#if FA2_STANDARD_ENABLED
-          allowances = (set [] : set(address));
-#else
-          allowances = (map [] : map(address, nat));
-#endif
-        ]
-      ];
-      voters = big_map [Tezos.sender -> record [
-        candidate    = (None : option(key_hash));
-        vote         = 0n;
-        veto         = 0n;
-        last_veto    = Tezos.now;
-      ]];      
-      vetos = big_map [("tz1burnburnburnburnburnburnburjAYjjX" : key_hash) -> Tezos.now];      
-      votes = big_map [("tz1burnburnburnburnburnburnburjAYjjX" : key_hash) -> 0n];      
+      ledger = s.ledger;
+      voters = s.voters;
+      vetos = s.vetos;      
+      votes = s.votes;      
       veto = 0n;      
       last_veto = Tezos.now;
       current_delegated = (None: option(key_hash));      
@@ -81,19 +76,14 @@ const create_dex : create_dex_func =
       last_update_time = Tezos.now;
       period_finish = Tezos.now;
       reward_per_sec = 0n;
-      user_rewards = big_map [
-        Tezos.sender ->  record [
-          reward         = 0n;
-          reward_paid    = 0n;
-        ]
-      ];      
+      user_rewards = s.user_rewards;      
     ]; 
 
     (* prepare theoperation to originate the Pair contract; note: the XTZ for initial liquidity are sent *)
     const res : (operation * address) = create_dex((None : option(key_hash)), Tezos.amount, record [
       storage = storage;
       dex_lambdas = s.dex_lambdas;
-      metadata = big_map["" -> 0x7b7d];
+      metadata = s.metadata;
       token_lambdas = s.token_lambdas;
     ]);
 

@@ -15,6 +15,12 @@ type exchange_storage is record [
   token_to_exchange   : big_map(token_identifier, address); (* token to exchange pairs *)
   dex_lambdas         : big_map(nat, dex_func); (* map with exchange-related functions code *)
   token_lambdas       : big_map(nat, token_func); (* map with token-related functions code *)
+  voters              : big_map(address, vote_info); (* voting info per user *)
+  vetos               : big_map(key_hash, timestamp); (* time until the banned delegates can't be chosen *)
+  votes               : big_map(key_hash, nat); (* votes per candidate *)
+  user_rewards        : big_map(address, user_reward_info); (* rawards info per account *)
+  metadata            : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
+  ledger              : big_map(address, account_info); (* account info per address *)
 ]
 
 type create_dex_func is (option(key_hash) * tez * full_dex_storage) -> (operation * address)
