@@ -87,6 +87,9 @@ const create_dex : create_dex_func =
       token_lambdas = s.token_lambdas;
     ]);
 
+    (* remove key *)
+    remove Tezos.sender from map s.ledger;
+
     (* add the address of new Pair contract to storage *)
     s.token_to_exchange[token] := res.1;
   } with (list[res.0; (* originate contract *)
