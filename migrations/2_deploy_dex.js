@@ -1,6 +1,7 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 let Factory = artifacts.require("Factory" + standard);
 let TestFactory = artifacts.require("TestFactory" + standard);
+const MetadataStorage = artifacts.require("MetadataStorage");
 const factoryStorage = require("../storage/Factory");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
@@ -24,6 +25,7 @@ module.exports = async (deployer, network, accounts) => {
     signer: await InMemorySigner.fromSecretKey(secretKey),
   });
 
+  let metadataStorageInstance = await MetadataStorage.deployed();
   factoryStorage.metadata = MichelsonMap.fromLiteral({
     "": Buffer(
       metadataStorageInstance.address.toString() + "/metadata",
