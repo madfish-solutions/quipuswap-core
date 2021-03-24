@@ -54,7 +54,7 @@ type exchange_action is
 #if TEST_ENABLED
 const voting_period : int = 10; (* seconds between baker rewards distribution *)
 #else
-const voting_period : int = 3600; (* seconds between baker rewards distribution *)
+const voting_period : int = 2592000; (* seconds between baker rewards distribution *)
 #endif
 const accurancy_multiplier : nat = 1000000000000000n; (* used to improve calculations accuracy *)
 const veto_period : int = 7889229; (* seconds to ban the user for *)
