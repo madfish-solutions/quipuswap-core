@@ -61,7 +61,7 @@ type dex_storage is record [
 (* Entrypoint arguments *)
 
 type tez_to_token_payment_params is record [
-  amount    : nat; (* min amount of tokens received to accept exchange *)
+  min_out    : nat; (* min amount of tokens received to accept exchange *)
   receiver  : address; (* tokens receiver *)
 ]
 
@@ -114,10 +114,10 @@ type token_func is (token_action * dex_storage * address) -> return
 
 (* real dex storage *)
 type full_dex_storage is record
-  storage        : dex_storage; (* real dex storage *)
-  dex_lambdas    : big_map(nat, dex_func); (* map with exchange-related functions code *)
-  metadata       : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
-  token_lambdas  : big_map(nat, token_func); (* map with token-related functions code *)
+  storage         : dex_storage; (* real dex storage *)
+  dex_lambdas     : big_map(nat, dex_func); (* map with exchange-related functions code *)
+  metadata        : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
+  token_lambdas   : big_map(nat, token_func); (* map with token-related functions code *)
 end
 
 type full_return is list (operation) * full_dex_storage

@@ -3,8 +3,8 @@ type token_id is nat
 type token_metadata_info is
   [@layout:comb] 
   record [
-    token_id  : token_id;
-    extras    : map (string, bytes);
+    token_id      : token_id;
+    token_info    : map (string, bytes);
   ]
   
 const default_token_id : token_id = 0n;

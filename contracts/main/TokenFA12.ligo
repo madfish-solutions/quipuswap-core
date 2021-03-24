@@ -95,7 +95,7 @@ function getBalance (const owner : address; const contr : contract(amt); var s :
   } with (list [transaction(ownerAccount.balance, 0tz, contr)], s)
 
 (* View function that forwards the allowance amt of spender in the name of tokenOwner to a contract *)
-function getAllowance (const owner : address; const spender : address; const contr : contract(amt); var s : storage) : return is
+function getAllowances (const owner : address; const spender : address; const contr : contract(amt); var s : storage) : return is
   block {
     const ownerAccount : account = getAccount(owner, s);
     const spenderAllowance : amt = getAllowance(ownerAccount, spender, s);
@@ -115,6 +115,6 @@ function main (const action : tokenAction; var s : storage) : return is
     | Transfer(params)        -> transfer(params.0, params.1.0, params.1.1, s)
     | Approve(params)         -> approve(params.0, params.1, s)
     | GetBalance(params)      -> getBalance(params.0, params.1, s)
-    | GetAllowance(params)    -> getAllowance(params.0.0, params.0.1, params.1, s)
+    | GetAllowance(params)    -> getAllowances(params.0.0, params.0.1, params.1, s)
     | GetTotalSupply(params)  -> getTotalSupply(params.1, s)
   end;

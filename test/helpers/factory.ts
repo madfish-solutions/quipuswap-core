@@ -31,7 +31,11 @@ export class Factory {
     return key;
   }
 
-  convertTokensList(list: any): any {
+  async convertTokensList(bigMap: any, counter: number): Promise<any> {
+    let list = [];
+    for (let i = 0; i < counter; i++) {
+      list.push(await bigMap.get(i.toString()));
+    }
     if (standard === "FA2") {
       return list.map((value) => {
         return value["0"];
@@ -49,7 +53,10 @@ export class Factory {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      token_list: this.convertTokensList(storage.token_list),
+      token_list: await this.convertTokensList(
+        storage.token_list,
+        storage.counter
+      ),
       token_to_exchange: {},
       dex_lambdas: {},
       token_lambdas: {},
@@ -169,12 +176,16 @@ export class Factory {
       : await this.approveTokenFA12(tokenAddress, tokenAmount, address);
   }
 
-  async approveTokenFA2(tokenAddress: string, tokenAmount: number,  address: string): Promise<void> {
+  async approveTokenFA2(
+    tokenAddress: string,
+    tokenAmount: number,
+    address: string
+  ): Promise<void> {
     let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods
-      .update_operators([ 
+      .update_operators([
         {
-          [(tokenAmount) ? "add_operator" : "remove_operator"]: {
+          [tokenAmount ? "add_operator" : "remove_operator"]: {
             owner: await tezos.signer.publicKeyHash(),
             operator: address,
             token_id: defaultTokenId,

@@ -90,7 +90,7 @@ contract("RewardsDistribution()", function () {
       const aliceFinalTezBalance = new BigNumber(
         await tezos.tz.getBalance(receiver)
       );
-      const accomulatedReward = new BigNumber(1)
+      const accumulatedReward = new BigNumber(1)
         .multipliedBy(
           Math.floor(
             (Date.parse(finalRewardInfo.last_update_time) -
@@ -135,7 +135,7 @@ contract("RewardsDistribution()", function () {
         );
       }
       if (initRewardInfo.period_finish == finalRewardInfo.period_finish) {
-        const accomulatedReward = new BigNumber(1)
+        const accumulatedReward = new BigNumber(1)
           .multipliedBy(
             Math.floor(
               (Date.parse(finalRewardInfo.last_update_time) -
@@ -156,7 +156,7 @@ contract("RewardsDistribution()", function () {
           finalRewardInfo.reward_per_share.toString(),
           initRewardInfo.reward_per_share
             .plus(
-              accomulatedReward
+              accumulatedReward
                 .div(initRewardInfo.total_supply)
                 .integerValue(BigNumber.ROUND_DOWN)
             )
@@ -191,7 +191,7 @@ contract("RewardsDistribution()", function () {
             .integerValue(BigNumber.ROUND_DOWN)
             .toString()
         );
-        const accomulatedReward = new BigNumber(1)
+        const accumulatedReward = new BigNumber(1)
           .multipliedBy(
             Math.floor(
               (Date.parse(initRewardInfo.period_finish) -
@@ -200,7 +200,7 @@ contract("RewardsDistribution()", function () {
             )
           )
           .multipliedBy(initRewardInfo.reward_per_sec);
-        const accomulatedThisCycleReward = new BigNumber(1)
+        const accumulatedThisCycleReward = new BigNumber(1)
           .multipliedBy(
             Math.floor(
               (Date.parse(finalRewardInfo.last_update_time) -
@@ -213,12 +213,12 @@ contract("RewardsDistribution()", function () {
           finalRewardInfo.reward_per_share.toString(),
           initRewardInfo.reward_per_share
             .plus(
-              accomulatedReward
+              accumulatedReward
                 .div(initRewardInfo.total_supply)
                 .integerValue(BigNumber.ROUND_DOWN)
             )
             .plus(
-              accomulatedThisCycleReward
+              accumulatedThisCycleReward
                 .div(initRewardInfo.total_supply)
                 .integerValue(BigNumber.ROUND_DOWN)
             )
@@ -322,7 +322,7 @@ contract("RewardsDistribution()", function () {
         await context.pairs[0].sendReward(2000);
       });
       defaultSuccessCase(
-        "success in case of reward is accomulated",
+        "success in case of reward is accumulated",
         "bob",
         7,
         function () {

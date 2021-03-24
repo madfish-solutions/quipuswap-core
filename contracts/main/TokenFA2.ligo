@@ -121,8 +121,8 @@ function get_balance_of (const balance_params : balance_params; const s : storag
       } with response # l;
     
     (* Collect balances info *)
-    const accomulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
-  } with list [transaction(accomulated_response, 0tz, balance_params.callback)]
+    const accumulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
+  } with list [transaction(accumulated_response, 0tz, balance_params.callback)]
 
 (* TokenFA2 - Mock FA2 token for tests *)
 function main (const action : token_action; var s : storage) : return is

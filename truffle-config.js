@@ -25,7 +25,7 @@ module.exports = {
       type: "tezos",
     },
     edonet: {
-      host: "https://edonet.smartpy.io",
+      host: "https://testnet-tezos.giganode.io",
       port: 443,
       network_id: "*",
       secretKey: alice.sk,

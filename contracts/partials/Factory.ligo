@@ -25,15 +25,26 @@ const create_dex : create_dex_func =
 [@inline] function launch_exchange (const self : address; const token : token_identifier; const token_amount : nat; var s : exchange_storage) :  full_factory_return is
   block {
     (* check requirements *)
-    if s.token_list contains token then 
-      failwith("Factory/exchange-launched") 
-    else skip;
+    case s.token_to_exchange[token] of 
+      Some(n) -> failwith("Factory/exchange-launched") 
+      | None -> skip 
+    end;
     if Tezos.amount < 1mutez or token_amount < 1n then 
       failwith("Dex/not-allowed") 
     else skip; 
 
     (* register in the supported assets list *)
-    s.token_list := Set.add (token, s.token_list);
+    s.token_list[s.counter] := token;
+    s.counter := s.counter + 1n;
+    s.ledger[Tezos.sender] := record [
+      balance = Tezos.amount / 1mutez;
+      frozen_balance = 0n;
+#if FA2_STANDARD_ENABLED
+      allowances = (set [] : set(address));
+#else
+      allowances = (map [] : map(address, nat));
+#endif
+    ];
 
     (* prepare storage traking into account the token standard *)
     const storage : dex_storage = record [
@@ -49,19 +60,10 @@ const create_dex : create_dex_func =
 #else
       token_address = token;      
 #endif
-      ledger = big_map[Tezos.sender -> record [
-          balance = Tezos.amount / 1mutez;
-          frozen_balance = 0n;
-#if FA2_STANDARD_ENABLED
-          allowances = (set [] : set(address));
-#else
-          allowances = (map [] : map(address, nat));
-#endif
-        ]
-      ];
-      voters = (big_map [] : big_map(address, vote_info));      
-      vetos = (big_map [] : big_map(key_hash, timestamp));      
-      votes = (big_map [] : big_map(key_hash, nat));      
+      ledger = s.ledger;
+      voters = s.voters;
+      vetos = s.vetos;      
+      votes = s.votes;      
       veto = 0n;      
       last_veto = Tezos.now;
       current_delegated = (None: option(key_hash));      
@@ -74,16 +76,19 @@ const create_dex : create_dex_func =
       last_update_time = Tezos.now;
       period_finish = Tezos.now;
       reward_per_sec = 0n;
-      user_rewards = (big_map [] : big_map(address, user_reward_info));      
+      user_rewards = s.user_rewards;      
     ]; 
 
     (* prepare theoperation to originate the Pair contract; note: the XTZ for initial liquidity are sent *)
     const res : (operation * address) = create_dex((None : option(key_hash)), Tezos.amount, record [
       storage = storage;
       dex_lambdas = s.dex_lambdas;
-      metadata = big_map["" -> 0x7b7d];
+      metadata = s.metadata;
       token_lambdas = s.token_lambdas;
     ]);
+
+    (* remove key *)
+    remove Tezos.sender from map s.ledger;
 
     (* add the address of new Pair contract to storage *)
     s.token_to_exchange[token] := res.1;

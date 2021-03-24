@@ -1,9 +1,11 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 let Factory = artifacts.require("Factory" + standard);
 let TestFactory = artifacts.require("TestFactory" + standard);
+const MetadataStorage = artifacts.require("MetadataStorage");
 const factoryStorage = require("../storage/Factory");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
+const { MichelsonMap } = require("@taquito/michelson-encoder");
 const { dexFunctions, tokenFunctions } = require("../storage/Functions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + standard);
@@ -23,10 +25,14 @@ module.exports = async (deployer, network, accounts) => {
     signer: await InMemorySigner.fromSecretKey(secretKey),
   });
 
-  await deployer.deploy(Factory, factoryStorage, {
-    gas: 490000,
-    fee: 10000000,
+  let metadataStorageInstance = await MetadataStorage.deployed();
+  factoryStorage.metadata = MichelsonMap.fromLiteral({
+    "": Buffer(
+      metadataStorageInstance.address.toString() + "/metadata",
+      "ascii"
+    ).toString("hex"),
   });
+  await deployer.deploy(Factory, factoryStorage);
   let factoryInstance = await Factory.deployed();
   console.log(`Factory address: ${factoryInstance.address}`);
 
