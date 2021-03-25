@@ -1,16 +1,16 @@
 type token_id is nat
 
 type token_metadata_info is
-  [@layout:comb] 
+  [@layout:comb]
   record [
     token_id      : token_id;
     token_info    : map (string, bytes);
   ]
-  
+
 const default_token_id : token_id = 0n;
 
 type transfer_destination is
-  [@layout:comb] 
+  [@layout:comb]
   record
     to_       : address;
     token_id  : token_id;
@@ -18,37 +18,37 @@ type transfer_destination is
 end
 
 type transfer_param is
-  [@layout:comb] 
+  [@layout:comb]
   record [
     from_   : address;
     txs     : list (transfer_destination);
   ]
 
-type balance_of_request is 
+type balance_of_request is
   [@layout:comb]
   record [
     owner       : address;
     token_id    : token_id;
   ]
 
-type balance_of_response is 
+type balance_of_response is
   [@layout:comb]
   record [
     request     : balance_of_request;
     balance     : nat;
   ]
 
-type balance_params is 
+type balance_params is
   [@layout:comb]
   record [
-    requests    : list (balance_of_request); 
+    requests    : list (balance_of_request);
     callback    : contract (list (balance_of_response));
   ]
 
-type operator_param is 
+type operator_param is
   [@layout:comb]
   record [
-    owner     : address; 
+    owner     : address;
     operator  : address;
     token_id  : token_id;
   ]

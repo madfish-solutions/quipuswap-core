@@ -25,6 +25,6 @@ function get_metadata (const token_id : nat) : token_metadata_info is
 
 function main (const f : func_type ; const s : storage) :
   (list(operation) * storage) is
-  block { 
+  block {
       s[0n] := f;
    } with ((nil : list(operation)), s)
