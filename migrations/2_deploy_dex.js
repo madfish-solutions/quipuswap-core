@@ -1,6 +1,5 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
-let Factory = artifacts.require("Factory" + standard);
-let TestFactory = artifacts.require("TestFactory" + standard);
+const Factory = artifacts.require("Factory" + standard);
 const MetadataStorage = artifacts.require("MetadataStorage");
 const factoryStorage = require("../storage/Factory");
 const { TezosToolkit } = require("@taquito/taquito");
@@ -12,7 +11,10 @@ const Token = artifacts.require("Token" + standard);
 const tokenStorage = require("../storage/Token" + standard);
 const { getLigo } = require("../scripts/utils");
 const accountsStored = require("../scripts/sandbox/accounts");
-let prefix = "";
+
+const initialTezAmount = 1;
+const initialTokenAmount = 1000000;
+const defaultTokenId = 0;
 
 module.exports = async (deployer, network, accounts) => {
   tezos = new TezosToolkit(tezos.rpc.url);
@@ -25,7 +27,7 @@ module.exports = async (deployer, network, accounts) => {
     signer: await InMemorySigner.fromSecretKey(secretKey),
   });
 
-  let metadataStorageInstance = await MetadataStorage.deployed();
+  const metadataStorageInstance = await MetadataStorage.deployed();
   factoryStorage.metadata = MichelsonMap.fromLiteral({
     "": Buffer(
       metadataStorageInstance.address.toString() + "/metadata",
@@ -33,14 +35,14 @@ module.exports = async (deployer, network, accounts) => {
     ).toString("hex"),
   });
   await deployer.deploy(Factory, factoryStorage);
-  let factoryInstance = await Factory.deployed();
+  const factoryInstance = await Factory.deployed();
   console.log(`Factory address: ${factoryInstance.address}`);
 
-  let ligo = getLigo(true);
+  const ligo = getLigo(true);
 
   for (dexFunction of dexFunctions) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/${prefix}Factory${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -78,29 +80,27 @@ module.exports = async (deployer, network, accounts) => {
     );
     console.log(`Token 1 address: ${token0Instance.address}`);
     console.log(`Token 2 address: ${token1Instance.address}`);
-    let tezAmount = 1;
-    let tokenAmount = 1000000;
+
     if (standard === "FA12") {
       let operation = await token0Instance.methods
-        .approve(factoryInstance.address.toString(), tokenAmount)
+        .approve(factoryInstance.address.toString(), initialTokenAmount)
         .send();
       await operation.confirmation();
       operation = await token1Instance.methods
-        .approve(factoryInstance.address.toString(), tokenAmount)
+        .approve(factoryInstance.address.toString(), initialTokenAmount)
         .send();
       await operation.confirmation();
       await factoryInstance.launchExchange(
         token0Instance.address.toString(),
-        tokenAmount,
-        { amount: tezAmount }
+        initialTokenAmount,
+        { amount: initialTezAmount }
       );
       await factoryInstance.launchExchange(
         token1Instance.address.toString(),
-        tokenAmount,
-        { amount: tezAmount }
+        initialTokenAmount,
+        { amount: initialTezAmount }
       );
     } else {
-      let defaultTokenId = 0;
       let operation = await token0Instance.methods
         .update_operators([
           {
@@ -128,14 +128,14 @@ module.exports = async (deployer, network, accounts) => {
       await factoryInstance.launchExchange(
         token0Instance.address.toString(),
         defaultTokenId,
-        tokenAmount,
-        { amount: tezAmount }
+        initialTokenAmount,
+        { amount: initialTezAmount }
       );
       await factoryInstance.launchExchange(
         token1Instance.address.toString(),
         defaultTokenId,
-        tokenAmount,
-        { amount: tezAmount }
+        initialTokenAmount,
+        { amount: initialTezAmount }
       );
     }
   }
