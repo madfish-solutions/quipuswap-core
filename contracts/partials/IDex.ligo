@@ -21,7 +21,7 @@ type vote_info is record [
   vote        : nat; (* number of shares to be used for voting *)
   veto        : nat; (* number of shares to be used for voting agains the current delegate*)
   last_veto    : timestamp;  (* time of the last veto proposal by user *)
-] 
+]
 
 (* record that represents account baker rewards info *)
 type user_reward_info is record [
@@ -72,20 +72,20 @@ type token_to_tez_payment_params is record [
 ]
 
 type divest_liquidity_params is record [
-  min_tez      : nat; (* min amount of XTZ received to accept the divestment *) 
+  min_tez      : nat; (* min amount of XTZ received to accept the divestment *)
   min_tokens   : nat; (* min amount of tokens received to accept the divestment *)
-  shares       : nat; (* amount of shares to be burnt *) 
+  shares       : nat; (* amount of shares to be burnt *)
 ]
 
 type vote_params is record [
   candidate   : key_hash; (* the chosen baker *)
-  value       : nat; (* amount of shares that are used to vote *) 
-  voter       : address; (* the account from which the voting is done *) 
+  value       : nat; (* amount of shares that are used to vote *)
+  voter       : address; (* the account from which the voting is done *)
 ]
 
 type veto_params is record [
-  value       : nat; (* amount of shares that are used to vote against the chosen baker *) 
-  voter       : address; (* the account from which the veto voting is done *) 
+  value       : nat; (* amount of shares that are used to vote against the chosen baker *)
+  voter       : address; (* the account from which the veto voting is done *)
 ]
 
 type dex_action is

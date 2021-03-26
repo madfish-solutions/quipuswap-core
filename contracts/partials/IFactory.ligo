@@ -48,7 +48,7 @@ type set_dex_function_params is record [
 
 type exchange_action is
 | LaunchExchange        of launch_exchange_params (* deploys a new empty Dex for token, stores the address of the new contract, and puts initial liquidity *)
-| SetDexFunction        of set_dex_function_params (* sets the dex specific function. Is used before the whole system is launched *) 
+| SetDexFunction        of set_dex_function_params (* sets the dex specific function. Is used before the whole system is launched *)
 | SetTokenFunction      of set_token_function_params (* sets the FA function, is used before the whole system is launched *)
 
 #if TEST_ENABLED
@@ -59,7 +59,7 @@ const voting_period : int = 2592000; (* seconds between baker rewards distributi
 const accurancy_multiplier : nat = 1000000000000000n; (* used to improve calculations accuracy *)
 const veto_period : int = 7889229; (* seconds to ban the user for *)
 
-type transfer_type is TransferType of transfer_params 
+type transfer_type is TransferType of transfer_params
 
 #if FA2_STANDARD_ENABLED
 const token_func_count : nat = 2n;

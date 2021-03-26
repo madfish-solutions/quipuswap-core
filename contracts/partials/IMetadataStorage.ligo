@@ -13,7 +13,7 @@ type storage is record [
 type return is list (operation) * storage
 
 (* Valid entry points *)
-type storage_action is 
+type storage_action is
 | Update_owners     of update_owner_type (* manage owner permissions *)
 | Update_storage    of metadata_type (* update storage *)
 | Get_metadata      of contract (metadata_type) (* send the storage data to the account *)
