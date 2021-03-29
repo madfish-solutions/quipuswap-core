@@ -380,22 +380,20 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
           const tokens_out : nat = abs(s.token_pool - new_token_pool);
 
           (* ensure requirements *)
-          if tokens_out >= args.min_out (* sutisfy minimal requested amount *)
-          and tokens_out <= s.token_pool / 3n (* not cause a high price impact *)
-          then {
-            (* update token reserves *)
-            s.token_pool := new_token_pool;
+          if tokens_out < args.min_out then failwith("Dex/cant-reach-min-out") else skip; (* satisfy minimal requested amount *)
+          if tokens_out > s.token_pool / 3n then failwith("Dex/price-impact-too-high") else skip; (* not cause a high price impact *)
+          (* update token reserves *)
+          s.token_pool := new_token_pool;
 
-            (* update inariant *)
-            s.invariant := s.tez_pool * new_token_pool;
+          (* update inariant *)
+          s.invariant := s.tez_pool * new_token_pool;
 
-            (* prepare the transfer operation *)
-            operations := transaction(
-              wrap_transfer_trx(this, args.receiver, tokens_out, s),
-              0mutez,
-              get_token_contract(s.token_address)
-            ) # operations;
-          } else failwith("Dex/wrong-out");
+          (* prepare the transfer operation *)
+          operations := transaction(
+            wrap_transfer_trx(this, args.receiver, tokens_out, s),
+            0mutez,
+            get_token_contract(s.token_address)
+          ) # operations;
         } else failwith("Dex/wrong-params")
       }
       | TokenToTezPayment(n) -> skip
@@ -428,14 +426,13 @@ function token_to_tez (const p : dex_action; const s : dex_storage; const this :
           const tez_out : nat = abs(s.tez_pool - new_tez_pool);
 
           (* ensure requirements *)
-          if tez_out >= args.min_out (* minimal XTZ amount out is sutisfied *)
-          and tez_out <= s.tez_pool / 3n (* the price impact isn't to high *)
-          then {
-            (* update XTZ pool *)
-            s.tez_pool := new_tez_pool;
-            (* update exchange invariant *)
-            s.invariant := new_tez_pool * s.token_pool;
-          } else failwith("Dex/wrong-out");
+          if tez_out < args.min_out then failwith("Dex/cant-reach-min-out") else skip;(* minimal XTZ amount out is satisfied *)
+          if tez_out > s.tez_pool / 3n then failwith("Dex/price-impact-too-high") else skip; (* the price impact isn't to high *)
+
+          (* update XTZ pool *)
+          s.tez_pool := new_tez_pool;
+          (* update exchange invariant *)
+          s.invariant := new_tez_pool * s.token_pool;
 
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
           operations := list [transaction(
