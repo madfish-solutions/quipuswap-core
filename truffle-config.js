@@ -31,6 +31,13 @@ module.exports = {
       secretKey: alice.sk,
       type: "tezos",
     },
+    florence: {
+      host: "https://florence-tezos.giganode.io",
+      port: 443,
+      network_id: "*",
+      secretKey: alice.sk,
+      type: "tezos",
+    },
     mainnet: {
       host: "https://mainnet.smartpy.io",
       port: 443,
