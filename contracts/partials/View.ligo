@@ -19,7 +19,7 @@ function get_metadata (const token_id : nat) : token_metadata_info is
       "decimals" -> 0x36;
       "shouldPreferSymbol" -> 0x74727565;
       "description" -> 0x51756970757377617020536861726520506f6f6c20546f6b656e;
-      // "thumbnailUri" -> 0x00;
+      "thumbnailUri" -> 0x68747470733a2f2f7175697075737761702e636f6d2f51504c502e706e67;
     ]
   ]
 

@@ -30,7 +30,9 @@ module.exports = async (deployer, network, accounts) => {
   const metadataStorageInstance = await MetadataStorage.deployed();
   factoryStorage.metadata = MichelsonMap.fromLiteral({
     "": Buffer(
-      metadataStorageInstance.address.toString() + "/metadata",
+      "tezos-storage://" +
+        metadataStorageInstance.address.toString() +
+        "/quipu",
       "ascii"
     ).toString("hex"),
   });
