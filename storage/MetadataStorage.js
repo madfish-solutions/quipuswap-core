@@ -10,7 +10,7 @@ module.exports = {
         version: "v0.0.1",
         description: "Quipuswap Share Pool Token",
         name: "Quipu Token",
-        authors: ["Madfish.Solutions"],
+        authors: ["Madfish.Solutions <info@madfish.solutions>"],
         homepage: "https://quipuswap.com/",
         source: {
           tools: ["Ligo", "Flextesa"],
