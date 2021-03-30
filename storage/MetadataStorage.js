@@ -1,5 +1,6 @@
 const { MichelsonMap } = require("@taquito/michelson-encoder");
 const { alice } = require("../scripts/sandbox/accounts");
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 module.exports = {
   owners: [alice.pkh],
@@ -16,7 +17,7 @@ module.exports = {
           tools: ["Ligo", "Flextesa"],
           location: "https://ligolang.org/",
         },
-        interfaces: ["TZIP-12", "TZIP-16"],
+        interfaces: [standard == "FA2" ? "TZIP-12" : "TZIP-7", "TZIP-16"],
         errors: [],
         views: [
           {
