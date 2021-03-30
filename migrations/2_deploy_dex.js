@@ -32,7 +32,7 @@ module.exports = async (deployer, network, accounts) => {
     "": Buffer(
       "tezos-storage://" +
         metadataStorageInstance.address.toString() +
-        "/metadata",
+        "/quipu",
       "ascii"
     ).toString("hex"),
   });

@@ -32,7 +32,7 @@ module.exports = {
       type: "tezos",
     },
     florence: {
-      host: "https://florence-tezos.giganode.io",
+      host: "https://api.tez.ie/rpc/florencenet",
       port: 443,
       network_id: "*",
       secretKey: alice.sk,

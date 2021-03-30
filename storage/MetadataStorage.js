@@ -4,8 +4,8 @@ const { alice } = require("../scripts/sandbox/accounts");
 module.exports = {
   owners: [alice.pkh],
   metadata: MichelsonMap.fromLiteral({
-    "": Buffer("tezos-storage:here", "ascii").toString("hex"),
-    here: Buffer(
+    "": Buffer("tezos-storage:quipu", "ascii").toString("hex"),
+    quipu: Buffer(
       JSON.stringify({
         version: "v0.0.1",
         description: "Quipuswap Share Pool Token",
