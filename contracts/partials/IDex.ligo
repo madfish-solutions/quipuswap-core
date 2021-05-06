@@ -36,8 +36,8 @@ type dex_storage is record [
 #endif
   tez_pool            : nat; (* tez reserves in the pool *)
   token_pool          : nat; (* token reserves in the pool *)
-  invariant           : nat; (* liquidity invariant *)
   token_address       : address; (* address of the traded asset *)
+  baker_validator     : address; (* address of the traded asset *)
   total_supply        : nat; (* total shares count *)
   ledger              : big_map(address, account_info); (* account info per address *)
   voters              : big_map(address, vote_info); (* voting info per user *)

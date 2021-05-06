@@ -2,6 +2,7 @@ import { execSync } from "child_process";
 import { InMemorySigner } from "@taquito/signer";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import accounts from "../accounts/accounts";
+import { confirmOperation } from "./confirmation";
 export const tezPrecision = 1e6;
 
 export function getLigo(isDockerizedLigo: boolean): string {
@@ -71,6 +72,6 @@ export async function bakeBlocks(count: number) {
       to: await tezos.signer.publicKeyHash(),
       amount: 1,
     });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
   }
 }

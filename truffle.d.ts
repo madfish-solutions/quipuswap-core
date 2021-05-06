@@ -21,12 +21,15 @@ declare interface Contract<T> {
 
 declare interface Artifacts {
   require(name: "MetadataStorage"): Contract<MetadataStorageContractInstance>;
+  require(name: "BakerRegistry"): Contract<BakerRegistryContractInstance>;
   require(name: "TokenFA12"): Contract<TokenContractInstance>;
   require(name: "TokenFA2"): Contract<TokenContractInstance>;
   require(name: "TestFactoryFA12"): Contract<FactoryContractInstance>;
   require(name: "TestFactoryFA2"): Contract<FactoryContractInstance>;
   require(name: "DexFA12"): Contract<DexContractInstance>;
   require(name: "DexFA2"): Contract<DexContractInstance>;
+  require(name: "TTDexFA12"): Contract<DexContractInstance>;
+  require(name: "TTDexFA2"): Contract<DexContractInstance>;
 }
 
 declare interface TokenContractInstance {
@@ -43,6 +46,10 @@ declare interface MetadataStorageContractInstance {
   update_storage(storage: any): any;
   update_owners(amount: boolean, spender: string): any;
   get_metadata(contract: any): any;
+}
+declare interface BakerRegistryContractInstance {
+  address: string;
+  validate(baker: string): any;
 }
 
 declare interface FactoryContractInstance {

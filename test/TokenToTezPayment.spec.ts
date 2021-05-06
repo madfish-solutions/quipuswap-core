@@ -78,7 +78,7 @@ contract("TokenToTezPayment()", function () {
       ].balance;
       const pairTezBalance = await tezos.tz.getBalance(pairAddress);
       strictEqual(
-        bobInitTezBalance.toNumber() + xtzAmount + tezLeftover,
+        bobInitTezBalance.toNumber() + xtzAmount,
         bobFinalTezBalance.toNumber()
       );
       strictEqual(
@@ -103,11 +103,6 @@ contract("TokenToTezPayment()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         prevStorage.token_pool.toNumber() + tokensAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (prevStorage.token_pool.toNumber() + tokensAmount) *
-          (prevStorage.tez_pool.toNumber() - xtzAmount - tezLeftover)
-      );
     });
   }
 
@@ -128,32 +123,32 @@ contract("TokenToTezPayment()", function () {
       "revert in case of 0 tokens to be swapped",
       1,
       0,
-      "Dex/wrong-params"
+      "Dex/zero-amount-in"
     );
     tokenToTezFailCase(
       "revert in case of 100% of reserves to be swapped",
       1,
       100,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
 
     tokenToTezFailCase(
       "revert in case of 10000% of reserves to be swapped",
       1,
       10000,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
 
-    tokenToTezSuccessCase(
-      "success in case of 1% of reserves to be swapped",
+    tokenToTezFailCase(
+      "revert in case of 1% of reserves to be swapped",
       1,
       1,
-      0
+      "Dex/wrong-min-out"
     );
 
     tokenToTezSuccessCase(
       "success in case of ~30% of reserves to be swapped",
-      24,
+      23,
       31,
       0
     );
@@ -164,25 +159,25 @@ contract("TokenToTezPayment()", function () {
       "reevert in case of 0 XTZ expected",
       0,
       10,
-      "Dex/wrong-params"
+      "Dex/zero-min-amount-out"
     );
     tokenToTezFailCase(
       "revert in case of too many XTZ expected",
-      7,
       10,
-      "Dex/wrong-out"
+      10,
+      "Dex/wrong-min-out"
     );
     tokenToTezSuccessCase(
       "success in case of exact amount of XTZ expected",
-      6,
-      10,
+      5,
+      11,
       0
     );
     tokenToTezSuccessCase(
       "success in case of smaller amount of XTZ expected",
-      3,
+      4,
       10,
-      2
+      0
     );
   });
 });

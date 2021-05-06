@@ -110,11 +110,6 @@ contract("TezToTokenPayment()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         prevStorage.token_pool.toNumber() - tokensAmount - tokensLeftover
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (prevStorage.token_pool.toNumber() - tokensAmount - tokensLeftover) *
-          (prevStorage.tez_pool.toNumber() + xtzAmount)
-      );
     });
   }
 
@@ -135,30 +130,30 @@ contract("TezToTokenPayment()", function () {
       "revert in case of 0 XTZ to be swapped",
       0,
       1,
-      "Dex/wrong-params"
+      "Dex/zero-amount-in"
     );
     tezToTokenFailCase(
       "revert in case of 100% of reserves to be swapped",
       100,
       1,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
     tezToTokenFailCase(
       "revert in case of 10000% of reserves to be swapped",
       10000,
       1,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
-    tezToTokenSuccessCase(
-      "success in case of 1% of reserves to be swapped",
+    tezToTokenFailCase(
+      "revert in case of 1% of reserves to be swapped",
       1,
       1,
-      0
+      "Dex/wrong-min-out"
     );
     tezToTokenSuccessCase(
       "success in case of ~30% of reserves to be swapped",
       31,
-      24,
+      23,
       0
     );
   });
@@ -168,25 +163,25 @@ contract("TezToTokenPayment()", function () {
       "reevert in case of 0 tokens expected",
       10,
       0,
-      "Dex/wrong-params"
+      "Dex/zero-min-amount-out"
     );
     tezToTokenFailCase(
       "revert in case of too many tokens expected",
       10,
       7,
-      "Dex/wrong-out"
+      "Dex/wrong-min-out"
     );
     tezToTokenSuccessCase(
       "success in case of exact amount of tokens expected",
       10,
-      6,
+      5,
       0
     );
     tezToTokenSuccessCase(
       "success in case of smaller amount of tokens expected",
       10,
       3,
-      2
+      1
     );
   });
 });

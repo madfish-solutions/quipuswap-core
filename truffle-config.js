@@ -25,7 +25,7 @@ module.exports = {
       type: "tezos",
     },
     edonet: {
-      host: "https://testnet-tezos.giganode.io",
+      host: "https://api.tez.ie/rpc/edonet",
       port: 443,
       network_id: "*",
       secretKey: alice.sk,

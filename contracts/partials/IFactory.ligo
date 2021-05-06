@@ -11,6 +11,7 @@ type token_identifier is address
 (* record for factory storage *)
 type exchange_storage is record [
   counter             : nat;
+  baker_validator     : address;
   token_list          : big_map(nat, token_identifier); (* all the tokens list *)
   token_to_exchange   : big_map(token_identifier, address); (* token to exchange pairs *)
   dex_lambdas         : big_map(nat, dex_func); (* map with exchange-related functions code *)

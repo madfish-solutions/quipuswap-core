@@ -1,6 +1,7 @@
 import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
+import { confirmOperation } from "./confirmation";
 import { TokenFA12 } from "./tokenFA12";
 import { DexStorage } from "./types";
 import { tezPrecision } from "./utils";
@@ -30,7 +31,7 @@ export class Dex extends TokenFA12 {
     this.storage = {
       tez_pool: storage.storage.tez_pool,
       token_pool: storage.storage.token_pool,
-      invariant: storage.storage.invariant,
+      baker_validator: storage.storage.baker_validator,
       token_address: storage.storage.token_address,
       total_supply: storage.storage.total_supply,
       last_veto: storage.storage.last_veto,
@@ -74,7 +75,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("initializeExchange", tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -86,7 +87,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("tezToTokenPayment", minTokens, receiver)
       .send({ amount: tezAmount / tezPrecision });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -113,7 +114,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("tokenToTezPayment", tokenAmount, minTezOut, receiver)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return [tokensOperation, operation];
   }
 
@@ -161,7 +162,7 @@ export class Dex extends TokenFA12 {
           .toTransferParams({ amount: middleTezAmount / tezPrecision })
       );
     const operation = await batch.send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return [operation];
   }
 
@@ -189,7 +190,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("investLiquidity", tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -201,7 +202,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("divestLiquidity", tezAmount, tokenAmount, sharesBurned)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -213,7 +214,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("vote", delegate, value, voter)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -221,7 +222,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("veto", value, voter)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -229,7 +230,7 @@ export class Dex extends TokenFA12 {
     const operation = await this.contract.methods
       .use("withdrawProfit", receiver)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -239,7 +240,7 @@ export class Dex extends TokenFA12 {
       amount: amount,
       mutez: true,
     });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -251,7 +252,7 @@ export class Dex extends TokenFA12 {
     let tokenAddress = this.storage.token_address;
     let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods.approve(address, tokenAmount).send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 }

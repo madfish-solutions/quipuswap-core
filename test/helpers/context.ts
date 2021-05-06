@@ -16,6 +16,7 @@ import { TezosToolkit } from "@taquito/taquito";
 
 let tokenStorage, CDex, CToken, CFactory;
 type Dex = DexFA12 | DexFA2;
+const BakerRegistry = artifacts.require("BakerRegistry");
 if (standard == "FA12") {
   tokenStorage = tokenFA12Storage;
   CDex = artifacts.require("DexFA12");
@@ -50,6 +51,10 @@ export class Context {
     let config = await prepareProviderOptions(accountName);
     tezos = new TezosToolkit(tezos.rpc.url);
     tezos.setProvider(config);
+
+    factoryStorage.baker_validator = (
+      await BakerRegistry.deployed()
+    ).address.toString();
 
     const currentBlock = await tezos.rpc.getBlock();
     let factoryInstance = useDeployedFactory

@@ -1,4 +1,5 @@
 #include "./IFactory.ligo"
+#include "./Common.ligo"
 #include "./MethodDex.ligo"
 
 (* Michelson code snipped to deploy the Exchange Pair code.
@@ -53,7 +54,7 @@ const create_dex : create_dex_func =
 #endif
       tez_pool = Tezos.amount / 1mutez;
       token_pool = token_amount;
-      invariant = Tezos.amount / 1mutez * token_amount;
+      baker_validator = s.baker_validator;
       total_supply = Tezos.amount / 1mutez;
 #if FA2_STANDARD_ENABLED
       token_address = token.0;

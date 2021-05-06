@@ -1,4 +1,4 @@
-name: Testing Pipeline
+name: QS Testing Pipeline
 
 on:
   push:

@@ -1,11 +1,11 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
-const Factory = artifacts.require("Factory" + standard);
+const TTDex = artifacts.require("TTDex" + standard);
 const MetadataStorage = artifacts.require("MetadataStorage");
-const factoryStorage = require("../storage/Factory");
+const dexStorage = require("../storage/TTDex");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 const { MichelsonMap } = require("@taquito/michelson-encoder");
-const { dexFunctions, tokenFunctions } = require("../storage/Functions");
+const { dexFunctions, tokenFunctions } = require("../storage/TTFunctions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + standard);
 const tokenStorage = require("../storage/Token" + standard);
@@ -28,7 +28,7 @@ module.exports = async (deployer, network, accounts) => {
   });
 
   const metadataStorageInstance = await MetadataStorage.deployed();
-  factoryStorage.metadata = MichelsonMap.fromLiteral({
+  dexStorage.metadata = MichelsonMap.fromLiteral({
     "": Buffer(
       "tezos-storage://" +
         metadataStorageInstance.address.toString() +
@@ -36,38 +36,38 @@ module.exports = async (deployer, network, accounts) => {
       "ascii"
     ).toString("hex"),
   });
-  await deployer.deploy(Factory, factoryStorage);
-  const factoryInstance = await Factory.deployed();
-  console.log(`Factory address: ${factoryInstance.address}`);
+  await deployer.deploy(TTDex, dexStorage);
+  const dexInstance = await TTDex.deployed();
+  console.log(`TTDex address: ${dexInstance.address}`);
 
   const ligo = getLigo(true);
 
   for (dexFunction of dexFunctions) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
-      to: factoryInstance.address,
+      to: dexInstance.address,
       amount: 0,
       parameter: {
         entrypoint: "setDexFunction",
-        value: JSON.parse(stdout.toString()).args[0].args[0],
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0],
       },
     });
     await operation.confirmation();
   }
   for (tokenFunction of tokenFunctions[standard]) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Factory${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
-      to: factoryInstance.address,
+      to: dexInstance.address,
       amount: 0,
       parameter: {
         entrypoint: "setTokenFunction",
-        value: JSON.parse(stdout.toString()).args[0],
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0],
       },
     });
     await operation.confirmation();
@@ -83,32 +83,40 @@ module.exports = async (deployer, network, accounts) => {
     console.log(`Token 1 address: ${token0Instance.address}`);
     console.log(`Token 2 address: ${token1Instance.address}`);
 
+    const dex = await tezos.contract.at(dexInstance.address.toString());
+    const ordered =
+      token0Instance.address.toString() < token1Instance.address.toString();
     if (standard === "FA12") {
       let operation = await token0Instance.methods
-        .approve(factoryInstance.address.toString(), initialTokenAmount)
+        .approve(dexInstance.address.toString(), initialTokenAmount)
         .send();
       await operation.confirmation();
       operation = await token1Instance.methods
-        .approve(factoryInstance.address.toString(), initialTokenAmount)
+        .approve(dexInstance.address.toString(), initialTokenAmount)
         .send();
       await operation.confirmation();
-      await factoryInstance.launchExchange(
-        token0Instance.address.toString(),
-        initialTokenAmount,
-        { amount: initialTezAmount }
-      );
-      await factoryInstance.launchExchange(
-        token1Instance.address.toString(),
-        initialTokenAmount,
-        { amount: initialTezAmount }
-      );
+
+      operation = await dex.methods
+        .use(
+          "initializeExchange",
+          ordered
+            ? token0Instance.address.toString()
+            : token1Instance.address.toString(),
+          ordered
+            ? token1Instance.address.toString()
+            : token0Instance.address.toString(),
+          initialTokenAmount,
+          initialTokenAmount
+        )
+        .send();
+      await operation.confirmation();
     } else {
       let operation = await token0Instance.methods
         .update_operators([
           {
             add_operator: {
               owner: accounts[0],
-              operator: factoryInstance.address.toString(),
+              operator: dexInstance.address.toString(),
               token_id: defaultTokenId,
             },
           },
@@ -120,25 +128,35 @@ module.exports = async (deployer, network, accounts) => {
           {
             add_operator: {
               owner: accounts[0],
-              operator: factoryInstance.address.toString(),
+              operator: dexInstance.address.toString(),
               token_id: defaultTokenId,
             },
           },
         ])
         .send();
       await operation.confirmation();
-      await factoryInstance.launchExchange(
-        token0Instance.address.toString(),
-        defaultTokenId,
-        initialTokenAmount,
-        { amount: initialTezAmount }
-      );
-      await factoryInstance.launchExchange(
-        token1Instance.address.toString(),
-        defaultTokenId,
-        initialTokenAmount,
-        { amount: initialTezAmount }
-      );
+      let pair = {
+        token_a_address: token0Instance.address.toString(),
+        token_b_address: token1Instance.address.toString(),
+        token_a_id: 0,
+        token_b_id: 0,
+      };
+      operation = await dex.methods
+        .use(
+          "initializeExchange",
+          ordered
+            ? token0Instance.address.toString()
+            : token1Instance.address.toString(),
+          0,
+          ordered
+            ? token1Instance.address.toString()
+            : token0Instance.address.toString(),
+          0,
+          initialTokenAmount,
+          initialTokenAmount
+        )
+        .send();
+      await operation.confirmation();
     }
   }
 };

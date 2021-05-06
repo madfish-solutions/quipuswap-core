@@ -1,109 +1,3 @@
-
-(* Helper function to get account *)
-function get_account (const addr : address; const s : dex_storage) : account_info is
-  case s.ledger[addr] of
-    None -> record [
-      balance    = 0n;
-      frozen_balance   = 0n;
-#if FA2_STANDARD_ENABLED
-      allowances = (set [] : set (address));
-#else
-      allowances = (map [] : map(address, nat));
-#endif
-    ]
-  | Some(instance) -> instance
-  end;
-
-(* Helper function to prepare the token transfer *)
-function wrap_transfer_trx(const owner : address; const receiver : address; const value : nat; const s : dex_storage) : transfer_type is
-#if FA2_STANDARD_ENABLED
-  TransferType(list[
-    record[
-      from_ = owner;
-      txs = list [ record [
-          to_ = receiver;
-          token_id = s.token_id;
-          amount = value;
-        ] ]
-    ]
-  ])
-#else
-  TransferType(owner, (receiver, value))
-#endif
-
-(* Helper function to get token contract *)
-function get_token_contract(const token_address : address) : contract(transfer_type) is
-  case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type))) of
-    Some(contr) -> contr
-    | None -> (failwith("Dex/not-token") : contract(transfer_type))
-  end;
-
-(* Helper function to get voter info *)
-function get_voter (const addr : address; const s : dex_storage) : vote_info is
-  case s.voters[addr] of
-    None -> record [
-      candidate    = (None : option(key_hash));
-      vote         = 0n;
-      veto         = 0n;
-      last_veto    = Tezos.now;
-    ]
-  | Some(instance) -> instance
-  end;
-
-(* Helper function to get user reward info *)
-function get_user_reward_info (const addr : address; const s : dex_storage) : user_reward_info is
-  case s.user_rewards[addr] of
-    None -> record [
-      reward         = 0n;
-      reward_paid    = 0n;
-    ]
-  | Some(instance) -> instance
-  end;
-
-
-(* Helper function to update global rewards info *)
-function update_reward (const s : dex_storage) : dex_storage is
-  block {
-    (* update loyalty info *)
-    const rewards_time : timestamp = if Tezos.now > s.period_finish then
-      s.period_finish
-    else Tezos.now;
-    const new_reward : nat = abs(rewards_time - s.last_update_time) * s.reward_per_sec;
-    s.reward_per_share := s.reward_per_share + new_reward / s.total_supply;
-    s.last_update_time := Tezos.now;
-
-    (* update reward info *)
-    if Tezos.now > s.period_finish then block {
-      const periods_duration : int = ((Tezos.now - s.period_finish) / voting_period + 1) * voting_period;
-      s.reward_per_sec :=  s.reward * accurancy_multiplier / abs(periods_duration);
-      const new_reward : nat = abs(Tezos.now - s.period_finish) * s.reward_per_sec;
-      s.period_finish := s.period_finish + periods_duration;
-      s.reward_per_share := s.reward_per_share + new_reward / s.total_supply;
-      s.reward := 0n;
-      s.total_reward := s.total_reward + s.reward_per_sec * abs(periods_duration) / accurancy_multiplier;
-    } else skip;
-  } with s
-
-(* Helper function to update user rewards info *)
-function update_user_reward (const addr : address; const account: account_info; const new_balance: nat; const s : dex_storage) : dex_storage is
-  block {
-    var user_reward_info : user_reward_info := get_user_reward_info(addr, s);
-
-    (* calculate user's reward *)
-    const current_reward : nat = (account.balance + account.frozen_balance) * s.reward_per_share;
-    user_reward_info.reward := user_reward_info.reward + abs(current_reward - user_reward_info.reward_paid);
-    user_reward_info.reward_paid := new_balance * s.reward_per_share;
-
-    (* update user's reward *)
-    s.user_rewards[addr] := user_reward_info;
-  } with s
-
-#if FA2_STANDARD_ENABLED
-#include "../partials/MethodFA2.ligo"
-#else
-#include "../partials/MethodFA12.ligo"
-#endif
-
 (* Initialize exchange after the previous liquidity was drained *)
 function initialize_exchange (const p : dex_action ; const s : dex_storage ; const this: address) :  return is
   block {
@@ -111,17 +5,17 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
       case p of
         | InitializeExchange(token_amount) -> {
           (* check preconditions *)
-          if s.invariant =/= 0n (* no reserves *)
-            or s.total_supply =/= 0n  (* no shares owned *)
-            or Tezos.amount < 1mutez (* XTZ provided *)
-            or token_amount < 1n (* tokens provided *)
-          then
-            failwith("Dex/not-allowed")
-          else skip;
+          if s.tez_pool * s.token_pool =/= 0n (* no reserves *)
+          then failwith("Dex/non-zero-reserves") else skip;
+          if s.total_supply =/= 0n  (* no shares owned *)
+          then failwith("Dex/non-zero-shares") else skip;
+          if Tezos.amount < 1mutez (* XTZ provided *)
+          then failwith("Dex/no-xtz") else skip;
+          if token_amount < 1n (* tokens provided *)
+          then failwith("Dex/no-tokens") else skip;
 
           s.token_pool := token_amount;
           s.tez_pool := Tezos.amount / 1mutez;
-          s.invariant := s.tez_pool * s.token_pool;
           s.ledger[Tezos.sender] := record [
               balance    = Tezos.amount / 1mutez;
               frozen_balance    = 0n;
@@ -229,19 +123,22 @@ function vote (const p : dex_action; const s : dex_storage; const this: address)
             voter_info.vote := args.value;
             s.voters[args.voter] := voter_info;
 
+            (* update candidates votes *)
+            const prev_votes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end);
+            const new_votes: nat = prev_votes + args.value;
+            s.votes[args.candidate] := new_votes;
+
             (* ensure the candidate is registered baker *)
             if case s.current_delegated of
-              | None -> False
+              | None -> prev_votes =/= 0n
               | Some(delegate) -> args.candidate = delegate
               end
             then skip
             else {
-              operations := list [set_delegate(Some(args.candidate)); set_delegate(s.current_delegated)];
+              operations := list [Tezos.transaction(args.candidate,
+                0mutez,
+                get_validator_contract(s.baker_validator))];
             };
-
-            (* update candidates votes *)
-            const new_votes: nat = (case s.votes[args.candidate] of  None -> 0n | Some(v) -> v end) + args.value;
-            s.votes[args.candidate] := new_votes;
 
             (* check if current best candidate and delegated should be updated *)
             if args.value =/= 0n and (case s.current_candidate of None -> case s.current_delegated of
@@ -367,36 +264,40 @@ function tez_to_token (const p : dex_action; const s : dex_storage; const this :
       | InitializeExchange(n) -> skip
       | TezToTokenPayment(args) -> {
         (* ensure *)
-        if Tezos.amount / 1mutez > 0n (* XTZ sent *)
-        and args.min_out > 0n (* minimal amount is non-zero *)
-        then block {
-          (* update XTZ reserves *)
-          s.tez_pool := s.tez_pool + Tezos.amount / 1mutez;
+        if Tezos.amount / 1mutez > 0n (* non-zero amount of tokens exchanged *)
+        then skip
+        else failwith ("Dex/zero-amount-in");
 
-          (* calculate new token reserves *)
-          const new_token_pool : nat = s.invariant / abs(s.tez_pool - Tezos.amount / 1mutez / fee_rate);
+        if args.min_out > 0n (* non-zero amount of tokens exchanged *)
+        then skip
+        else failwith ("Dex/zero-min-amount-out");
 
-          (* calculate swapped token amount *)
-          const tokens_out : nat = abs(s.token_pool - new_token_pool);
+        (* calculate amount out *)
+        const tez_in_with_fee : nat = Tezos.amount / 1mutez * 997n;
+        const numerator : nat = tez_in_with_fee * s.token_pool;
+        const denominator : nat = s.tez_pool * 1000n + tez_in_with_fee;
 
-          (* ensure requirements *)
-          if tokens_out >= args.min_out (* sutisfy minimal requested amount *)
-          and tokens_out <= s.token_pool / 3n (* not cause a high price impact *)
-          then {
-            (* update token reserves *)
-            s.token_pool := new_token_pool;
+        (* calculate swapped token amount *)
+        const tokens_out : nat = numerator / denominator;
 
-            (* update inariant *)
-            s.invariant := s.tez_pool * new_token_pool;
+        (* ensure requirements *)
+        if tokens_out >= args.min_out (* sutisfy minimal requested amount *)
+        then skip else failwith("Dex/wrong-min-out");
 
-            (* prepare the transfer operation *)
-            operations := transaction(
-              wrap_transfer_trx(this, args.receiver, tokens_out, s),
-              0mutez,
-              get_token_contract(s.token_address)
-            ) # operations;
-          } else failwith("Dex/wrong-out");
-        } else failwith("Dex/wrong-params")
+        if tokens_out > s.token_pool / 3n (* not cause a high price impact *)
+        then failwith("Dex/high-out")
+        else skip;
+
+        (* update reserves *)
+        s.token_pool := abs(s.token_pool - tokens_out);
+        s.tez_pool := s.tez_pool + Tezos.amount / 1mutez;
+
+        (* prepare the transfer operation *)
+        operations := Tezos.transaction(
+          wrap_transfer_trx(this, args.receiver, tokens_out, s),
+          0mutez,
+          get_token_contract(s.token_address)
+        ) # operations;
       }
       | TokenToTezPayment(n) -> skip
       | InvestLiquidity(n) -> skip
@@ -415,39 +316,43 @@ function token_to_tez (const p : dex_action; const s : dex_storage; const this :
       | InitializeExchange(n) -> skip
       | TezToTokenPayment(n) -> skip
       | TokenToTezPayment(args) -> {
+        (* ensure *)
         if args.amount > 0n (* non-zero amount of tokens exchanged *)
-        and args.min_out > 0n (* minimal amount out is non-zero *)
-        then {
-          (* update token reserves *)
-          s.token_pool := s.token_pool + args.amount;
+        then skip
+        else failwith ("Dex/zero-amount-in");
 
-          (* calculate new XTZ reserves *)
-          const new_tez_pool : nat = s.invariant / abs(s.token_pool - args.amount / fee_rate);
+        if args.min_out > 0n (* non-zero amount of tokens exchanged *)
+        then skip
+        else failwith ("Dex/zero-min-amount-out");
 
-          (* calculate amount out *)
-          const tez_out : nat = abs(s.tez_pool - new_tez_pool);
+        (* calculate amount out *)
+        const token_in_with_fee : nat = args.amount * 997n;
+        const numerator : nat = token_in_with_fee * s.tez_pool;
+        const denominator : nat = s.token_pool * 1000n + token_in_with_fee;
+        const tez_out : nat = numerator / denominator;
 
-          (* ensure requirements *)
-          if tez_out >= args.min_out (* minimal XTZ amount out is sutisfied *)
-          and tez_out <= s.tez_pool / 3n (* the price impact isn't to high *)
-          then {
-            (* update XTZ pool *)
-            s.tez_pool := new_tez_pool;
-            (* update exchange invariant *)
-            s.invariant := new_tez_pool * s.token_pool;
-          } else failwith("Dex/wrong-out");
+        (* ensure requirements *)
+        if tez_out >= args.min_out (* sutisfy minimal requested amount *)
+        then skip
+        else failwith("Dex/wrong-min-out");
+        if tez_out <= s.tez_pool / 3n (* not cause a high price impact *)
+        then skip
+        else failwith("Dex/high-out");
 
-          (* prepare operations to withdraw user's tokens and transfer XTZ *)
-          operations := list [transaction(
-              wrap_transfer_trx(Tezos.sender, this, args.amount, s),
-              0mutez,
-              get_token_contract(s.token_address));
-            transaction(
-              unit,
-              tez_out * 1mutez,
-              (get_contract(args.receiver) : contract(unit)));
-          ];
-        } else failwith("Dex/wrong-params");
+        (* update reserves *)
+        s.token_pool := s.token_pool + args.amount;
+        s.tez_pool := abs(s.tez_pool - tez_out);
+
+        (* prepare operations to withdraw user's tokens and transfer XTZ *)
+        operations := list [Tezos.transaction(
+            wrap_transfer_trx(Tezos.sender, this, args.amount, s),
+            0mutez,
+            get_token_contract(s.token_address));
+          Tezos.transaction(
+            unit,
+            tez_out * 1mutez,
+            (get_contract(args.receiver) : contract(unit)));
+        ];
       }
       | InvestLiquidity(n) -> skip
       | DivestLiquidity(n) -> skip
@@ -467,16 +372,11 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
       | TokenToTezPayment(n) -> skip
       | InvestLiquidity(max_tokens) -> {
         (* ensure there is liquidity *)
-        if s.invariant > 0n then
+        if s.tez_pool * s.token_pool > 0n then
           skip
         else failwith("Dex/not-launched");
 
-        const shares_via_tez : nat = Tezos.amount / 1mutez * s.total_supply / s.tez_pool;
-        const shares_purchased : nat = max_tokens * s.total_supply / s.token_pool;
-
-        if shares_via_tez < shares_purchased then
-          shares_purchased := shares_via_tez;
-        else skip;
+        const shares_purchased : nat = Tezos.amount / 1mutez * s.total_supply / s.tez_pool;
 
         (* ensure *)
         if shares_purchased > 0n (* purchsed shares satisfy required minimum *)
@@ -488,44 +388,31 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
 
         (* calculate tokens to be withdrawn *)
         const tokens_required : nat = shares_purchased * s.token_pool / s.total_supply;
-        const tez_required : nat = shares_purchased * s.tez_pool / s.total_supply;
 
         (* ensure *)
-        if tokens_required = 0n (* providing liquidity won't impact on price *)
-        or tez_required = 0n (* providing liquidity won't impact on price *)
-        or tokens_required > max_tokens (* required tokens doesn't exceed max allowed by user *)
-        or tez_required > Tezos.amount / 1mutez (* required tez doesn't exceed max allowed by user *)
-        then
-          failwith("Dex/dangerous-rate")
-        else {
-          var account : account_info := get_account(Tezos.sender, s);
-          const share : nat = account.balance;
+        if tokens_required = 0n (* required tokens doesn't exceed max allowed by user *)
+        then failwith("Dex/zero-tokens-in") else skip;
+        if tokens_required > max_tokens (* required tez doesn't exceed max allowed by user *)
+        then failwith("Dex/low-max-token-in") else skip;
 
-          (* update user's loyalty and shares *)
-          s := update_user_reward(Tezos.sender, account, share + shares_purchased + account.frozen_balance, s);
+        var account : account_info := get_account(Tezos.sender, s);
+        const share : nat = account.balance;
 
-          (* update user rewards *)
-          if tez_required < Tezos.amount / 1mutez then {
-            var user_reward_info : user_reward_info := get_user_reward_info(Tezos.sender, s);
-            user_reward_info.reward := user_reward_info.reward + abs(Tezos.amount / 1mutez - tez_required) * accurancy_multiplier;
-            s.user_rewards[Tezos.sender] := user_reward_info;
-          } else skip;
+        (* update user's loyalty and shares *)
+        s := update_user_reward(Tezos.sender, account, share + shares_purchased + account.frozen_balance, s);
 
-          (* update user's shares *)
-          account.balance := share + shares_purchased;
-          s.ledger[Tezos.sender] := account;
+        (* update user's shares *)
+        account.balance := share + shares_purchased;
+        s.ledger[Tezos.sender] := account;
 
-          (* update reserves *)
-          s.tez_pool := s.tez_pool + tez_required;
-          s.token_pool := s.token_pool + tokens_required;
+        (* update reserves *)
+        s.tez_pool := s.tez_pool + Tezos.amount / 1mutez;
+        s.token_pool := s.token_pool + tokens_required;
 
-          (* update invarianе *)
-          s.invariant := s.tez_pool * s.token_pool;
-
-          (* update total number of shares *)
-          s.total_supply := s.total_supply + shares_purchased;
-        };
-        operations := list[transaction(wrap_transfer_trx(Tezos.sender, this, tokens_required, s),
+        (* update total number of shares *)
+        s.total_supply := s.total_supply + shares_purchased;
+        operations := list[Tezos.transaction(
+          wrap_transfer_trx(Tezos.sender, this, tokens_required, s),
           0mutez,
           get_token_contract(s.token_address)
         )];
@@ -548,62 +435,63 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       | InvestLiquidity(min_shares) -> skip
       | DivestLiquidity(args) -> {
         (* ensure there is liquidity *)
-        if s.invariant > 0n then
+        if s.tez_pool * s.token_pool > 0n then
           skip
         else failwith("Dex/not-launched");
         var account : account_info := get_account(Tezos.sender, s);
         const share : nat = account.balance;
+
         (* ensure *)
         if args.shares > 0n (* minimal burn's shares are non-zero *)
-        and args.shares <= share (* burnt shares are lower than liquid balance *)
-        then block {
-          (* update loyalty and rewards globaly *)
-          s := update_reward(s);
+          then skip
+        else failwith("Dex/zero-burn-shares");
+        if args.shares <= share (* burnt shares are lower than liquid balance *)
+          then skip
+        else failwith("Dex/insufficient-shares");
 
-          (* update user's loyalty and shares *)
-          s := update_user_reward(Tezos.sender, account, abs(share - args.shares) + account.frozen_balance,s);
+        (* update loyalty and rewards globaly *)
+        s := update_reward(s);
 
-          (* update users shares *)
-          account.balance := abs(share - args.shares);
-          s.ledger[Tezos.sender] := account;
+        (* update user's loyalty and shares *)
+        s := update_user_reward(Tezos.sender, account, abs(share - args.shares) + account.frozen_balance,s);
 
-          (* calculate amount of token's sent to user *)
-          const tez_divested : nat = s.tez_pool * args.shares / s.total_supply;
-          const tokens_divested : nat = s.token_pool * args.shares / s.total_supply;
+        (* update users shares *)
+        account.balance := abs(share - args.shares);
+        s.ledger[Tezos.sender] := account;
 
-          (* ensure minimal amounts out are non-zero *)
-          if args.min_tez > 0n and args.min_tokens > 0n then
-            skip
-          else failwith("Dex/dust-output");
+        (* calculate amount of token's sent to user *)
+        const tez_divested : nat = s.tez_pool * args.shares / s.total_supply;
+        const tokens_divested : nat = s.token_pool * args.shares / s.total_supply;
 
-          (* ensure minimal amounts are satisfied *)
-          if tez_divested >= args.min_tez and tokens_divested >= args.min_tokens then
-            skip
-          else failwith("Dex/high-expectation");
+        (* ensure minimal amounts out are non-zero *)
+        if args.min_tez > 0n and args.min_tokens > 0n then
+          skip
+        else failwith("Dex/dust-output");
 
-          (* update total shares *)
-          s.total_supply := abs(s.total_supply - args.shares);
+        (* ensure minimal amounts are satisfied *)
+        if tez_divested >= args.min_tez and tokens_divested >= args.min_tokens then
+          skip
+        else failwith("Dex/high-expectation");
 
-          (* update reserves *)
-          s.tez_pool := abs(s.tez_pool - tez_divested);
-          s.token_pool := abs(s.token_pool - tokens_divested);
+        (* update total shares *)
+        s.total_supply := abs(s.total_supply - args.shares);
 
-          (* update invariant *)
-          s.invariant := if s.total_supply = 0n then 0n; else s.tez_pool * s.token_pool;
+        (* update reserves *)
+        s.tez_pool := abs(s.tez_pool - tez_divested);
+        s.token_pool := abs(s.token_pool - tokens_divested);
 
-          (* prepare operations with XTZ and tokens to user *)
-          operations := list [
-            transaction(
-              wrap_transfer_trx(this, Tezos.sender, tokens_divested, s),
-              0mutez,
-              get_token_contract(s.token_address)
-            );
-            transaction(
-              unit,
-              tez_divested * 1mutez,
-              (get_contract(Tezos.sender) : contract(unit)));
-          ];
-        } else failwith("Dex/wrong-params");
+        (* prepare operations with XTZ and tokens to user *)
+        operations := list [
+          Tezos.transaction(
+            wrap_transfer_trx(this, Tezos.sender, tokens_divested, s),
+            0mutez,
+            get_token_contract(s.token_address)
+          );
+          Tezos.transaction(
+            unit,
+            tez_divested * 1mutez,
+            (get_contract(Tezos.sender) : contract(unit)));
+        ];
       }
       | Vote(n) -> skip
       | Veto(voter) -> skip
@@ -648,7 +536,7 @@ function withdraw_profit (const p : dex_action; const s : dex_storage; const thi
         const reward : nat = user_reward_info.reward;
 
         (* reset user's reward *)
-        user_reward_info.reward := 0n;
+        user_reward_info.reward := abs (reward - reward / accurancy_multiplier * accurancy_multiplier);
         s.user_rewards[Tezos.sender] := user_reward_info;
 
         (* update total paid rewards *)
@@ -656,7 +544,7 @@ function withdraw_profit (const p : dex_action; const s : dex_storage; const thi
 
         (* prepare transfer operations if there are tokens to sent *)
         if reward >= accurancy_multiplier then {
-          operations := list [transaction(
+          operations := list [Tezos.transaction(
             unit,
             reward / accurancy_multiplier * 1mutez,
             (get_contract(receiver) : contract(unit)))];

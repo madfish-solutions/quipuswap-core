@@ -113,7 +113,7 @@ contract("RewardsDistribution()", function () {
         expectedRewardPaid.toString()
       );
       if (rewardWithdrawn) {
-        strictEqual(finalUserRewards.reward.toString(), "0");
+        ok(finalUserRewards.reward.lt(new BigNumber("1000000000000000")));
         const realReward = expectedUserReward
           .div(accuracy)
           .integerValue(BigNumber.ROUND_DOWN);

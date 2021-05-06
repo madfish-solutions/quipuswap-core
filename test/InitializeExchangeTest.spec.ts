@@ -122,10 +122,6 @@ contract("InitializeExchange()", function () {
       strictEqual(context.pairs[0].storage.total_supply.toNumber(), tezAmount);
       strictEqual(context.pairs[0].storage.tez_pool.toNumber(), tezAmount);
       strictEqual(context.pairs[0].storage.token_pool.toNumber(), tokenAmount);
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        tokenAmount * tezAmount
-      );
       strictEqual(context.pairs[0].storage.token_address, tokenAddress);
     });
 
@@ -154,7 +150,11 @@ contract("InitializeExchange()", function () {
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, tezAmount),
         (err) => {
-          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          strictEqual(
+            err.message,
+            "Dex/non-zero-reserves",
+            "Error message mismatch"
+          );
           return true;
         }
       );
@@ -223,10 +223,6 @@ contract("InitializeExchange()", function () {
       strictEqual(context.pairs[0].storage.total_supply.toNumber(), tezAmount);
       strictEqual(context.pairs[0].storage.tez_pool.toNumber(), tezAmount);
       strictEqual(context.pairs[0].storage.token_pool.toNumber(), tokenAmount);
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        tokenAmount * tezAmount
-      );
       strictEqual(context.pairs[0].storage.token_address, tokenAddress);
     });
 
@@ -234,7 +230,11 @@ contract("InitializeExchange()", function () {
       await rejects(
         context.pairs[0].initializeExchange(0, tezAmount),
         (err) => {
-          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          strictEqual(
+            err.message,
+            "Dex/non-zero-reserves",
+            "Error message mismatch"
+          );
           return true;
         }
       );
@@ -244,7 +244,11 @@ contract("InitializeExchange()", function () {
       await rejects(
         context.pairs[0].initializeExchange(tokenAmount, 0),
         (err) => {
-          strictEqual(err.message, "Dex/not-allowed", "Error message mismatch");
+          strictEqual(
+            err.message,
+            "Dex/non-zero-reserves",
+            "Error message mismatch"
+          );
           return true;
         }
       );
