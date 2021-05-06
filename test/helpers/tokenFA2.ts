@@ -1,5 +1,6 @@
 import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
+import { confirmOperation } from "./confirmation";
 import { Token } from "./token";
 import { TokenStorage } from "./types";
 import { prepareProviderOptions } from "./utils";
@@ -69,7 +70,7 @@ export class TokenFA2 implements Token {
       ])
       .send();
 
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -96,7 +97,7 @@ export class TokenFA2 implements Token {
     let operation = await this.contract.methods
       .balance_of({ requests, contract })
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -104,7 +105,7 @@ export class TokenFA2 implements Token {
     let operation = await this.contract.methods
       .token_metadata_registry(receiver)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -127,7 +128,7 @@ export class TokenFA2 implements Token {
         })
       )
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 }

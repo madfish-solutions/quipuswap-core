@@ -87,10 +87,6 @@ contract("DivestLiquidity()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         initToken - receivedTokenAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initToken - receivedTokenAmount) * (initTez - receivedTezAmount)
-      );
     });
   });
 
@@ -99,14 +95,14 @@ contract("DivestLiquidity()", function () {
 
     it("revert in case of 0 burnt shares", async function () {
       await rejects(context.pairs[0].divestLiquidity(1, 1, 0), (err) => {
-        ok(err.message == "Dex/wrong-params", "Error message mismatch");
+        ok(err.message == "Dex/zero-burn-shares", "Error message mismatch");
         return true;
       });
     });
 
     it("revert in case of too high expected burnt shares", async function () {
       await rejects(context.pairs[0].divestLiquidity(1, 1, 20000), (err) => {
-        ok(err.message == "Dex/wrong-params", "Error message mismatch");
+        ok(err.message == "Dex/insufficient-shares", "Error message mismatch");
         return true;
       });
     });
@@ -168,11 +164,6 @@ contract("DivestLiquidity()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() - minReceivedTokenAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() - minReceivedTokenAmount) *
-          (initialStorage.tez_pool.toNumber() - minReceivedTezAmount)
-      );
     });
 
     it("success in case the medium burnt shares", async function () {
@@ -232,11 +223,6 @@ contract("DivestLiquidity()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() - minReceivedTokenAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() - minReceivedTokenAmount) *
-          (initialStorage.tez_pool.toNumber() - minReceivedTezAmount)
-      );
     });
 
     it("success in case of exact burnt shares", async function () {
@@ -289,7 +275,6 @@ contract("DivestLiquidity()", function () {
       strictEqual(context.pairs[0].storage.total_supply.toNumber(), 0);
       strictEqual(context.pairs[0].storage.tez_pool.toNumber(), 0);
       strictEqual(context.pairs[0].storage.token_pool.toNumber(), 0);
-      strictEqual(context.pairs[0].storage.invariant.toNumber(), 0);
     });
   });
 
@@ -429,11 +414,6 @@ contract("DivestLiquidity()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() - minReceivedTokenAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() - minReceivedTokenAmount) *
-          (initialStorage.tez_pool.toNumber() - minReceivedTezAmount)
-      );
     });
 
     it("success in case the of the exact expected tez and tokens", async function () {
@@ -496,11 +476,6 @@ contract("DivestLiquidity()", function () {
       strictEqual(
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() - minReceivedTokenAmount
-      );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() - minReceivedTokenAmount) *
-          (initialStorage.tez_pool.toNumber() - minReceivedTezAmount)
       );
     });
   });

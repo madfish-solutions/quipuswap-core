@@ -1,9 +1,32 @@
 import BigNumber from "bignumber.js";
 
+export declare type TokenInfo = {
+  token_a_address: string;
+  token_b_address: string;
+  token_a_id?: BigNumber;
+  token_b_id?: BigNumber;
+};
+
+export declare type PairInfo = {
+  token_a_pool: BigNumber;
+  token_b_pool: BigNumber;
+  total_supply: BigNumber;
+};
+
+export declare type TTDexStorage = {
+  dex_lambdas: { [key: string]: any };
+  token_lambdas: { [key: string]: any };
+  pairs_count: BigNumber;
+  tokens: { [key: string]: TokenInfo };
+  token_to_id: { [key: string]: BigNumber };
+  pairs: { [key: string]: PairInfo };
+  ledger: { [key: string]: AccountInfo };
+};
+
 export declare type DexStorage = {
   tez_pool: BigNumber;
   token_pool: BigNumber;
-  invariant: BigNumber;
+  baker_validator: string;
   token_address: string;
   total_supply: BigNumber;
   ledger: { [key: string]: AccountInfo };
@@ -36,7 +59,7 @@ export declare type UserRewardInfo = {
 
 export declare type AccountInfo = {
   balance: BigNumber;
-  frozen_balance: BigNumber;
+  frozen_balance?: BigNumber;
   allowances: { [key: string]: BigNumber };
 };
 
@@ -53,11 +76,12 @@ export declare type VoteInfo = {
 };
 
 export declare type TokenStorage = {
-  total_supply: BigNumber;
+  total_supply?: BigNumber;
   ledger: { [key: string]: AccountTokenInfo };
 };
 
 export declare type FactoryStorage = {
+  baker_validator: string;
   token_list: string[];
   token_to_exchange: { [key: string]: string };
   dex_lambdas: { [key: number]: any };

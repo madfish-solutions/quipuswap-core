@@ -87,10 +87,6 @@ contract("InvestLiquidity()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         initToken + tokenAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initToken + tokenAmount) * (initTez + tezAmount)
-      );
     });
   });
 
@@ -150,11 +146,6 @@ contract("InvestLiquidity()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() + tokenAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() + tokenAmount) *
-          (initialStorage.tez_pool.toNumber() + tezAmount)
-      );
     });
 
     it("success in case of exact min shares", async function () {
@@ -210,11 +201,6 @@ contract("InvestLiquidity()", function () {
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() + tokenAmount
       );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() + tokenAmount) *
-          (initialStorage.tez_pool.toNumber() + tezAmount)
-      );
     });
 
     it("success in case of medium min shares", async function () {
@@ -269,11 +255,6 @@ contract("InvestLiquidity()", function () {
       strictEqual(
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() + tokenAmount
-      );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() + tokenAmount) *
-          (initialStorage.tez_pool.toNumber() + tezAmount)
       );
     });
   });
@@ -333,11 +314,6 @@ contract("InvestLiquidity()", function () {
       strictEqual(
         context.pairs[0].storage.token_pool.toNumber(),
         initialStorage.token_pool.toNumber() + tokenAmount
-      );
-      strictEqual(
-        context.pairs[0].storage.invariant.toNumber(),
-        (initialStorage.token_pool.toNumber() + tokenAmount) *
-          (initialStorage.tez_pool.toNumber() + tezAmount)
       );
     });
 

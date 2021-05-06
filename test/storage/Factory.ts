@@ -2,6 +2,7 @@ import { MichelsonMap } from "@taquito/michelson-encoder";
 
 export default {
   counter: "0",
+  baker_validator: "tz1ZZZZZZZZZZZZZZZZZZZZZZZZZZZZNkiRg",
   token_list: MichelsonMap.fromLiteral({}),
   token_to_exchange: MichelsonMap.fromLiteral({}),
   dex_lambdas: MichelsonMap.fromLiteral({}),

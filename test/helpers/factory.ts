@@ -4,9 +4,8 @@ import { FactoryStorage } from "./types";
 import { execSync } from "child_process";
 import { getLigo, prepareProviderOptions, tezPrecision } from "./utils";
 import { defaultTokenId } from "./tokenFA2";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
+import { confirmOperation } from "./confirmation";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
-
 export class Factory {
   public contract: ContractAbstraction<ContractProvider>;
   public storage: FactoryStorage;
@@ -53,6 +52,7 @@ export class Factory {
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
+      baker_validator: storage.baker_validator,
       token_list: await this.convertTokensList(
         storage.token_list,
         storage.counter
@@ -111,7 +111,7 @@ export class Factory {
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, defaultTokenId, tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     await this.updateStorage({ token_to_exchange: [tokenAddress] });
     return operation;
   }
@@ -127,7 +127,7 @@ export class Factory {
     const operation = await this.contract.methods
       .launchExchange(tokenAddress, tokenAmount)
       .send({ amount: tezAmount / tezPrecision });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     await this.updateStorage({ token_to_exchange: [tokenAddress] });
     return operation;
   }
@@ -146,7 +146,7 @@ export class Factory {
         value: JSON.parse(stdout.toString()).args[0].args[0],
       },
     });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
   }
 
   async setTokenFunction(index: number, lambdaName: string): Promise<void> {
@@ -163,7 +163,7 @@ export class Factory {
         value: JSON.parse(stdout.toString()).args[0],
       },
     });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
   }
 
   async approveToken(
@@ -193,7 +193,7 @@ export class Factory {
         },
       ])
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
   }
 
   async approveTokenFA12(
@@ -203,6 +203,6 @@ export class Factory {
   ): Promise<void> {
     let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods.approve(address, tokenAmount).send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
   }
 }

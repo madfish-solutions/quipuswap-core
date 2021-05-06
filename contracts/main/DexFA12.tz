@@ -25,8 +25,8 @@
                                               (pair %veto (nat %value) (address %voter)))
                                           (or (pair %vote (pair (key_hash %candidate) (nat %value)) (address %voter))
                                               (address %withdrawProfit))))
-                                  (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                                          (pair (nat %invariant) (timestamp %last_update_time)))
+                                  (pair (pair (pair (pair (pair (address %baker_validator) (option %current_candidate key_hash))
+                                                          (pair (option %current_delegated key_hash) (timestamp %last_update_time)))
                                                     (pair (pair (timestamp %last_veto)
                                                                 (big_map %ledger
                                                                    address
@@ -46,8 +46,8 @@
                                                     (big_map %votes key_hash nat)))))
                             address)
                       (pair (list operation)
-                            (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                                    (pair (nat %invariant) (timestamp %last_update_time)))
+                            (pair (pair (pair (pair (pair (address %baker_validator) (option %current_candidate key_hash))
+                                                    (pair (option %current_delegated key_hash) (timestamp %last_update_time)))
                                               (pair (pair (timestamp %last_veto)
                                                           (big_map %ledger
                                                              address
@@ -67,8 +67,8 @@
                                               (big_map %votes key_hash nat)))))))
                 (big_map %metadata string bytes))
           (pair (pair %storage
-                   (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                     (pair (nat %invariant) (timestamp %last_update_time)))
+                   (pair (pair (pair (pair (address %baker_validator) (option %current_candidate key_hash))
+                                     (pair (option %current_delegated key_hash) (timestamp %last_update_time)))
                                (pair (pair (timestamp %last_veto)
                                            (big_map %ledger
                                               address
@@ -94,8 +94,8 @@
                                           (or (pair %iGetBalance (address %owner) (contract nat))
                                               (pair %iGetTotalSupply unit (contract nat))))
                                       (pair %iTransfer (address %from) (pair (address %to) (nat %value))))
-                                  (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                                          (pair (nat %invariant) (timestamp %last_update_time)))
+                                  (pair (pair (pair (pair (pair (address %baker_validator) (option %current_candidate key_hash))
+                                                          (pair (option %current_delegated key_hash) (timestamp %last_update_time)))
                                                     (pair (pair (timestamp %last_veto)
                                                                 (big_map %ledger
                                                                    address
@@ -115,8 +115,8 @@
                                                     (big_map %votes key_hash nat)))))
                             address)
                       (pair (list operation)
-                            (pair (pair (pair (pair (pair (option %current_candidate key_hash) (option %current_delegated key_hash))
-                                                    (pair (nat %invariant) (timestamp %last_update_time)))
+                            (pair (pair (pair (pair (pair (address %baker_validator) (option %current_candidate key_hash))
+                                                    (pair (option %current_delegated key_hash) (timestamp %last_update_time)))
                                               (pair (pair (timestamp %last_veto)
                                                           (big_map %ledger
                                                              address

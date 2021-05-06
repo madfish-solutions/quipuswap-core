@@ -269,7 +269,7 @@ contract("Vote()", function () {
       await context.pairs[0].transfer(aliceAddress, bobAddress, 5000);
     });
     voteSuccessCase(
-      "success in case of voting for new candidate if there if no delegate",
+      "success in case of voting for new candidate if no delegate",
       "alice",
       aliceAddress,
       aliceAddress,
@@ -283,17 +283,17 @@ contract("Vote()", function () {
       4000
     );
     voteSuccessCase(
-      "success in case of voting for new candidate if there if delegate wit higher votes",
+      "success in case of voting for new candidate if delegate with higher votes",
       "alice",
       aliceAddress,
-      aliceAddress,
+      carolAddress,
       1000
     );
     voteSuccessCase(
       "success in case of voting for new candidate if there is delegate with the same votes",
       "alice",
       aliceAddress,
-      carolAddress,
+      aliceAddress,
       4000
     );
     voteSuccessCase(

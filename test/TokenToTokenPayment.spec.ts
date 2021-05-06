@@ -27,8 +27,8 @@ contract("TokenToTokenPayment()", function () {
   it("should exchnge token to token and update dex state", async function () {
     this.timeout(5000000);
     let tokenAmount = 1000;
-    let middleTezAmount = 10;
-    let minTokensOut = 5;
+    let middleTezAmount = 9;
+    let minTokensOut = 4;
 
     let firstDexContract = context.pairs[0].contract;
     let secondDexContract = context.pairs[1].contract;
@@ -165,14 +165,6 @@ contract("TokenToTokenPayment()", function () {
     strictEqual(
       context.pairs[1].storage.token_pool.toNumber(),
       tezInitAmount0 - minTokensOut
-    );
-    strictEqual(
-      context.pairs[0].storage.invariant.toNumber(),
-      (tokenInitAmount0 + tokenAmount) * (tezInitAmount0 - middleTezAmount)
-    );
-    strictEqual(
-      context.pairs[1].storage.invariant.toNumber(),
-      (tezInitAmount1 + middleTezAmount) * (tokenInitAmount1 - minTokensOut)
     );
   });
 });

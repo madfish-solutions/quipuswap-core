@@ -1,9 +1,9 @@
 import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
+import { confirmOperation } from "./confirmation";
 import { Token } from "./token";
 import { TokenStorage } from "./types";
 import { prepareProviderOptions } from "./utils";
-
 export class TokenFA12 implements Token {
   public contract: ContractAbstraction<ContractProvider>;
   public storage: TokenStorage;
@@ -56,13 +56,13 @@ export class TokenFA12 implements Token {
     let operation = await this.contract.methods
       .transfer(from, to, amount)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
   async approve(to: string, amount: number): Promise<TransactionOperation> {
     let operation = await this.contract.methods.approve(to, amount).send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -73,7 +73,7 @@ export class TokenFA12 implements Token {
     let operation = await this.contract.methods
       .getBalance(owner, contract)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -85,7 +85,7 @@ export class TokenFA12 implements Token {
     let operation = await this.contract.methods
       .getAllowance(owner, trusted, contract)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
@@ -93,7 +93,7 @@ export class TokenFA12 implements Token {
     let operation = await this.contract.methods
       .getTotalSupply(null, contract)
       .send();
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
     return operation;
   }
 }

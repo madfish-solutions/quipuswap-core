@@ -2,6 +2,7 @@ const { MichelsonMap } = require("@taquito/michelson-encoder");
 
 module.exports = {
   counter: "0",
+  baker_validator: "tz1ZZZZZZZZZZZZZZZZZZZZZZZZZZZZNkiRg",
   token_list: MichelsonMap.fromLiteral({}),
   token_to_exchange: MichelsonMap.fromLiteral({}),
   dex_lambdas: MichelsonMap.fromLiteral({}),
