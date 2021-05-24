@@ -308,8 +308,8 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
         else failwith("Dex/wrong-params");
 
         (* calculate tokens to be withdrawn *)
-        const tokens_a_required : nat = shares_purchased * pair.token_a_pool / pair.total_supply;
-        const tokens_b_required : nat = shares_purchased * pair.token_b_pool / pair.total_supply;
+        const tokens_a_required : nat = shares_purchased * pair.token_a_pool / pair.total_supply + 1n;
+        const tokens_b_required : nat = shares_purchased * pair.token_b_pool / pair.total_supply + 1n;
 
         (* ensure *)
         if tokens_a_required = 0n  (* providing liquidity won't impact on price *)
