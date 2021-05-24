@@ -387,7 +387,7 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
         s := update_reward(s);
 
         (* calculate tokens to be withdrawn *)
-        const tokens_required : nat = shares_purchased * s.token_pool / s.total_supply;
+        const tokens_required : nat = shares_purchased * s.token_pool / s.total_supply + 1n;
 
         (* ensure *)
         if tokens_required = 0n (* required tokens doesn't exceed max allowed by user *)
