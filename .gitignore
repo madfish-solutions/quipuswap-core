@@ -7,3 +7,5 @@ faucet*
 deploy
 .test*
 .vscode/
+*.pyc
+.hypothesis
