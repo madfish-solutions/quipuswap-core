@@ -8,12 +8,14 @@ The current implementation supports [FA1.2](https://gitlab.com/tzip/tzip/-/blob/
 
 ![Architecture](Architecture.png)
 
-The solution consists of 4 types of contracts:
+The solution consists of 6 types of contracts:
 
-1. `Factory` - singleton used to deploy new exchange pair;
+1. `Factory` - singleton used to deploy new TokenX-XTZ exchange pair;
 2. `Dex` - contract for TokenX-XTZ pair exchanges;
-3. `Token` - FA token implementation.
-4. `MetadataStorage` - contract to store and upgrade the shares token metadata.
+3. `TTDex` - contract for TokenX-TokenY pair exchanges;
+4. `Token` - FA token implementation.
+5. `BakerRegistry` - bakery registrar.
+6. `MetadataStorage` - contract to store and upgrade the shares token metadata.
 
 # Project structure
 
@@ -61,14 +63,13 @@ To compile and deploy contracts to Delphinet
 1. Chose configure the version - `FA12` or `FA2` - by setting `EXCHANGE_TOKEN_STANDARD` in `.env` and run:
 
 ```
-yarn run migrate-delphinet
+yarn migrate
 ```
 
 For other networks:
 
 ```
-yarn run migrate # development
-yarn run migrate --network NAME # other networks
+yarn migrate --network NAME
 ```
 
 # Usage
