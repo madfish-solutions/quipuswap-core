@@ -188,7 +188,7 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
             (* update XTZ pool *)
             pair.token_b_pool := abs(pair.token_b_pool - token_b_out);
             pair.token_a_pool := pair.token_a_pool + params.amount_in;
-          } else failwith("Dex/wrong-out");
+          } else failwith("Dex/high-out");
 
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
 
@@ -235,7 +235,7 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
             (* update XTZ pool *)
             pair.token_a_pool := abs(pair.token_a_pool - token_a_out);
             pair.token_b_pool := pair.token_b_pool + params.amount_in;
-          } else failwith("Dex/wrong-out");
+          } else failwith("Dex/high-out");
 
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
           operations := list[
