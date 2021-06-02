@@ -49,9 +49,8 @@ contract("BuyToken()", function () {
         tokens: ["0"],
         pairs: ["0"],
       });
-      const aliceInitShares = context.dex.storage.ledger[
-        aliceAddress
-      ].balance.toNumber();
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
       const aliceInitTokenABalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
@@ -156,13 +155,13 @@ contract("BuyToken()", function () {
       "revert in case of 100% of reserves to be swapped",
       1000,
       1000,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
     tokenToTokenFailCase(
       "revert in case of 10000% of reserves to be swapped",
       100000,
       1,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
 
     tokenToTokenSuccessCase(
