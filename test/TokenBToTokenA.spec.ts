@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 
-contract.only("TokenBToTokenA()", function () {
+contract("TokenBToTokenA()", function () {
   let context: TTContext;
   const tokenAAmount: number = 100;
   const tokenBAmount: number = 100;
