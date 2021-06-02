@@ -70,7 +70,10 @@ contract("TokenBToTokenA()", function () {
         pairAddress
       ].balance;
       await context.dex.updateStorage({
-        ledger: [[aliceAddress, bobAddress, 0]],
+        ledger: [
+          [aliceAddress, 0],
+          [bobAddress, 0],
+        ],
         tokens: ["0"],
         pairs: ["0"],
       });
@@ -84,7 +87,10 @@ contract("TokenBToTokenA()", function () {
         bobAddress
       );
       await context.dex.updateStorage({
-        ledger: [[aliceAddress, bobAddress, 0]],
+        ledger: [
+          [aliceAddress, 0],
+          [bobAddress, 0],
+        ],
         tokens: ["0"],
         pairs: ["0"],
       });
@@ -138,7 +144,10 @@ contract("TokenBToTokenA()", function () {
         prevPairTezBalance.toNumber() + tokenAAmount
       );
       await context.dex.updateStorage({
-        ledger: [[aliceAddress, bobAddress, 0]],
+        ledger: [
+          [aliceAddress, 0],
+          [bobAddress, 0],
+        ],
         tokens: ["0"],
         pairs: ["0"],
       });
