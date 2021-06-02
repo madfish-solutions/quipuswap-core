@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 
-contract.only("DivestTTLiquidity()", function () {
+contract("DivestTTLiquidity()", function () {
   let context: TTContext;
   const tokenAAmount: number = 1000;
   const tokenBAmount: number = 100000;
