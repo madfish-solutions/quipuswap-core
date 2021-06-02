@@ -173,11 +173,11 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 XTZ
-- [ ] 1% of reserves
-- [ ] 30% of reserves
-- [ ] 100% of reserves
-- [ ] 10000% of reserves
+- [x] 0 XTZ
+- [x] 1% of reserves
+- [x] 30% of reserves
+- [x] 100% of reserves
+- [x] 10000% of reserves
 
 **Scope**: Test different minimal desirable output amount.
 
@@ -189,10 +189,10 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 tokens
-- [ ] too many tokens
-- [ ] smaller amount of tokens
-- [ ] exact tokens
+- [x] 0 tokens
+- [x] too many tokens
+- [x] smaller amount of tokens
+- [x] exact tokens
 
 ## Test Item: TokenBToTokenA Entrypoint
 
@@ -221,11 +221,11 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 tokens
-- [ ] 0.01% of reserves
-- [ ] 30% of reserves
-- [ ] 100% of reserves
-- [ ] 10000% of reserves
+- [x] 0 tokens
+- [x] 0.01% of reserves
+- [x] 30% of reserves
+- [x] 100% of reserves
+- [x] 10000% of reserves
 
 **Scope**: Test different minimal desirable output amount.
 
@@ -237,6 +237,6 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 XTZ
-- [ ] too many XTZ
-- [ ] exact XTZ
+- [x] 0 XTZ
+- [x] too many XTZ
+- [x] exact XTZ
