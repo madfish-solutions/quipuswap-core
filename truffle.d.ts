@@ -28,6 +28,7 @@ declare interface Artifacts {
   require(name: "TestFactoryFA2"): Contract<FactoryContractInstance>;
   require(name: "DexFA12"): Contract<DexContractInstance>;
   require(name: "DexFA2"): Contract<DexContractInstance>;
+  require(name: "TTDexFA2FA12"): Contract<DexContractInstance>;
   require(name: "TTDexFA12"): Contract<DexContractInstance>;
   require(name: "TTDexFA2"): Contract<DexContractInstance>;
 }

@@ -3,6 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("DivestTTLiquidity()", function () {
   let context: TTContext;
@@ -25,7 +26,7 @@ contract("DivestTTLiquidity()", function () {
     });
     tokenAAddress = context.tokens[0].contract.address;
     tokenBAddress = context.tokens[1].contract.address;
-    if (tokenAAddress > tokenBAddress) {
+    if (standard != "FA2FA12" && tokenAAddress > tokenBAddress) {
       const tmp = context.tokens[0];
       context.tokens[0] = context.tokens[1];
       context.tokens[1] = tmp;
@@ -68,9 +69,8 @@ contract("DivestTTLiquidity()", function () {
         tokens: ["0"],
         pairs: ["0"],
       });
-      const aliceInitShares = context.dex.storage.ledger[
-        aliceAddress
-      ].balance.toNumber();
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
       const aliceInitTokenABalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
@@ -176,9 +176,8 @@ contract("DivestTTLiquidity()", function () {
         tokens: ["0"],
         pairs: ["0"],
       });
-      const aliceInitShares = context.dex.storage.ledger[
-        aliceAddress
-      ].balance.toNumber();
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
       const aliceInitTokenABalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
@@ -268,9 +267,8 @@ contract("DivestTTLiquidity()", function () {
         tokens: ["0"],
         pairs: ["0"],
       });
-      const aliceInitShares = context.dex.storage.ledger[
-        aliceAddress
-      ].balance.toNumber();
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
       const aliceInitTokenABalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
@@ -360,9 +358,8 @@ contract("DivestTTLiquidity()", function () {
         tokens: ["0"],
         pairs: ["0"],
       });
-      const aliceInitShares = context.dex.storage.ledger[
-        aliceAddress
-      ].balance.toNumber();
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
       const aliceInitTokenABalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo

@@ -83,19 +83,17 @@ export class TTDex extends TokenFA2 {
     tokenAAmount: number,
     tokenBAmount: number,
     tokenAid: BigNumber = new BigNumber(0),
-    tokenBid: BigNumber = new BigNumber(0),
     approve: boolean = true
   ): Promise<TransactionOperation> {
     if (approve) {
-      await this.approveToken(
+      await this.approveFA2Token(
         tokenAAddress,
         tokenAid,
         tokenAAmount,
         this.contract.address
       );
-      await this.approveToken(
+      await this.approveFA12Token(
         tokenBAddress,
-        tokenBid,
         tokenBAmount,
         this.contract.address
       );
@@ -106,7 +104,6 @@ export class TTDex extends TokenFA2 {
         tokenAAddress,
         tokenAid,
         tokenBAddress,
-        tokenBid,
         tokenAAmount,
         tokenBAmount
       )
@@ -122,16 +119,28 @@ export class TTDex extends TokenFA2 {
     amountIn: number,
     minAmountOut: number,
     receiver: string,
-    tokenAid: BigNumber = new BigNumber(0),
-    tokenBid: BigNumber = new BigNumber(0)
+    tokenAid: BigNumber = new BigNumber(0)
   ): Promise<TransactionOperation> {
+    if (opType == "buy") {
+      await this.approveFA12Token(
+        tokenBAddress,
+        amountIn,
+        this.contract.address
+      );
+    } else {
+      await this.approveFA2Token(
+        tokenAAddress,
+        tokenAid,
+        amountIn,
+        this.contract.address
+      );
+    }
     const operation = await this.contract.methods
       .use(
         "tokenToTokenPayment",
         tokenAAddress,
         tokenAid,
         tokenBAddress,
-        tokenBid,
         opType,
         null,
         amountIn,
@@ -151,15 +160,14 @@ export class TTDex extends TokenFA2 {
   ): Promise<TransactionOperation> {
     await this.updateStorage({ tokens: [pairId] });
     let pair = this.storage.tokens[pairId];
-    await this.approveToken(
+    await this.approveFA2Token(
       pair.token_a_address,
       pair.token_a_id,
       tokenAAmount,
       this.contract.address
     );
-    await this.approveToken(
+    await this.approveFA12Token(
       pair.token_b_address,
-      pair.token_b_id,
       tokenBAmount,
       this.contract.address
     );
@@ -169,7 +177,6 @@ export class TTDex extends TokenFA2 {
         pair.token_a_address,
         pair.token_a_id,
         pair.token_b_address,
-        pair.token_b_id,
         tokenAAmount,
         tokenBAmount,
         minShares
@@ -193,7 +200,6 @@ export class TTDex extends TokenFA2 {
         pair.token_a_address,
         pair.token_a_id,
         pair.token_b_address,
-        pair.token_b_id,
         tokenAAmount,
         tokenBAmount,
         sharesBurned
@@ -203,7 +209,7 @@ export class TTDex extends TokenFA2 {
     return operation;
   }
 
-  async approveToken(
+  async approveFA2Token(
     tokenAddress: string,
     tokenId: BigNumber,
     tokenAmount: number,
@@ -222,6 +228,18 @@ export class TTDex extends TokenFA2 {
         },
       ])
       .send();
+    await confirmOperation(tezos, operation.hash);
+    return operation;
+  }
+
+  async approveFA12Token(
+    tokenAddress: string,
+    tokenAmount: number,
+    address: string
+  ): Promise<TransactionOperation> {
+    await this.updateStorage();
+    let token = await tezos.contract.at(tokenAddress);
+    let operation = await token.methods.approve(address, tokenAmount).send();
     await confirmOperation(tezos, operation.hash);
     return operation;
   }

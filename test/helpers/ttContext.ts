@@ -2,6 +2,7 @@ const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 import { TTDex as TTDexFA12 } from "./ttdexFA12";
 import { TTDex as TTDexFA2 } from "./ttdexFA2";
+import { TTDex as TTDexFA2FA12 } from "./ttdexFA2FA12";
 import { TokenFA12 } from "./tokenFA12";
 import { prepareProviderOptions } from "./utils";
 
@@ -15,15 +16,26 @@ import { TezosToolkit } from "@taquito/taquito";
 import BigNumber from "bignumber.js";
 
 let tokenStorage, CDex, CToken;
-type Dex = TTDexFA12 | TTDexFA2;
-if (standard == "FA2") {
-  tokenStorage = tokenFA2Storage;
-  CDex = artifacts.require("TTDexFA2");
-  CToken = artifacts.require("TokenFA2");
-} else {
-  tokenStorage = tokenFA12Storage;
-  CDex = artifacts.require("TTDexFA12");
-  CToken = artifacts.require("TokenFA12");
+type Dex = TTDexFA12 | TTDexFA2 | TTDexFA2FA12;
+const CTokenFA12 = artifacts.require("TokenFA12");
+const CTokenFA2 = artifacts.require("TokenFA2");
+
+switch (standard) {
+  case "FA2":
+    tokenStorage = tokenFA2Storage;
+    CDex = artifacts.require("TTDexFA2");
+    CToken = artifacts.require("TokenFA2");
+    break;
+  case "FA12":
+    tokenStorage = tokenFA12Storage;
+    CDex = artifacts.require("TTDexFA12");
+    CToken = artifacts.require("TokenFA12");
+    break;
+  case "FA2FA12":
+    tokenStorage = tokenFA12Storage;
+    CDex = artifacts.require("TTDexFA2FA12");
+    CToken = artifacts.require("TokenFA2");
+    break;
 }
 
 export class TTContext {
@@ -60,10 +72,18 @@ export class TTContext {
     let dexInstance = useDeployedDex
       ? await CDex.deployed()
       : await CDex.new(dexStorage);
-    let dex =
-      standard === "FA2"
-        ? await TTDexFA2.init(dexInstance.address.toString())
-        : await TTDexFA12.init(dexInstance.address.toString());
+    let dex;
+    switch (standard) {
+      case "FA2":
+        dex = await TTDexFA2.init(dexInstance.address.toString());
+        break;
+      case "FA12":
+        dex = await TTDexFA12.init(dexInstance.address.toString());
+        break;
+      case "FA2FA12":
+        dex = await TTDexFA2FA12.init(dexInstance.address.toString());
+        break;
+    }
 
     let context = new TTContext(dex, []);
     if (setDexFunctions) {
@@ -85,15 +105,19 @@ export class TTContext {
     await this.updateActor();
   }
 
-  async createToken(): Promise<string> {
-    let tokenInstance = await CToken.new(tokenStorage);
-    let tokenAddress = tokenInstance.address.toString();
-    this.tokens.push(
-      standard === "FA2"
-        ? await TokenFA2.init(tokenAddress)
-        : await TokenFA12.init(tokenAddress)
-    );
-    return tokenAddress;
+  async createToken(type = null): Promise<string> {
+    if (!type) type = standard;
+    if (type == "FA2") {
+      let tokenInstance = await CTokenFA2.new(tokenFA2Storage);
+      let tokenAddress = tokenInstance.address.toString();
+      this.tokens.push(await TokenFA2.init(tokenAddress));
+      return tokenAddress;
+    } else {
+      let tokenInstance = await CTokenFA12.new(tokenFA12Storage);
+      let tokenAddress = tokenInstance.address.toString();
+      this.tokens.push(await TokenFA12.init(tokenAddress));
+      return tokenAddress;
+    }
   }
 
   async setDexFunctions(): Promise<void> {
@@ -149,10 +173,15 @@ export class TTContext {
     }
   ): Promise<BigNumber> {
     pairConfig.tokenAAddress =
-      pairConfig.tokenAAddress || (await this.createToken());
+      pairConfig.tokenAAddress ||
+      (await this.createToken(standard == "FA2FA12" ? "FA2" : standard));
     pairConfig.tokenBAddress =
-      pairConfig.tokenBAddress || (await this.createToken());
-    if (pairConfig.tokenAAddress > pairConfig.tokenBAddress) {
+      pairConfig.tokenBAddress ||
+      (await this.createToken(standard == "FA2FA12" ? "FA12" : standard));
+    if (
+      standard !== "FA2FA12" &&
+      pairConfig.tokenAAddress > pairConfig.tokenBAddress
+    ) {
       const tmp = pairConfig.tokenAAddress;
       pairConfig.tokenAAddress = pairConfig.tokenBAddress;
       pairConfig.tokenBAddress = tmp;

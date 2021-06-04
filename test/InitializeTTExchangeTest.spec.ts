@@ -2,6 +2,7 @@ import { TTContext } from "./helpers/ttContext";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("InitializeTTExchange()", function () {
   let context: TTContext;
@@ -26,7 +27,7 @@ contract("InitializeTTExchange()", function () {
     before(async () => {
       tokenAAddress = await context.createToken();
       tokenBAddress = await context.createToken();
-      if (tokenAAddress > tokenBAddress) {
+      if (standard != "FA2FA12" && tokenAAddress > tokenBAddress) {
         const tmp = context.tokens[0];
         context.tokens[0] = context.tokens[1];
         context.tokens[1] = tmp;
