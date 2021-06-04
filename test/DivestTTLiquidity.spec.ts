@@ -425,205 +425,287 @@ contract("DivestTTLiquidity()", function () {
     });
   });
 
-  // describe("Test calculated received amount", () => {
-  //   it("revert in case of calculated tez are zero", async function () {
-  //     const initToken = 1000000;
-  //     const initTez = 100;
-  //     const share = 1;
-  //     await context.pairs[0].initializeExchange(initToken, initTez);
-  //     await context.pairs[0].tokenToTezPayment(100000, 1, bobAddress);
-  //     await rejects(context.pairs[0].divestLiquidity(1, 1, share), (err) => {
-  //       ok(err.message == "Dex/high-expectation", "Error message mismatch");
-  //       return true;
-  //     });
-  //   });
+  describe("Test calculated received amount", () => {
+    it("revert in case of calculated tez are zero", async function () {
+      const initTokenA = 100000;
+      const initTokenB = 100;
+      const share = 1;
+      await context.dex.initializeExchange(
+        tokenAAddress,
+        tokenBAddress,
+        initTokenA,
+        initTokenB
+      );
+      await context.dex.tokenToTokenPayment(
+        tokenAAddress,
+        tokenBAddress,
+        "sell",
+        2000,
+        1,
+        bobAddress
+      );
+      await rejects(context.dex.divestLiquidity("0", 1, 1, share), (err) => {
+        ok(err.message == "Dex/high-expectation", "Error message mismatch");
+        return true;
+      });
+      await context.dex.divestLiquidity("0", 1, 1, initTokenB);
+    });
 
-  //   it("revert in case of calculated tokens are zero", async function () {
-  //     const initTez = 1000000;
-  //     const initToken = 100;
-  //     await context.pairs[0].divestLiquidity(1, 1, initToken);
-  //     await context.pairs[0].initializeExchange(initToken, initTez);
-  //     await context.pairs[0].tezToTokenPayment(1, 100000, bobAddress);
-  //     const share = 1;
-  //     await rejects(context.pairs[0].divestLiquidity(1, 1, share), (err) => {
-  //       ok(err.message == "Dex/high-expectation", "Error message mismatch");
-  //       return true;
-  //     });
-  //   });
-  // });
+    it("revert in case of calculated tokens are zero", async function () {
+      const initTokenA = 100;
+      const initTokenB = 100000;
+      const share = 1;
+      await context.dex.initializeExchange(
+        tokenAAddress,
+        tokenBAddress,
+        initTokenA,
+        initTokenB
+      );
+      await context.dex.tokenToTokenPayment(
+        tokenAAddress,
+        tokenBAddress,
+        "buy",
+        2000,
+        1,
+        bobAddress
+      );
+      await rejects(context.dex.divestLiquidity("0", 1, 1, share), (err) => {
+        ok(err.message == "Dex/high-expectation", "Error message mismatch");
+        return true;
+      });
+      await context.dex.divestLiquidity("0", 1, 1, initTokenA);
+    });
+  });
 
-  // describe("Test expected amount when", () => {
-  //   before(async () => {
-  //     const initTez = 1000000;
-  //     const initToken = 100;
-  //     await context.pairs[0].divestLiquidity(1, 1, initTez);
-  //     await context.pairs[0].initializeExchange(initToken, initTez);
-  //   });
+  describe("Test expected amount", () => {
+    before(async () => {
+      const initTokenB = 100000;
+      const initTokenA = 100;
+      await context.dex.initializeExchange(
+        tokenAAddress,
+        tokenBAddress,
+        initTokenA,
+        initTokenB
+      );
+    });
 
-  //   it("revert in case of expected tez are higher", async function () {
-  //     const share = 100;
-  //     await rejects(
-  //       context.pairs[0].divestLiquidity(1, 100000000, share),
-  //       (err) => {
-  //         ok(err.message == "Dex/high-expectation", "Error message mismatch");
-  //         return true;
-  //       }
-  //     );
-  //   });
+    it("revert in case of expected tez are higher", async function () {
+      const share = 100;
+      await rejects(
+        context.dex.divestLiquidity("0", 1, 100000000, share),
+        (err) => {
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
+          return true;
+        }
+      );
+    });
 
-  //   it("revert in case of expected tokens are higher", async function () {
-  //     const share = 100;
-  //     await rejects(
-  //       context.pairs[0].divestLiquidity(100000000, 1, share),
-  //       (err) => {
-  //         ok(err.message == "Dex/high-expectation", "Error message mismatch");
-  //         return true;
-  //       }
-  //     );
-  //   });
+    it("revert in case of expected tokens are higher", async function () {
+      const share = 100;
+      await rejects(
+        context.dex.divestLiquidity("0", 100000000, 1, share),
+        (err) => {
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
+          return true;
+        }
+      );
+    });
 
-  //   it("revert in case of expected tokens are 0", async function () {
-  //     const share = 1;
-  //     await rejects(context.pairs[0].divestLiquidity(0, 1, share), (err) => {
-  //       ok(err.message == "Dex/dust-output", "Error message mismatch");
-  //       return true;
-  //     });
-  //   });
+    it("revert in case of expected tokens are 0", async function () {
+      const share = 1;
+      await rejects(context.dex.divestLiquidity("0", 0, 1, share), (err) => {
+        ok(err.message == "Dex/dust-output", "Error message mismatch");
+        return true;
+      });
+    });
 
-  //   it("revert in case of expected tez are 0", async function () {
-  //     const share = 1;
-  //     await rejects(context.pairs[0].divestLiquidity(1, 0, share), (err) => {
-  //       ok(err.message == "Dex/dust-output", "Error message mismatch");
-  //       return true;
-  //     });
-  //   });
+    it("revert in case of expected tez are 0", async function () {
+      const share = 1;
+      await rejects(context.dex.divestLiquidity("0", 1, 0, share), (err) => {
+        ok(err.message == "Dex/dust-output", "Error message mismatch");
+        return true;
+      });
+    });
 
-  //   it("success in case the of the expected amount smaller than calculated", async function () {
-  //     const expectedTez = 100000;
-  //     const expectedToken = 10;
-  //     const minBurntShares = 500000;
-  //     const minReceivedTezAmount: number = 500000;
-  //     const minReceivedTokenAmount: number = 50;
-  //     await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-  //     await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
-  //     const initialStorage = await context.pairs[0].storage;
-  //     const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
-  //     const aliceInitTokenBalance = (
-  //       (await context.tokens[0].storage.ledger[aliceAddress]) ||
-  //       defaultAccountInfo
-  //     ).balance;
-  //     await context.pairs[0].divestLiquidity(
-  //       expectedToken,
-  //       expectedTez,
-  //       minBurntShares
-  //     );
-  //     await context.tokens[0].updateStorage({
-  //       ledger: [aliceAddress, pairAddress],
-  //     });
-  //     await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-  //     const aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
-  //     const aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
-  //       aliceAddress
-  //     ].balance;
-  //     const pairTokenBalance = await context.tokens[0].storage.ledger[
-  //       pairAddress
-  //     ].balance;
-  //     const pairTezBalance = await tezos.tz.getBalance(pairAddress);
-  //     strictEqual(
-  //       aliceInitTokenBalance.toNumber() + minReceivedTokenAmount,
-  //       aliceFinalTokenBalance.toNumber()
-  //     );
-  //     ok(
-  //       aliceInitTezBalance.toNumber() + minReceivedTezAmount >=
-  //         aliceFinalTezBalance.toNumber()
-  //     );
-  //     strictEqual(
-  //       pairTokenBalance.toNumber(),
-  //       initialStorage.token_pool.toNumber() - minReceivedTokenAmount
-  //     );
-  //     strictEqual(
-  //       pairTezBalance.toNumber(),
-  //       initialStorage.tez_pool.toNumber() - minReceivedTezAmount
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-  //       initialStorage.ledger[aliceAddress].balance.toNumber() - minBurntShares
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.total_supply.toNumber(),
-  //       initialStorage.total_supply.toNumber() - minBurntShares
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.tez_pool.toNumber(),
-  //       initialStorage.tez_pool.toNumber() - minReceivedTezAmount
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.token_pool.toNumber(),
-  //       initialStorage.token_pool.toNumber() - minReceivedTokenAmount
-  //     );
-  //   });
+    it("success in case the of the expected amount smaller than calculated", async function () {
+      const receivedTokenAAmount: number = 20;
+      const receivedTokenBAmount: number = 20000;
+      const burntShares: number = 20;
+      const pairAddress = context.dex.contract.address;
+      await context.tokens[0].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.tokens[1].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.dex.updateStorage({
+        ledger: [[aliceAddress, 0]],
+        tokens: ["0"],
+        pairs: ["0"],
+      });
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
+      const aliceInitTokenABalance = (
+        (await context.tokens[0].storage.ledger[aliceAddress]) ||
+        defaultAccountInfo
+      ).balance;
+      const aliceInitTokenBBalance = (
+        (await context.tokens[1].storage.ledger[aliceAddress]) ||
+        defaultAccountInfo
+      ).balance;
+      const pairInitTokenABalance = await context.tokens[0].storage.ledger[
+        pairAddress
+      ].balance;
+      const pairInitTokenBBalance = await context.tokens[1].storage.ledger[
+        pairAddress
+      ].balance;
+      const initDexPair = context.dex.storage.pairs[0];
+      await context.dex.divestLiquidity("0", 10, 10, burntShares);
+      await context.tokens[0].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.tokens[1].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.dex.updateStorage({
+        ledger: [[aliceAddress, 0]],
+        tokens: ["0"],
+        pairs: ["0"],
+      });
+      const finalDexPair = context.dex.storage.pairs[0];
+      const aliceFinalTokenABalance = await context.tokens[0].storage.ledger[
+        aliceAddress
+      ].balance;
+      const aliceFinalTokenBBalance = await context.tokens[1].storage.ledger[
+        aliceAddress
+      ].balance;
+      const pairTokenABalance = await context.tokens[0].storage.ledger[
+        pairAddress
+      ].balance;
+      const pairTokenBBalance = await context.tokens[1].storage.ledger[
+        pairAddress
+      ].balance;
+      strictEqual(
+        aliceInitTokenABalance.toNumber() + receivedTokenAAmount,
+        aliceFinalTokenABalance.toNumber()
+      );
+      strictEqual(
+        aliceInitTokenBBalance.toNumber() + receivedTokenBAmount,
+        aliceFinalTokenBBalance.toNumber()
+      );
+      strictEqual(
+        pairTokenABalance.toNumber(),
+        pairInitTokenABalance.minus(receivedTokenAAmount).toNumber()
+      );
+      strictEqual(
+        pairTokenBBalance.toNumber(),
+        pairInitTokenBBalance.minus(receivedTokenBAmount).toNumber()
+      );
+      strictEqual(
+        context.dex.storage.ledger[aliceAddress].balance.toNumber(),
+        pairInitTokenABalance.minus(receivedTokenAAmount).toNumber()
+      );
+      strictEqual(
+        finalDexPair.token_a_pool.toNumber(),
+        pairInitTokenABalance.minus(receivedTokenAAmount).toNumber()
+      );
+      strictEqual(
+        finalDexPair.token_b_pool.toNumber(),
+        pairInitTokenBBalance.minus(receivedTokenBAmount).toNumber()
+      );
+    });
 
-  //   it("success in case the of the exact expected tez and tokens", async function () {
-  //     const minBurntShares = 500000;
-  //     const minReceivedTezAmount: number = 500000;
-  //     const minReceivedTokenAmount: number = 50;
-  //     await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-  //     await context.tokens[0].updateStorage({ ledger: [aliceAddress] });
-  //     const initialStorage = await context.pairs[0].storage;
-  //     const aliceInitTezBalance = await tezos.tz.getBalance(aliceAddress);
-  //     const aliceInitTokenBalance = (
-  //       (await context.tokens[0].storage.ledger[aliceAddress]) ||
-  //       defaultAccountInfo
-  //     ).balance;
-  //     await context.pairs[0].divestLiquidity(
-  //       minReceivedTokenAmount,
-  //       minReceivedTezAmount,
-  //       minBurntShares
-  //     );
-  //     await context.tokens[0].updateStorage({
-  //       ledger: [aliceAddress, pairAddress],
-  //     });
-  //     await context.pairs[0].updateStorage({ ledger: [aliceAddress] });
-  //     const aliceFinalTezBalance = await tezos.tz.getBalance(aliceAddress);
-  //     const aliceFinalTokenBalance = await context.tokens[0].storage.ledger[
-  //       aliceAddress
-  //     ].balance;
-  //     const pairTokenBalance = await context.tokens[0].storage.ledger[
-  //       pairAddress
-  //     ].balance;
-  //     const pairTezBalance = await tezos.tz.getBalance(pairAddress);
-  //     strictEqual(
-  //       aliceInitTokenBalance.toNumber() + minReceivedTokenAmount,
-  //       aliceFinalTokenBalance.toNumber()
-  //     );
-  //     ok(
-  //       aliceInitTezBalance.toNumber() + minReceivedTezAmount >=
-  //         aliceFinalTezBalance.toNumber()
-  //     );
-  //     strictEqual(
-  //       pairTokenBalance.toNumber(),
-  //       initialStorage.token_pool.toNumber() - minReceivedTokenAmount
-  //     );
-  //     strictEqual(
-  //       pairTezBalance.toNumber(),
-  //       initialStorage.tez_pool.toNumber() - minReceivedTezAmount
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.ledger[aliceAddress].balance.toNumber(),
-  //       initialStorage.ledger[aliceAddress].balance.toNumber() - minBurntShares
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.total_supply.toNumber(),
-  //       initialStorage.total_supply.toNumber() - minBurntShares
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.tez_pool.toNumber(),
-  //       initialStorage.tez_pool.toNumber() - minReceivedTezAmount
-  //     );
-  //     strictEqual(
-  //       context.pairs[0].storage.token_pool.toNumber(),
-  //       initialStorage.token_pool.toNumber() - minReceivedTokenAmount
-  //     );
-  //   });
-  // });
+    it("success in case the of the exact expected tez and tokens", async function () {
+      const receivedTokenAAmount: number = 70;
+      const receivedTokenBAmount: number = 70000;
+      const burntShares: number = 70;
+      const pairAddress = context.dex.contract.address;
+      await context.tokens[0].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.tokens[1].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.dex.updateStorage({
+        ledger: [[aliceAddress, 0]],
+        tokens: ["0"],
+        pairs: ["0"],
+      });
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
+      const aliceInitTokenABalance = (
+        (await context.tokens[0].storage.ledger[aliceAddress]) ||
+        defaultAccountInfo
+      ).balance;
+      const aliceInitTokenBBalance = (
+        (await context.tokens[1].storage.ledger[aliceAddress]) ||
+        defaultAccountInfo
+      ).balance;
+      const pairInitTokenABalance = await context.tokens[0].storage.ledger[
+        pairAddress
+      ].balance;
+      const pairInitTokenBBalance = await context.tokens[1].storage.ledger[
+        pairAddress
+      ].balance;
+      const initDexPair = context.dex.storage.pairs[0];
+      await context.dex.divestLiquidity(
+        "0",
+        receivedTokenAAmount,
+        receivedTokenBAmount,
+        burntShares
+      );
+      await context.tokens[0].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.tokens[1].updateStorage({
+        ledger: [aliceAddress, pairAddress],
+      });
+      await context.dex.updateStorage({
+        ledger: [[aliceAddress, 0]],
+        tokens: ["0"],
+        pairs: ["0"],
+      });
+      const finalDexPair = context.dex.storage.pairs[0];
+      const aliceFinalTokenABalance = await context.tokens[0].storage.ledger[
+        aliceAddress
+      ].balance;
+      const aliceFinalTokenBBalance = await context.tokens[1].storage.ledger[
+        aliceAddress
+      ].balance;
+      const pairTokenABalance = await context.tokens[0].storage.ledger[
+        pairAddress
+      ].balance;
+      const pairTokenBBalance = await context.tokens[1].storage.ledger[
+        pairAddress
+      ].balance;
+      strictEqual(
+        aliceInitTokenABalance.toNumber() + receivedTokenAAmount,
+        aliceFinalTokenABalance.toNumber()
+      );
+      strictEqual(
+        aliceInitTokenBBalance.toNumber() + receivedTokenBAmount,
+        aliceFinalTokenBBalance.toNumber()
+      );
+      strictEqual(
+        pairTokenABalance.toNumber(),
+        pairInitTokenABalance.minus(receivedTokenAAmount).toNumber()
+      );
+      strictEqual(
+        pairTokenBBalance.toNumber(),
+        pairInitTokenBBalance.minus(receivedTokenBAmount).toNumber()
+      );
+      strictEqual(
+        context.dex.storage.ledger[aliceAddress].balance.toNumber(),
+        pairInitTokenABalance.minus(receivedTokenAAmount).toNumber()
+      );
+      strictEqual(
+        finalDexPair.token_a_pool.toNumber(),
+        pairInitTokenABalance.minus(receivedTokenAAmount).toNumber()
+      );
+      strictEqual(
+        finalDexPair.token_b_pool.toNumber(),
+        pairInitTokenBBalance.minus(receivedTokenBAmount).toNumber()
+      );
+    });
+  });
 });

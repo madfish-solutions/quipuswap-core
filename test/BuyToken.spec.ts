@@ -156,13 +156,13 @@ contract("BuyToken()", function () {
       "revert in case of 100% of reserves to be swapped",
       1000,
       1000,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
     tokenToTokenFailCase(
       "revert in case of 10000% of reserves to be swapped",
       100000,
       1,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
 
     tokenToTokenSuccessCase(

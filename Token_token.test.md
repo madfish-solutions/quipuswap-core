@@ -60,8 +60,8 @@ tokens_amount = shares_purchased * token_pool / total_supply
 
 **Scenario 1**: Test the investment
 
-- [ ] without provided liquidity
-- [ ] with provided liquidity
+- [x] without provided liquidity
+- [x] with provided liquidity
 
 **Scope**: Test various min shared.
 
@@ -73,16 +73,15 @@ tokens_amount = shares_purchased * token_pool / total_supply
 
 **Scenario 1**: Test the investment with minimal shares of
 
-- [ ] 0
-- [ ] 1
-- [ ] enough
-- [ ] exact
-- [ ] too many
+- [x] 0
+- [x] 1
+- [x] enough
+- [x] exact
 
 **Scenario 2**: Test purchased shares
 
-- [ ] 0
-- [ ] > 0
+- [x] 0
+- [x] > 0
 
 ## Test Item: DivestLiquidity Entrypoint
 
@@ -112,8 +111,8 @@ tokens_divested = token_pool * burnt_shares / total_supply
 
 **Scenario 1**: Test the divestment
 
-- [ ] without provided liquidity
-- [ ] with provided liquidity
+- [x] without provided liquidity
+- [x] with provided liquidity
 
 **Scope**: Test various burnt shared.
 
@@ -125,74 +124,27 @@ tokens_divested = token_pool * burnt_shares / total_supply
 
 **Scenario 1**: Test the divestment with burnt shares of
 
-- [ ] 0
-- [ ] 1
-- [ ] enough
-- [ ] exact
-- [ ] too many
+- [x] 0
+- [x] 1
+- [x] enough
+- [x] exact
+- [x] too many
 
 **Scenario 2**: Test calculated received amount
 
-- [ ] Received tez are zero
-- [ ] Reseived tokens are zero
+- [x] Received token a are zero
+- [x] Reseived token b are zero
 
 **Scenario 3**: Test expected amount when
 
-- [ ] Expected tez are smaller
-- [ ] Expected tokens are smaller
-- [ ] Expected tez are exact
-- [ ] Expected tokens are exact
-- [ ] Expected tez are higher
-- [ ] Expected tokens are higher
-- [ ] Expected tez are 0
-- [ ] Expected tokens are 0
-
-## Test Item: SetXFunctions Entrypoint
-
-### General Requirements:
-
-1. The function can be set only once.
-2. Only functions with index between 0 and 8 can be set as exchange functions.
-3. Only functions with index between 0 and 4 can be set as token functions.
-
-**Scope**: Test the all functions can be added.
-
-**Action**: Invoke the SetXFunctions entrypoint.
-
-**Test Notes and Preconditions**: Create new empty factory.
-
-**Verification Steps**: Verify the function can be set only once.
-
-**Scenario 1**: Test adding of all
-
-- [ ] exchange fuctions
-- [ ] token functions
-
-**Scope**: Test the function replacement.
-
-**Action**: Invoke the SetXFunctions entrypoint.
-
-**Test Notes and Preconditions**: Create new empty factory.
-
-**Verification Steps**: Verify the function can be set only once.
-
-**Scenario 1**: Test the replacement of
-
-- [ ] exchange fuction
-- [ ] token function
-
-**Scope**: Test the function count.
-
-**Action**: Invoke the SetXFunctions entrypoint.
-
-**Test Notes and Preconditions**: Create new empty factory.
-
-**Verification Steps**: Verify only 9 exchange and 4 token functions can be set.
-
-**Scenario 1**: Test the function setting
-
-- [ ] of 5th token function
-- [ ] of 9th token function
+- [x] Expected token a are smaller
+- [x] Expected token b are smaller
+- [x] Expected token a are exact
+- [x] Expected token b are exact
+- [x] Expected token a are higher
+- [x] Expected token b are higher
+- [x] Expected token a are 0
+- [x] Expected token b are 0
 
 ## Test Item: TokenAToTokenB Entrypoint
 
@@ -221,11 +173,11 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 XTZ
-- [ ] 1% of reserves
-- [ ] 30% of reserves
-- [ ] 100% of reserves
-- [ ] 10000% of reserves
+- [x] 0 XTZ
+- [x] 1% of reserves
+- [x] 30% of reserves
+- [x] 100% of reserves
+- [x] 10000% of reserves
 
 **Scope**: Test different minimal desirable output amount.
 
@@ -237,10 +189,10 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 tokens
-- [ ] too many tokens
-- [ ] smaller amount of tokens
-- [ ] exact tokens
+- [x] 0 tokens
+- [x] too many tokens
+- [x] smaller amount of tokens
+- [x] exact tokens
 
 ## Test Item: TokenBToTokenA Entrypoint
 
@@ -269,11 +221,11 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 tokens
-- [ ] 0.01% of reserves
-- [ ] 30% of reserves
-- [ ] 100% of reserves
-- [ ] 10000% of reserves
+- [x] 0 tokens
+- [x] 0.01% of reserves
+- [x] 30% of reserves
+- [x] 100% of reserves
+- [x] 10000% of reserves
 
 **Scope**: Test different minimal desirable output amount.
 
@@ -285,6 +237,6 @@ tokens_out = token_pool * (tez_in - fee) / (tez_pool + tez_in - fee)
 
 **Scenario 1**: Test swap of
 
-- [ ] 0 XTZ
-- [ ] too many XTZ
-- [ ] exact XTZ
+- [x] 0 XTZ
+- [x] too many XTZ
+- [x] exact XTZ
