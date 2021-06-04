@@ -6,9 +6,6 @@ import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("BuyToken()", function () {
-  if (standard === "FA2FA12") {
-    this.skip();
-  }
   let context: TTContext;
   const tokenAAmount: number = 100000;
   const tokenBAmount: number = 1000;
