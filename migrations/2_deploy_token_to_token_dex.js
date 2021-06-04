@@ -23,7 +23,7 @@ const defaultTokenId = 0;
 
 module.exports = async (deployer, network, accounts) => {
   tezos = new TezosToolkit(tezos.rpc.url);
-  if (network === "development") return;
+  // if (network === "development") return;
   const secretKey = accountsStored.alice.sk.trim();
   tezos.setProvider({
     config: {
@@ -151,21 +151,38 @@ module.exports = async (deployer, network, accounts) => {
       }
       await operation.confirmation();
 
-      operation = await dex.methods
-        .use(
-          "initializeExchange",
-          ordered
-            ? token0Instance.address.toString()
-            : token1Instance.address.toString(),
-          0,
-          ordered
-            ? token1Instance.address.toString()
-            : token0Instance.address.toString(),
-          0,
-          initialTokenAmount,
-          initialTokenAmount
-        )
-        .send();
+      if (standard === "FA2FA12") {
+        operation = await dex.methods
+          .use(
+            "initializeExchange",
+            ordered
+              ? token0Instance.address.toString()
+              : token1Instance.address.toString(),
+            0,
+            ordered
+              ? token1Instance.address.toString()
+              : token0Instance.address.toString(),
+            initialTokenAmount,
+            initialTokenAmount
+          )
+          .send();
+      } else {
+        operation = await dex.methods
+          .use(
+            "initializeExchange",
+            ordered
+              ? token0Instance.address.toString()
+              : token1Instance.address.toString(),
+            0,
+            ordered
+              ? token1Instance.address.toString()
+              : token0Instance.address.toString(),
+            0,
+            initialTokenAmount,
+            initialTokenAmount
+          )
+          .send();
+      }
       await operation.confirmation();
     }
   }
