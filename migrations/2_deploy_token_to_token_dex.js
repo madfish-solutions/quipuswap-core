@@ -1,4 +1,5 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
+const usedStandard = standard == "FA2FA12" ? "FA2" : standard;
 const TTDex = artifacts.require("TTDex" + standard);
 const MetadataStorage = artifacts.require("MetadataStorage");
 const dexStorage = require("../storage/TTDex");
@@ -7,8 +8,12 @@ const { InMemorySigner } = require("@taquito/signer");
 const { MichelsonMap } = require("@taquito/michelson-encoder");
 const { dexFunctions, tokenFunctions } = require("../storage/TTFunctions");
 const { execSync } = require("child_process");
-const Token = artifacts.require("Token" + standard);
-const tokenStorage = require("../storage/Token" + standard);
+const Token = artifacts.require("Token" + usedStandard);
+const TokenFA12 = artifacts.require("TokenFA12");
+const TokenFA2 = artifacts.require("TokenFA2");
+const tokenStorage = require("../storage/Token" + usedStandard);
+const tokenFA12Storage = require("../storage/TokenFA12");
+const tokenFA2Storage = require("../storage/TokenFA2");
 const { getLigo } = require("../scripts/utils");
 const accountsStored = require("../scripts/sandbox/accounts");
 
@@ -75,10 +80,14 @@ module.exports = async (deployer, network, accounts) => {
 
   if (network !== "mainnet") {
     let token0Instance = await tezos.contract.at(
-      (await Token.new(tokenStorage)).address.toString()
+      standard == "FA2FA12"
+        ? (await TokenFA2.new(tokenFA2Storage)).address.toString()
+        : (await Token.new(tokenStorage)).address.toString()
     );
     let token1Instance = await tezos.contract.at(
-      (await Token.new(tokenStorage)).address.toString()
+      standard == "FA2FA12"
+        ? (await TokenFA12.new(tokenFA12Storage)).address.toString()
+        : (await Token.new(tokenStorage)).address.toString()
     );
     console.log(`Token 1 address: ${token0Instance.address}`);
     console.log(`Token 2 address: ${token1Instance.address}`);
@@ -123,24 +132,25 @@ module.exports = async (deployer, network, accounts) => {
         ])
         .send();
       await operation.confirmation();
-      operation = await token1Instance.methods
-        .update_operators([
-          {
-            add_operator: {
-              owner: accounts[0],
-              operator: dexInstance.address.toString(),
-              token_id: defaultTokenId,
+      if (standard == "FA2FA12") {
+        operation = await token1Instance.methods
+          .approve(dexInstance.address.toString(), initialTokenAmount)
+          .send();
+      } else {
+        operation = await token1Instance.methods
+          .update_operators([
+            {
+              add_operator: {
+                owner: accounts[0],
+                operator: dexInstance.address.toString(),
+                token_id: defaultTokenId,
+              },
             },
-          },
-        ])
-        .send();
+          ])
+          .send();
+      }
       await operation.confirmation();
-      let pair = {
-        token_a_address: token0Instance.address.toString(),
-        token_b_address: token1Instance.address.toString(),
-        token_a_id: 0,
-        token_b_id: 0,
-      };
+
       operation = await dex.methods
         .use(
           "initializeExchange",
