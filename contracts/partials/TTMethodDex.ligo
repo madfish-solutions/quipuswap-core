@@ -39,6 +39,10 @@ function wrap_transfer_trx(const owner : address; const receiver : address; cons
         ] ]
     ]
   ])
+#if FA2FA12_STANDARD_ENABLED
+function wrap_fa12_transfer_trx(const owner : address; const receiver : address; const value : nat) : transfer_type_fa12 is
+  TransferTypeFA12(owner, (receiver, value))
+#endif
 #else
 function wrap_transfer_trx(const owner : address; const receiver : address; const value : nat) : transfer_type is
   TransferType(owner, (receiver, value))
@@ -50,6 +54,14 @@ function get_token_contract(const token_address : address) : contract(transfer_t
     Some(contr) -> contr
     | None -> (failwith("Dex/not-token") : contract(transfer_type))
   end;
+
+#if FA2FA12_STANDARD_ENABLED
+function get_fa12_token_contract(const token_address : address) : contract(transfer_type_fa12) is
+  case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type_fa12))) of
+    Some(contr) -> contr
+    | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
+  end;
+#endif
 
 #include "../partials/TTMethodFA2.ligo"
 
@@ -120,15 +132,28 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
               get_token_contract(params.pair.token_a_address)
             );
             Tezos.transaction(
-              wrap_transfer_trx(Tezos.sender,
+#if FA2FA12_STANDARD_ENABLED
+              wrap_fa12_transfer_trx(
+#else
+              wrap_transfer_trx(
+#endif
+                Tezos.sender,
                 this,
                 params.token_b_in
 #if FA2_STANDARD_ENABLED
+#if FA2FA12_STANDARD_ENABLED
+#else
                 , params.pair.token_b_id
+#endif
 #endif
                 ),
               0mutez,
-              get_token_contract(params.pair.token_b_address)
+#if FA2FA12_STANDARD_ENABLED              
+              get_fa12_token_contract(
+#else
+              get_token_contract(
+#endif
+                params.pair.token_b_address)
             )];
         }
         | TokenToTokenPayment(n) -> skip
@@ -205,15 +230,28 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
               get_token_contract(params.pair.token_a_address)
             );
             Tezos.transaction(
-              wrap_transfer_trx(this,
+#if FA2FA12_STANDARD_ENABLED
+              wrap_fa12_transfer_trx(
+#else
+              wrap_transfer_trx(
+#endif
+                this,
                 params.receiver,
                 token_b_out
 #if FA2_STANDARD_ENABLED
+#if FA2FA12_STANDARD_ENABLED
+#else
                 , params.pair.token_b_id
+#endif
 #endif
                 ),
               0mutez,
-              get_token_contract(params.pair.token_b_address)
+#if FA2FA12_STANDARD_ENABLED              
+              get_fa12_token_contract(
+#else
+              get_token_contract(
+#endif
+                params.pair.token_b_address)
             )];
         }
         | Buy -> {
@@ -240,15 +278,28 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
           operations := list[
             Tezos.transaction(
-              wrap_transfer_trx(Tezos.sender,
+#if FA2FA12_STANDARD_ENABLED
+              wrap_fa12_transfer_trx(
+#else
+              wrap_transfer_trx(
+#endif
+                Tezos.sender,
                 this,
                 params.amount_in
 #if FA2_STANDARD_ENABLED
+#if FA2FA12_STANDARD_ENABLED
+#else
                 , params.pair.token_b_id
+#endif
 #endif
                 ),
               0mutez,
-              get_token_contract(params.pair.token_b_address)
+#if FA2FA12_STANDARD_ENABLED              
+              get_fa12_token_contract(
+#else
+              get_token_contract(
+#endif
+                params.pair.token_b_address)
             );
             Tezos.transaction(
               wrap_transfer_trx(this,
@@ -356,15 +407,28 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
             get_token_contract(params.pair.token_a_address)
           );
           Tezos.transaction(
-            wrap_transfer_trx(Tezos.sender,
+#if FA2FA12_STANDARD_ENABLED
+              wrap_fa12_transfer_trx(
+#else
+              wrap_transfer_trx(
+#endif
+              Tezos.sender,
               this,
               tokens_b_required
 #if FA2_STANDARD_ENABLED
+#if FA2FA12_STANDARD_ENABLED
+#else
               , params.pair.token_b_id
+#endif
 #endif
               ),
             0mutez,
-            get_token_contract(params.pair.token_b_address)
+#if FA2FA12_STANDARD_ENABLED              
+            get_fa12_token_contract(
+#else
+            get_token_contract(
+#endif
+              params.pair.token_b_address)
           )];
       }
       | DivestLiquidity(n) -> skip
@@ -453,15 +517,28 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
             get_token_contract(params.pair.token_a_address)
           );
           transaction(
-            wrap_transfer_trx(this,
+#if FA2FA12_STANDARD_ENABLED
+              wrap_fa12_transfer_trx(
+#else
+              wrap_transfer_trx(
+#endif
+              this,
               Tezos.sender,
               token_b_divested
 #if FA2_STANDARD_ENABLED
+#if FA2FA12_STANDARD_ENABLED
+#else
               , params.pair.token_b_id
+#endif
 #endif
               ),
             0mutez,
-            get_token_contract(params.pair.token_b_address)
+#if FA2FA12_STANDARD_ENABLED              
+            get_fa12_token_contract(
+#else
+            get_token_contract(
+#endif
+              params.pair.token_b_address)
           );
         ];
       }

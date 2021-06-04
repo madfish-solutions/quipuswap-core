@@ -14,6 +14,11 @@ type token_identifier is record [
     token_address     : address;
     token_id          : nat;
   ]
+#if FA2FA12_STANDARD_ENABLED
+type token_transfer_params_fa12 is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
+type token_identifier_fa12 is address
+type transfer_type_fa12 is TransferTypeFA12 of token_transfer_params_fa12
+#endif
 #else
 type token_transfer_params is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type token_identifier is address
@@ -30,7 +35,10 @@ type tokens_info is record [
   token_b_address        : address;
 #if FA2_STANDARD_ENABLED
   token_a_id             : nat;
+#if FA2FA12_STANDARD_ENABLED
+#else
   token_b_id             : nat;
+#endif
 #endif
 ]
 
