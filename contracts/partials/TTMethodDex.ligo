@@ -72,10 +72,12 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
       case p of
         | InitializeExchange(params) -> {
           (* check preconditions *)
+#if FA2FA12_STANDARD_ENABLED
+#else
           if params.pair.token_a_address > params.pair.token_b_address then
             failwith("Dex/wrong-pair")
           else skip;
-
+#endif
           (* get par info*)
           const res : (pair_info * nat) = get_pair(params.pair, s);
           const pair : pair_info = res.0;
@@ -170,10 +172,13 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
     case p of
       | InitializeExchange(n) -> skip
       | TokenToTokenPayment(params) -> {
+#if FA2FA12_STANDARD_ENABLED
+#else
         (* check preconditions *)
         if params.pair.token_a_address > params.pair.token_b_address then
           failwith("Dex/wrong-pair")
         else skip;
+#endif
 
         (* get par info*)
         const res : (pair_info * nat) = get_pair(params.pair, s);
@@ -329,11 +334,13 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
       | InitializeExchange(n) -> skip
       | TokenToTokenPayment(n) -> skip
       | InvestLiquidity(params) -> {
-
+#if FA2FA12_STANDARD_ENABLED
+#else
         (* check preconditions *)
         if params.pair.token_a_address > params.pair.token_b_address then
           failwith("Dex/wrong-pair")
         else skip;
+#endif
 
         (* get par info*)
         const res : (pair_info * nat) = get_pair(params.pair, s);
@@ -444,10 +451,13 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       | TokenToTokenPayment(n) -> skip
       | InvestLiquidity(n) -> skip
       | DivestLiquidity(params) -> {
+#if FA2FA12_STANDARD_ENABLED
+#else
         (* check preconditions *)
         if params.pair.token_a_address > params.pair.token_b_address  then
           failwith("Dex/wrong-pair")
         else skip;
+#endif
 
         (* get par info*)
         const res : (pair_info * nat) = get_pair(params.pair, s);
