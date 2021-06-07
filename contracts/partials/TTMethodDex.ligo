@@ -27,9 +27,8 @@ function get_pair (const key : tokens_info; const s : dex_storage) : (pair_info 
   } with (pair, token_id)
 
 (* Helper function to prepare the token transfer *)
-#if FA2_STANDARD_ENABLED
-function wrap_transfer_trx(const owner : address; const receiver : address; const value : nat; const token_id : nat) : transfer_type is
-  TransferType(list[
+function wrap_fa2_transfer_trx(const owner : address; const receiver : address; const value : nat; const token_id : nat) : transfer_type_fa2 is
+  TransferTypeFA2(list[
     record[
       from_ = owner;
       txs = list [ record [
@@ -39,29 +38,22 @@ function wrap_transfer_trx(const owner : address; const receiver : address; cons
         ] ]
     ]
   ])
-#if FA2FA12_STANDARD_ENABLED
+
 function wrap_fa12_transfer_trx(const owner : address; const receiver : address; const value : nat) : transfer_type_fa12 is
   TransferTypeFA12(owner, (receiver, value))
-#endif
-#else
-function wrap_transfer_trx(const owner : address; const receiver : address; const value : nat) : transfer_type is
-  TransferType(owner, (receiver, value))
-#endif
 
 (* Helper function to get token contract *)
-function get_token_contract(const token_address : address) : contract(transfer_type) is
-  case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type))) of
+function get_fa2_token_contract(const token_address : address) : contract(transfer_type_fa2) is
+  case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type_fa2))) of
     Some(contr) -> contr
-    | None -> (failwith("Dex/not-token") : contract(transfer_type))
+    | None -> (failwith("Dex/not-token") : contract(transfer_type_fa2))
   end;
 
-#if FA2FA12_STANDARD_ENABLED
 function get_fa12_token_contract(const token_address : address) : contract(transfer_type_fa12) is
   case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type_fa12))) of
     Some(contr) -> contr
     | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
   end;
-#endif
 
 #include "../partials/TTMethodFA2.ligo"
 
@@ -72,12 +64,10 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
       case p of
         | InitializeExchange(params) -> {
           (* check preconditions *)
-#if FA2FA12_STANDARD_ENABLED
-#else
-          if params.pair.token_a_address > params.pair.token_b_address then
-            failwith("Dex/wrong-pair")
+          if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id > params.pair.token_b_id then
+            failwith("Dex/wrong-token-id")
           else skip;
-#endif
+
           (* get par info*)
           const res : (pair_info * nat) = get_pair(params.pair, s);
           const pair : pair_info = res.0;
@@ -121,42 +111,77 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           s.tokens[token_id] := params.pair;
 
           (* prepare operations to get initial liquidity *)
-          operations := list[
-            Tezos.transaction(
-              wrap_transfer_trx(Tezos.sender,
-                this,
-                params.token_a_in
-#if FA2_STANDARD_ENABLED
-                , params.pair.token_a_id
-#endif
+          case params.pair.standard of
+          | Fa12 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+            operations := list[
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(Tezos.sender,
+                  this,
+                  params.token_a_in),
+                0mutez,
+                get_fa12_token_contract(params.pair.token_a_address)
+              );
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(Tezos.sender,
+                  this,
+                  params.token_b_in
                 ),
-              0mutez,
-              get_token_contract(params.pair.token_a_address)
-            );
-            Tezos.transaction(
-#if FA2FA12_STANDARD_ENABLED
-              wrap_fa12_transfer_trx(
-#else
-              wrap_transfer_trx(
-#endif
-                Tezos.sender,
-                this,
-                params.token_b_in
-#if FA2_STANDARD_ENABLED
-#if FA2FA12_STANDARD_ENABLED
-#else
-                , params.pair.token_b_id
-#endif
-#endif
-                ),
-              0mutez,
-#if FA2FA12_STANDARD_ENABLED              
-              get_fa12_token_contract(
-#else
-              get_token_contract(
-#endif
-                params.pair.token_b_address)
-            )];
+                0mutez,
+                get_fa12_token_contract(
+                  params.pair.token_b_address)
+              )];
+            }
+          | Fa2 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+            operations := list[
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(Tezos.sender,
+                  this,
+                  params.token_a_in,
+                  params.pair.token_a_id),
+                0mutez,
+                get_fa2_token_contract(params.pair.token_a_address)
+              );
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.token_b_in,
+                  params.pair.token_b_id),
+                0mutez,
+                get_fa2_token_contract(
+                  params.pair.token_b_address)
+              )];
+            }
+          | Mixed -> {
+            operations :=list[
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(Tezos.sender,
+                  this,
+                  params.token_a_in,
+                  params.pair.token_a_id
+                  ),
+                0mutez,
+                get_fa2_token_contract(params.pair.token_a_address)
+              );
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.token_b_in
+                  ),
+                0mutez,
+                get_fa12_token_contract(
+                  params.pair.token_b_address)
+              )];
+
+            }
+          end;
         }
         | TokenToTokenPayment(n) -> skip
         | InvestLiquidity(n) -> skip
@@ -172,13 +197,10 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
     case p of
       | InitializeExchange(n) -> skip
       | TokenToTokenPayment(params) -> {
-#if FA2FA12_STANDARD_ENABLED
-#else
         (* check preconditions *)
-        if params.pair.token_a_address > params.pair.token_b_address then
-          failwith("Dex/wrong-pair")
+        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id > params.pair.token_b_id then
+          failwith("Dex/wrong-token-id")
         else skip;
-#endif
 
         (* get par info*)
         const res : (pair_info * nat) = get_pair(params.pair, s);
@@ -221,43 +243,80 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
           } else failwith("Dex/high-out");
 
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
-
-          operations := list[
-            Tezos.transaction(
-              wrap_transfer_trx(Tezos.sender,
-                this,
-                params.amount_in
-#if FA2_STANDARD_ENABLED
-                , params.pair.token_a_id
-#endif
+          case params.pair.standard of
+          | Fa12 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+            operations := list[
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.amount_in),
+                0mutez,
+                get_fa12_token_contract(params.pair.token_a_address)
+              );
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(
+                  this,
+                  params.receiver,
+                  token_b_out
                 ),
-              0mutez,
-              get_token_contract(params.pair.token_a_address)
-            );
-            Tezos.transaction(
-#if FA2FA12_STANDARD_ENABLED
-              wrap_fa12_transfer_trx(
-#else
-              wrap_transfer_trx(
-#endif
-                this,
-                params.receiver,
-                token_b_out
-#if FA2_STANDARD_ENABLED
-#if FA2FA12_STANDARD_ENABLED
-#else
-                , params.pair.token_b_id
-#endif
-#endif
-                ),
-              0mutez,
-#if FA2FA12_STANDARD_ENABLED              
-              get_fa12_token_contract(
-#else
-              get_token_contract(
-#endif
-                params.pair.token_b_address)
-            )];
+                0mutez,
+                get_fa12_token_contract(
+                  params.pair.token_b_address)
+              )];
+            }
+          | Fa2 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+            operations := list[
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.amount_in,
+                  params.pair.token_a_id),
+                0mutez,
+                get_fa2_token_contract(params.pair.token_a_address)
+              );
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  this,
+                  params.receiver,
+                  token_b_out,
+                  params.pair.token_b_id),
+                0mutez,
+                get_fa2_token_contract(
+                  params.pair.token_b_address)
+              )];
+            }
+          | Mixed -> {
+            operations := list[
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.amount_in,
+                  params.pair.token_a_id
+                  ),
+                0mutez,
+                get_fa2_token_contract(params.pair.token_a_address)
+              );
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(
+                  this,
+                  params.receiver,
+                  token_b_out
+                  ),
+                0mutez,
+                get_fa12_token_contract(
+                  params.pair.token_b_address)
+              )];
+            }
+          end;
         }
         | Buy -> {
           (* calculate amount out *)
@@ -281,42 +340,80 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
           } else failwith("Dex/high-out");
 
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
-          operations := list[
-            Tezos.transaction(
-#if FA2FA12_STANDARD_ENABLED
-              wrap_fa12_transfer_trx(
-#else
-              wrap_transfer_trx(
-#endif
-                Tezos.sender,
-                this,
-                params.amount_in
-#if FA2_STANDARD_ENABLED
-#if FA2FA12_STANDARD_ENABLED
-#else
-                , params.pair.token_b_id
-#endif
-#endif
+          case params.pair.standard of
+          | Fa12 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+            operations := list[
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.amount_in),
+                0mutez,
+                get_fa12_token_contract(params.pair.token_b_address)
+              );
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(
+                  this,
+                  params.receiver,
+                  token_a_out
                 ),
-              0mutez,
-#if FA2FA12_STANDARD_ENABLED              
-              get_fa12_token_contract(
-#else
-              get_token_contract(
-#endif
-                params.pair.token_b_address)
-            );
-            Tezos.transaction(
-              wrap_transfer_trx(this,
-                params.receiver,
-                token_a_out
-#if FA2_STANDARD_ENABLED
-                , params.pair.token_a_id
-#endif
-                ),
-              0mutez,
-              get_token_contract(params.pair.token_a_address)
-            )];
+                0mutez,
+                get_fa12_token_contract(
+                  params.pair.token_a_address)
+              )];
+            }
+          | Fa2 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+            operations := list[
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.amount_in,
+                  params.pair.token_b_id),
+                0mutez,
+                get_fa2_token_contract(params.pair.token_b_address)
+              );
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  this,
+                  params.receiver,
+                  token_a_out,
+                  params.pair.token_a_id),
+                0mutez,
+                get_fa2_token_contract(
+                  params.pair.token_a_address)
+              )];
+          }
+          | Mixed -> {
+            operations := list[
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.amount_in,
+                  params.pair.token_b_id
+                  ),
+                0mutez,
+                get_fa2_token_contract(params.pair.token_b_address)
+              );
+              Tezos.transaction(
+                wrap_fa12_transfer_trx(
+                  this,
+                  params.receiver,
+                  token_a_out
+                  ),
+                0mutez,
+                get_fa12_token_contract(
+                  params.pair.token_a_address)
+              )];
+            }
+          end;
         }
         end;
         s.pairs[token_id] := pair;
@@ -334,13 +431,10 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
       | InitializeExchange(n) -> skip
       | TokenToTokenPayment(n) -> skip
       | InvestLiquidity(params) -> {
-#if FA2FA12_STANDARD_ENABLED
-#else
         (* check preconditions *)
-        if params.pair.token_a_address > params.pair.token_b_address then
-          failwith("Dex/wrong-pair")
+        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id > params.pair.token_b_id then
+          failwith("Dex/wrong-token-id")
         else skip;
-#endif
 
         (* get par info*)
         const res : (pair_info * nat) = get_pair(params.pair, s);
@@ -401,42 +495,76 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
         s.pairs[token_id] := pair;
 
         (* prepare operations to get initial liquidity *)
-        operations := list[
-          Tezos.transaction(
-            wrap_transfer_trx(Tezos.sender,
-              this,
-              tokens_a_required
-#if FA2_STANDARD_ENABLED
-              , params.pair.token_a_id
-#endif
+        case params.pair.standard of
+        | Fa12 -> {
+          if params.pair.token_a_address > params.pair.token_b_address then
+            failwith("Dex/wrong-pair")
+          else skip;
+          operations :=  list[
+            Tezos.transaction(
+              wrap_fa12_transfer_trx(Tezos.sender,
+                this,
+                params.token_a_in),
+              0mutez,
+              get_fa12_token_contract(params.pair.token_a_address)
+            );
+            Tezos.transaction(
+              wrap_fa12_transfer_trx(Tezos.sender,
+                this,
+                params.token_b_in
               ),
-            0mutez,
-            get_token_contract(params.pair.token_a_address)
-          );
-          Tezos.transaction(
-#if FA2FA12_STANDARD_ENABLED
+              0mutez,
+              get_fa12_token_contract(
+                params.pair.token_b_address)
+            )];
+          }
+        | Fa2 -> {
+          if params.pair.token_a_address > params.pair.token_b_address then
+            failwith("Dex/wrong-pair")
+          else skip;
+          operations := list[
+            Tezos.transaction(
+              wrap_fa2_transfer_trx(Tezos.sender,
+                this,
+                params.token_a_in,
+                params.pair.token_a_id),
+              0mutez,
+              get_fa2_token_contract(params.pair.token_a_address)
+            );
+            Tezos.transaction(
+              wrap_fa2_transfer_trx(
+                Tezos.sender,
+                this,
+                params.token_b_in,
+                params.pair.token_b_id),
+              0mutez,
+              get_fa2_token_contract(
+                params.pair.token_b_address)
+            )];
+          }
+        | Mixed -> {
+          operations := list[
+            Tezos.transaction(
+              wrap_fa2_transfer_trx(Tezos.sender,
+                this,
+                params.token_a_in,
+                params.pair.token_a_id
+                ),
+              0mutez,
+              get_fa2_token_contract(params.pair.token_a_address)
+            );
+            Tezos.transaction(
               wrap_fa12_transfer_trx(
-#else
-              wrap_transfer_trx(
-#endif
-              Tezos.sender,
-              this,
-              tokens_b_required
-#if FA2_STANDARD_ENABLED
-#if FA2FA12_STANDARD_ENABLED
-#else
-              , params.pair.token_b_id
-#endif
-#endif
-              ),
-            0mutez,
-#if FA2FA12_STANDARD_ENABLED              
-            get_fa12_token_contract(
-#else
-            get_token_contract(
-#endif
-              params.pair.token_b_address)
-          )];
+                Tezos.sender,
+                this,
+                params.token_b_in
+                ),
+              0mutez,
+              get_fa12_token_contract(
+                params.pair.token_b_address)
+            )]
+          }
+        end;
       }
       | DivestLiquidity(n) -> skip
     end
@@ -451,13 +579,10 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       | TokenToTokenPayment(n) -> skip
       | InvestLiquidity(n) -> skip
       | DivestLiquidity(params) -> {
-#if FA2FA12_STANDARD_ENABLED
-#else
         (* check preconditions *)
-        if params.pair.token_a_address > params.pair.token_b_address  then
-          failwith("Dex/wrong-pair")
+        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id > params.pair.token_b_id then
+          failwith("Dex/wrong-token-id")
         else skip;
-#endif
 
         (* get par info*)
         const res : (pair_info * nat) = get_pair(params.pair, s);
@@ -514,43 +639,80 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
         s.pairs[token_id] := pair;
 
         (* prepare operations with XTZ and tokens to user *)
-        operations := list [
-          transaction(
-            wrap_transfer_trx(this,
-              Tezos.sender,
-              token_a_divested
-#if FA2_STANDARD_ENABLED
-              , params.pair.token_a_id
-#endif
-              ),
-            0mutez,
-            get_token_contract(params.pair.token_a_address)
-          );
-          transaction(
-#if FA2FA12_STANDARD_ENABLED
+        case params.pair.standard of
+        | Fa12 -> {
+          if params.pair.token_a_address > params.pair.token_b_address then
+            failwith("Dex/wrong-pair")
+          else skip;
+          operations := list[
+            Tezos.transaction(
               wrap_fa12_transfer_trx(
-#else
-              wrap_transfer_trx(
-#endif
-              this,
-              Tezos.sender,
-              token_b_divested
-#if FA2_STANDARD_ENABLED
-#if FA2FA12_STANDARD_ENABLED
-#else
-              , params.pair.token_b_id
-#endif
-#endif
+                this,
+                Tezos.sender,
+                token_a_divested),
+              0mutez,
+              get_fa12_token_contract(
+                params.pair.token_a_address)
+            );
+            Tezos.transaction(
+              wrap_fa12_transfer_trx(
+                this,
+                Tezos.sender,
+                token_b_divested
               ),
-            0mutez,
-#if FA2FA12_STANDARD_ENABLED              
-            get_fa12_token_contract(
-#else
-            get_token_contract(
-#endif
-              params.pair.token_b_address)
-          );
-        ];
+              0mutez,
+              get_fa12_token_contract(
+                params.pair.token_b_address)
+            )];
+          }
+        | Fa2 -> {
+          if params.pair.token_a_address > params.pair.token_b_address then
+            failwith("Dex/wrong-pair")
+          else skip;
+          operations := list[
+            Tezos.transaction(
+              wrap_fa2_transfer_trx(
+                this,
+                Tezos.sender,
+                token_a_divested,
+                params.pair.token_a_id),
+              0mutez,
+              get_fa2_token_contract(
+                params.pair.token_a_address)
+            );
+            Tezos.transaction(
+              wrap_fa2_transfer_trx(
+                this,
+                Tezos.sender,
+                token_b_divested,
+                params.pair.token_b_id),
+              0mutez,
+              get_fa2_token_contract(
+                params.pair.token_b_address)
+            )];
+          }
+        | Mixed -> {
+          operations := list[
+            Tezos.transaction(
+              wrap_fa2_transfer_trx(
+                this,
+                Tezos.sender,
+                token_a_divested,
+                params.pair.token_a_id),
+              0mutez,
+              get_fa2_token_contract(params.pair.token_a_address)
+            );
+            Tezos.transaction(
+              wrap_fa12_transfer_trx(
+                this,
+                Tezos.sender,
+                token_b_divested),
+              0mutez,
+              get_fa12_token_contract(
+                params.pair.token_b_address)
+            )];
+          }
+        end;
       }
     end
   } with (operations, s)

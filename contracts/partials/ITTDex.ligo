@@ -8,21 +8,20 @@ type account_info is record [
   allowances        : set (address); (* accounts allowed to act on behalf of the user *)
 ]
 
-#if FA2_STANDARD_ENABLED
-type token_transfer_params is list (transfer_param)
-type token_identifier is record [
+type token_transfer_params_fa2 is list (transfer_param)
+type token_identifier_fa2 is record [
     token_address     : address;
     token_id          : nat;
   ]
-#if FA2FA12_STANDARD_ENABLED
 type token_transfer_params_fa12 is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type token_identifier_fa12 is address
 type transfer_type_fa12 is TransferTypeFA12 of token_transfer_params_fa12
-#endif
-#else
-type token_transfer_params is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
-type token_identifier is address
-#endif
+type transfer_type_fa2 is TransferTypeFA2 of token_transfer_params_fa2
+
+type pair_type is
+| Fa12
+| Fa2
+| Mixed
 
 type pair_info is record [
   token_a_pool        : nat; (* tez reserves in the pool *)
@@ -33,13 +32,9 @@ type pair_info is record [
 type tokens_info is record [
   token_a_address        : address;
   token_b_address        : address;
-#if FA2_STANDARD_ENABLED
   token_a_id             : nat;
-#if FA2FA12_STANDARD_ENABLED
-#else
   token_b_id             : nat;
-#endif
-#endif
+  standard               : pair_type;
 ]
 
 type token_pair is bytes
@@ -147,6 +142,5 @@ type full_return is list (operation) * full_dex_storage
 
 const fee_rate : nat = 333n; (* exchange fee rate distributed among the liquidity providers *)
 
-type transfer_type is TransferType of token_transfer_params
 const token_func_count : nat = 2n;
 
