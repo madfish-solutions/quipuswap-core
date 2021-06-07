@@ -49,6 +49,22 @@ type dex_storage is record [
 ]
 type swap_type is Buy | Sell
 
+type swap_slice_type is record [
+    swap                  : tokens_info;
+    operation             : swap_type;
+]
+
+
+(* Entrypoint arguments *)
+type token_to_token_route_params is
+  [@layout:comb]
+  record [
+    swaps                 : list(swap_slice_type);
+    amount_in             : nat; (* amount of tokens to be exchanged *)
+    min_amount_out        : nat; (* min amount of XTZ received to accept exchange *)
+    receiver              : address; (* tokens receiver *)
+  ]
+
 (* Entrypoint arguments *)
 type token_to_token_payment_params is
   [@layout:comb]
