@@ -5,7 +5,7 @@ import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-contract.only("BuyToken()", function () {
+contract("BuyToken()", function () {
   let context: TTContext;
   const tokenAAmount: number = 100000;
   const tokenBAmount: number = 1000;
