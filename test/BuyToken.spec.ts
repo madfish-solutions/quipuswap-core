@@ -5,7 +5,7 @@ import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-contract("BuyToken()", function () {
+contract.only("BuyToken()", function () {
   let context: TTContext;
   const tokenAAmount: number = 100000;
   const tokenBAmount: number = 1000;
@@ -22,7 +22,7 @@ contract("BuyToken()", function () {
     });
     tokenAAddress = context.tokens[0].contract.address;
     tokenBAddress = context.tokens[1].contract.address;
-    if (standard != "FA2FA12" && tokenAAddress > tokenBAddress) {
+    if (standard != "MIXED" && tokenAAddress > tokenBAddress) {
       const tmp = context.tokens[0];
       context.tokens[0] = context.tokens[1];
       context.tokens[1] = tmp;

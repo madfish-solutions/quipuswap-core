@@ -393,23 +393,23 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
           | Mixed -> {
             operations := list[
               Tezos.transaction(
-                wrap_fa2_transfer_trx(
+                wrap_fa12_transfer_trx(
                   Tezos.sender,
                   this,
-                  params.amount_in,
-                  params.pair.token_b_id
+                  params.amount_in
                   ),
                 0mutez,
-                get_fa2_token_contract(params.pair.token_b_address)
+                get_fa12_token_contract(params.pair.token_b_address)
               );
               Tezos.transaction(
-                wrap_fa12_transfer_trx(
+                wrap_fa2_transfer_trx(
                   this,
                   params.receiver,
-                  token_a_out
+                  token_a_out,
+                  params.pair.token_a_id
                   ),
                 0mutez,
-                get_fa12_token_contract(
+                get_fa2_token_contract(
                   params.pair.token_a_address)
               )];
             }

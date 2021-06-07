@@ -6,7 +6,7 @@ import accounts from "./accounts/accounts";
 import { defaultAccountInfo, accuracy } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-if (standard !== "FA2FA12") {
+if (standard !== "MIXED") {
   contract("Default()", function () {
     let context: Context;
     let tokenAddress: string;

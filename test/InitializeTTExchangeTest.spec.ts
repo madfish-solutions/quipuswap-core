@@ -26,12 +26,12 @@ contract("InitializeTTExchange()", function () {
     let tokenBAddress: string;
     before(async () => {
       tokenAAddress = await context.createToken(
-        standard == "FA2FA12" ? "FA2" : standard
+        standard == "MIXED" ? "FA2" : standard
       );
       tokenBAddress = await context.createToken(
-        standard == "FA2FA12" ? "FA12" : standard
+        standard == "MIXED" ? "FA12" : standard
       );
-      if (standard != "FA2FA12" && tokenAAddress > tokenBAddress) {
+      if (standard != "MIXED" && tokenAAddress > tokenBAddress) {
         const tmp = context.tokens[0];
         context.tokens[0] = context.tokens[1];
         context.tokens[1] = tmp;
@@ -172,7 +172,7 @@ contract("InitializeTTExchange()", function () {
     before(async () => {
       tokenAAddress = context.tokens[0].contract.address;
       tokenBAddress = context.tokens[1].contract.address;
-      if (standard != "FA2FA12" && tokenAAddress > tokenBAddress) {
+      if (standard != "MIXED" && tokenAAddress > tokenBAddress) {
         tokenBAddress = context.tokens[0].contract.address;
         tokenAAddress = context.tokens[1].contract.address;
       }

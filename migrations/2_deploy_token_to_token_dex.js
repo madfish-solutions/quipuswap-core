@@ -1,6 +1,6 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
-const usedStandard = standard == "FA2FA12" ? "FA2" : standard;
-const TTDex = artifacts.require("TTDex" + standard);
+const usedStandard = standard == "MIXED" ? "FA2" : standard;
+const TTDex = artifacts.require("TTDex");
 const MetadataStorage = artifacts.require("MetadataStorage");
 const dexStorage = require("../storage/TTDex");
 const { TezosToolkit } = require("@taquito/taquito");
@@ -49,7 +49,7 @@ module.exports = async (deployer, network, accounts) => {
 
   for (dexFunction of dexFunctions) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -64,7 +64,7 @@ module.exports = async (deployer, network, accounts) => {
   }
   for (tokenFunction of tokenFunctions[standard]) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -80,12 +80,12 @@ module.exports = async (deployer, network, accounts) => {
 
   if (network !== "mainnet") {
     let token0Instance = await tezos.contract.at(
-      standard == "FA2FA12"
+      standard == "MIXED"
         ? (await TokenFA2.new(tokenFA2Storage)).address.toString()
         : (await Token.new(tokenStorage)).address.toString()
     );
     let token1Instance = await tezos.contract.at(
-      standard == "FA2FA12"
+      standard == "MIXED"
         ? (await TokenFA12.new(tokenFA12Storage)).address.toString()
         : (await Token.new(tokenStorage)).address.toString()
     );
@@ -132,7 +132,7 @@ module.exports = async (deployer, network, accounts) => {
         ])
         .send();
       await operation.confirmation();
-      if (standard == "FA2FA12") {
+      if (standard == "MIXED") {
         operation = await token1Instance.methods
           .approve(dexInstance.address.toString(), initialTokenAmount)
           .send();
@@ -151,7 +151,7 @@ module.exports = async (deployer, network, accounts) => {
       }
       await operation.confirmation();
 
-      if (standard === "FA2FA12") {
+      if (standard === "MIXED") {
         operation = await dex.methods
           .use(
             "initializeExchange",

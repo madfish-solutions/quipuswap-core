@@ -2,7 +2,7 @@ import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-if (standard !== "FA2FA12") {
+if (standard !== "MIXED") {
   contract("SetXFunctions()", function () {
     let context: Context;
     let tokenAddress: string;

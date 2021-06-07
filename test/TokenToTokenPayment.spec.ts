@@ -3,7 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-if (standard !== "FA2FA12") {
+if (standard !== "MIXED") {
   contract("TokenToTokenPayment()", function () {
     let context: Context;
     let tokenAddress: string;

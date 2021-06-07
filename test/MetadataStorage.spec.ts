@@ -7,7 +7,7 @@ import { MichelsonMap } from "@taquito/michelson-encoder";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 const CMetadataStorage = artifacts.require("MetadataStorage");
-if (standard !== "FA2FA12") {
+if (standard !== "MIXED") {
   contract("MetadataStorage()", function () {
     let metadataStorage: Metadata;
     const aliceAddress: string = accounts.alice.pkh;

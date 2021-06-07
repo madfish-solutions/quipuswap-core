@@ -5,6 +5,7 @@ export declare type TokenInfo = {
   token_b_address: string;
   token_a_id?: BigNumber;
   token_b_id?: BigNumber;
+  standard: string;
 };
 
 export declare type PairInfo = {

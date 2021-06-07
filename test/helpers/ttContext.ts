@@ -1,8 +1,6 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-import { TTDex as TTDexFA12 } from "./ttdexFA12";
 import { TTDex as TTDexFA2 } from "./ttdexFA2";
-import { TTDex as TTDexFA2FA12 } from "./ttdexFA2FA12";
 import { TokenFA12 } from "./tokenFA12";
 import { prepareProviderOptions } from "./utils";
 
@@ -15,28 +13,10 @@ import { Token } from "./token";
 import { TezosToolkit } from "@taquito/taquito";
 import BigNumber from "bignumber.js";
 
-let tokenStorage, CDex, CToken;
-type Dex = TTDexFA12 | TTDexFA2 | TTDexFA2FA12;
+type Dex = TTDexFA2;
 const CTokenFA12 = artifacts.require("TokenFA12");
 const CTokenFA2 = artifacts.require("TokenFA2");
-
-switch (standard) {
-  case "FA2":
-    tokenStorage = tokenFA2Storage;
-    CDex = artifacts.require("TTDexFA2");
-    CToken = artifacts.require("TokenFA2");
-    break;
-  case "FA12":
-    tokenStorage = tokenFA12Storage;
-    CDex = artifacts.require("TTDexFA12");
-    CToken = artifacts.require("TokenFA12");
-    break;
-  case "FA2FA12":
-    tokenStorage = tokenFA12Storage;
-    CDex = artifacts.require("TTDexFA2FA12");
-    CToken = artifacts.require("TokenFA2");
-    break;
-}
+const CDex = artifacts.require("TTDex");
 
 export class TTContext {
   public dex: Dex;
@@ -72,18 +52,7 @@ export class TTContext {
     let dexInstance = useDeployedDex
       ? await CDex.deployed()
       : await CDex.new(dexStorage);
-    let dex;
-    switch (standard) {
-      case "FA2":
-        dex = await TTDexFA2.init(dexInstance.address.toString());
-        break;
-      case "FA12":
-        dex = await TTDexFA12.init(dexInstance.address.toString());
-        break;
-      case "FA2FA12":
-        dex = await TTDexFA2FA12.init(dexInstance.address.toString());
-        break;
-    }
+    const dex = await TTDexFA2.init(dexInstance.address.toString());
 
     let context = new TTContext(dex, []);
     if (setDexFunctions) {
@@ -174,12 +143,12 @@ export class TTContext {
   ): Promise<BigNumber> {
     pairConfig.tokenAAddress =
       pairConfig.tokenAAddress ||
-      (await this.createToken(standard == "FA2FA12" ? "FA2" : standard));
+      (await this.createToken(standard == "MIXED" ? "FA2" : standard));
     pairConfig.tokenBAddress =
       pairConfig.tokenBAddress ||
-      (await this.createToken(standard == "FA2FA12" ? "FA12" : standard));
+      (await this.createToken(standard == "MIXED" ? "FA12" : standard));
     if (
-      standard !== "FA2FA12" &&
+      standard !== "MIXED" &&
       pairConfig.tokenAAddress > pairConfig.tokenBAddress
     ) {
       const tmp = pairConfig.tokenAAddress;

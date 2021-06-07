@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
-if (standard !== "FA2FA12") {
+if (standard !== "MIXED") {
   contract("DivestLiquidity()", function () {
     let context: Context;
     let tokenAddress: string;
