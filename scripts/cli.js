@@ -73,7 +73,7 @@ program
   .option("-j, --no-json", "The format of output file")
   .option("-g, --no-dockerized_ligo", "Switch global ligo")
   .action(function (options) {
-    if (process.env.EXCHANGE_TOKEN_STANDARD == "FA2FA12") return;
+    if (process.env.EXCHANGE_TOKEN_STANDARD == "MIXED") return;
     let contractName = `./main/Dex${process.env.EXCHANGE_TOKEN_STANDARD}`;
     exec("mkdir -p " + options.output_dir);
     if (contractName === "*") {

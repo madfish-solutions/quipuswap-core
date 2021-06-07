@@ -34,6 +34,6 @@ let tokenFunctions = [
 ];
 module.exports.tokenFunctions = {
   FA12: tokenFunctions,
-  FA2FA12: tokenFunctions,
+  MIXED: tokenFunctions,
   FA2: tokenFunctions,
 };
