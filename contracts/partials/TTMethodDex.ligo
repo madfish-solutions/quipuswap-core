@@ -184,6 +184,7 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           end;
         }
         | TokenToTokenPayment(n) -> skip
+        | TokenToTokenRoutePayment(n) -> skip
         | InvestLiquidity(n) -> skip
         | DivestLiquidity(n) -> skip
 
@@ -196,6 +197,7 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
     var operations : list(operation) := list[];
     case p of
       | InitializeExchange(n) -> skip
+      | TokenToTokenRoutePayment(n) -> skip
       | TokenToTokenPayment(params) -> {
         (* check preconditions *)
         if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id > params.pair.token_b_id then
@@ -423,238 +425,198 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
     end
   } with (operations, s)
 
-// (* Exchange tokens to tez, note: tokens should be approved before the operation *)
-// function internal_token_to_token_swap (const swap : swap_slice_type; const amount_in : nat; const s : dex_storage) : (nat * dex_storage) is
-//   block {
-//     var operations : list(operation) := list[];
-//     case p of
-//       | InitializeExchange(n) -> skip
-//       | TokenToTokenPayment(params) -> {
-//         (* check preconditions *)
-//         if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id > params.pair.token_b_id then
-//           failwith("Dex/wrong-token-id")
-//         else skip;
+(* Exchange tokens to tez, note: tokens should be approved before the operation *)
+function internal_token_to_token_swap (const tmp : internal_swap_type; const params : swap_slice_type ) : internal_swap_type is
+  block {
+        (* check preconditions *)
+        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id > params.pair.token_b_id then
+          failwith("Dex/wrong-token-id")
+        else skip;
 
-//         (* get par info*)
-//         const res : (pair_info * nat) = get_pair(params.pair, s);
-//         const pair : pair_info = res.0;
-//         const token_id : nat = res.1;
+        (* get par info*)
+        const res : (pair_info * nat) = get_pair(params.pair, tmp.s);
+        const pair : pair_info = res.0;
+        const token_id : nat = res.1;
 
-//         (* ensure there is liquidity *)
-//         if pair.token_a_pool * pair.token_b_pool > 0n then
-//           skip
-//         else failwith("Dex/not-launched");
+        (* ensure there is liquidity *)
+        if pair.token_a_pool * pair.token_b_pool > 0n then
+          skip
+        else failwith("Dex/not-launched");
 
-//         if params.amount_in > 0n (* non-zero amount of tokens exchanged *)
-//         then skip
-//         else failwith ("Dex/zero-amount-in");
+        if tmp.amount_in > 0n (* non-zero amount of tokens exchanged *)
+        then skip
+        else failwith ("Dex/zero-amount-in");
 
-//         if params.min_amount_out > 0n (* non-zero amount of tokens exchanged *)
-//         then skip
-//         else failwith ("Dex/zero-min-amount-out");
+        case params.operation of
+        | Sell -> {
+          (* calculate amount out *)
+          const token_a_in_with_fee : nat = tmp.amount_in * 997n;
+          const numerator : nat = token_a_in_with_fee * pair.token_b_pool;
+          const denominator : nat = pair.token_a_pool * 1000n + token_a_in_with_fee;
 
-//         case params.operation of
-//         | Sell -> {
-//           (* calculate amount out *)
-//           const token_a_in_with_fee : nat = params.amount_in * 997n;
-//           const numerator : nat = token_a_in_with_fee * pair.token_b_pool;
-//           const denominator : nat = pair.token_a_pool * 1000n + token_a_in_with_fee;
+          (* calculate swapped token amount *)
+          const token_b_out : nat = numerator / denominator;
 
-//           (* calculate swapped token amount *)
-//           const token_b_out : nat = numerator / denominator;
+          (* ensure requirements *)
+          if token_b_out <= pair.token_b_pool / 3n (* the price impact isn't to high *)
+          then {
+            (* update XTZ pool *)
+            pair.token_b_pool := abs(pair.token_b_pool - token_b_out);
+            pair.token_a_pool := pair.token_a_pool + tmp.amount_in;
+          } else failwith("Dex/high-out");
+          tmp.amount_in := token_b_out;
 
-//           (* ensure requirements *)
-//           if token_b_out >= params.min_amount_out (* minimal XTZ amount out is sutisfied *)
-//           then skip else failwith("Dex/wrong-min-out");
+          (* prepare operations to withdraw user's tokens and transfer XTZ *)
+          case params.pair.standard of
+          | Fa12 -> if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip
+          | Fa2 -> if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip
+          | Mixed -> skip
+          end;
+        }
+        | Buy -> {
+          (* calculate amount out *)
+          const token_b_in_with_fee : nat = tmp.amount_in * 997n;
+          const numerator : nat = token_b_in_with_fee * pair.token_a_pool;
+          const denominator : nat = pair.token_b_pool * 1000n + token_b_in_with_fee;
 
-//           (* ensure requirements *)
-//           if token_b_out <= pair.token_b_pool / 3n (* the price impact isn't to high *)
-//           then {
-//             (* update XTZ pool *)
-//             pair.token_b_pool := abs(pair.token_b_pool - token_b_out);
-//             pair.token_a_pool := pair.token_a_pool + params.amount_in;
-//           } else failwith("Dex/high-out");
+          (* calculate swapped token amount *)
+          const token_a_out : nat = numerator / denominator;
 
-//           (* prepare operations to withdraw user's tokens and transfer XTZ *)
-//           case params.pair.standard of
-//           | Fa12 -> {
-//             if params.pair.token_a_address > params.pair.token_b_address then
-//               failwith("Dex/wrong-pair")
-//             else skip;
-//             operations := list[
-//               Tezos.transaction(
-//                 wrap_fa12_transfer_trx(
-//                   Tezos.sender,
-//                   this,
-//                   params.amount_in),
-//                 0mutez,
-//                 get_fa12_token_contract(params.pair.token_a_address)
-//               );
-//               Tezos.transaction(
-//                 wrap_fa12_transfer_trx(
-//                   this,
-//                   params.receiver,
-//                   token_b_out
-//                 ),
-//                 0mutez,
-//                 get_fa12_token_contract(
-//                   params.pair.token_b_address)
-//               )];
-//             }
-//           | Fa2 -> {
-//             if params.pair.token_a_address > params.pair.token_b_address then
-//               failwith("Dex/wrong-pair")
-//             else skip;
-//             operations := list[
-//               Tezos.transaction(
-//                 wrap_fa2_transfer_trx(
-//                   Tezos.sender,
-//                   this,
-//                   params.amount_in,
-//                   params.pair.token_a_id),
-//                 0mutez,
-//                 get_fa2_token_contract(params.pair.token_a_address)
-//               );
-//               Tezos.transaction(
-//                 wrap_fa2_transfer_trx(
-//                   this,
-//                   params.receiver,
-//                   token_b_out,
-//                   params.pair.token_b_id),
-//                 0mutez,
-//                 get_fa2_token_contract(
-//                   params.pair.token_b_address)
-//               )];
-//             }
-//           | Mixed -> {
-//             operations := list[
-//               Tezos.transaction(
-//                 wrap_fa2_transfer_trx(
-//                   Tezos.sender,
-//                   this,
-//                   params.amount_in,
-//                   params.pair.token_a_id
-//                   ),
-//                 0mutez,
-//                 get_fa2_token_contract(params.pair.token_a_address)
-//               );
-//               Tezos.transaction(
-//                 wrap_fa12_transfer_trx(
-//                   this,
-//                   params.receiver,
-//                   token_b_out
-//                   ),
-//                 0mutez,
-//                 get_fa12_token_contract(
-//                   params.pair.token_b_address)
-//               )];
-//             }
-//           end;
-//         }
-//         | Buy -> {
-//           (* calculate amount out *)
-//           const token_b_in_with_fee : nat = params.amount_in * 997n;
-//           const numerator : nat = token_b_in_with_fee * pair.token_a_pool;
-//           const denominator : nat = pair.token_b_pool * 1000n + token_b_in_with_fee;
+          (* ensure requirements *)
+          if token_a_out <= pair.token_a_pool / 3n (* the price impact isn't to high *)
+          then {
+            (* update XTZ pool *)
+            pair.token_a_pool := abs(pair.token_a_pool - token_a_out);
+            pair.token_b_pool := pair.token_b_pool + tmp.amount_in;
+          } else failwith("Dex/high-out");
 
-//           (* calculate swapped token amount *)
-//           const token_a_out : nat = numerator / denominator;
+          tmp.amount_in := token_a_out;
+          (* prepare operations to withdraw user's tokens and transfer XTZ *)
+          case params.pair.standard of
+          | Fa12 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+            }
+          | Fa2 -> {
+            if params.pair.token_a_address > params.pair.token_b_address then
+              failwith("Dex/wrong-pair")
+            else skip;
+          }
+          | Mixed -> skip
+          end;
+        }
+        end;
+        tmp.s.pairs[token_id] := pair;
+  } with tmp
 
-//           (* ensure requirements *)
-//           if token_a_out >= params.min_amount_out (* minimal XTZ amount out is sutisfied *)
-//           then skip else failwith("Dex/wrong-min-out");
+(* Exchange tokens to tez, note: tokens should be approved before the operation *)
+function token_to_token (const p : dex_action; const s : dex_storage; const this : address) : return is
+  block {
+    var operations : list(operation) := list[];
+    case p of
+      | InitializeExchange(n) -> skip
+      | TokenToTokenPayment(n) -> skip
+      | TokenToTokenRoutePayment(params) -> {
+        if params.amount_in > 0n (* non-zero amount of tokens exchanged *)
+        then skip
+        else failwith ("Dex/zero-amount-in");
 
-//           (* ensure requirements *)
-//           if token_a_out <= pair.token_a_pool / 3n (* the price impact isn't to high *)
-//           then {
-//             (* update XTZ pool *)
-//             pair.token_a_pool := abs(pair.token_a_pool - token_a_out);
-//             pair.token_b_pool := pair.token_b_pool + params.amount_in;
-//           } else failwith("Dex/high-out");
+        if params.min_amount_out > 0n (* non-zero amount of tokens exchanged *)
+        then skip
+        else failwith ("Dex/zero-min-amount-out");
 
-//           (* prepare operations to withdraw user's tokens and transfer XTZ *)
-//           case params.pair.standard of
-//           | Fa12 -> {
-//             if params.pair.token_a_address > params.pair.token_b_address then
-//               failwith("Dex/wrong-pair")
-//             else skip;
-//             operations := list[
-//               Tezos.transaction(
-//                 wrap_fa12_transfer_trx(
-//                   Tezos.sender,
-//                   this,
-//                   params.amount_in),
-//                 0mutez,
-//                 get_fa12_token_contract(params.pair.token_b_address)
-//               );
-//               Tezos.transaction(
-//                 wrap_fa12_transfer_trx(
-//                   this,
-//                   params.receiver,
-//                   token_a_out
-//                 ),
-//                 0mutez,
-//                 get_fa12_token_contract(
-//                   params.pair.token_a_address)
-//               )];
-//             }
-//           | Fa2 -> {
-//             if params.pair.token_a_address > params.pair.token_b_address then
-//               failwith("Dex/wrong-pair")
-//             else skip;
-//             operations := list[
-//               Tezos.transaction(
-//                 wrap_fa2_transfer_trx(
-//                   Tezos.sender,
-//                   this,
-//                   params.amount_in,
-//                   params.pair.token_b_id),
-//                 0mutez,
-//                 get_fa2_token_contract(params.pair.token_b_address)
-//               );
-//               Tezos.transaction(
-//                 wrap_fa2_transfer_trx(
-//                   this,
-//                   params.receiver,
-//                   token_a_out,
-//                   params.pair.token_a_id),
-//                 0mutez,
-//                 get_fa2_token_contract(
-//                   params.pair.token_a_address)
-//               )];
-//           }
-//           | Mixed -> {
-//             operations := list[
-//               Tezos.transaction(
-//                 wrap_fa12_transfer_trx(
-//                   Tezos.sender,
-//                   this,
-//                   params.amount_in
-//                   ),
-//                 0mutez,
-//                 get_fa12_token_contract(params.pair.token_b_address)
-//               );
-//               Tezos.transaction(
-//                 wrap_fa2_transfer_trx(
-//                   this,
-//                   params.receiver,
-//                   token_a_out,
-//                   params.pair.token_a_id
-//                   ),
-//                 0mutez,
-//                 get_fa2_token_contract(
-//                   params.pair.token_a_address)
-//               )];
-//             }
-//           end;
-//         }
-//         end;
-//         s.pairs[token_id] := pair;
-//       }
-//       | InvestLiquidity(n) -> skip
-//       | DivestLiquidity(n) -> skip
-//     end
-//   } with (operations, s)
+        const tmp : internal_swap_type = List.fold(
+          internal_token_to_token_swap,
+          params.swaps,
+          record [
+            s = s;
+            amount_in = params.amount_in;
+            token_address = ("tz1ZZZZZZZZZZZZZZZZZZZZZZZZZZZZNkiRg" : address);
+            token_id = 0n;
+          ]
+        );
+        s := tmp.s;
+
+        // const swap : tokens_info = List.head_opt();
+        // case swap.pair.standard of
+        // | Fa12 -> {
+        //   operations := list[
+        //     // Tezos.transaction(
+        //     //   wrap_fa12_transfer_trx(
+        //     //     Tezos.sender,
+        //     //     this,
+        //     //     params.amount_in),
+        //     //   0mutez,
+        //     //   get_fa12_token_contract(params.pair.token_a_address)
+        //     // );
+        //     Tezos.transaction(
+        //       wrap_fa12_transfer_trx(
+        //         this,
+        //         params.receiver,
+        //         tmp.amount_in
+        //       ),
+        //       0mutez,
+        //       get_fa12_token_contract(
+        //         tmp.token_address)
+        //     )];
+        //   }
+        // | Fa2 -> {
+        //   operations := list[
+        //     // Tezos.transaction(
+        //     //   wrap_fa2_transfer_trx(
+        //     //     Tezos.sender,
+        //     //     this,
+        //     //     params.amount_in,
+        //     //     params.pair.token_a_id),
+        //     //   0mutez,
+        //     //   get_fa2_token_contract(params.pair.token_a_address)
+        //     // );
+        //     Tezos.transaction(
+        //       wrap_fa2_transfer_trx(
+        //         this,
+        //         params.receiver,
+        //         tmp.amount_in,
+        //         token.token_id),
+        //       0mutez,
+        //       get_fa2_token_contract(
+        //         tmp.token_address)
+        //     )];
+        //   }
+        // | Mixed -> {
+        //   operations := list[
+        //     // Tezos.transaction(
+        //     //   wrap_fa2_transfer_trx(
+        //     //     Tezos.sender,
+        //     //     this,
+        //     //     params.amount_in,
+        //     //     params.pair.token_id
+        //     //     ),
+        //     //   0mutez,
+        //     //   get_fa2_token_contract(params.pair.token_a_address)
+        //     // );
+        //     Tezos.transaction(
+        //       wrap_fa12_transfer_trx(
+        //         this,
+        //         params.receiver,
+        //         tmp.amount_in
+        //       ),
+        //       0mutez,
+        //       get_fa12_token_contract(
+        //         tmp.token_address)
+        //     )];
+        //   }
+        // end;
+        
+      }
+      | InvestLiquidity(n) -> skip
+      | DivestLiquidity(n) -> skip
+    end
+  } with (operations, s)
 
 (* Provide liquidity (both tokens and tez) to the pool, note: tokens should be approved before the operation *)
 function invest_liquidity (const p : dex_action; const s : dex_storage; const this: address) : return is
@@ -662,6 +624,7 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
     var operations: list(operation) := list[];
     case p of
       | InitializeExchange(n) -> skip
+      | TokenToTokenRoutePayment(n) -> skip
       | TokenToTokenPayment(n) -> skip
       | InvestLiquidity(params) -> {
         (* check preconditions *)
@@ -810,6 +773,7 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       case p of
       | InitializeExchange(token_amount) -> skip
       | TokenToTokenPayment(n) -> skip
+      | TokenToTokenRoutePayment(n) -> skip
       | InvestLiquidity(n) -> skip
       | DivestLiquidity(params) -> {
         (* check preconditions *)

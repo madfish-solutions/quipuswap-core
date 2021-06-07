@@ -50,10 +50,16 @@ type dex_storage is record [
 type swap_type is Buy | Sell
 
 type swap_slice_type is record [
-    swap                  : tokens_info;
+    pair                  : tokens_info;
     operation             : swap_type;
 ]
 
+type internal_swap_type is record [
+  s                       : dex_storage;
+  amount_in               : nat;
+  token_address           : address;
+  token_id                : nat;
+]
 
 (* Entrypoint arguments *)
 type token_to_token_route_params is
@@ -103,10 +109,11 @@ type divest_liquidity_params is
   ]
 
 type dex_action is
-| InitializeExchange      of initialize_exchange_params  (* sets initial liquidity *)
-| TokenToTokenPayment     of token_to_token_payment_params  (* exchanges XTZ to tokens and sends them to receiver *)
-| InvestLiquidity         of invest_liquidity_params  (* mints min shares after investing tokens and XTZ *)
-| DivestLiquidity         of divest_liquidity_params  (* burns shares and sends tokens and XTZ to the owner *)
+| InitializeExchange          of initialize_exchange_params  (* sets initial liquidity *)
+| TokenToTokenRoutePayment    of token_to_token_route_params  (* exchanges XTZ to tokens and sends them to receiver *)
+| TokenToTokenPayment         of token_to_token_payment_params  (* exchanges XTZ to tokens and sends them to receiver *)
+| InvestLiquidity             of invest_liquidity_params  (* mints min shares after investing tokens and XTZ *)
+| DivestLiquidity             of divest_liquidity_params  (* burns shares and sends tokens and XTZ to the owner *)
 
 type use_params is dex_action
 type get_reserves_params is record [
