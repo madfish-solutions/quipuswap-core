@@ -234,7 +234,7 @@ export class TTDex extends TokenFA2 {
     const operation = await this.contract.methods
       .use(
         "investLiquidity",
-        pair.standard,
+        standard.toLowerCase(),
         null,
         pair.token_a_address,
         pair.token_a_id,
@@ -260,7 +260,7 @@ export class TTDex extends TokenFA2 {
     const operation = await this.contract.methods
       .use(
         "divestLiquidity",
-        pair.standard,
+        standard.toLowerCase(),
         null,
         pair.token_a_address,
         pair.token_a_id,
