@@ -3,7 +3,7 @@ import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-ope
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { BigNumber } from "bignumber.js";
 import { TokenFA2 } from "./tokenFA2";
-import { TTDexStorage } from "./types";
+import { TTDexStorage, SwapSliceType } from "./types";
 import { getLigo } from "./utils";
 import { execSync } from "child_process";
 import { confirmOperation } from "./confirmation";
@@ -128,6 +128,54 @@ export class TTDex extends TokenFA2 {
         tokenAAmount,
         tokenBAmount
       )
+      .send();
+    await confirmOperation(tezos, operation.hash);
+    return operation;
+  }
+
+  async tokenToTokenRoutePayment(
+    swaps: SwapSliceType[],
+    amountIn: number,
+    minAmountOut: number,
+    receiver: string,
+    tokenAid: BigNumber = new BigNumber(0),
+    tokenBid: BigNumber = new BigNumber(0)
+  ): Promise<TransactionOperation> {
+    let firstSwap = swaps[0];
+    if (Object.keys(firstSwap.operation)[0] == "buy") {
+      if (["FA2"].includes(standard)) {
+        await this.approveFA2Token(
+          firstSwap.pair.token_b_address,
+          tokenBid,
+          amountIn,
+          this.contract.address
+        );
+      } else {
+        await this.approveFA12Token(
+          firstSwap.pair.token_b_address,
+          amountIn,
+          this.contract.address
+        );
+      }
+    } else {
+      if (["FA2"].includes(standard)) {
+        await this.approveFA2Token(
+          firstSwap.pair.token_a_address,
+          tokenAid,
+          amountIn,
+          this.contract.address
+        );
+      } else {
+        await this.approveFA12Token(
+          firstSwap.pair.token_a_address,
+          amountIn,
+          this.contract.address
+        );
+      }
+    }
+
+    const operation = await this.contract.methods
+      .use("tokenToTokenRoutePayment", swaps, amountIn, minAmountOut, receiver)
       .send();
     await confirmOperation(tezos, operation.hash);
     return operation;

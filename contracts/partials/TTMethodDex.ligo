@@ -601,31 +601,10 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
         then skip
         else failwith ("Dex/zero-min-amount-out");
 
-        const tmp : internal_swap_type = List.fold(
-          internal_token_to_token_swap,
-          params.swaps,
-          record [
-            s = s;
-            amount_in = params.amount_in;
-            operation = (None : option(operation));
-            sender = this;
-            receiver = params.receiver;
-          ]
-        );
-        s := tmp.s;
-
-        if tmp.amount_in > params.min_amount_out (* non-zero amount of tokens exchanged *)
-        then skip
-        else failwith ("Dex/wrong-min-out");
-
         (* collect the operations to execute *)
         const first_swap : swap_slice_type = case List.head_opt(params.swaps) of
         | Some(swap) -> swap
         | None -> (failwith("Dex/zero-swaps") : swap_slice_type)
-        end;
-        const last_operation : operation = case tmp.operation of
-        | Some(o) -> o
-        | None -> (failwith("Dex/too-few-swaps") : operation)
         end;
 
         case first_swap.pair.standard of
@@ -688,6 +667,28 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
             end
             ]
           }
+        end;
+
+        const tmp : internal_swap_type = List.fold(
+          internal_token_to_token_swap,
+          params.swaps,
+          record [
+            s = s;
+            amount_in = params.amount_in;
+            operation = (None : option(operation));
+            sender = this;
+            receiver = params.receiver;
+          ]
+        );
+        s := tmp.s;
+
+        if tmp.amount_in > params.min_amount_out (* non-zero amount of tokens exchanged *)
+        then skip
+        else failwith ("Dex/wrong-min-out");
+
+        const last_operation : operation = case tmp.operation of
+        | Some(o) -> o
+        | None -> (failwith("Dex/too-few-swaps") : operation)
         end;
         operations := last_operation # operations;
       }
