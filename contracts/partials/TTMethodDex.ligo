@@ -449,6 +449,10 @@ function internal_token_to_token_swap (const tmp : internal_swap_type; const par
 
         case params.operation of
         | Sell -> {
+          if params.pair.token_a_address = tmp.token_address_in and params.pair.token_a_id = tmp.token_id_in then
+            skip
+          else failwith("Dex/wrong-route");
+
           (* calculate amount out *)
           const token_a_in_with_fee : nat = tmp.amount_in * 997n;
           const numerator : nat = token_a_in_with_fee * pair.token_b_pool;
@@ -465,6 +469,8 @@ function internal_token_to_token_swap (const tmp : internal_swap_type; const par
             pair.token_a_pool := pair.token_a_pool + tmp.amount_in;
           } else failwith("Dex/high-out");
           tmp.amount_in := token_b_out;
+          tmp.token_address_in := params.pair.token_b_address;
+          tmp.token_id_in := params.pair.token_b_id;
 
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
           case params.pair.standard of
@@ -513,6 +519,10 @@ function internal_token_to_token_swap (const tmp : internal_swap_type; const par
           end;
         }
         | Buy -> {
+          if params.pair.token_b_address = tmp.token_address_in and params.pair.token_b_id = tmp.token_id_in then
+            skip
+          else failwith("Dex/wrong-route");
+
           (* calculate amount out *)
           const token_b_in_with_fee : nat = tmp.amount_in * 997n;
           const numerator : nat = token_b_in_with_fee * pair.token_a_pool;
@@ -530,6 +540,9 @@ function internal_token_to_token_swap (const tmp : internal_swap_type; const par
           } else failwith("Dex/high-out");
 
           tmp.amount_in := token_a_out;
+          tmp.token_address_in := params.
+          pair.token_a_address;
+          tmp.token_id_in := params.pair.token_a_id;
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
           case params.pair.standard of
           | Fa12 -> {
@@ -607,65 +620,97 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
         | None -> (failwith("Dex/zero-swaps") : swap_slice_type)
         end;
 
+        (* declare helper variables *)
+        var token_id_in : nat := first_swap.pair.token_a_id;
+        var token_address_in : address := first_swap.pair.token_a_address;
+
         case first_swap.pair.standard of
         | Fa12 -> {
-          operations := list[
-            Tezos.transaction(
-              wrap_fa12_transfer_trx(
-                Tezos.sender,
-                this,
-                params.amount_in
-              ),
-              0mutez,
-              get_fa12_token_contract(
-                case first_swap.operation of
-                | Sell -> first_swap.pair.token_a_address
-                | Buy -> first_swap.pair.token_b_address
-                end
-              ))];
+            case first_swap.operation of
+            | Sell -> {
+              operations := list[
+                Tezos.transaction(
+                  wrap_fa12_transfer_trx(
+                    Tezos.sender,
+                    this,
+                    params.amount_in
+                  ),
+                  0mutez,
+                  get_fa12_token_contract(
+                    first_swap.pair.token_a_address
+                  ))];
+              }
+            | Buy -> {
+              token_id_in := first_swap.pair.token_b_id;
+              token_address_in := first_swap.pair.token_b_address;
+              operations := list[
+                Tezos.transaction(
+                  wrap_fa12_transfer_trx(
+                    Tezos.sender,
+                    this,
+                    params.amount_in
+                  ),
+                  0mutez,
+                  get_fa12_token_contract(
+                    first_swap.pair.token_b_address
+                  ))];
+              }
+            end
           }
         | Fa2 -> {
-          operations := list[
-            case first_swap.operation of
-            | Sell -> Tezos.transaction(
+          case first_swap.operation of
+          | Sell -> {
+            operations := list[
+              Tezos.transaction(
                 wrap_fa2_transfer_trx(
                   Tezos.sender,
                   this,
                   params.amount_in,
                   first_swap.pair.token_a_id),
                 0mutez,
-                get_fa2_token_contract(first_swap.pair.token_a_address))
-            | Buy -> Tezos.transaction(
-              wrap_fa2_transfer_trx(
-                Tezos.sender,
-                this,
-                params.amount_in,
-                first_swap.pair.token_b_id),
-              0mutez,
-              get_fa2_token_contract(first_swap.pair.token_b_address))
-            end
-            ]
+                get_fa2_token_contract(first_swap.pair.token_a_address))]
+            }
+          | Buy -> {
+            token_id_in := first_swap.pair.token_b_id;
+            token_address_in := first_swap.pair.token_b_address;
+            operations := list[
+              Tezos.transaction(
+                wrap_fa2_transfer_trx(
+                  Tezos.sender,
+                  this,
+                  params.amount_in,
+                  first_swap.pair.token_b_id),
+                0mutez,
+                get_fa2_token_contract(first_swap.pair.token_b_address))]
+            }
+          end
           }
         | Mixed -> {
-          operations := list[
             case first_swap.operation of
-            | Sell -> Tezos.transaction(
-                wrap_fa2_transfer_trx(
-                  Tezos.sender,
-                  this,
-                  params.amount_in,
-                  first_swap.pair.token_a_id),
-                0mutez,
-                get_fa2_token_contract(first_swap.pair.token_a_address))
-            | Buy -> Tezos.transaction(
-              wrap_fa12_transfer_trx(
-                Tezos.sender,
-                this,
-                params.amount_in),
-              0mutez,
-              get_fa12_token_contract(first_swap.pair.token_b_address))
+            | Sell -> {
+              operations := list[
+                Tezos.transaction(
+                  wrap_fa2_transfer_trx(
+                    Tezos.sender,
+                    this,
+                    params.amount_in,
+                    first_swap.pair.token_a_id),
+                  0mutez,
+                  get_fa2_token_contract(first_swap.pair.token_a_address))]
+              }
+            | Buy -> {
+              token_id_in := first_swap.pair.token_b_id;
+              token_address_in := first_swap.pair.token_b_address;
+              operations := list[
+                Tezos.transaction(
+                  wrap_fa12_transfer_trx(
+                    Tezos.sender,
+                    this,
+                    params.amount_in),
+                  0mutez,
+                  get_fa12_token_contract(first_swap.pair.token_b_address))]
+              }
             end
-            ]
           }
         end;
 
@@ -678,6 +723,8 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
             operation = (None : option(operation));
             sender = this;
             receiver = params.receiver;
+            token_id_in = token_id_in;
+            token_address_in = token_address_in;
           ]
         );
         s := tmp.s;

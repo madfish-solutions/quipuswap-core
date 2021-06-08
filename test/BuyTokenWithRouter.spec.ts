@@ -36,12 +36,12 @@ contract.only("BuyTokenWithRoute()", function () {
       tokenBAddress = context.tokens[1].contract.address;
     }
     await context.createPair({
-      tokenAAmount: tokenCAmount,
-      tokenBAddress,
-      tokenBAmount: tokenBAmount,
+      tokenAAmount: tokenAAmount,
+      tokenAAddress,
+      tokenBAmount: tokenCAmount,
     });
     tokenCAddress = context.tokens[2].contract.address;
-    reverseOrder = standard != "MIXED" && tokenCAddress > tokenBAddress;
+    reverseOrder = standard != "MIXED" && tokenCAddress > tokenAAddress;
   });
 
   function tokenToTokenSuccessCase(
@@ -97,13 +97,13 @@ contract.only("BuyTokenWithRoute()", function () {
           },
           {
             pair: {
-              token_a_address: reverseOrder ? tokenBAddress : tokenCAddress,
-              token_b_address: reverseOrder ? tokenCAddress : tokenBAddress,
+              token_a_address: reverseOrder ? tokenAAddress : tokenCAddress,
+              token_b_address: reverseOrder ? tokenCAddress : tokenAAddress,
               token_a_id: new BigNumber(0),
               token_b_id: new BigNumber(0),
               standard: { [standard.toLowerCase()]: null },
             },
-            operation: { buy: null },
+            operation: { sell: null },
           },
         ],
         amountIn,
@@ -186,13 +186,13 @@ contract.only("BuyTokenWithRoute()", function () {
             },
             {
               pair: {
-                token_a_address: reverseOrder ? tokenBAddress : tokenCAddress,
-                token_b_address: reverseOrder ? tokenCAddress : tokenBAddress,
+                token_a_address: reverseOrder ? tokenAAddress : tokenCAddress,
+                token_b_address: reverseOrder ? tokenCAddress : tokenAAddress,
                 token_a_id: new BigNumber(0),
                 token_b_id: new BigNumber(0),
                 standard: { [standard.toLowerCase()]: null },
               },
-              operation: { buy: null },
+              operation: { sell: null },
             },
           ],
           amountIn,

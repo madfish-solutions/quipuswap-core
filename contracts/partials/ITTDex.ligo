@@ -57,6 +57,8 @@ type swap_slice_type is record [
 type internal_swap_type is record [
   s                       : dex_storage;
   amount_in               : nat;
+  token_address_in        : address;
+  token_id_in             : nat;
   operation               : option(operation);
   sender                  : address;
   receiver                : address;
