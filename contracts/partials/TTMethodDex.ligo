@@ -729,7 +729,7 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
         );
         s := tmp.s;
 
-        if tmp.amount_in > params.min_amount_out (* non-zero amount of tokens exchanged *)
+        if tmp.amount_in >= params.min_amount_out (* non-zero amount of tokens exchanged *)
         then skip
         else failwith ("Dex/wrong-min-out");
 

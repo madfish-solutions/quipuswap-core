@@ -173,7 +173,6 @@ export class TTDex extends TokenFA2 {
         );
       }
     }
-
     const operation = await this.contract.methods
       .use("tokenToTokenRoutePayment", swaps, amountIn, minAmountOut, receiver)
       .send();

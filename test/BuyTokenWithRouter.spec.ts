@@ -64,25 +64,31 @@ contract.only("BuyTokenWithRoute()", function () {
       await context.dex.updateStorage({
         ledger: [[aliceAddress, 0]],
         tokens: ["0"],
-        pairs: ["0"],
+        pairs: ["0", "1"],
       });
-      const aliceInitShares =
-        context.dex.storage.ledger[aliceAddress].balance.toNumber();
       const aliceInitTokenABalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
       ).balance;
       const aliceInitTokenBBalance = (
+        (await context.tokens[1].storage.ledger[aliceAddress]) ||
+        defaultAccountInfo
+      ).balance;
+      const aliceInitTokenСBalance = (
         (await context.tokens[2].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
       ).balance;
       const pairInitTokenABalance = await context.tokens[0].storage.ledger[
         pairAddress
       ].balance;
-      const pairInitTokenBBalance = await context.tokens[2].storage.ledger[
+      const pairInitTokenBBalance = await context.tokens[1].storage.ledger[
         pairAddress
       ].balance;
-      const initDexPair = context.dex.storage.pairs[0];
+      const pairInitTokenСBalance = await context.tokens[2].storage.ledger[
+        pairAddress
+      ].balance;
+      const initDexPair0 = context.dex.storage.pairs[0];
+      const initDexPair1 = context.dex.storage.pairs[1];
       await context.dex.tokenToTokenRoutePayment(
         [
           {
@@ -97,8 +103,8 @@ contract.only("BuyTokenWithRoute()", function () {
           },
           {
             pair: {
-              token_a_address: reverseOrder ? tokenAAddress : tokenCAddress,
-              token_b_address: reverseOrder ? tokenCAddress : tokenAAddress,
+              token_a_address: reverseOrder ? tokenCAddress : tokenAAddress,
+              token_b_address: reverseOrder ? tokenAAddress : tokenCAddress,
               token_a_id: new BigNumber(0),
               token_b_id: new BigNumber(0),
               standard: { [standard.toLowerCase()]: null },
@@ -122,50 +128,67 @@ contract.only("BuyTokenWithRoute()", function () {
       await context.dex.updateStorage({
         ledger: [[aliceAddress, 0]],
         tokens: ["0"],
-        pairs: ["0"],
+        pairs: ["0", "1"],
       });
-      const finalDexPair = context.dex.storage.pairs[0];
+      const finalDexPair0 = context.dex.storage.pairs[0];
+      const finalDexPair1 = context.dex.storage.pairs[1];
       const aliceFinalTokenABalance = await context.tokens[0].storage.ledger[
         aliceAddress
       ].balance;
-      const aliceFinalTokenBBalance = await context.tokens[2].storage.ledger[
+      const aliceFinalTokenBBalance = await context.tokens[1].storage.ledger[
+        aliceAddress
+      ].balance;
+      const aliceFinalTokenСBalance = await context.tokens[2].storage.ledger[
         aliceAddress
       ].balance;
       const pairTokenABalance = await context.tokens[0].storage.ledger[
         pairAddress
       ].balance;
-      const pairTokenBBalance = await context.tokens[2].storage.ledger[
+      const pairTokenBBalance = await context.tokens[1].storage.ledger[
         pairAddress
       ].balance;
-      console.log(
-        aliceInitTokenBBalance.toNumber(),
-        amountIn,
-        aliceFinalTokenBBalance.toNumber()
+      const pairTokenСBalance = await context.tokens[2].storage.ledger[
+        pairAddress
+      ].balance;
+      const internalBalanceChange0 =
+        initDexPair0.token_a_pool.toNumber() -
+        finalDexPair0.token_a_pool.toNumber();
+      const internalBalanceChange1 =
+        finalDexPair1.token_a_pool.toNumber() -
+        initDexPair1.token_a_pool.toNumber();
+      strictEqual(
+        aliceInitTokenABalance.toNumber(),
+        aliceFinalTokenABalance.toNumber()
       );
       strictEqual(
         aliceInitTokenBBalance.toNumber() - amountIn,
         aliceFinalTokenBBalance.toNumber()
       );
       strictEqual(
-        aliceInitTokenABalance.toNumber() + amountOut + tokensLeftover,
-        aliceFinalTokenABalance.toNumber()
+        aliceInitTokenСBalance.toNumber() + amountOut + tokensLeftover,
+        aliceFinalTokenСBalance.toNumber()
       );
       strictEqual(
-        pairInitTokenABalance.toNumber() - amountOut - tokensLeftover,
+        pairInitTokenABalance.toNumber(),
         pairTokenABalance.toNumber()
+      );
+      strictEqual(
+        pairInitTokenСBalance.toNumber() - amountOut - tokensLeftover,
+        pairTokenСBalance.toNumber()
       );
       strictEqual(
         pairInitTokenBBalance.toNumber() + amountIn,
         pairTokenBBalance.toNumber()
       );
       strictEqual(
-        finalDexPair.token_a_pool.toNumber(),
-        initDexPair.token_a_pool.toNumber() - amountOut - tokensLeftover
+        finalDexPair0.token_b_pool.toNumber(),
+        initDexPair0.token_b_pool.toNumber() + amountIn
       );
       strictEqual(
-        finalDexPair.token_b_pool.toNumber(),
-        initDexPair.token_b_pool.toNumber() + amountIn
+        finalDexPair1.token_b_pool.toNumber(),
+        initDexPair1.token_b_pool.toNumber() - amountOut - tokensLeftover
       );
+      strictEqual(internalBalanceChange0, internalBalanceChange1);
     });
   }
 
@@ -186,8 +209,8 @@ contract.only("BuyTokenWithRoute()", function () {
             },
             {
               pair: {
-                token_a_address: reverseOrder ? tokenAAddress : tokenCAddress,
-                token_b_address: reverseOrder ? tokenCAddress : tokenAAddress,
+                token_a_address: reverseOrder ? tokenCAddress : tokenAAddress,
+                token_b_address: reverseOrder ? tokenAAddress : tokenCAddress,
                 token_a_id: new BigNumber(0),
                 token_b_id: new BigNumber(0),
                 standard: { [standard.toLowerCase()]: null },
@@ -200,7 +223,6 @@ contract.only("BuyTokenWithRoute()", function () {
           aliceAddress
         ),
         (err) => {
-          console.log(err.message);
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }
@@ -217,8 +239,8 @@ contract.only("BuyTokenWithRoute()", function () {
     );
     tokenToTokenFailCase(
       "revert in case of 100% of reserves to be swapped",
-      1000,
-      1000,
+      10000,
+      1,
       "Dex/high-out"
     );
     tokenToTokenFailCase(
@@ -230,42 +252,42 @@ contract.only("BuyTokenWithRoute()", function () {
 
     tokenToTokenSuccessCase(
       "success in case of 1% of reserves to be swapped",
-      1,
-      1,
+      11,
+      10,
       0
     );
-    // tokenToTokenSuccessCase(
-    //   "success in case of ~30% of reserves to be swapped",
-    //   300,
-    //   22983,
-    //   0
-    // );
+    tokenToTokenSuccessCase(
+      "success in case of ~30% of reserves to be swapped",
+      300,
+      280,
+      0
+    );
   });
 
-  // describe("Test different minimal desirable output amount", () => {
-  //   tokenToTokenFailCase(
-  //     "reevert in case of 0 tokens expected",
-  //     10,
-  //     0,
-  //     "Dex/zero-min-amount-out"
-  //   );
-  //   tokenToTokenFailCase(
-  //     "revert in case of too many tokens expected",
-  //     10,
-  //     70000,
-  //     "Dex/wrong-min-out"
-  //   );
-  //   tokenToTokenSuccessCase(
-  //     "success in case of exact amount of tokens expected",
-  //     5,
-  //     293,
-  //     0
-  //   );
-  //   tokenToTokenSuccessCase(
-  //     "success in case of smaller amount of tokens expected",
-  //     10,
-  //     500,
-  //     80
-  //   );
-  // });
+  describe("Test different minimal desirable output amount", () => {
+    tokenToTokenFailCase(
+      "reevert in case of 0 tokens expected",
+      10,
+      0,
+      "Dex/zero-min-amount-out"
+    );
+    tokenToTokenFailCase(
+      "revert in case of too many tokens expected",
+      10,
+      70000,
+      "Dex/wrong-min-out"
+    );
+    tokenToTokenSuccessCase(
+      "success in case of exact amount of tokens expected",
+      5,
+      2,
+      0
+    );
+    tokenToTokenSuccessCase(
+      "success in case of smaller amount of tokens expected",
+      10,
+      5,
+      1
+    );
+  });
 });
