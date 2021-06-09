@@ -141,20 +141,21 @@ export class TTContext {
       tokenBAmount: 1000000,
     }
   ): Promise<BigNumber> {
-    pairConfig.tokenAAddress =
-      pairConfig.tokenAAddress ||
-      (await this.createToken(standard == "MIXED" ? "FA2" : standard));
-    pairConfig.tokenBAddress =
-      pairConfig.tokenBAddress ||
-      (await this.createToken(standard == "MIXED" ? "FA12" : standard));
-    if (
-      standard !== "MIXED" &&
-      pairConfig.tokenAAddress > pairConfig.tokenBAddress
-    ) {
-      const tmp = pairConfig.tokenAAddress;
-      pairConfig.tokenAAddress = pairConfig.tokenBAddress;
-      pairConfig.tokenBAddress = tmp;
-    }
+    let tokenAAddress;
+    let tokenBAddress;
+    do {
+      tokenAAddress =
+        pairConfig.tokenAAddress ||
+        (await this.createToken(standard == "MIXED" ? "FA2" : standard));
+      tokenBAddress =
+        pairConfig.tokenBAddress ||
+        (await this.createToken(standard == "MIXED" ? "FA12" : standard));
+    } while (
+      standard == "MIXED" ||
+      pairConfig.tokenAAddress < pairConfig.tokenBAddress
+    );
+    pairConfig.tokenAAddress = tokenAAddress;
+    pairConfig.tokenBAddress = tokenBAddress;
     await this.dex.initializeExchange(
       pairConfig.tokenAAddress,
       pairConfig.tokenBAddress,
