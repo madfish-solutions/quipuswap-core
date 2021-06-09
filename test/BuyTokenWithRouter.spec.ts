@@ -280,13 +280,13 @@ contract.only("BuyTokenWithRoute()", function () {
     tokenToTokenSuccessCase(
       "success in case of exact amount of tokens expected",
       5,
-      2,
+      4,
       0
     );
     tokenToTokenSuccessCase(
       "success in case of smaller amount of tokens expected",
       10,
-      5,
+      7,
       1
     );
   });
