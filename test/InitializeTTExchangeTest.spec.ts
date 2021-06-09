@@ -6,7 +6,7 @@ import { TokenFA2 } from "./helpers/tokenFA2";
 import { TokenFA12 } from "./helpers/tokenFA12";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-contract.only("InitializeTTExchange()", function () {
+contract("InitializeTTExchange()", function () {
   let context: TTContext;
   let aliceAddress: string = accounts.alice.pkh;
   const tokenAAmount: number = 10000;
