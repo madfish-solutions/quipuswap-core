@@ -164,10 +164,28 @@ export class TTContext {
         tokenBAddress = tmp;
       }
     } while (standard !== "MIXED" && tokenAAddress > tokenBAddress);
-    if (pairConfig.tokenAAddress != tokenAAddress)
-      this.tokens.push(await TokenFA2.init(tokenAAddress));
-    if (pairConfig.tokenBAddress != tokenBAddress)
-      this.tokens.push(await TokenFA2.init(tokenBAddress));
+    switch (standard) {
+      case "FA2":
+        if (pairConfig.tokenAAddress != tokenAAddress)
+          this.tokens.push(await TokenFA2.init(tokenAAddress));
+        if (pairConfig.tokenBAddress != tokenBAddress)
+          this.tokens.push(await TokenFA2.init(tokenBAddress));
+        break;
+      case "FA12":
+        if (pairConfig.tokenAAddress != tokenAAddress)
+          this.tokens.push(await TokenFA12.init(tokenAAddress));
+        if (pairConfig.tokenBAddress != tokenBAddress)
+          this.tokens.push(await TokenFA12.init(tokenBAddress));
+        break;
+      case "MIXED":
+        if (pairConfig.tokenAAddress != tokenAAddress)
+          this.tokens.push(await TokenFA2.init(tokenAAddress));
+        if (pairConfig.tokenBAddress != tokenBAddress)
+          this.tokens.push(await TokenFA12.init(tokenBAddress));
+        break;
+      default:
+        break;
+    }
     pairConfig.tokenAAddress = tokenAAddress;
     pairConfig.tokenBAddress = tokenBAddress;
     await this.dex.initializeExchange(

@@ -2,9 +2,11 @@ import { TTContext } from "./helpers/ttContext";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
+import { TokenFA2 } from "./helpers/tokenFA2";
+import { TokenFA12 } from "./helpers/tokenFA12";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-contract("InitializeTTExchange()", function () {
+contract.only("InitializeTTExchange()", function () {
   let context: TTContext;
   let aliceAddress: string = accounts.alice.pkh;
   const tokenAAmount: number = 10000;
@@ -25,12 +27,37 @@ contract("InitializeTTExchange()", function () {
     let tokenAAddress: string;
     let tokenBAddress: string;
     before(async () => {
-      tokenAAddress = await context.createToken(
-        standard == "MIXED" ? "FA2" : standard
-      );
-      tokenBAddress = await context.createToken(
-        standard == "MIXED" ? "FA12" : standard
-      );
+      do {
+        tokenBAddress = await context.createToken(
+          standard == "MIXED" ? "FA12" : standard,
+          false
+        );
+        tokenAAddress = await context.createToken(
+          standard == "MIXED" ? "FA2" : standard,
+          false
+        );
+        if (standard !== "MIXED" && tokenAAddress > tokenBAddress) {
+          const tmp = tokenAAddress;
+          tokenAAddress = tokenBAddress;
+          tokenBAddress = tmp;
+        }
+      } while (standard !== "MIXED" && tokenAAddress > tokenBAddress);
+      switch (standard) {
+        case "FA2":
+          context.tokens.push(await TokenFA2.init(tokenAAddress));
+          context.tokens.push(await TokenFA2.init(tokenBAddress));
+          break;
+        case "FA12":
+          context.tokens.push(await TokenFA12.init(tokenAAddress));
+          context.tokens.push(await TokenFA12.init(tokenBAddress));
+          break;
+        case "MIXED":
+          context.tokens.push(await TokenFA2.init(tokenAAddress));
+          context.tokens.push(await TokenFA12.init(tokenBAddress));
+          break;
+        default:
+          break;
+      }
     });
 
     it("revert in case the amount of one of A tokens is zero", async function () {
