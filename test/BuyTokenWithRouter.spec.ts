@@ -28,11 +28,14 @@ contract("BuyTokenWithRoute()", function () {
     });
     tokenAAddress = context.tokens[0].contract.address;
     tokenBAddress = context.tokens[1].contract.address;
-    await context.createPair({
-      tokenAAmount: tokenAAmount,
-      tokenAAddress,
-      tokenBAmount: tokenCAmount,
-    });
+    await context.createPair(
+      {
+        tokenAAmount: tokenAAmount,
+        tokenAAddress,
+        tokenBAmount: tokenCAmount,
+      },
+      false
+    );
     tokenCAddress = context.tokens[2].contract.address;
     reverseOrder = standard != "MIXED" && tokenAAddress > tokenCAddress;
   });
