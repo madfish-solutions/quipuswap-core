@@ -23,13 +23,6 @@ contract("InvestTTLiquidity()", function () {
     });
     tokenAAddress = context.tokens[0].contract.address;
     tokenBAddress = context.tokens[1].contract.address;
-    if (standard != "MIXED" && tokenAAddress > tokenBAddress) {
-      const tmp = context.tokens[0];
-      context.tokens[0] = context.tokens[1];
-      context.tokens[1] = tmp;
-      tokenAAddress = context.tokens[0].contract.address;
-      tokenBAddress = context.tokens[1].contract.address;
-    }
   });
 
   describe("Test if the investment is allowed", () => {

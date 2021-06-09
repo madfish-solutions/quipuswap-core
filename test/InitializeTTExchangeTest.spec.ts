@@ -31,13 +31,6 @@ contract("InitializeTTExchange()", function () {
       tokenBAddress = await context.createToken(
         standard == "MIXED" ? "FA12" : standard
       );
-      if (standard != "MIXED" && tokenAAddress > tokenBAddress) {
-        const tmp = context.tokens[0];
-        context.tokens[0] = context.tokens[1];
-        context.tokens[1] = tmp;
-        tokenAAddress = context.tokens[0].contract.address;
-        tokenBAddress = context.tokens[1].contract.address;
-      }
     });
 
     it("revert in case the amount of one of A tokens is zero", async function () {

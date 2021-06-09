@@ -150,10 +150,7 @@ export class TTContext {
       tokenBAddress =
         pairConfig.tokenBAddress ||
         (await this.createToken(standard == "MIXED" ? "FA12" : standard));
-    } while (
-      standard == "MIXED" ||
-      pairConfig.tokenAAddress < pairConfig.tokenBAddress
-    );
+    } while (standard == "MIXED" || tokenAAddress < tokenBAddress);
     pairConfig.tokenAAddress = tokenAAddress;
     pairConfig.tokenBAddress = tokenBAddress;
     await this.dex.initializeExchange(
