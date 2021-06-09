@@ -41,7 +41,7 @@ contract.only("BuyTokenWithRoute()", function () {
       tokenBAmount: tokenCAmount,
     });
     tokenCAddress = context.tokens[2].contract.address;
-    reverseOrder = standard != "MIXED" && tokenCAddress > tokenAAddress;
+    reverseOrder = standard != "MIXED" && tokenAAddress > tokenCAddress;
   });
 
   function tokenToTokenSuccessCase(
