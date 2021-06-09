@@ -158,7 +158,7 @@ export class TTDex extends TokenFA2 {
         );
       }
     } else {
-      if (["FA2"].includes(standard)) {
+      if (["FA2", "MIXED"].includes(standard)) {
         await this.approveFA2Token(
           firstSwap.pair.token_a_address,
           tokenAid,
