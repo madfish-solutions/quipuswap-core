@@ -22,6 +22,7 @@ based on the argument type.
 block {
   const res : return = case p of
     | InitializeExchange(n) -> initialize_exchange(p, s.storage, this)
+    | TokenToTokenRoutePayment(n) -> token_to_token_route(p, s.storage, this)
     | TokenToTokenPayment(n) -> token_to_token(p, s.storage, this)
     | InvestLiquidity(n) -> invest_liquidity(p, s.storage, this)
     | DivestLiquidity(n) -> divest_liquidity(p, s.storage, this)
