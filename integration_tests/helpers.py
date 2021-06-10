@@ -13,6 +13,12 @@ julian = "tz1MDhGTfMQjtMYFXeasKzRWzkQKPtXEkSEw" # :)
 
 dummy_candidate = "tz1XXPVLyQqsMVaQKnPWvD4q6nVwgwXUG4Fp"
 
+# the same as Pytezos' contract.context.get_self_address()
+contract_self_address = 'KT1BEqzn5Wx8uJrZNvuS9DVHmLvG9td3fDLi'
+
+# the same as Pytezos' `contract.context.get_sender()`. The default Tezos.sender
+me = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU"
+
 initial_storage = dict(
     token_id = 0,
     tez_pool = 0,
@@ -99,10 +105,12 @@ def calc_pool_rate(res, pair=-1):
 def parse_tez_transfer(op):
     dest = op["destination"]
     amount = int(op["amount"])
+    source = op["source"]
     return {
         "type": "tez", 
         "destination": dest,
-        "amount": amount
+        "amount": amount,
+        "source": source
     }
 
 def parse_token_transfer(op):
@@ -223,6 +231,11 @@ class LocalChain():
                 dest = op["destination"]
                 amount = op["amount"]
                 self.payouts[dest] = self.payouts.get(dest, 0) + amount
+
+                # reduce contract balance in case it has sent something
+                if op["source"] == contract_self_address:
+                    self.balance -= op["amount"]
+
             elif op["type"] == "token":
                 dest = op["destination"]
                 amount = op["amount"]

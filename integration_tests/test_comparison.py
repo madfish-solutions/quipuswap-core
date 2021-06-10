@@ -19,8 +19,7 @@ class DexTest(TestCase):
         cls.dex = ContractInterface.from_michelson(dex_code)
 
     def perform_sequence(self, with_actions):
-        my_address = self.dex.context.get_sender()
-
+        me = self.dex.context.get_sender()
         chain = LocalChain()
         initial_tokens = 1_000_000_000
         initial_tezos = 100_000
@@ -30,9 +29,9 @@ class DexTest(TestCase):
         res = chain.execute(self.dex.tokenToTezPayment(amount=1_000_000, min_out=1, receiver=alice), amount=0)
 
         if with_actions:
-            chain.execute(self.dex.vote(voter=my_address, \
+            res = chain.execute(self.dex.vote(voter=me, \
                 candidate=dummy_candidate, \
-                value=100), \
+                value=1), \
                 amount=1)
 
         chain.advance_period()
@@ -40,8 +39,6 @@ class DexTest(TestCase):
         res = chain.execute(self.dex.tezToTokenPayment(min_out=1, receiver=julian), amount=101)
 
         if with_actions:
-            print("pre default tez_pool", res.storage["storage"]["tez_pool"])
-            print("pre default contract balance", chain.balance)
             res = chain.execute(self.dex.default(), amount=1_000)
         
         res = chain.execute(self.dex.divestLiquidity(min_tez=1, min_tokens=1, shares=1_000), amount=0)
@@ -49,7 +46,7 @@ class DexTest(TestCase):
         res = chain.execute(self.dex.tokenToTezPayment(amount=333_333, min_out=1, receiver=alice), amount=0)
 
         if with_actions:
-            chain.execute(self.dex.veto(voter=my_address, \
+            res = chain.execute(self.dex.veto(voter=me, \
                 value=666), \
                 amount=1)
         
@@ -68,7 +65,7 @@ class DexTest(TestCase):
 
         if with_actions:
             chain.advance_period()
-            res = chain.execute(self.dex.withdrawProfit(my_address), sender=my_address)
+            res = chain.execute(self.dex.withdrawProfit(me), sender=me)
 
         return chain
 
@@ -85,19 +82,22 @@ class DexTest(TestCase):
         print("\npayouts", chain.payouts)
         print("\nactions payouts", actions_chain.payouts)
 
+        print("\contract_balances", chain.contract_balances)
+        print("\nactions contract_balances", actions_chain.contract_balances)
+
         print("\n storage", storage)
         print("\n actions storage", actions_storage)
 
         tez_delta = abs(storage["tez_pool"] - actions_storage["tez_pool"])
-        token_delta = abs(storage["token_pool"] - actions_storage["token_pool"])
-        tez_delta_fraction = tez_delta / storage["tez_pool"]
-        token_delta_fraction = token_delta / storage["token_pool"]
-        # print("balance", chain.balance)
-        # print("actions balance", actions_chain.balance)
+        token_delta = (storage["token_pool"] - actions_storage["token_pool"])
 
-        # less than 1% difference due to default enrypoint sync
-        self.assertLess(tez_delta_fraction, 0.01) 
-        self.assertLess(token_delta_fraction, 0.01)
+        print("tez_delta", tez_delta)
+
+        # less than 1 difference due to default enrypoint sync
+        self.assertLessEqual(tez_delta, 1) 
+        # self.assertLessEqual(token_delta, 1)
+
+        self.assertDictEqual(storage, actions_storage)
     
 
 
@@ -135,6 +135,8 @@ class DexTest(TestCase):
             res = chain.execute(self.dex.withdrawProfit(alice), sender=alice)
             res = chain.execute(self.dex.withdrawProfit(bob), sender=bob)
 
+        res = chain.execute(self.dex.default(), amount=0)
+        
         res = chain.execute(self.dex.tezToTokenPayment(min_out=1, receiver=julian), amount=99_999)
 
         return chain
@@ -145,24 +147,6 @@ class DexTest(TestCase):
 
         storage = chain.storage["storage"]
         actions_storage = actions_chain.storage["storage"]
-
-        print("\npayouts", chain.payouts)
-        print("\nactions payouts", actions_chain.payouts)
-
-        print("\n storage", storage)
-        print("\n actions storage", actions_storage)
-
-        tez_delta = abs(storage["tez_pool"] - actions_storage["tez_pool"])
-        token_delta = abs(storage["token_pool"] - actions_storage["token_pool"])
-        tez_delta_fraction = tez_delta / storage["tez_pool"]
-        token_delta_fraction = token_delta / storage["token_pool"]
         
-        print("balance", chain.balance)
-        print("actions balance", actions_chain.balance)
-
-        # less than 1% difference due to default enrypoint sync
-        self.assertLess(tez_delta_fraction, 0.01) 
-        self.assertLess(token_delta_fraction, 0.01)        
-
-
-        
+        self.assertEqual(storage["tez_pool"], actions_storage["tez_pool"])
+        self.assertEqual(storage["token_pool"], actions_storage["token_pool"])

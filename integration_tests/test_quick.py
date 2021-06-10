@@ -270,6 +270,23 @@ class DexTest(TestCase):
 
         self.assertEqual(alice_profit, bob_profit)
 
+    def test_multiple_swaps(self):
+        chain = LocalChain()
+        res = chain.execute(self.dex.initializeExchange(100_000_000), amount=100_000)
+
+        total_tokens_gained = 0
+        total_tezos_spent = 0
+        for i in range(0, 5):
+            tez = 1_000
+            res = chain.execute(self.dex.tezToTokenPayment(min_out=1, receiver=julian), amount=tez)
+            (_, tok) = parse_transfers(res)
+            total_tezos_spent += tez
+            total_tokens_gained += tok
+
+        res = chain.execute(self.dex.tokenToTezPayment(amount=total_tokens_gained, min_out=1, receiver=julian))
+        (tez, tok) = parse_transfers(res)
+        
+        self.assertLessEqual(tez, total_tezos_spent)   
 
 
     def test_pool_drain(self):

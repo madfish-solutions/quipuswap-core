@@ -99,6 +99,54 @@ class DexTest(TestCase):
         print("alice tez after all", alice_tez)
         print("bob tez after all", bob_tez)
         
+    def test_self_to_self(self):
+        chain = LocalChain()
+        res = chain.execute(self.dex.initializeExchange(100_000), amount=10_000, sender=alice)
+        res = chain.execute(self.dex.investLiquidity(100_000), amount=10_000, sender=bob)
+
+        res = chain.execute(self.dex.default(), amount=100)
+        chain.advance_period()
+
+        res = chain.execute(self.dex.vote(voter=alice, candidate=julian, value=5_000), sender=alice)
+
+        res = chain.interpret(self.dex.withdrawProfit(alice), sender=alice)
+        (alice_tez, _) = parse_transfers(res)
+
+        res = chain.interpret(self.dex.withdrawProfit(bob), sender=bob)
+        (bob_tez, _) = parse_transfers(res)
+
+        transfer = self.dex.transfer(
+            [{ "from_" : alice,
+                "txs" : [{
+                    "amount": 5_000,
+                    "to_": alice,
+                    "token_id": 0
+                }]
+            }])
+        
+        # with self.assertRaises(MichelsonRuntimeError):
+        res = chain.execute(transfer, sender=alice)
+
+        res = chain.execute(self.dex.withdrawProfit(alice), sender=alice)
+        (new_alice_tez, _) = parse_transfers(res)
+        print("new alice tez", new_alice_tez)
+
+        res = chain.execute(self.dex.withdrawProfit(bob), sender=bob)
+        (new_bob_tez, _) = parse_transfers(res)
+
+        self.assertEqual(alice_tez, new_alice_tez)
+        self.assertEqual(bob_tez, new_bob_tez)
+
+        old_storage = res.storage["storage"]
+        # old_user_rewards = old_storage["user_rewards"]
+        res = chain.execute(transfer, sender=alice)
+
+        res = chain.execute(self.dex.withdrawProfit(alice), sender=alice)
+        (tez, tok) = parse_transfers(res)
+        print("alice tez", tez, "tokens", tok)
+
+        self.assertDictEqual(res.storage["storage"], old_storage)
+
 
     def test_cant_double_transfer(self):
         chain = LocalChain()
