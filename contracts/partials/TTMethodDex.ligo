@@ -39,6 +39,7 @@ function wrap_fa2_transfer_trx(const owner : address; const receiver : address; 
     ]
   ])
 
+
 function wrap_fa12_transfer_trx(const owner : address; const receiver : address; const value : nat) : transfer_type_fa12 is
   TransferTypeFA12(owner, (receiver, value))
 
@@ -54,6 +55,23 @@ function get_fa12_token_contract(const token_address : address) : contract(trans
     Some(contr) -> contr
     | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
   end;
+
+
+function fa2_transfer(
+  const sender_ : address;
+  const receiver : address;
+  const amount_ : nat;
+  const token_id : nat;
+  const contract_address : address) : operation is
+  Tezos.transaction(
+    wrap_fa2_transfer_trx(
+      sender_,
+      receiver,
+      amount_,
+      token_id),
+    0mutez,
+    get_fa2_token_contract(contract_address)
+  );
 
 #include "../partials/TTMethodFA2.ligo"
 
@@ -139,24 +157,19 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
               failwith("Dex/wrong-pair")
             else skip;
             operations := list[
-              Tezos.transaction(
-                wrap_fa2_transfer_trx(Tezos.sender,
+              fa2_transfer(
+                  Tezos.sender,
                   this,
                   params.token_a_in,
-                  params.pair.token_a_id),
-                0mutez,
-                get_fa2_token_contract(params.pair.token_a_address)
-              );
-              Tezos.transaction(
-                wrap_fa2_transfer_trx(
+                  params.pair.token_a_id,
+                  params.pair.token_a_address);
+              fa2_transfer(
                   Tezos.sender,
                   this,
                   params.token_b_in,
-                  params.pair.token_b_id),
-                0mutez,
-                get_fa2_token_contract(
+                  params.pair.token_b_id,
                   params.pair.token_b_address)
-              )];
+              ];
             }
           | Mixed -> {
             operations :=list[
