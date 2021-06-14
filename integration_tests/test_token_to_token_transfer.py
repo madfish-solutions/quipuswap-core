@@ -21,7 +21,7 @@ class TokenToTokenTransferTest(TestCase):
     def setUpClass(cls):
         cls.maxDiff = None
 
-        dex_code = open("./MockTTDex.tz", 'r').read()
+        dex_code = open("./integration_tests/MockTTDex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
 
     def test_tt_transfer_divest(self):

@@ -15,7 +15,7 @@ class DexTest(TestCase):
     def setUpClass(cls):
         cls.maxDiff = None
 
-        dex_code = open("./MockDex.tz", 'r').read()
+        dex_code = open("./integration_tests/MockDex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
 
     def test_initialize(self):
@@ -288,20 +288,6 @@ class DexTest(TestCase):
         
         self.assertLessEqual(tez, total_tezos_spent)   
 
-
-    def test_pool_drain(self):
-        chain = LocalChain()
-        res = chain.execute(self.dex.initializeExchange(10_000), amount=1_000, sender=alice)
-
-        start = time.time()
-        for i in range(0, 100):
-            res = chain.execute(self.dex.tokenToTezPayment(amount=1_000, min_out=1, receiver=julian), amount=0)
-        
-        end = time.time()
-        print(end - start)
-        print("\nops", res.operations)
-        print("\nstorage", res.storage)
-
     def test_zeroing_everything(self):
         me = self.dex.context.get_sender()
 
@@ -339,3 +325,46 @@ class DexTest(TestCase):
             res = chain.execute(self.dex.tokenToTezPayment(amount=0, min_out=0, receiver=julian), amount=1)
 
         # NOTE vote and veto with zero are tested in voting tests
+
+    def test_vault_manipulation(self):
+        chain = LocalChain()
+        res = chain.execute(self.dex.initializeExchange(1_000_000_000), amount=1_000_000_000)
+
+        res = chain.execute(self.dex.tokenToTezPayment(amount=300_000_000, min_out=1, receiver=julian))
+
+        (tez, tok) = parse_transfers(res)
+        print("tez", tez, "tokens", tok)
+
+        # contract agrees to swap disregarding the price
+        res = chain.execute(self.dex.tokenToTezPayment(amount=10_000_000, min_out=1, receiver=julian))
+
+        res = chain.execute(self.dex.tezToTokenPayment(min_out=1, receiver=julian), amount=tez)
+
+        (tez, token) = parse_transfers(res)
+        print("Got token", token)
+
+    def test_aliens_farm_manipulation(self):
+        decimals = pow(10,8)
+        total_paul_supply = 100_000_000 * decimals
+        
+        chain = LocalChain()
+        res = chain.execute(self.dex.initializeExchange(total_paul_supply // 3), amount=1_000_000_000)
+
+        loaned_amount = 33_000_000 * decimals // 3
+        print("loaned amount", loaned_amount)
+
+        res = chain.execute(self.dex.tokenToTezPayment(amount=loaned_amount, min_out=1, receiver=julian))
+
+        (tez, tok) = parse_transfers(res)
+        print("tez", tez, "tokens", tok)
+
+        # contract agrees to swap disregarding the price
+        res = chain.execute(self.dex.tokenToTezPayment(amount=1_000_000 * decimals, min_out=1, receiver=julian))
+
+        res = chain.execute(self.dex.tezToTokenPayment(min_out=1, receiver=julian), amount=tez)
+
+        (tez, token) = parse_transfers(res)
+        print("Got token", token)
+
+
+

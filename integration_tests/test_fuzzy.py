@@ -12,7 +12,7 @@ class DexFuzzying(unittest.TestCase):
     def setUpClass(cls):
         cls.maxDiff = None
 
-        dex_code = open("./MockDex.tz", 'r').read()
+        dex_code = open("./integration_tests/MockDex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
 
     @given( in_tok=st.integers(1))

@@ -15,7 +15,7 @@ MUTEZ_RULE = st.integers(min_value=1, max_value=pow(2,63))
 class DivNotExceedInv(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
-        dex_code = open("./MockDex.tz", 'r').read()
+        dex_code = open("./integration_tests/MockDex.tz", 'r').read()
         self.dex = ContractInterface.from_michelson(dex_code)
         self.me = self.dex.context.get_sender()
         self.chain = LocalChain()

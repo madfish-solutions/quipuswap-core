@@ -15,7 +15,7 @@ class DexTest(TestCase):
     def setUpClass(cls):
         cls.maxDiff = None
 
-        dex_code = open("./MockDex.tz", 'r').read()
+        dex_code = open("./integration_tests/MockDex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
 
     def perform_sequence(self, with_actions):
@@ -135,8 +135,6 @@ class DexTest(TestCase):
             res = chain.execute(self.dex.withdrawProfit(alice), sender=alice)
             res = chain.execute(self.dex.withdrawProfit(bob), sender=bob)
 
-        res = chain.execute(self.dex.default(), amount=0)
-        
         res = chain.execute(self.dex.tezToTokenPayment(min_out=1, receiver=julian), amount=99_999)
 
         return chain
