@@ -93,3 +93,46 @@ class TokenToTokenTest(TestCase):
 
     
 
+
+    def test_tt_router_impossible_path(self):
+        token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"
+        token_b = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton"
+        token_c = "KT1AxaBxkFLCUi3f8rdDAAxBKHfzY8LfKDRA"
+        token_d = "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC"
+
+        pair_ab = {
+            "token_a_address" : token_a,
+            "token_a_id" : 0,
+            "token_b_address" : token_b,
+            "token_b_id" : 1,
+            "standard": "fa2"
+        }
+        pair_cd = {
+            "token_a_address" : token_c,
+            "token_a_id" : 1,
+            "token_b_address" : token_d,
+            "token_b_id" : 2,
+            "standard": "fa12"
+        }
+
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair_ab, 1111, 3333))
+        res = chain.execute(self.dex.initializeExchange(pair_cd, 5555, 7777))
+
+        # can't find path
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.interpret(self.dex.tokenToTokenRoutePayment({
+                "swaps" : [
+                    {
+                        "pair": pair_ab, 
+                        "operation": "sell",
+                    },
+                    {
+                        "pair": pair_cd, 
+                        "operation": "sell",
+                    }
+                ],
+                "amount_in" : 334,
+                "min_amount_out" : 1, 
+                "receiver" : julian
+            }))
