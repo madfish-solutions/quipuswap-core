@@ -47,10 +47,10 @@ initial_storage = dict(
 
 initial_tt_storage = dict(
     pairs_count=0,
-    tokens =  {},
-    token_to_id =  {},
-    pairs =  {},
-    ledger =  {},
+    tokens = {},
+    token_to_id = {},
+    pairs = {},
+    ledger = {},
 )
 
 initial_full_storage = {
@@ -113,22 +113,40 @@ def parse_tez_transfer(op):
         "source": source
     }
 
-def parse_token_transfer(op):
-    value = op["parameters"]["value"][0]
+def parse_as_fa12(value):
+    args = value["args"]
+
+    return {
+        "type": "token",
+        "amount": int(args[2]["int"]),
+        "destination": args[1]["string"]
+    }
+
+def parse_as_fa2(values):
+    value = values[0]
     args = value["args"][1][0]["args"]
-    
+
     amount = args[-1]["int"]
     amount = int(amount)
-   
+
     dest = args[0]["string"]
-    token_addr = op["destination"]
-   
+
     return {
-        "type": "token", 
+        "type": "token",
         "destination": dest,
         "amount": amount,
-        "token_address": token_addr
+        
     }
+
+def parse_token_transfer(op):
+    transfer = None
+    if not isinstance(op["parameters"]["value"], list):
+        transfer = parse_as_fa12(op["parameters"]["value"])
+    else:
+        transfer = parse_as_fa2(op["parameters"]["value"])
+
+    transfer["token_address"] = op["destination"]
+    return transfer
 
 def parse_delegations(res):
     delegates = []

@@ -13,7 +13,8 @@ pair = {
     "token_a_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
     "token_a_id" : 0,
     "token_b_address" : "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC",
-    "token_b_id" : 1
+    "token_b_id" : 1,
+    "standard": "fa2"
 }
 
 class TokenToTokenTest(TestCase):
@@ -172,3 +173,4 @@ class TokenToTokenTest(TestCase):
         # should fail due to Julian not owning any shares 
         with self.assertRaises(MichelsonRuntimeError):
             res = chain.execute(self.dex.divestLiquidity(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=100), sender=julian)
+
