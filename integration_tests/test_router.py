@@ -17,7 +17,7 @@ class TokenToTokenTest(TestCase):
     
     # TODO check triangle abritrage
     def test_tt_token_to_token_router(self):
-        token_a = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton"
+        token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"
         token_b = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton"
         token_c = "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC"
 
@@ -37,8 +37,8 @@ class TokenToTokenTest(TestCase):
         }
 
         chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000, 100_000))
-        res = chain.execute(self.dex.initializeExchange(pair_bc, 100_000, 100_000))
+        res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000, 300_000))
+        res = chain.execute(self.dex.initializeExchange(pair_bc, 500_000, 700_000))
 
         res = chain.execute(self.dex.tokenToTokenRoutePayment({
             "swaps" : [
@@ -51,9 +51,17 @@ class TokenToTokenTest(TestCase):
                     "operation": "sell",
                 }
             ],
-            "amount_in" : 100,
+            "amount_in" : 10_000,
             "min_amount_out" : 1, 
             "receiver" : julian
         }))
 
+        transfers = parse_token_transfers(res)
+
+        contract_in = next(v for v in transfers if v["destination"] == contract_self_address)
+        self.assertEqual(contract_in["token_address"], token_a)
+        self.assertEqual(contract_in["amount"], 10_000)
+
+        julians_out = next(v for v in transfers if v["destination"] == julian)
+        self.assertEqual(julians_out["token_address"], token_c)
 

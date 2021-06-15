@@ -174,3 +174,16 @@ class TokenToTokenTest(TestCase):
         with self.assertRaises(MichelsonRuntimeError):
             res = chain.execute(self.dex.divestLiquidity(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=100), sender=julian)
 
+    def test_tt_same_token_in_pair(self):
+        chain = LocalChain(token_to_token=True)
+        
+        pair = {
+            "token_a_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+            "token_a_id" : 0,
+            "token_b_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+            "token_b_id" : 0,
+            "standard": "fa2"
+        }
+
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.initializeExchange(pair, 100_000, 200_000))
