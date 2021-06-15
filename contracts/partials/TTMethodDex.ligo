@@ -885,8 +885,8 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
               token_a_divested,
               params.pair.token_a_address);
             transfer_fa12(
-              Tezos.sender,
               this,
+              Tezos.sender,
               token_b_divested,
               params.pair.token_b_address)];
           }
@@ -917,8 +917,8 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
               params.pair.token_a_id,
               params.pair.token_a_address);
             transfer_fa12(
-              Tezos.sender,
               this,
+              Tezos.sender,
               token_b_divested,
               params.pair.token_b_address)
             ];
