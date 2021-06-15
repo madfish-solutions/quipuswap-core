@@ -138,6 +138,13 @@ def parse_as_fa2(values):
         
     }
 
+def parse_token_transfers(res):
+    token_transfers = []
+    for op in res.operations:
+        tx = parse_token_transfer(op)
+        token_transfers.append(tx)
+    return token_transfers
+
 def parse_token_transfer(op):
     transfer = None
     if not isinstance(op["parameters"]["value"], list):

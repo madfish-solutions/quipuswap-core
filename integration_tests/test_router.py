@@ -36,11 +36,14 @@ class TokenToTokenTest(TestCase):
             "standard": "fa12"
         }
 
+        amount_in=10_000
+
         chain = LocalChain(token_to_token=True)
         res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000, 300_000))
         res = chain.execute(self.dex.initializeExchange(pair_bc, 500_000, 700_000))
 
-        res = chain.execute(self.dex.tokenToTokenRoutePayment({
+        # interpret the call without applying it
+        res = chain.interpret(self.dex.tokenToTokenRoutePayment({
             "swaps" : [
                 {
                     "pair": pair_ab, 
@@ -51,7 +54,7 @@ class TokenToTokenTest(TestCase):
                     "operation": "sell",
                 }
             ],
-            "amount_in" : 10_000,
+            "amount_in" : amount_in,
             "min_amount_out" : 1, 
             "receiver" : julian
         }))
@@ -62,6 +65,31 @@ class TokenToTokenTest(TestCase):
         self.assertEqual(contract_in["token_address"], token_a)
         self.assertEqual(contract_in["amount"], 10_000)
 
-        julians_out = next(v for v in transfers if v["destination"] == julian)
-        self.assertEqual(julians_out["token_address"], token_c)
+        routed_out = next(v for v in transfers if v["destination"] == julian)
+        self.assertEqual(routed_out["token_address"], token_c)
+
+        # same swap but one by one
+        res = chain.interpret(self.dex.tokenToTokenPayment(
+            pair=pair_ab,
+            operation="sell",
+            amount_in=amount_in,
+            min_amount_out=1,
+            receiver=julian
+        ))
+        transfers = parse_token_transfers(res)
+        first_out = next(v for v in transfers if v["destination"] == julian)
+
+        res = chain.interpret(self.dex.tokenToTokenPayment(
+            pair=pair_bc,
+            operation="sell",
+            amount_in=first_out["amount"],
+            min_amount_out=1,
+            receiver=julian
+        ))
+        transfers = parse_token_transfers(res)
+        second_out = next(v for v in transfers if v["destination"] == julian)
+
+        self.assertEqual(routed_out["amount"], first_out["amount"] + second_out["amount"])
+
+    
 
