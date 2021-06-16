@@ -41,7 +41,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAddress = tokenBAddress;
           tokenBAddress = tmp;
         }
-      } while (standard !== "MIXED" && tokenAAddress > tokenBAddress);
+      } while (tokenAAddress > tokenBAddress);
       switch (standard) {
         case "FA2":
           context.tokens.push(await TokenFA2.init(tokenAAddress));

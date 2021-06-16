@@ -163,7 +163,7 @@ export class TTContext {
         tokenAAddress = tokenBAddress;
         tokenBAddress = tmp;
       }
-    } while (standard !== "MIXED" && tokenAAddress > tokenBAddress);
+    } while (tokenAAddress > tokenBAddress);
     switch (standard) {
       case "FA2":
         if (pairConfig.tokenAAddress != tokenAAddress)
