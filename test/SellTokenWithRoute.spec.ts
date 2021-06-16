@@ -90,7 +90,14 @@ contract("SellTokenWithRoute()", function () {
               token_b_address: tokenBAddress,
               token_a_id: new BigNumber(0),
               token_b_id: new BigNumber(0),
-              standard: { [standard.toLowerCase()]: null },
+              token_a_type:
+                standard.toLowerCase() == "mixed"
+                  ? "fa2"
+                  : standard.toLowerCase(),
+              token_b_type:
+                standard.toLowerCase() == "mixed"
+                  ? "fa12"
+                  : standard.toLowerCase(),
             },
             operation: { sell: null },
           },
@@ -100,7 +107,14 @@ contract("SellTokenWithRoute()", function () {
               token_b_address: reverseOrder ? tokenCAddress : tokenBAddress,
               token_a_id: new BigNumber(0),
               token_b_id: new BigNumber(0),
-              standard: { [standard.toLowerCase()]: null },
+              token_a_type:
+                standard.toLowerCase() == "mixed"
+                  ? "fa2"
+                  : standard.toLowerCase(),
+              token_b_type:
+                standard.toLowerCase() == "mixed"
+                  ? "fa12"
+                  : standard.toLowerCase(),
             },
             operation: { buy: null },
           },
@@ -196,7 +210,14 @@ contract("SellTokenWithRoute()", function () {
                 token_b_address: tokenBAddress,
                 token_a_id: new BigNumber(0),
                 token_b_id: new BigNumber(0),
-                standard: { [standard.toLowerCase()]: null },
+                token_a_type:
+                  standard.toLowerCase() == "mixed"
+                    ? "fa2"
+                    : standard.toLowerCase(),
+                token_b_type:
+                  standard.toLowerCase() == "mixed"
+                    ? "fa12"
+                    : standard.toLowerCase(),
               },
               operation: { sell: null },
             },
@@ -206,7 +227,14 @@ contract("SellTokenWithRoute()", function () {
                 token_b_address: reverseOrder ? tokenCAddress : tokenBAddress,
                 token_a_id: new BigNumber(0),
                 token_b_id: new BigNumber(0),
-                standard: { [standard.toLowerCase()]: null },
+                token_a_type:
+                  standard.toLowerCase() == "mixed"
+                    ? "fa2"
+                    : standard.toLowerCase(),
+                token_b_type:
+                  standard.toLowerCase() == "mixed"
+                    ? "fa12"
+                    : standard.toLowerCase(),
               },
               operation: { buy: null },
             },

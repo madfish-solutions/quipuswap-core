@@ -18,10 +18,9 @@ type token_identifier_fa12 is address
 type transfer_type_fa12 is TransferTypeFA12 of token_transfer_params_fa12
 type transfer_type_fa2 is TransferTypeFA2 of token_transfer_params_fa2
 
-type pair_type is
+type token_type is
 | Fa12
 | Fa2
-| Mixed
 
 type pair_info is record [
   token_a_pool        : nat; (* tez reserves in the pool *)
@@ -34,7 +33,8 @@ type tokens_info is record [
   token_b_address        : address;
   token_a_id             : nat;
   token_b_id             : nat;
-  standard               : pair_type;
+  token_a_type           : token_type;
+  token_b_type           : token_type;
 ]
 
 type token_pair is bytes
