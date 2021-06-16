@@ -93,14 +93,16 @@ contract("BuyTokenWithRoute()", function () {
               token_b_address: tokenBAddress,
               token_a_id: new BigNumber(0),
               token_b_id: new BigNumber(0),
-              token_a_type:
-                standard.toLowerCase() == "mixed"
+              token_a_type: {
+                [standard.toLowerCase() == "mixed"
                   ? "fa2"
-                  : standard.toLowerCase(),
-              token_b_type:
-                standard.toLowerCase() == "mixed"
+                  : standard.toLowerCase()]: null,
+              },
+              token_b_type: {
+                [standard.toLowerCase() == "mixed"
                   ? "fa12"
-                  : standard.toLowerCase(),
+                  : standard.toLowerCase()]: null,
+              },
             },
             operation: { buy: null },
           },
@@ -110,14 +112,16 @@ contract("BuyTokenWithRoute()", function () {
               token_b_address: reverseOrder ? tokenAAddress : tokenCAddress,
               token_a_id: new BigNumber(0),
               token_b_id: new BigNumber(0),
-              token_a_type:
-                standard.toLowerCase() == "mixed"
+              token_a_type: {
+                [standard.toLowerCase() == "mixed"
                   ? "fa2"
-                  : standard.toLowerCase(),
-              token_b_type:
-                standard.toLowerCase() == "mixed"
+                  : standard.toLowerCase()]: null,
+              },
+              token_b_type: {
+                [standard.toLowerCase() == "mixed"
                   ? "fa12"
-                  : standard.toLowerCase(),
+                  : standard.toLowerCase()]: null,
+              },
             },
             operation: { sell: null },
           },
@@ -213,14 +217,16 @@ contract("BuyTokenWithRoute()", function () {
                 token_b_address: tokenBAddress,
                 token_a_id: new BigNumber(0),
                 token_b_id: new BigNumber(0),
-                token_a_type:
-                  standard.toLowerCase() == "mixed"
+                token_a_type: {
+                  [standard.toLowerCase() == "mixed"
                     ? "fa2"
-                    : standard.toLowerCase(),
-                token_b_type:
-                  standard.toLowerCase() == "mixed"
+                    : standard.toLowerCase()]: null,
+                },
+                token_b_type: {
+                  [standard.toLowerCase() == "mixed"
                     ? "fa12"
-                    : standard.toLowerCase(),
+                    : standard.toLowerCase()]: null,
+                },
               },
               operation: { buy: null },
             },
@@ -230,14 +236,16 @@ contract("BuyTokenWithRoute()", function () {
                 token_b_address: reverseOrder ? tokenAAddress : tokenCAddress,
                 token_a_id: new BigNumber(0),
                 token_b_id: new BigNumber(0),
-                token_a_type:
-                  standard.toLowerCase() == "mixed"
+                token_a_type: {
+                  [standard.toLowerCase() == "mixed"
                     ? "fa2"
-                    : standard.toLowerCase(),
-                token_b_type:
-                  standard.toLowerCase() == "mixed"
+                    : standard.toLowerCase()]: null,
+                },
+                token_b_type: {
+                  [standard.toLowerCase() == "mixed"
                     ? "fa12"
-                    : standard.toLowerCase(),
+                    : standard.toLowerCase()]: null,
+                },
               },
               operation: { sell: null },
             },
