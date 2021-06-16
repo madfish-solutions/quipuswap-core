@@ -26,6 +26,45 @@ function get_pair (const key : tokens_info; const s : dex_storage) : (pair_info 
       end;
   } with (pair, token_id)
 
+function form_pools(const from_pool: nat; const to_pool: nat; const supply: nat; const direction: swap_type) : pair_info is
+  case direction of
+    Buy -> record [
+      token_a_pool = to_pool;
+      token_b_pool = from_pool;
+      total_supply = supply;
+    ]
+    | Sell -> record [
+      token_a_pool = from_pool;
+      token_b_pool = to_pool;
+      total_supply = supply;
+    ]
+  end;
+
+function form_swap_data(const pair: pair_info; const swap: tokens_info; const direction: swap_type) : swap_data is
+  block {
+    const side_a : swap_side = record [
+      pool = pair.token_a_pool;
+      token = swap.token_a_address;
+      id = swap.token_a_id;
+      standard = swap.token_a_type;
+    ];
+    const side_b : swap_side = record [
+      pool = pair.token_b_pool;
+      token = swap.token_b_address;
+      id = swap.token_b_id;
+      standard = swap.token_b_type;
+    ];
+  } with case direction of
+      Sell -> record [
+        from_ = side_a;
+        to_ = side_b;
+      ]
+      | Buy -> record [
+        from_ = side_b;
+        to_ = side_a;
+      ]
+    end;
+
 (* Helper function to prepare the token transfer *)
 function wrap_fa2_transfer_trx(const owner : address; const receiver : address; const value : nat; const token_id : nat) : transfer_type_fa2 is
   TransferTypeFA2(list[
@@ -91,6 +130,17 @@ function transfer_fa12(
     get_fa12_token_contract(contract_address)
   );
 
+function typed_transfer(
+  const sender_ : address;
+  const receiver : address;
+  const amount_ : nat;
+  const token_id : nat;
+  const contract_address : address;
+  const standard: token_type) : operation is
+    case standard of
+      Fa12 -> transfer_fa12(sender_, receiver, amount_, contract_address)
+      | Fa2 -> transfer_fa2(sender_, receiver, amount_, token_id, contract_address)
+    end;
 
 #include "../partials/TTMethodFA2.ligo"
 
@@ -249,125 +299,49 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
         then skip
         else failwith ("Dex/zero-min-amount-out");
 
-        case params.operation of
-        | Sell -> {
-          (* calculate amount out *)
-          const token_a_in_with_fee : nat = params.amount_in * 997n;
-          const numerator : nat = token_a_in_with_fee * pair.token_b_pool;
-          const denominator : nat = pair.token_a_pool * 1000n + token_a_in_with_fee;
+        const swap: swap_data = form_swap_data(pair, params.pair, params.operation);
 
-          (* calculate swapped token amount *)
-          const token_b_out : nat = numerator / denominator;
+        (* calculate amount out *)
+        const from_in_with_fee : nat = params.amount_in * 997n;
+        const numerator : nat = from_in_with_fee * swap.to_.pool;
+        const denominator : nat = swap.from_.pool * 1000n + from_in_with_fee;
 
-          (* ensure requirements *)
-          if token_b_out >= params.min_amount_out (* minimal XTZ amount out is sutisfied *)
-          then skip else failwith("Dex/wrong-min-out");
+        (* calculate swapped token amount *)
+        const out : nat = numerator / denominator;
 
-          (* ensure requirements *)
-          if token_b_out <= pair.token_b_pool / 3n (* the price impact isn't to high *)
-          then {
-            (* update XTZ pool *)
-            pair.token_b_pool := abs(pair.token_b_pool - token_b_out);
-            pair.token_a_pool := pair.token_a_pool + params.amount_in;
-          } else failwith("Dex/high-out");
+        (* ensure requirements *)
+        if out >= params.min_amount_out (* minimal XTZ amount out is sutisfied *)
+        then skip else failwith("Dex/wrong-min-out");
 
-          (* prepare operations to withdraw user's tokens and transfer XTZ *)
-          case params.pair.token_a_type of
-          | Fa12 -> {
-            operations := transfer_fa12(
-                Tezos.sender,
-                this,
-                params.amount_in,
-                params.pair.token_a_address) # operations;
-            }
-          | Fa2 -> {
-            operations := transfer_fa2(
-                Tezos.sender,
-                this,
-                params.amount_in,
-                params.pair.token_a_id,
-                params.pair.token_a_address) # operations;
-            }
-          end;
-          case params.pair.token_b_type of
-          | Fa12 -> {
-            operations :=
-              transfer_fa12(
-                this,
-                params.receiver,
-                token_b_out,
-                params.pair.token_b_address) # operations;
-            }
-          | Fa2 -> {
-            operations :=
-              transfer_fa2(
-                this,
-                params.receiver,
-                token_b_out,
-                params.pair.token_b_id,
-                params.pair.token_b_address) # operations;
-            }
-          end;
-        }
-        | Buy -> {
-          (* calculate amount out *)
-          const token_b_in_with_fee : nat = params.amount_in * 997n;
-          const numerator : nat = token_b_in_with_fee * pair.token_a_pool;
-          const denominator : nat = pair.token_b_pool * 1000n + token_b_in_with_fee;
+        (* ensure requirements *)
+        if out <= swap.to_.pool / 3n (* the price impact isn't too high *)
+        then {
+          (* update XTZ pool *)
+          swap.to_.pool := abs(swap.to_.pool - out);
+          swap.from_.pool := swap.from_.pool + params.amount_in;
 
-          (* calculate swapped token amount *)
-          const token_a_out : nat = numerator / denominator;
+          const updated_pair : pair_info = form_pools(swap.from_.pool, swap.to_.pool, pair.total_supply, params.operation);
+          s.pairs[token_id] := updated_pair;
+          
+        } else failwith("Dex/high-out");
 
-          (* ensure requirements *)
-          if token_a_out >= params.min_amount_out (* minimal XTZ amount out is sutisfied *)
-          then skip else failwith("Dex/wrong-min-out");
-
-          (* ensure requirements *)
-          if token_a_out <= pair.token_a_pool / 3n (* the price impact isn't to high *)
-          then {
-            (* update XTZ pool *)
-            pair.token_a_pool := abs(pair.token_a_pool - token_a_out);
-            pair.token_b_pool := pair.token_b_pool + params.amount_in;
-          } else failwith("Dex/high-out");
-
-          (* prepare operations to withdraw user's tokens and transfer XTZ *)
-          case params.pair.token_a_type of
-          | Fa12 -> {
-            operations := transfer_fa12(
-                this,
-                params.receiver,
-                token_a_out,
-                params.pair.token_a_address) # operations;
-            }
-          | Fa2 -> {
-            operations := transfer_fa2(
-                this,
-                params.receiver,
-                token_a_out,
-                params.pair.token_a_id,
-                params.pair.token_a_address) # operations;
-          }
-          end;
-          case params.pair.token_b_type of
-          | Fa12 -> {
-            operations := transfer_fa12(
-                Tezos.sender,
-                this,
-                params.amount_in,
-                params.pair.token_b_address) # operations;
-            }
-          | Fa2 -> {
-            operations := transfer_fa2(
-                Tezos.sender,
-                this,
-                params.amount_in,
-                params.pair.token_b_id,
-                params.pair.token_b_address) # operations;
-          }
-          end;
-        }
-        end;
-        s.pairs[token_id] := pair;
+        (* prepare operations to withdraw user's tokens and transfer XTZ *)
+        operations := list [
+          (* from *)
+          typed_transfer(Tezos.sender, this, params.amount_in,
+            swap.from_.id,
+            swap.from_.token,
+            swap.from_.standard
+          );
+          (* to *)
+          typed_transfer(this, params.receiver, out,
+            swap.to_.id,
+            swap.to_.token,
+            swap.to_.standard
+          )
+        ];
+  
+        (* TODO saving pool to storage *)
       }
       | InvestLiquidity(n) -> skip
       | DivestLiquidity(n) -> skip
