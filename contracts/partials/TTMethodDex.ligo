@@ -55,6 +55,12 @@ function get_fa12_token_contract(const token_address : address) : contract(trans
     | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
   end;
 
+function get_close_entrypoint(const contract_address : address) : contract(unit) is
+  case (Tezos.get_entrypoint_opt("%close", contract_address) : option(contract(unit))) of
+    Some(contr) -> contr
+    | None -> (failwith("Dex/no-close-entrypoint") : contract(unit))
+  end;
+
 function transfer_fa2(
   const sender_ : address;
   const receiver : address;
@@ -91,8 +97,12 @@ function transfer_fa12(
 (* Initialize exchange after the previous liquidity was drained *)
 function initialize_exchange (const p : dex_action ; const s : dex_storage ; const this: address) :  return is
   block {
-    var operations : list(operation) := list[];
-      case p of
+    var operations: list(operation) := list[Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(this)
+    )];
+    case p of
         | InitializeExchange(params) -> {
           if s.entered then
             failwith("Dex/reentrancy")
@@ -151,22 +161,21 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           (* prepare operations to get initial liquidity *)
           case params.pair.token_a_type of
           | Fa12 -> {
-            operations := list[
+            operations :=
               transfer_fa12(
                 Tezos.sender,
                 this,
                 params.token_a_in,
-                params.pair.token_a_address)];
+                params.pair.token_a_address) # operations;
             }
           | Fa2 -> {
-            operations := list[
+            operations := 
               transfer_fa2(
                 Tezos.sender,
                 this,
                 params.token_a_in,
                 params.pair.token_a_id,
-                params.pair.token_a_address)
-              ];
+                params.pair.token_a_address) # operations;
             }
           end;
 
@@ -202,7 +211,11 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
 (* Exchange tokens to tez, note: tokens should be approved before the operation *)
 function token_to_token (const p : dex_action; const s : dex_storage; const this : address) : return is
   block {
-    var operations : list(operation) := list[];
+    var operations: list(operation) := list[Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(this)
+    )];
     case p of
       | InitializeExchange(n) -> skip
       | TokenToTokenRoutePayment(n) -> skip
@@ -261,23 +274,19 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
           case params.pair.token_a_type of
           | Fa12 -> {
-            operations := list[
-              transfer_fa12(
+            operations := transfer_fa12(
                 Tezos.sender,
                 this,
                 params.amount_in,
-                params.pair.token_a_address);
-              ];
+                params.pair.token_a_address) # operations;
             }
           | Fa2 -> {
-            operations := list[
-              transfer_fa2(
+            operations := transfer_fa2(
                 Tezos.sender,
                 this,
                 params.amount_in,
                 params.pair.token_a_id,
-                params.pair.token_a_address)
-              ];
+                params.pair.token_a_address) # operations;
             }
           end;
           case params.pair.token_b_type of
@@ -324,23 +333,19 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
           (* prepare operations to withdraw user's tokens and transfer XTZ *)
           case params.pair.token_a_type of
           | Fa12 -> {
-            operations := list[
-              transfer_fa12(
+            operations := transfer_fa12(
                 this,
                 params.receiver,
                 token_a_out,
-                params.pair.token_a_address)
-              ];
+                params.pair.token_a_address) # operations;
             }
           | Fa2 -> {
-            operations := list[
-              transfer_fa2(
+            operations := transfer_fa2(
                 this,
                 params.receiver,
                 token_a_out,
                 params.pair.token_a_id,
-                params.pair.token_a_address)
-              ];
+                params.pair.token_a_address) # operations;
           }
           end;
           case params.pair.token_b_type of
@@ -495,7 +500,11 @@ function internal_token_to_token_swap (const tmp : internal_swap_type; const par
 (* Exchange tokens to tez, note: tokens should be approved before the operation *)
 function token_to_token_route (const p : dex_action; const s : dex_storage; const this : address) : return is
   block {
-    var operations : list(operation) := list[];
+    var operations: list(operation) := list[Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(this)
+    )];
     case p of
       | InitializeExchange(n) -> skip
       | TokenToTokenPayment(n) -> skip
@@ -530,21 +539,19 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
         | Sell -> {
             case first_swap.pair.token_a_type of
             | Fa12 -> {
-              operations := list[
-                transfer_fa12(
+              operations := transfer_fa12(
                   Tezos.sender,
                   this,
                   params.amount_in,
-                  first_swap.pair.token_a_address)];
+                  first_swap.pair.token_a_address) # operations;
               }
             | Fa2 -> {
-              operations := list[
-                transfer_fa2(
+              operations := transfer_fa2(
                   Tezos.sender,
                   this,
                   params.amount_in,
                   first_swap.pair.token_a_id,
-                  first_swap.pair.token_a_address)]
+                  first_swap.pair.token_a_address) # operations;
             }
             end;
           }
@@ -553,21 +560,19 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
             token_address_in := first_swap.pair.token_b_address;
             case first_swap.pair.token_b_type of
             | Fa12 -> {
-              operations := list[
-                transfer_fa12(
+              operations := transfer_fa12(
                   Tezos.sender,
                   this,
                   params.amount_in,
-                  first_swap.pair.token_b_address)];
+                  first_swap.pair.token_b_address) # operations;
               }
             | Fa2 -> {
-              operations := list[
-                transfer_fa2(
+              operations := transfer_fa2(
                   Tezos.sender,
                   this,
                   params.amount_in,
                   first_swap.pair.token_b_id,
-                  first_swap.pair.token_b_address)]
+                  first_swap.pair.token_b_address) # operations;
             }
             end;
           }
@@ -606,7 +611,11 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
 (* Provide liquidity (both tokens and tez) to the pool, note: tokens should be approved before the operation *)
 function invest_liquidity (const p : dex_action; const s : dex_storage; const this: address) : return is
   block {
-    var operations: list(operation) := list[];
+    var operations: list(operation) := list[Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(this)
+    )];
     case p of
       | InitializeExchange(n) -> skip
       | TokenToTokenRoutePayment(n) -> skip
@@ -685,21 +694,19 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
         (* prepare operations to get initial liquidity *)
         case params.pair.token_a_type of
         | Fa12 -> {
-          operations := list[
-            transfer_fa12(
+          operations := transfer_fa12(
               Tezos.sender,
               this,
               tokens_a_required,
-              params.pair.token_a_address)];
+              params.pair.token_a_address) # operations;
           }
         | Fa2 -> {
-          operations := list[
-            transfer_fa2(
+          operations := transfer_fa2(
                 Tezos.sender,
                 this,
                 tokens_a_required,
                 params.pair.token_a_id,
-                params.pair.token_a_address);];
+                params.pair.token_a_address) # operations;
           }
         end;
         case params.pair.token_b_type of
@@ -727,8 +734,12 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
 (* Remove liquidity (both tokens and tez) from the pool by burning shares *)
 function divest_liquidity (const p : dex_action; const s : dex_storage; const this: address) :  return is
   block {
-    var operations: list(operation) := list[];
-      case p of
+    var operations: list(operation) := list[Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(this)
+    )];
+    case p of
       | InitializeExchange(token_amount) -> skip
       | TokenToTokenPayment(n) -> skip
       | TokenToTokenRoutePayment(n) -> skip
@@ -803,21 +814,19 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
         (* prepare operations with XTZ and tokens to user *)
         case params.pair.token_a_type of
         | Fa12 -> {
-          operations := list[
-            transfer_fa12(
+          operations := transfer_fa12(
               this,
               Tezos.sender,
               token_a_divested,
-              params.pair.token_a_address)];
+              params.pair.token_a_address) # operations;
           }
         | Fa2 -> {
-          operations := list[
-            transfer_fa2(
+          operations := transfer_fa2(
               this,
               Tezos.sender,
               token_a_divested,
               params.pair.token_a_id,
-              params.pair.token_a_address)];
+              params.pair.token_a_address) # operations;
           }
         end;
         case params.pair.token_b_type of
