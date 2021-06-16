@@ -41,6 +41,7 @@ type token_pair is bytes
 
 (* record for the dex storage *)
 type dex_storage is record [
+  entered             : bool;
   pairs_count         : nat; (* total shares count *)
   tokens              : big_map(nat, tokens_info); (* all the tokens list *)
   token_to_id         : big_map(token_pair, nat); (* all the tokens list *)
@@ -144,6 +145,7 @@ type full_action is
 | Balance_of              of balance_params
 | Update_operators        of update_operator_params
 | Get_reserves            of get_reserves_params
+| Close                   of unit
 | SetDexFunction          of set_dex_function_params (* sets the dex specific function. Is used before the whole system is launched *)
 | SetTokenFunction        of set_token_function_params (* sets the FA function, is used before the whole system is launched *)
 

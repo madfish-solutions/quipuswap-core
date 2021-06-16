@@ -94,6 +94,10 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
     var operations : list(operation) := list[];
       case p of
         | InitializeExchange(params) -> {
+          if s.entered then
+            failwith("Dex/reentrancy")
+          else s.entered := True;
+
           (* check preconditions *)
           if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id then
             failwith("Dex/wrong-token-id")
@@ -169,7 +173,7 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           (* prepare operations to get initial liquidity *)
           case params.pair.token_b_type of
           | Fa12 -> {
-            operations := 
+            operations :=
               transfer_fa12(
                 Tezos.sender,
                 this,
@@ -177,7 +181,7 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
                 params.pair.token_b_address) # operations;
             }
           | Fa2 -> {
-            operations := 
+            operations :=
               transfer_fa2(
                 Tezos.sender,
                 this,
@@ -203,6 +207,10 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
       | InitializeExchange(n) -> skip
       | TokenToTokenRoutePayment(n) -> skip
       | TokenToTokenPayment(params) -> {
+        if s.entered then
+          failwith("Dex/reentrancy")
+        else s.entered := True;
+
         (* check preconditions *)
         if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id then
           failwith("Dex/wrong-token-id")
@@ -492,6 +500,10 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
       | InitializeExchange(n) -> skip
       | TokenToTokenPayment(n) -> skip
       | TokenToTokenRoutePayment(params) -> {
+        if s.entered then
+          failwith("Dex/reentrancy")
+        else s.entered := True;
+
         if List.size(params.swaps) > 1n (* non-zero amount of tokens exchanged *)
         then skip
         else failwith ("Dex/too-few-swaps");
@@ -600,6 +612,10 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
       | TokenToTokenRoutePayment(n) -> skip
       | TokenToTokenPayment(n) -> skip
       | InvestLiquidity(params) -> {
+        if s.entered then
+          failwith("Dex/reentrancy")
+        else s.entered := True;
+
         (* check preconditions *)
         if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id then
           failwith("Dex/wrong-token-id")
@@ -718,6 +734,10 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       | TokenToTokenRoutePayment(n) -> skip
       | InvestLiquidity(n) -> skip
       | DivestLiquidity(params) -> {
+        if s.entered then
+          failwith("Dex/reentrancy")
+        else s.entered := True;
+
         (* check preconditions *)
         if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id then
           failwith("Dex/wrong-token-id")
