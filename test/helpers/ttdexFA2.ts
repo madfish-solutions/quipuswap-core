@@ -119,12 +119,13 @@ export class TTDex extends TokenFA2 {
     const operation = await this.contract.methods
       .use(
         "initializeExchange",
-        standard.toLowerCase(),
         null,
         tokenAAddress,
         tokenAid,
+        standard.toLowerCase(),
         tokenBAddress,
         tokenBid,
+        standard.toLowerCase(),
         tokenAAmount,
         tokenBAmount
       )
@@ -224,12 +225,13 @@ export class TTDex extends TokenFA2 {
     const operation = await this.contract.methods
       .use(
         "tokenToTokenPayment",
-        standard.toLowerCase(),
         null,
         tokenAAddress,
         tokenAid,
+        standard.toLowerCase(),
         tokenBAddress,
         tokenBid,
+        standard.toLowerCase(),
         opType,
         null,
         amountIn,
@@ -281,12 +283,13 @@ export class TTDex extends TokenFA2 {
     const operation = await this.contract.methods
       .use(
         "investLiquidity",
-        standard.toLowerCase(),
         null,
         pair.token_a_address,
         pair.token_a_id,
+        standard.toLowerCase(),
         pair.token_b_address,
         pair.token_b_id,
+        standard.toLowerCase(),
         tokenAAmount,
         tokenBAmount,
         minShares
@@ -311,8 +314,10 @@ export class TTDex extends TokenFA2 {
         null,
         pair.token_a_address,
         pair.token_a_id,
+        standard.toLowerCase(),
         pair.token_b_address,
         pair.token_b_id,
+        standard.toLowerCase(),
         tokenAAmount,
         tokenBAmount,
         sharesBurned
