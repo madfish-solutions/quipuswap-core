@@ -55,6 +55,18 @@ type swap_slice_type is record [
     operation             : swap_type;
 ]
 
+type swap_side is record [
+  pool : nat;
+  token : address;
+  id: nat;
+  standard: token_type;
+]
+
+type swap_data is record [
+  to_: swap_side;
+  from_: swap_side;
+]
+
 type internal_swap_type is record [
   s                       : dex_storage;
   amount_in               : nat;
