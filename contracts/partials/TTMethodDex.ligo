@@ -209,46 +209,24 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
           s.tokens[token_id] := params.pair;
 
           (* prepare operations to get initial liquidity *)
-          case params.pair.token_a_type of
-          | Fa12 -> {
-            operations :=
-              transfer_fa12(
-                Tezos.sender,
-                this,
-                params.token_a_in,
-                params.pair.token_a_address) # operations;
-            }
-          | Fa2 -> {
-            operations :=
-              transfer_fa2(
-                Tezos.sender,
-                this,
-                params.token_a_in,
-                params.pair.token_a_id,
-                params.pair.token_a_address) # operations;
-            }
-          end;
-
-          (* prepare operations to get initial liquidity *)
-          case params.pair.token_b_type of
-          | Fa12 -> {
-            operations :=
-              transfer_fa12(
-                Tezos.sender,
-                this,
-                params.token_b_in,
-                params.pair.token_b_address) # operations;
-            }
-          | Fa2 -> {
-            operations :=
-              transfer_fa2(
-                Tezos.sender,
-                this,
-                params.token_b_in,
-                params.pair.token_b_id,
-                params.pair.token_b_address) # operations;
-            }
-          end;
+          operations :=
+            typed_transfer(
+              Tezos.sender,
+              this,
+              params.token_a_in,
+              params.pair.token_a_id,
+              params.pair.token_a_address,
+              params.pair.token_a_type
+            ) # operations;
+          operations :=
+            typed_transfer(
+              Tezos.sender,
+              this,
+              params.token_b_in,
+              params.pair.token_b_id,
+              params.pair.token_b_address,
+              params.pair.token_b_type
+            ) # operations;
         }
         | TokenToTokenPayment(n) -> skip
         | TokenToTokenRoutePayment(n) -> skip
@@ -449,44 +427,28 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
 
         case first_swap.operation of
         | Sell -> {
-            case first_swap.pair.token_a_type of
-            | Fa12 -> {
-              operations := transfer_fa12(
-                  Tezos.sender,
-                  this,
-                  params.amount_in,
-                  first_swap.pair.token_a_address) # operations;
-              }
-            | Fa2 -> {
-              operations := transfer_fa2(
-                  Tezos.sender,
-                  this,
-                  params.amount_in,
-                  first_swap.pair.token_a_id,
-                  first_swap.pair.token_a_address) # operations;
-            }
-            end;
+          operations :=
+            (* from *)
+            typed_transfer(Tezos.sender,
+              this,
+              params.amount_in,
+              first_swap.pair.token_a_id,
+              first_swap.pair.token_a_address,
+              first_swap.pair.token_a_type
+            ) # operations;
           }
         | Buy -> {
             token_id_in := first_swap.pair.token_b_id;
             token_address_in := first_swap.pair.token_b_address;
-            case first_swap.pair.token_b_type of
-            | Fa12 -> {
-              operations := transfer_fa12(
-                  Tezos.sender,
-                  this,
-                  params.amount_in,
-                  first_swap.pair.token_b_address) # operations;
-              }
-            | Fa2 -> {
-              operations := transfer_fa2(
-                  Tezos.sender,
-                  this,
-                  params.amount_in,
-                  first_swap.pair.token_b_id,
-                  first_swap.pair.token_b_address) # operations;
-            }
-            end;
+          operations :=
+            (* from *)
+            typed_transfer(Tezos.sender,
+              this,
+              params.amount_in,
+              first_swap.pair.token_b_id,
+              first_swap.pair.token_b_address,
+              first_swap.pair.token_b_type
+            ) # operations;
           }
         end;
 
@@ -604,40 +566,24 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
         s.pairs[token_id] := pair;
 
         (* prepare operations to get initial liquidity *)
-        case params.pair.token_a_type of
-        | Fa12 -> {
-          operations := transfer_fa12(
-              Tezos.sender,
-              this,
-              tokens_a_required,
-              params.pair.token_a_address) # operations;
-          }
-        | Fa2 -> {
-          operations := transfer_fa2(
-                Tezos.sender,
-                this,
-                tokens_a_required,
-                params.pair.token_a_id,
-                params.pair.token_a_address) # operations;
-          }
-        end;
-        case params.pair.token_b_type of
-        | Fa12 -> {
-          operations := transfer_fa12(
-              Tezos.sender,
-              this,
-              tokens_b_required,
-              params.pair.token_b_address) # operations;
-          }
-        | Fa2 -> {
-          operations := transfer_fa2(
-                Tezos.sender,
-                this,
-                tokens_b_required,
-                params.pair.token_b_id,
-                params.pair.token_b_address) # operations;
-          }
-        end;
+        operations :=
+          typed_transfer(
+            Tezos.sender,
+            this,
+            tokens_a_required,
+            params.pair.token_a_id,
+            params.pair.token_a_address,
+            params.pair.token_a_type
+          ) # operations;
+        operations :=
+          typed_transfer(
+            Tezos.sender,
+            this,
+            tokens_b_required,
+            params.pair.token_b_id,
+            params.pair.token_b_address,
+            params.pair.token_b_type
+          ) # operations;
       }
       | DivestLiquidity(n) -> skip
     end
@@ -724,40 +670,24 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
         s.pairs[token_id] := pair;
 
         (* prepare operations with XTZ and tokens to user *)
-        case params.pair.token_a_type of
-        | Fa12 -> {
-          operations := transfer_fa12(
-              this,
-              Tezos.sender,
-              token_a_divested,
-              params.pair.token_a_address) # operations;
-          }
-        | Fa2 -> {
-          operations := transfer_fa2(
-              this,
-              Tezos.sender,
-              token_a_divested,
-              params.pair.token_a_id,
-              params.pair.token_a_address) # operations;
-          }
-        end;
-        case params.pair.token_b_type of
-        | Fa12 -> {
-          operations := transfer_fa12(
-              this,
-              Tezos.sender,
-              token_b_divested,
-              params.pair.token_b_address) # operations;
-          }
-        | Fa2 -> {
-          operations := transfer_fa2(
-              this,
-              Tezos.sender,
-              token_b_divested,
-              params.pair.token_b_id,
-              params.pair.token_b_address) # operations;
-          }
-        end;
+        operations :=
+          typed_transfer(
+            this,
+            Tezos.sender,
+            token_a_divested,
+            params.pair.token_a_id,
+            params.pair.token_a_address,
+            params.pair.token_a_type
+          ) # operations;
+        operations :=
+          typed_transfer(
+            this,
+            Tezos.sender,
+            token_b_divested,
+            params.pair.token_b_id,
+            params.pair.token_b_address,
+            params.pair.token_b_type
+          ) # operations;
       }
     end
   } with (operations, s)
