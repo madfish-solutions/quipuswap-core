@@ -322,26 +322,24 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
 
           const updated_pair : pair_info = form_pools(swap.from_.pool, swap.to_.pool, pair.total_supply, params.operation);
           s.pairs[token_id] := updated_pair;
-          
+
         } else failwith("Dex/high-out");
 
         (* prepare operations to withdraw user's tokens and transfer XTZ *)
-        operations := list [
+        operations :=
           (* from *)
           typed_transfer(Tezos.sender, this, params.amount_in,
             swap.from_.id,
             swap.from_.token,
             swap.from_.standard
-          );
+          ) # operations;
+        operations :=
           (* to *)
           typed_transfer(this, params.receiver, out,
             swap.to_.id,
             swap.to_.token,
             swap.to_.standard
-          )
-        ];
-  
-        (* TODO saving pool to storage *)
+          ) # operations;
       }
       | InvestLiquidity(n) -> skip
       | DivestLiquidity(n) -> skip
