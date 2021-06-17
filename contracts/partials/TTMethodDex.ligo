@@ -219,7 +219,7 @@ function initialize_exchange (const p : dex_action ; const s : dex_storage ; con
                 params.pair.token_a_address) # operations;
             }
           | Fa2 -> {
-            operations := 
+            operations :=
               transfer_fa2(
                 Tezos.sender,
                 this,
@@ -371,102 +371,42 @@ function internal_token_to_token_swap (const tmp : internal_swap_type; const par
         then skip
         else failwith ("Dex/zero-amount-in");
 
-        case params.operation of
-        | Sell -> {
-          if params.pair.token_a_address = tmp.token_address_in and params.pair.token_a_id = tmp.token_id_in then
-            skip
-          else failwith("Dex/wrong-route");
+        const swap: swap_data = form_swap_data(pair, params.pair, params.operation);
 
-          (* calculate amount out *)
-          const token_a_in_with_fee : nat = tmp.amount_in * 997n;
-          const numerator : nat = token_a_in_with_fee * pair.token_b_pool;
-          const denominator : nat = pair.token_a_pool * 1000n + token_a_in_with_fee;
+        if swap.from_.token = tmp.token_address_in and swap.from_.id = tmp.token_id_in then
+          skip
+        else failwith("Dex/wrong-route");
 
-          (* calculate swapped token amount *)
-          const token_b_out : nat = numerator / denominator;
+        (* calculate amount out *)
+        const from_in_with_fee : nat = tmp.amount_in * 997n;
+        const numerator : nat = from_in_with_fee * swap.to_.pool;
+        const denominator : nat = swap.from_.pool * 1000n + from_in_with_fee;
 
-          (* ensure requirements *)
-          if token_b_out <= pair.token_b_pool / 3n (* the price impact isn't to high *)
-          then {
-            (* update XTZ pool *)
-            pair.token_b_pool := abs(pair.token_b_pool - token_b_out);
-            pair.token_a_pool := pair.token_a_pool + tmp.amount_in;
-          } else failwith("Dex/high-out");
-          tmp.amount_in := token_b_out;
-          tmp.token_address_in := params.pair.token_b_address;
-          tmp.token_id_in := params.pair.token_b_id;
+        (* calculate swapped token amount *)
+        const out : nat = numerator / denominator;
 
-          (* prepare operations to withdraw user's tokens and transfer XTZ *)
-          case params.pair.token_b_type of
-          | Fa12 -> {
-            tmp.operation := Some(
-              transfer_fa12(
-                tmp.sender,
-                tmp.receiver,
-                token_b_out,
-                params.pair.token_b_address));
-            }
-          | Fa2 -> {
-            tmp.operation := Some(
-                transfer_fa2(
-                  tmp.sender,
-                  tmp.receiver,
-                  token_b_out,
-                  params.pair.token_b_id,
-                  params.pair.token_b_address)
-              );
-            }
-          end;
-        }
-        | Buy -> {
-          if params.pair.token_b_address = tmp.token_address_in and params.pair.token_b_id = tmp.token_id_in then
-            skip
-          else failwith("Dex/wrong-route");
+        (* ensure requirements *)
+        if out <= swap.to_.pool / 3n (* the price impact isn't too high *)
+        then {
+          (* update XTZ pool *)
+          swap.to_.pool := abs(swap.to_.pool - out);
+          swap.from_.pool := swap.from_.pool + tmp.amount_in;
 
-          (* calculate amount out *)
-          const token_b_in_with_fee : nat = tmp.amount_in * 997n;
-          const numerator : nat = token_b_in_with_fee * pair.token_a_pool;
-          const denominator : nat = pair.token_b_pool * 1000n + token_b_in_with_fee;
+          tmp.amount_in := out;
+          tmp.token_address_in := swap.to_.token;
+          tmp.token_id_in := swap.to_.id;
 
-          (* calculate swapped token amount *)
-          const token_a_out : nat = numerator / denominator;
+          const updated_pair : pair_info = form_pools(swap.from_.pool, swap.to_.pool, pair.total_supply, params.operation);
+          tmp.s.pairs[token_id] := updated_pair;
+        } else failwith("Dex/high-out");
 
-          (* ensure requirements *)
-          if token_a_out <= pair.token_a_pool / 3n (* the price impact isn't to high *)
-          then {
-            (* update XTZ pool *)
-            pair.token_a_pool := abs(pair.token_a_pool - token_a_out);
-            pair.token_b_pool := pair.token_b_pool + tmp.amount_in;
-          } else failwith("Dex/high-out");
-
-          tmp.amount_in := token_a_out;
-          tmp.token_address_in := params.
-          pair.token_a_address;
-          tmp.token_id_in := params.pair.token_a_id;
-          (* prepare operations to withdraw user's tokens and transfer XTZ *)
-          case params.pair.token_a_type of
-          | Fa12 -> {
-            tmp.operation := Some(
-              transfer_fa12(
-                tmp.sender,
-                tmp.receiver,
-                token_a_out,
-                params.pair.token_a_address));
-            }
-          | Fa2 -> {
-            tmp.operation := Some(
-              transfer_fa2(
-                  tmp.sender,
-                  tmp.receiver,
-                  token_a_out,
-                  params.pair.token_a_id,
-                  params.pair.token_a_address)
-              );
-          }
-          end;
-        }
-        end;
-        tmp.s.pairs[token_id] := pair;
+        (* prepare operations to withdraw user's tokens and transfer XTZ *)
+        tmp.operation := Some(
+          typed_transfer(tmp.sender, tmp.receiver, out,
+            swap.to_.id,
+            swap.to_.token,
+            swap.to_.standard
+          ));
   } with tmp
 
 (* Exchange tokens to tez, note: tokens should be approved before the operation *)
