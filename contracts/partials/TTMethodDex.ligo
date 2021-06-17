@@ -10,7 +10,7 @@ function get_account(
   | Some(instance) -> instance
   end;
 
-(* Helper function to get account *)
+(* Helper function to get token pair *)
 function get_pair(
   const key : tokens_info;
   const s : dex_storage) : (pair_info * nat) is
@@ -30,6 +30,7 @@ function get_pair(
       end;
   } with (pair, token_id)
 
+(* Helper function to wrap the pair for swap *)
 function form_pools(
   const from_pool: nat;
   const to_pool: nat;
@@ -48,6 +49,7 @@ function form_pools(
     ]
   end;
 
+(* Helper function to unwrap the pair for swap *)
 function form_swap_data(
   const pair: pair_info;
   const swap: tokens_info;
@@ -93,6 +95,7 @@ function wrap_fa2_transfer_trx(
     ]
   ])
 
+(* Helper function to prepare the token transfer *)
 function wrap_fa12_transfer_trx(
   const owner : address;
   const receiver : address;
@@ -109,6 +112,7 @@ function get_fa2_token_contract(
   | None -> (failwith("Dex/not-token") : contract(transfer_type_fa2))
   end;
 
+(* Helper function to get token contract *)
 function get_fa12_token_contract(
   const token_address : address) : contract(transfer_type_fa12) is
   case (Tezos.get_entrypoint_opt(
@@ -118,6 +122,7 @@ function get_fa12_token_contract(
   | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
   end;
 
+(* Helper function to get self reentrancy entrypoint *)
 function get_close_entrypoint(
   const contract_address : address) : contract(unit) is
   case (Tezos.get_entrypoint_opt(
@@ -273,7 +278,8 @@ function initialize_exchange(
     end
 } with (operations, s)
 
-(* Exchange tokens to tez, note: tokens should be approved before the operation *)
+(* Exchange tokens to tokens,
+note: tokens should be approved before the operation *)
 function token_to_token(
   const p : dex_action;
   const s : dex_storage;
@@ -364,7 +370,7 @@ function token_to_token(
     end
   } with (operations, s)
 
-(* Exchange tokens to tez, note: tokens should be approved before the operation *)
+(* Intrenal functions for swap hops *)
 function internal_token_to_token_swap(
   const tmp : internal_swap_type;
   const params : swap_slice_type ) : internal_swap_type is
@@ -429,7 +435,8 @@ function internal_token_to_token_swap(
       ));
   } with tmp
 
-(* Exchange tokens to tez, note: tokens should be approved before the operation *)
+(* Exchange tokens to tokens with multiple hops,
+note: tokens should be approved before the operation *)
 function token_to_token_route(
   const p : dex_action;
   const s : dex_storage;
@@ -509,8 +516,8 @@ function token_to_token_route(
           ]
         );
 
-        (* check minimal received *)
-        if tmp.amount_in < params.min_amount_out (* non-zero amount of tokens exchanged *)
+        (* check the amount of tokens is sufficient *)
+        if tmp.amount_in < params.min_amount_out
         then failwith ("Dex/wrong-min-out") else skip;
 
         (* update storage*)
@@ -528,7 +535,8 @@ function token_to_token_route(
     end
   } with (operations, s)
 
-(* Provide liquidity (both tokens and tez) to the pool, note: tokens should be approved before the operation *)
+(* Provide liquidity (both tokens) to the pool,
+note: tokens should be approved before the operation *)
 function invest_liquidity(
   const p : dex_action;
   const s : dex_storage;
@@ -639,7 +647,7 @@ function invest_liquidity(
     end
   } with (operations, s)
 
-(* Remove liquidity (both tokens and tez) from the pool by burning shares *)
+(* Remove liquidity (both tokens) from the pool by burning shares *)
 function divest_liquidity(
   const p : dex_action;
   const s : dex_storage;
