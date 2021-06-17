@@ -1,5 +1,7 @@
 (* Helper function to get account *)
-function get_account (const key : (address * nat); const s : dex_storage) : account_info is
+function get_account(
+  const key : (address * nat);
+  const s : dex_storage) : account_info is
   case s.ledger[key] of
     None -> record [
       balance    = 0n;
@@ -9,7 +11,9 @@ function get_account (const key : (address * nat); const s : dex_storage) : acco
   end;
 
 (* Helper function to get account *)
-function get_pair (const key : tokens_info; const s : dex_storage) : (pair_info * nat) is
+function get_pair(
+  const key : tokens_info;
+  const s : dex_storage) : (pair_info * nat) is
   block {
     const token_bytes : token_pair = Bytes.pack(key);
     const token_id : nat = case s.token_to_id[token_bytes] of
@@ -26,21 +30,28 @@ function get_pair (const key : tokens_info; const s : dex_storage) : (pair_info 
       end;
   } with (pair, token_id)
 
-function form_pools(const from_pool: nat; const to_pool: nat; const supply: nat; const direction: swap_type) : pair_info is
+function form_pools(
+  const from_pool: nat;
+  const to_pool: nat;
+  const supply: nat;
+  const direction: swap_type) : pair_info is
   case direction of
     Buy -> record [
       token_a_pool = to_pool;
       token_b_pool = from_pool;
       total_supply = supply;
     ]
-    | Sell -> record [
+  | Sell -> record [
       token_a_pool = from_pool;
       token_b_pool = to_pool;
       total_supply = supply;
     ]
   end;
 
-function form_swap_data(const pair: pair_info; const swap: tokens_info; const direction: swap_type) : swap_data is
+function form_swap_data(
+  const pair: pair_info;
+  const swap: tokens_info;
+  const direction: swap_type) : swap_data is
   block {
     const side_a : swap_side = record [
       pool = pair.token_a_pool;
@@ -59,14 +70,18 @@ function form_swap_data(const pair: pair_info; const swap: tokens_info; const di
         from_ = side_a;
         to_ = side_b;
       ]
-      | Buy -> record [
+    | Buy -> record [
         from_ = side_b;
         to_ = side_a;
       ]
     end;
 
 (* Helper function to prepare the token transfer *)
-function wrap_fa2_transfer_trx(const owner : address; const receiver : address; const value : nat; const token_id : nat) : transfer_type_fa2 is
+function wrap_fa2_transfer_trx(
+  const owner : address;
+  const receiver : address;
+  const value : nat;
+  const token_id : nat) : transfer_type_fa2 is
   TransferTypeFA2(list[
     record[
       from_ = owner;
@@ -78,26 +93,37 @@ function wrap_fa2_transfer_trx(const owner : address; const receiver : address; 
     ]
   ])
 
-function wrap_fa12_transfer_trx(const owner : address; const receiver : address; const value : nat) : transfer_type_fa12 is
+function wrap_fa12_transfer_trx(
+  const owner : address;
+  const receiver : address;
+  const value : nat) : transfer_type_fa12 is
   TransferTypeFA12(owner, (receiver, value))
 
 (* Helper function to get token contract *)
-function get_fa2_token_contract(const token_address : address) : contract(transfer_type_fa2) is
-  case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type_fa2))) of
+function get_fa2_token_contract(
+  const token_address : address) : contract(transfer_type_fa2) is
+  case (Tezos.get_entrypoint_opt(
+      "%transfer",
+      token_address) : option(contract(transfer_type_fa2))) of
     Some(contr) -> contr
-    | None -> (failwith("Dex/not-token") : contract(transfer_type_fa2))
+  | None -> (failwith("Dex/not-token") : contract(transfer_type_fa2))
   end;
 
-function get_fa12_token_contract(const token_address : address) : contract(transfer_type_fa12) is
-  case (Tezos.get_entrypoint_opt("%transfer", token_address) : option(contract(transfer_type_fa12))) of
+function get_fa12_token_contract(
+  const token_address : address) : contract(transfer_type_fa12) is
+  case (Tezos.get_entrypoint_opt(
+      "%transfer",
+      token_address) : option(contract(transfer_type_fa12))) of
     Some(contr) -> contr
-    | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
+  | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
   end;
 
-function get_close_entrypoint(const contract_address : address) : contract(unit) is
-  case (Tezos.get_entrypoint_opt("%close", contract_address) : option(contract(unit))) of
+function get_close_entrypoint(
+  const contract_address : address) : contract(unit) is
+  case (Tezos.get_entrypoint_opt(
+      "%close", contract_address) : option(contract(unit))) of
     Some(contr) -> contr
-    | None -> (failwith("Dex/no-close-entrypoint") : contract(unit))
+  | None -> (failwith("Dex/no-close-entrypoint") : contract(unit))
   end;
 
 function transfer_fa2(
@@ -138,120 +164,138 @@ function typed_transfer(
   const contract_address : address;
   const standard: token_type) : operation is
     case standard of
-      Fa12 -> transfer_fa12(sender_, receiver, amount_, contract_address)
-      | Fa2 -> transfer_fa2(sender_, receiver, amount_, token_id, contract_address)
+      Fa12 -> transfer_fa12(
+        sender_,
+        receiver,
+        amount_,
+        contract_address)
+    | Fa2 -> transfer_fa2(
+        sender_,
+        receiver,
+        amount_,
+        token_id,
+        contract_address)
     end;
 
 #include "../partials/TTMethodFA2.ligo"
 
 (* Initialize exchange after the previous liquidity was drained *)
-function initialize_exchange (const p : dex_action ; const s : dex_storage ; const this: address) :  return is
+function initialize_exchange(
+  const p : dex_action;
+  const s : dex_storage;
+  const this: address) :  return is
   block {
-    var operations: list(operation) := list[Tezos.transaction(
-      unit,
-      0mutez,
-      get_close_entrypoint(this)
+    var operations: list(operation) := list[
+      Tezos.transaction(
+        unit,
+        0mutez,
+        get_close_entrypoint(this)
     )];
     case p of
-        | InitializeExchange(params) -> {
-          if s.entered
-          then failwith("Dex/reentrancy")
-          else s.entered := True;
-
-          (* check preconditions *)
-          if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id
-          then failwith("Dex/wrong-token-id") else skip;
-          if params.pair.token_a_address > params.pair.token_b_address
-          then failwith("Dex/wrong-pair") else skip;
-
-          (* get par info*)
-          const res : (pair_info * nat) = get_pair(params.pair, s);
-          const pair : pair_info = res.0;
-          const token_id : nat = res.1;
-
-          (* update counter if needed *)
-          if s.pairs_count = token_id then {
-            s.token_to_id[Bytes.pack(params.pair)] := token_id;
-            s.pairs_count := s.pairs_count + 1n;
-          } else skip;
-
-          (* check preconditions *)
-          if pair.token_a_pool * pair.token_b_pool =/= 0n (* no reserves *)
-          then failwith("Dex/non-zero-reserves") else skip;
-          if pair.total_supply =/= 0n  (* no shares owned *)
-          then failwith("Dex/non-zero-shares") else skip;
-          if params.token_a_in < 1n (* XTZ provided *)
-          then failwith("Dex/no-token-a") else skip;
-          if params.token_b_in < 1n (* XTZ provided *)
-          then failwith("Dex/no-token-b") else skip;
-
-          (* update pool reserves *)
-          pair.token_a_pool := params.token_a_in;
-          pair.token_b_pool := params.token_b_in;
-
-          (* calculate initial shares *)
-          const init_shares : nat =
-            if params.token_a_in < params.token_b_in then
-              params.token_a_in
-            else params.token_b_in;
-
-          (* distribute initial shares *)
-          s.ledger[(Tezos.sender, token_id)] := record [
-              balance    = init_shares;
-              allowances = (set [] : set(address));
-            ];
-          pair.total_supply := init_shares;
-
-          (* update storage *)
-          s.pairs[token_id] := pair;
-          s.tokens[token_id] := params.pair;
-
-          (* prepare operations to get initial liquidity *)
-          operations :=
-            typed_transfer(
-              Tezos.sender,
-              this,
-              params.token_a_in,
-              params.pair.token_a_id,
-              params.pair.token_a_address,
-              params.pair.token_a_type
-            ) # operations;
-          operations :=
-            typed_transfer(
-              Tezos.sender,
-              this,
-              params.token_b_in,
-              params.pair.token_b_id,
-              params.pair.token_b_address,
-              params.pair.token_b_type
-            ) # operations;
-        }
-        | TokenToTokenPayment(n) -> skip
-        | TokenToTokenRoutePayment(n) -> skip
-        | InvestLiquidity(n) -> skip
-        | DivestLiquidity(n) -> skip
-
-      end
-  } with (operations, s)
-
-(* Exchange tokens to tez, note: tokens should be approved before the operation *)
-function token_to_token (const p : dex_action; const s : dex_storage; const this : address) : return is
-  block {
-    var operations: list(operation) := list[Tezos.transaction(
-      unit,
-      0mutez,
-      get_close_entrypoint(this)
-    )];
-    case p of
-      | InitializeExchange(n) -> skip
-      | TokenToTokenRoutePayment(n) -> skip
-      | TokenToTokenPayment(params) -> {
+      InitializeExchange(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
 
         (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id 
+        if params.pair.token_a_address = params.pair.token_b_address
+        and params.pair.token_a_id >= params.pair.token_b_id
+        then failwith("Dex/wrong-token-id") else skip;
+        if params.pair.token_a_address > params.pair.token_b_address
+        then failwith("Dex/wrong-pair") else skip;
+
+        (* get par info*)
+        const res : (pair_info * nat) = get_pair(params.pair, s);
+        const pair : pair_info = res.0;
+        const token_id : nat = res.1;
+
+        (* update counter if needed *)
+        if s.pairs_count = token_id then {
+          s.token_to_id[Bytes.pack(params.pair)] := token_id;
+          s.pairs_count := s.pairs_count + 1n;
+        } else skip;
+
+        (* check preconditions *)
+        if pair.token_a_pool * pair.token_b_pool =/= 0n (* no reserves *)
+        then failwith("Dex/non-zero-reserves") else skip;
+        if pair.total_supply =/= 0n  (* no shares owned *)
+        then failwith("Dex/non-zero-shares") else skip;
+        if params.token_a_in < 1n (* XTZ provided *)
+        then failwith("Dex/no-token-a") else skip;
+        if params.token_b_in < 1n (* XTZ provided *)
+        then failwith("Dex/no-token-b") else skip;
+
+        (* update pool reserves *)
+        pair.token_a_pool := params.token_a_in;
+        pair.token_b_pool := params.token_b_in;
+
+        (* calculate initial shares *)
+        const init_shares : nat =
+          if params.token_a_in < params.token_b_in then
+            params.token_a_in
+          else params.token_b_in;
+
+        (* distribute initial shares *)
+        s.ledger[(Tezos.sender, token_id)] := record [
+            balance    = init_shares;
+            allowances = (set [] : set(address));
+          ];
+        pair.total_supply := init_shares;
+
+        (* update storage *)
+        s.pairs[token_id] := pair;
+        s.tokens[token_id] := params.pair;
+
+        (* prepare operations to get initial liquidity *)
+        operations :=
+          typed_transfer(
+            Tezos.sender,
+            this,
+            params.token_a_in,
+            params.pair.token_a_id,
+            params.pair.token_a_address,
+            params.pair.token_a_type
+          ) # operations;
+        operations :=
+          typed_transfer(
+            Tezos.sender,
+            this,
+            params.token_b_in,
+            params.pair.token_b_id,
+            params.pair.token_b_address,
+            params.pair.token_b_type
+          ) # operations;
+      }
+    | TokenToTokenPayment(n) -> skip
+    | TokenToTokenRoutePayment(n) -> skip
+    | InvestLiquidity(n) -> skip
+    | DivestLiquidity(n) -> skip
+    end
+} with (operations, s)
+
+(* Exchange tokens to tez, note: tokens should be approved before the operation *)
+function token_to_token(
+  const p : dex_action;
+  const s : dex_storage;
+  const this : address) : return is
+  block {
+    var operations: list(operation) := list[
+      Tezos.transaction(
+        unit,
+        0mutez,
+        get_close_entrypoint(this)
+    )];
+    case p of
+      InitializeExchange(n) -> skip
+    | TokenToTokenRoutePayment(n) -> skip
+    | TokenToTokenPayment(params) -> {
+        if s.entered
+        then failwith("Dex/reentrancy")
+        else s.entered := True;
+
+        (* check preconditions *)
+        if params.pair.token_a_address = params.pair.token_b_address
+        and params.pair.token_a_id >= params.pair.token_b_id
         then failwith("Dex/wrong-token-id") else skip;
         if params.pair.token_a_address > params.pair.token_b_address
         then failwith("Dex/wrong-pair") else skip;
@@ -271,7 +315,10 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
 
 
         (* calculate amount out *)
-        const swap: swap_data = form_swap_data(pair, params.pair, params.operation);
+        const swap: swap_data = form_swap_data(
+          pair,
+          params.pair,
+          params.operation);
         const from_in_with_fee : nat = params.amount_in * 997n;
         const numerator : nat = from_in_with_fee * swap.to_.pool;
         const denominator : nat = swap.from_.pool * 1000n + from_in_with_fee;
@@ -289,7 +336,11 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
         swap.to_.pool := abs(swap.to_.pool - out);
         swap.from_.pool := swap.from_.pool + params.amount_in;
 
-        const updated_pair : pair_info = form_pools(swap.from_.pool, swap.to_.pool, pair.total_supply, params.operation);
+        const updated_pair : pair_info = form_pools(
+          swap.from_.pool,
+          swap.to_.pool,
+          pair.total_supply,
+          params.operation);
         s.pairs[token_id] := updated_pair;
 
         (* prepare operations to withdraw user's tokens and transfer XTZ *)
@@ -308,70 +359,81 @@ function token_to_token (const p : dex_action; const s : dex_storage; const this
             swap.to_.standard
           ) # operations;
       }
-      | InvestLiquidity(n) -> skip
-      | DivestLiquidity(n) -> skip
+    | InvestLiquidity(n) -> skip
+    | DivestLiquidity(n) -> skip
     end
   } with (operations, s)
 
 (* Exchange tokens to tez, note: tokens should be approved before the operation *)
-function internal_token_to_token_swap (const tmp : internal_swap_type; const params : swap_slice_type ) : internal_swap_type is
+function internal_token_to_token_swap(
+  const tmp : internal_swap_type;
+  const params : swap_slice_type ) : internal_swap_type is
   block {
-        (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id
-        then failwith("Dex/wrong-token-id") else skip;
-        if params.pair.token_a_address > params.pair.token_b_address
-        then failwith("Dex/wrong-pair") else skip;
+    (* check preconditions *)
+    if params.pair.token_a_address = params.pair.token_b_address
+    and params.pair.token_a_id >= params.pair.token_b_id
+    then failwith("Dex/wrong-token-id") else skip;
+    if params.pair.token_a_address > params.pair.token_b_address
+    then failwith("Dex/wrong-pair") else skip;
 
-        (* get par info*)
-        const res : (pair_info * nat) = get_pair(params.pair, tmp.s);
-        const pair : pair_info = res.0;
-        const token_id : nat = res.1;
-        const swap: swap_data = form_swap_data(pair, params.pair, params.operation);
+    (* get par info*)
+    const res : (pair_info * nat) = get_pair(params.pair, tmp.s);
+    const pair : pair_info = res.0;
+    const token_id : nat = res.1;
+    const swap: swap_data = form_swap_data(pair, params.pair, params.operation);
 
-        (* ensure there is liquidity *)
-        if pair.token_a_pool * pair.token_b_pool = 0n
-        then failwith("Dex/not-launched") else skip;
-        if tmp.amount_in > 0n (* non-zero amount of tokens exchanged *)
-        then failwith ("Dex/zero-amount-in") else skip;
-        if swap.from_.token = tmp.token_address_in and swap.from_.id = tmp.token_id_in
-        then failwith("Dex/wrong-route") else skip;
+    (* ensure there is liquidity *)
+    if pair.token_a_pool * pair.token_b_pool = 0n
+    then failwith("Dex/not-launched") else skip;
+    if tmp.amount_in > 0n (* non-zero amount of tokens exchanged *)
+    then failwith ("Dex/zero-amount-in") else skip;
+    if swap.from_.token = tmp.token_address_in
+    and swap.from_.id = tmp.token_id_in
+    then failwith("Dex/wrong-route") else skip;
 
-        (* calculate amount out *)
-        const from_in_with_fee : nat = tmp.amount_in * 997n;
-        const numerator : nat = from_in_with_fee * swap.to_.pool;
-        const denominator : nat = swap.from_.pool * 1000n + from_in_with_fee;
+    (* calculate amount out *)
+    const from_in_with_fee : nat = tmp.amount_in * 997n;
+    const numerator : nat = from_in_with_fee * swap.to_.pool;
+    const denominator : nat = swap.from_.pool * 1000n + from_in_with_fee;
 
-        (* calculate swapped token amount *)
-        const out : nat = numerator / denominator;
+    (* calculate swapped token amount *)
+    const out : nat = numerator / denominator;
 
-        (* ensure requirements *)
-        if out > swap.to_.pool / 3n (* the price impact isn't too high *)
-        then failwith("Dex/high-out") else skip;
+    (* ensure requirements *)
+    if out > swap.to_.pool / 3n (* the price impact isn't too high *)
+    then failwith("Dex/high-out") else skip;
 
-        (* update pools amounts *)
-        swap.to_.pool := abs(swap.to_.pool - out);
-        swap.from_.pool := swap.from_.pool + tmp.amount_in;
+    (* update pools amounts *)
+    swap.to_.pool := abs(swap.to_.pool - out);
+    swap.from_.pool := swap.from_.pool + tmp.amount_in;
 
-        (* update info for the next hop *)
-        tmp.amount_in := out;
-        tmp.token_address_in := swap.to_.token;
-        tmp.token_id_in := swap.to_.id;
+    (* update info for the next hop *)
+    tmp.amount_in := out;
+    tmp.token_address_in := swap.to_.token;
+    tmp.token_id_in := swap.to_.id;
 
-        (* update storage *)
-        const updated_pair : pair_info = form_pools(swap.from_.pool, swap.to_.pool, pair.total_supply, params.operation);
-        tmp.s.pairs[token_id] := updated_pair;
+    (* update storage *)
+    const updated_pair : pair_info = form_pools(
+      swap.from_.pool,
+      swap.to_.pool,
+      pair.total_supply,
+      params.operation);
+    tmp.s.pairs[token_id] := updated_pair;
 
-        (* prepare operations to withdraw user's tokens *)
-        tmp.operation := Some(
-          typed_transfer(tmp.sender, tmp.receiver, out,
-            swap.to_.id,
-            swap.to_.token,
-            swap.to_.standard
-          ));
+    (* prepare operations to withdraw user's tokens *)
+    tmp.operation := Some(
+      typed_transfer(tmp.sender, tmp.receiver, out,
+        swap.to_.id,
+        swap.to_.token,
+        swap.to_.standard
+      ));
   } with tmp
 
 (* Exchange tokens to tez, note: tokens should be approved before the operation *)
-function token_to_token_route (const p : dex_action; const s : dex_storage; const this : address) : return is
+function token_to_token_route(
+  const p : dex_action;
+  const s : dex_storage;
+  const this : address) : return is
   block {
     var operations: list(operation) := list[Tezos.transaction(
       unit,
@@ -379,9 +441,9 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
       get_close_entrypoint(this)
     )];
     case p of
-      | InitializeExchange(n) -> skip
-      | TokenToTokenPayment(n) -> skip
-      | TokenToTokenRoutePayment(params) -> {
+    | InitializeExchange(n) -> skip
+    | TokenToTokenPayment(n) -> skip
+    | TokenToTokenRoutePayment(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
@@ -396,7 +458,7 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
 
         (* collect the operations to execute *)
         const first_swap : swap_slice_type = case List.head_opt(params.swaps) of
-        | Some(swap) -> swap
+          Some(swap) -> swap
         | None -> (failwith("Dex/zero-swaps") : swap_slice_type)
         end;
 
@@ -456,18 +518,21 @@ function token_to_token_route (const p : dex_action; const s : dex_storage; cons
 
         (* add token transfer to user's account *)
         const last_operation : operation = case tmp.operation of
-        | Some(o) -> o
+          Some(o) -> o
         | None -> (failwith("Dex/too-few-swaps") : operation)
         end;
         operations := last_operation # operations;
       }
-      | InvestLiquidity(n) -> skip
-      | DivestLiquidity(n) -> skip
+    | InvestLiquidity(n) -> skip
+    | DivestLiquidity(n) -> skip
     end
   } with (operations, s)
 
 (* Provide liquidity (both tokens and tez) to the pool, note: tokens should be approved before the operation *)
-function invest_liquidity (const p : dex_action; const s : dex_storage; const this: address) : return is
+function invest_liquidity(
+  const p : dex_action;
+  const s : dex_storage;
+  const this: address) : return is
   block {
     var operations: list(operation) := list[Tezos.transaction(
       unit,
@@ -475,16 +540,17 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
       get_close_entrypoint(this)
     )];
     case p of
-      | InitializeExchange(n) -> skip
-      | TokenToTokenRoutePayment(n) -> skip
-      | TokenToTokenPayment(n) -> skip
-      | InvestLiquidity(params) -> {
+    | InitializeExchange(n) -> skip
+    | TokenToTokenRoutePayment(n) -> skip
+    | TokenToTokenPayment(n) -> skip
+    | InvestLiquidity(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
 
         (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id 
+        if params.pair.token_a_address = params.pair.token_b_address
+        and params.pair.token_a_id >= params.pair.token_b_id
         then failwith("Dex/wrong-token-id") else skip;
         if params.pair.token_a_address > params.pair.token_b_address
         then failwith("Dex/wrong-pair") else skip;
@@ -499,9 +565,12 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
         then failwith("Dex/not-launched") else skip;
 
         (* calculate purchased tokens *)
-        const shares_a_purchased : nat = params.token_a_in * pair.total_supply / pair.token_a_pool;
-        const shares_b_purchased : nat = params.token_b_in * pair.total_supply / pair.token_b_pool;
-        const shares_purchased : nat = if shares_a_purchased < shares_b_purchased
+        const shares_a_purchased : nat =
+          params.token_a_in * pair.total_supply / pair.token_a_pool;
+        const shares_b_purchased : nat =
+          params.token_b_in * pair.total_supply / pair.token_b_pool;
+        const shares_purchased : nat =
+          if shares_a_purchased < shares_b_purchased
           then shares_a_purchased
           else shares_b_purchased;
 
@@ -510,11 +579,15 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
         then failwith("Dex/wrong-params") else skip;
 
         (* calculate tokens to be withdrawn *)
-        const tokens_a_required : nat = shares_purchased * pair.token_a_pool / pair.total_supply;
-        if shares_purchased * pair.token_a_pool > tokens_a_required * pair.total_supply
+        const tokens_a_required : nat =
+          shares_purchased * pair.token_a_pool / pair.total_supply;
+        if shares_purchased * pair.token_a_pool >
+          tokens_a_required * pair.total_supply
         then tokens_a_required := tokens_a_required + 1n else skip;
-        const tokens_b_required : nat = shares_purchased * pair.token_b_pool / pair.total_supply;
-        if shares_purchased * pair.token_b_pool > tokens_b_required * pair.total_supply
+        const tokens_b_required : nat =
+          shares_purchased * pair.token_b_pool / pair.total_supply;
+        if shares_purchased * pair.token_b_pool >
+          tokens_b_required * pair.total_supply
         then tokens_b_required := tokens_b_required + 1n else skip;
 
         (* ensure *)
@@ -562,12 +635,15 @@ function invest_liquidity (const p : dex_action; const s : dex_storage; const th
             params.pair.token_b_type
           ) # operations;
       }
-      | DivestLiquidity(n) -> skip
+    | DivestLiquidity(n) -> skip
     end
   } with (operations, s)
 
 (* Remove liquidity (both tokens and tez) from the pool by burning shares *)
-function divest_liquidity (const p : dex_action; const s : dex_storage; const this: address) :  return is
+function divest_liquidity(
+  const p : dex_action;
+  const s : dex_storage;
+  const this: address) :  return is
   block {
     var operations: list(operation) := list[Tezos.transaction(
       unit,
@@ -575,17 +651,18 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
       get_close_entrypoint(this)
     )];
     case p of
-      | InitializeExchange(token_amount) -> skip
-      | TokenToTokenPayment(n) -> skip
-      | TokenToTokenRoutePayment(n) -> skip
-      | InvestLiquidity(n) -> skip
-      | DivestLiquidity(params) -> {
+    | InitializeExchange(token_amount) -> skip
+    | TokenToTokenPayment(n) -> skip
+    | TokenToTokenRoutePayment(n) -> skip
+    | InvestLiquidity(n) -> skip
+    | DivestLiquidity(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
 
         (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address and params.pair.token_a_id >= params.pair.token_b_id
+        if params.pair.token_a_address = params.pair.token_b_address
+        and params.pair.token_a_id >= params.pair.token_b_id
         then failwith("Dex/wrong-token-id") else skip;
         if params.pair.token_a_address > params.pair.token_b_address
         then failwith("Dex/wrong-pair") else skip;
@@ -607,7 +684,7 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
         (* ensure *)
         if params.shares = 0n (* minimal burn's shares are non-zero *)
         then failwith("Dex/zero-burn-shares") else skip;
-        if params.shares > share (* burnt shares are lower than liquid balance *)
+        if params.shares > share (* burnt shares are lower than balance *)
         then failwith("Dex/insufficient-shares") else skip;
 
         (* update users shares *)
@@ -615,15 +692,18 @@ function divest_liquidity (const p : dex_action; const s : dex_storage; const th
         s.ledger[(Tezos.sender, token_id)] := account;
 
         (* calculate amount of token's sent to user *)
-        const token_a_divested : nat = pair.token_a_pool * params.shares / pair.total_supply;
-        const token_b_divested : nat = pair.token_b_pool * params.shares / pair.total_supply;
+        const token_a_divested : nat =
+          pair.token_a_pool * params.shares / pair.total_supply;
+        const token_b_divested : nat =
+          pair.token_b_pool * params.shares / pair.total_supply;
 
         (* ensure minimal amounts out are non-zero *)
         if params.min_token_a_out = 0n or params.min_token_b_out = 0n
         then failwith("Dex/dust-output") else skip;
 
         (* ensure minimal amounts are satisfied *)
-        if token_a_divested < params.min_token_a_out or token_b_divested < params.min_token_b_out
+        if token_a_divested < params.min_token_a_out
+        or token_b_divested < params.min_token_b_out
         then failwith("Dex/high-expectation") else skip;
 
         (* update total shares *)
