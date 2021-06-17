@@ -316,7 +316,7 @@ function token_to_token(
         then failwith("Dex/not-launched") else skip;
         if params.amount_in = 0n (* non-zero amount of tokens exchanged *)
         then failwith ("Dex/zero-amount-in") else skip;
-        if params.min_amount_out > 0n (* non-zero amount of tokens exchanged *)
+        if params.min_amount_out = 0n (* non-zero amount of tokens exchanged *)
         then failwith ("Dex/zero-min-amount-out") else skip;
 
 
@@ -391,10 +391,10 @@ function internal_token_to_token_swap(
     (* ensure there is liquidity *)
     if pair.token_a_pool * pair.token_b_pool = 0n
     then failwith("Dex/not-launched") else skip;
-    if tmp.amount_in > 0n (* non-zero amount of tokens exchanged *)
+    if tmp.amount_in = 0n (* non-zero amount of tokens exchanged *)
     then failwith ("Dex/zero-amount-in") else skip;
-    if swap.from_.token = tmp.token_address_in
-    and swap.from_.id = tmp.token_id_in
+    if swap.from_.token =/= tmp.token_address_in
+    or swap.from_.id =/= tmp.token_id_in
     then failwith("Dex/wrong-route") else skip;
 
     (* calculate amount out *)
