@@ -159,10 +159,12 @@ module.exports = async (deployer, network, accounts) => {
               ? token0Instance.address.toString()
               : token1Instance.address.toString(),
             0,
+            "fa12",
             ordered
               ? token1Instance.address.toString()
               : token0Instance.address.toString(),
-            initialTokenAmount,
+            0,
+            "fa2".initialTokenAmount,
             initialTokenAmount
           )
           .send();
@@ -174,10 +176,12 @@ module.exports = async (deployer, network, accounts) => {
               ? token0Instance.address.toString()
               : token1Instance.address.toString(),
             0,
+            standard.toLocaleLowerCase(),
             ordered
               ? token1Instance.address.toString()
               : token0Instance.address.toString(),
             0,
+            standard.toLocaleLowerCase(),
             initialTokenAmount,
             initialTokenAmount
           )
