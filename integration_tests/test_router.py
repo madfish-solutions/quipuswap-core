@@ -6,7 +6,7 @@ from helpers import *
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
 from pytezos.context.mixin import ExecutionContext
 
-class TokenToTokenTest(TestCase):
+class TokenToTokenRouterTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -26,14 +26,16 @@ class TokenToTokenTest(TestCase):
             "token_a_id" : 0,
             "token_b_address" : token_b,
             "token_b_id" : 1,
-            "standard": "fa2"
+            "token_a_type": "fa2",
+            "token_b_type": "fa2"
         }
         pair_bc = {
             "token_a_address" : token_b,
             "token_a_id" : 1,
             "token_b_address" : token_c,
             "token_b_id" : 2,
-            "standard": "fa12"
+            "token_a_type": "fa12",
+            "token_b_type": "fa12"
         }
 
         amount_in=10_000
@@ -60,7 +62,6 @@ class TokenToTokenTest(TestCase):
         }))
 
         transfers = parse_token_transfers(res)
-
         contract_in = next(v for v in transfers if v["destination"] == contract_self_address)
         self.assertEqual(contract_in["token_address"], token_a)
         self.assertEqual(contract_in["amount"], 10_000)
@@ -77,21 +78,20 @@ class TokenToTokenTest(TestCase):
             receiver=julian
         ))
         transfers = parse_token_transfers(res)
-        first_out = next(v for v in transfers if v["destination"] == julian)
+        token_b_out = next(v for v in transfers if v["destination"] == julian)
 
         res = chain.interpret(self.dex.tokenToTokenPayment(
             pair=pair_bc,
             operation="sell",
-            amount_in=first_out["amount"],
+            amount_in=token_b_out["amount"],
             min_amount_out=1,
             receiver=julian
         ))
         transfers = parse_token_transfers(res)
-        second_out = next(v for v in transfers if v["destination"] == julian)
+        token_c_out = next(v for v in transfers if v["destination"] == julian)
 
-        self.assertEqual(routed_out["amount"], first_out["amount"] + second_out["amount"])
-
-    
+        self.assertEqual(routed_out["amount"], token_c_out["amount"])
+ 
 
 
     def test_tt_router_impossible_path(self):
@@ -105,14 +105,16 @@ class TokenToTokenTest(TestCase):
             "token_a_id" : 0,
             "token_b_address" : token_b,
             "token_b_id" : 1,
-            "standard": "fa2"
+            "token_a_type": "fa12",
+            "token_b_type": "fa12"
         }
         pair_cd = {
             "token_a_address" : token_c,
             "token_a_id" : 1,
             "token_b_address" : token_d,
             "token_b_id" : 2,
-            "standard": "fa12"
+            "token_a_type": "fa12",
+            "token_b_type": "fa12"
         }
 
         chain = LocalChain(token_to_token=True)

@@ -13,7 +13,8 @@ pair = {
     "token_a_id" : 0,
     "token_b_address" : "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC",
     "token_b_id" : 1,
-    "standard": "fa2"
+    "token_a_type": "fa2",
+    "token_b_type": "fa2"
 }
 
 class TokenToTokenTransferTest(TestCase):
