@@ -2,6 +2,9 @@ import { TTContext } from "./helpers/ttContext";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
+import { TokenFA2 } from "./helpers/tokenFA2";
+import { TokenFA12 } from "./helpers/tokenFA12";
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("InitializeTTExchange()", function () {
   let context: TTContext;
@@ -12,7 +15,7 @@ contract("InitializeTTExchange()", function () {
   before(async () => {
     context = await TTContext.init([], false, "alice", false);
     await context.setDexFunction(0, "initialize_exchange");
-    await context.setDexFunction(3, "divest_liquidity");
+    await context.setDexFunction(4, "divest_liquidity");
   });
 
   it("should have an empty token list after deployment", async function () {
@@ -24,14 +27,36 @@ contract("InitializeTTExchange()", function () {
     let tokenAAddress: string;
     let tokenBAddress: string;
     before(async () => {
-      tokenAAddress = await context.createToken();
-      tokenBAddress = await context.createToken();
-      if (tokenAAddress > tokenBAddress) {
-        const tmp = context.tokens[0];
-        context.tokens[0] = context.tokens[1];
-        context.tokens[1] = tmp;
-        tokenAAddress = context.tokens[0].contract.address;
-        tokenBAddress = context.tokens[1].contract.address;
+      do {
+        tokenBAddress = await context.createToken(
+          standard == "MIXED" ? "FA12" : standard,
+          false
+        );
+        tokenAAddress = await context.createToken(
+          standard == "MIXED" ? "FA2" : standard,
+          false
+        );
+        if (standard !== "MIXED" && tokenAAddress > tokenBAddress) {
+          const tmp = tokenAAddress;
+          tokenAAddress = tokenBAddress;
+          tokenBAddress = tmp;
+        }
+      } while (tokenAAddress > tokenBAddress);
+      switch (standard) {
+        case "FA2":
+          context.tokens.push(await TokenFA2.init(tokenAAddress));
+          context.tokens.push(await TokenFA2.init(tokenBAddress));
+          break;
+        case "FA12":
+          context.tokens.push(await TokenFA12.init(tokenAAddress));
+          context.tokens.push(await TokenFA12.init(tokenBAddress));
+          break;
+        case "MIXED":
+          context.tokens.push(await TokenFA2.init(tokenAAddress));
+          context.tokens.push(await TokenFA12.init(tokenBAddress));
+          break;
+        default:
+          break;
       }
     });
 
@@ -167,7 +192,7 @@ contract("InitializeTTExchange()", function () {
     before(async () => {
       tokenAAddress = context.tokens[0].contract.address;
       tokenBAddress = context.tokens[1].contract.address;
-      if (tokenAAddress > tokenBAddress) {
+      if (standard != "MIXED" && tokenAAddress > tokenBAddress) {
         tokenBAddress = context.tokens[0].contract.address;
         tokenAAddress = context.tokens[1].contract.address;
       }

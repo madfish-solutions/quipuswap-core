@@ -1,5 +1,6 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
-const TTDex = artifacts.require("TTDex" + standard);
+const usedStandard = standard == "MIXED" ? "FA2" : standard;
+const TTDex = artifacts.require("TTDex");
 const MetadataStorage = artifacts.require("MetadataStorage");
 const dexStorage = require("../storage/TTDex");
 const { TezosToolkit } = require("@taquito/taquito");
@@ -7,8 +8,12 @@ const { InMemorySigner } = require("@taquito/signer");
 const { MichelsonMap } = require("@taquito/michelson-encoder");
 const { dexFunctions, tokenFunctions } = require("../storage/TTFunctions");
 const { execSync } = require("child_process");
-const Token = artifacts.require("Token" + standard);
-const tokenStorage = require("../storage/Token" + standard);
+const Token = artifacts.require("Token" + usedStandard);
+const TokenFA12 = artifacts.require("TokenFA12");
+const TokenFA2 = artifacts.require("TokenFA2");
+const tokenStorage = require("../storage/Token" + usedStandard);
+const tokenFA12Storage = require("../storage/TokenFA12");
+const tokenFA2Storage = require("../storage/TokenFA2");
 const { getLigo } = require("../scripts/utils");
 const accountsStored = require("../scripts/sandbox/accounts");
 
@@ -44,7 +49,7 @@ module.exports = async (deployer, network, accounts) => {
 
   for (dexFunction of dexFunctions) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex${standard}.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -59,7 +64,7 @@ module.exports = async (deployer, network, accounts) => {
   }
   for (tokenFunction of tokenFunctions[standard]) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex${standard}.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -75,10 +80,14 @@ module.exports = async (deployer, network, accounts) => {
 
   if (network !== "mainnet") {
     let token0Instance = await tezos.contract.at(
-      (await Token.new(tokenStorage)).address.toString()
+      standard == "MIXED"
+        ? (await TokenFA2.new(tokenFA2Storage)).address.toString()
+        : (await Token.new(tokenStorage)).address.toString()
     );
     let token1Instance = await tezos.contract.at(
-      (await Token.new(tokenStorage)).address.toString()
+      standard == "MIXED"
+        ? (await TokenFA12.new(tokenFA12Storage)).address.toString()
+        : (await Token.new(tokenStorage)).address.toString()
     );
     console.log(`Token 1 address: ${token0Instance.address}`);
     console.log(`Token 2 address: ${token1Instance.address}`);
@@ -123,39 +132,61 @@ module.exports = async (deployer, network, accounts) => {
         ])
         .send();
       await operation.confirmation();
-      operation = await token1Instance.methods
-        .update_operators([
-          {
-            add_operator: {
-              owner: accounts[0],
-              operator: dexInstance.address.toString(),
-              token_id: defaultTokenId,
+      if (standard == "MIXED") {
+        operation = await token1Instance.methods
+          .approve(dexInstance.address.toString(), initialTokenAmount)
+          .send();
+      } else {
+        operation = await token1Instance.methods
+          .update_operators([
+            {
+              add_operator: {
+                owner: accounts[0],
+                operator: dexInstance.address.toString(),
+                token_id: defaultTokenId,
+              },
             },
-          },
-        ])
-        .send();
+          ])
+          .send();
+      }
       await operation.confirmation();
-      let pair = {
-        token_a_address: token0Instance.address.toString(),
-        token_b_address: token1Instance.address.toString(),
-        token_a_id: 0,
-        token_b_id: 0,
-      };
-      operation = await dex.methods
-        .use(
-          "initializeExchange",
-          ordered
-            ? token0Instance.address.toString()
-            : token1Instance.address.toString(),
-          0,
-          ordered
-            ? token1Instance.address.toString()
-            : token0Instance.address.toString(),
-          0,
-          initialTokenAmount,
-          initialTokenAmount
-        )
-        .send();
+
+      if (standard === "MIXED") {
+        operation = await dex.methods
+          .use(
+            "initializeExchange",
+            ordered
+              ? token0Instance.address.toString()
+              : token1Instance.address.toString(),
+            0,
+            "fa12",
+            ordered
+              ? token1Instance.address.toString()
+              : token0Instance.address.toString(),
+            0,
+            "fa2".initialTokenAmount,
+            initialTokenAmount
+          )
+          .send();
+      } else {
+        operation = await dex.methods
+          .use(
+            "initializeExchange",
+            ordered
+              ? token0Instance.address.toString()
+              : token1Instance.address.toString(),
+            0,
+            standard.toLocaleLowerCase(),
+            ordered
+              ? token1Instance.address.toString()
+              : token0Instance.address.toString(),
+            0,
+            standard.toLocaleLowerCase(),
+            initialTokenAmount,
+            initialTokenAmount
+          )
+          .send();
+      }
       await operation.confirmation();
     }
   }

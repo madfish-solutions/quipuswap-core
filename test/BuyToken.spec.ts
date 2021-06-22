@@ -3,6 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
+const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("BuyToken()", function () {
   let context: TTContext;
@@ -21,13 +22,6 @@ contract("BuyToken()", function () {
     });
     tokenAAddress = context.tokens[0].contract.address;
     tokenBAddress = context.tokens[1].contract.address;
-    if (tokenAAddress > tokenBAddress) {
-      const tmp = context.tokens[0];
-      context.tokens[0] = context.tokens[1];
-      context.tokens[1] = tmp;
-      tokenAAddress = context.tokens[0].contract.address;
-      tokenBAddress = context.tokens[1].contract.address;
-    }
   });
 
   function tokenToTokenSuccessCase(
@@ -49,9 +43,8 @@ contract("BuyToken()", function () {
         tokens: ["0"],
         pairs: ["0"],
       });
-      const aliceInitShares = context.dex.storage.ledger[
-        aliceAddress
-      ].balance.toNumber();
+      const aliceInitShares =
+        context.dex.storage.ledger[aliceAddress].balance.toNumber();
       const aliceInitTokenABalance = (
         (await context.tokens[0].storage.ledger[aliceAddress]) ||
         defaultAccountInfo
@@ -156,13 +149,13 @@ contract("BuyToken()", function () {
       "revert in case of 100% of reserves to be swapped",
       1000,
       1000,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
     tokenToTokenFailCase(
       "revert in case of 10000% of reserves to be swapped",
       100000,
       1,
-      "Dex/wrong-out"
+      "Dex/high-out"
     );
 
     tokenToTokenSuccessCase(

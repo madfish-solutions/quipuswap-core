@@ -7,13 +7,16 @@ module.exports.dexFunctions = [
     index: 1,
     name: "token_to_token",
   },
-
   {
     index: 2,
-    name: "invest_liquidity",
+    name: "token_to_token_route",
   },
   {
     index: 3,
+    name: "invest_liquidity",
+  },
+  {
+    index: 4,
     name: "divest_liquidity",
   },
 ];
@@ -34,5 +37,6 @@ let tokenFunctions = [
 ];
 module.exports.tokenFunctions = {
   FA12: tokenFunctions,
+  MIXED: tokenFunctions,
   FA2: tokenFunctions,
 };

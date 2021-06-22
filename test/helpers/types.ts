@@ -5,12 +5,19 @@ export declare type TokenInfo = {
   token_b_address: string;
   token_a_id?: BigNumber;
   token_b_id?: BigNumber;
+  token_a_type: { [key: string]: any };
+  token_b_type: { [key: string]: any };
 };
 
 export declare type PairInfo = {
   token_a_pool: BigNumber;
   token_b_pool: BigNumber;
   total_supply: BigNumber;
+};
+
+export declare type SwapSliceType = {
+  pair: TokenInfo;
+  operation: { [key: string]: any };
 };
 
 export declare type TTDexStorage = {
