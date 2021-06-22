@@ -25,6 +25,10 @@ block {
     | None -> (failwith("Dex/function-not-set") : return)
   end;
   s.storage := res.1;
+  res.0 := Tezos.transaction(
+    unit,
+    0mutez,
+    get_close_entrypoint(this)) # res.0;
 } with (res.0, s)
 
 (* Route token-specific action
@@ -49,10 +53,6 @@ block {
     | None -> (failwith("Dex/function-not-set") : return)
   end;
   s.storage := res.1;
-  res.0 := Tezos.transaction(
-      unit,
-      0mutez,
-      get_close_entrypoint(this)) # res.0;
 } with (res.0, s)
 
 [@inline] function close (const s : full_dex_storage) :  full_dex_storage is

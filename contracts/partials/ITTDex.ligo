@@ -121,9 +121,9 @@ type transfer_params is list (transfer_param)
 type update_operator_params is list (update_operator_param)
 
 type token_action is
-| ITransfer                of transfer_params
-| IBalance_of              of balance_params
-| IUpdate_operators        of update_operator_params
+| ITransfer                of transfer_params (* transfer asset from one account to another *)
+| IBalance_of              of balance_params (* returns the balance of the account *)
+| IUpdate_operators        of update_operator_params (* updates the token operators *)
 
 type return is list (operation) * dex_storage
 type dex_func is (dex_action * dex_storage * address) -> return
@@ -139,19 +139,20 @@ type set_dex_function_params is record [
   index   : nat; (* the key in functions map *)
 ]
 
+(* full list of dex entrypoints *)
 type full_action is
 | Use                     of use_params
-| Transfer                of transfer_params
-| Balance_of              of balance_params
-| Update_operators        of update_operator_params
-| Get_reserves            of get_reserves_params
-| Close                   of unit
+| Transfer                of transfer_params (* transfer asset from one account to another *)
+| Balance_of              of balance_params (* returns the balance of the account *)
+| Update_operators        of update_operator_params (* updates the token operators *)
+| Get_reserves            of get_reserves_params (* returns the underlying token reserves *)
+| Close                   of unit (* entrypoint to prevent reentrancy *)
 | SetDexFunction          of set_dex_function_params (* sets the dex specific function. Is used before the whole system is launched *)
 | SetTokenFunction        of set_token_function_params (* sets the FA function, is used before the whole system is launched *)
 
 (* real dex storage *)
 type full_dex_storage is record
-  storage             : dex_storage;
+  storage             : dex_storage; (* real dex storage *)
   metadata            : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
   dex_lambdas         : big_map(nat, dex_func); (* map with exchange-related functions code *)
   token_lambdas       : big_map(nat, token_func); (* map with token-related functions code *)
@@ -161,5 +162,5 @@ type full_return is list (operation) * full_dex_storage
 
 const fee_rate : nat = 333n; (* exchange fee rate distributed among the liquidity providers *)
 
-const token_func_count : nat = 2n;
+const token_func_count : nat = 2n; (* number of token-related functions *)
 
