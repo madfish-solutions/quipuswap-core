@@ -29,12 +29,12 @@ type pair_info is record [
 ]
 
 type tokens_info is record [
-  token_a_address        : address;
-  token_b_address        : address;
-  token_a_id             : nat;
-  token_b_id             : nat;
-  token_a_type           : token_type;
-  token_b_type           : token_type;
+  token_a_address        : address; (* token A address *)
+  token_b_address        : address; (* token B address *)
+  token_a_id             : nat; (* token A identifier *)
+  token_b_id             : nat; (* token B identifier *)
+  token_a_type           : token_type; (* token A standard *)
+  token_b_type           : token_type; (* token B standard *)
 ]
 
 type token_pair is bytes
@@ -48,33 +48,36 @@ type dex_storage is record [
   pairs               : big_map(nat, pair_info); (* account info per address *)
   ledger              : big_map((address * nat), account_info); (* account info per address *)
 ]
-type swap_type is Buy | Sell
+(* operation type *)
+type swap_type is
+| Sell (* exchange token A to token B *)
+| Buy (* exchange token B to token A *)
 
 type swap_slice_type is record [
-    pair                  : tokens_info;
-    operation             : swap_type;
+    pair                  : tokens_info; (* exchange pair info *)
+    operation             : swap_type; (* exchange operation *)
 ]
 
 type swap_side is record [
-  pool                    : nat;
-  token                   : address;
-  id                      : nat;
-  standard                : token_type;
+  pool                    : nat; (* pair identifier*)
+  token                   : address; (* token address*)
+  id                      : nat; (* token aidentifier *)
+  standard                : token_type; (* token standard *)
 ]
 
 type swap_data is record [
-  to_                     : swap_side;
-  from_                   : swap_side;
+  to_                     : swap_side; (* info about sold asset *)
+  from_                   : swap_side; (* info about bought asset *)
 ]
 
 type internal_swap_type is record [
-  s                       : dex_storage;
-  amount_in               : nat;
-  token_address_in        : address;
-  token_id_in             : nat;
-  operation               : option(operation);
-  sender                  : address;
-  receiver                : address;
+  s                       : dex_storage; (* storage state *)
+  amount_in               : nat; (* amount of tokens to be sold *)
+  token_address_in        : address; (* address of sold token *)
+  token_id_in             : nat; (* identifier of sold token *)
+  operation               : option(operation); (* exchange operation type *)
+  sender                  : address; (* address of the sender *)
+  receiver                : address; (* address of the receiver *)
 ]
 
 (* Entrypoint arguments *)
@@ -90,7 +93,7 @@ type token_to_token_route_params is
 type invest_liquidity_params is
   [@layout:comb]
   record [
-    pair            : tokens_info;
+    pair            : tokens_info; (* exchange pair info *)
     token_a_in      : nat; (* min amount of tokens A invested  *)
     token_b_in      : nat; (* min amount of tokens B invested *)
   ]
@@ -98,7 +101,7 @@ type invest_liquidity_params is
 type divest_liquidity_params is
   [@layout:comb]
   record [
-    pair                 : tokens_info;
+    pair                 : tokens_info; (* exchange pair info *)
     min_token_a_out      : nat; (* min amount of tokens A received to accept the divestment *)
     min_token_b_out      : nat; (* min amount of tokens B received to accept the divestment *)
     shares               : nat; (* amount of shares to be burnt *)
@@ -112,8 +115,8 @@ type dex_action is
 
 type use_params is dex_action
 type get_reserves_params is record [
-  receiver        : contract(nat * nat);
-  token_id        : nat;
+  receiver        : contract(nat * nat); (* response receiver *)
+  pair_id         : nat; (* pair identifier *)
 ]
 
 (* Main function parameter types specific for FA2 standard*)

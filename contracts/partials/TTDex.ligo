@@ -71,7 +71,7 @@ block {
   const params : get_reserves_params;
   const s : full_dex_storage) : full_return is
 block {
-  const pair : pair_info = case s.storage.pairs[params.token_id] of
+  const pair : pair_info = case s.storage.pairs[params.pair_id] of
     None -> record [
       token_a_pool    = 0n;
       token_b_pool    = 0n;
