@@ -87,17 +87,6 @@ type token_to_token_route_params is
     receiver              : address; (* tokens receiver *)
   ]
 
-(* Entrypoint arguments *)
-type token_to_token_payment_params is
-  [@layout:comb]
-  record [
-    pair                  : tokens_info;
-    operation             : swap_type;
-    amount_in             : nat; (* amount of tokens to be exchanged *)
-    min_amount_out        : nat; (* min amount of XTZ received to accept exchange *)
-    receiver              : address; (* tokens receiver *)
-  ]
-
 type invest_liquidity_params is
   [@layout:comb]
   record [
@@ -118,7 +107,6 @@ type divest_liquidity_params is
 type dex_action is
 | InitializeExchange          of invest_liquidity_params  (* sets initial liquidity *)
 | TokenToTokenRoutePayment    of token_to_token_route_params  (* exchanges XTZ to tokens and sends them to receiver *)
-| TokenToTokenPayment         of token_to_token_payment_params  (* exchanges XTZ to tokens and sends them to receiver *)
 | InvestLiquidity             of invest_liquidity_params  (* mints min shares after investing tokens and XTZ *)
 | DivestLiquidity             of divest_liquidity_params  (* burns shares and sends tokens and XTZ to the owner *)
 

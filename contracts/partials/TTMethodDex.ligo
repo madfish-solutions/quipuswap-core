@@ -271,104 +271,11 @@ function initialize_exchange(
             params.pair.token_b_type
           ) # operations;
       }
-    | TokenToTokenPayment(n) -> skip
     | TokenToTokenRoutePayment(n) -> skip
     | InvestLiquidity(n) -> skip
     | DivestLiquidity(n) -> skip
     end
 } with (operations, s)
-
-(* Exchange tokens to tokens,
-note: tokens should be approved before the operation *)
-function token_to_token(
-  const p : dex_action;
-  const s : dex_storage;
-  const this : address) : return is
-  block {
-    var operations: list(operation) := list[
-      Tezos.transaction(
-        unit,
-        0mutez,
-        get_close_entrypoint(this)
-    )];
-    case p of
-      InitializeExchange(n) -> skip
-    | TokenToTokenRoutePayment(n) -> skip
-    | TokenToTokenPayment(params) -> {
-        if s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
-
-        (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address
-        and params.pair.token_a_id >= params.pair.token_b_id
-        then failwith("Dex/wrong-token-id") else skip;
-        if params.pair.token_a_address > params.pair.token_b_address
-        then failwith("Dex/wrong-pair") else skip;
-
-        (* get par info*)
-        const res : (pair_info * nat) = get_pair(params.pair, s);
-        const pair : pair_info = res.0;
-        const token_id : nat = res.1;
-
-        (* ensure there is liquidity *)
-        if pair.token_a_pool * pair.token_b_pool = 0n
-        then failwith("Dex/not-launched") else skip;
-        if params.amount_in = 0n (* non-zero amount of tokens exchanged *)
-        then failwith ("Dex/zero-amount-in") else skip;
-        if params.min_amount_out = 0n (* non-zero amount of tokens exchanged *)
-        then failwith ("Dex/zero-min-amount-out") else skip;
-
-
-        (* calculate amount out *)
-        const swap: swap_data = form_swap_data(
-          pair,
-          params.pair,
-          params.operation);
-        const from_in_with_fee : nat = params.amount_in * 997n;
-        const numerator : nat = from_in_with_fee * swap.to_.pool;
-        const denominator : nat = swap.from_.pool * 1000n + from_in_with_fee;
-
-        (* calculate swapped token amount *)
-        const out : nat = numerator / denominator;
-
-        (* ensure requirements *)
-        if out < params.min_amount_out (* minimal XTZ amount out is sutisfied *)
-        then failwith("Dex/wrong-min-out") else skip;
-        if out > swap.to_.pool / 3n (* the price impact isn't too high *)
-        then failwith("Dex/high-out") else skip;
-
-        (* update XTZ pool *)
-        swap.to_.pool := abs(swap.to_.pool - out);
-        swap.from_.pool := swap.from_.pool + params.amount_in;
-
-        const updated_pair : pair_info = form_pools(
-          swap.from_.pool,
-          swap.to_.pool,
-          pair.total_supply,
-          params.operation);
-        s.pairs[token_id] := updated_pair;
-
-        (* prepare operations to withdraw user's tokens and transfer XTZ *)
-        operations :=
-          (* from *)
-          typed_transfer(Tezos.sender, this, params.amount_in,
-            swap.from_.id,
-            swap.from_.token,
-            swap.from_.standard
-          ) # operations;
-        operations :=
-          (* to *)
-          typed_transfer(this, params.receiver, out,
-            swap.to_.id,
-            swap.to_.token,
-            swap.to_.standard
-          ) # operations;
-      }
-    | InvestLiquidity(n) -> skip
-    | DivestLiquidity(n) -> skip
-    end
-  } with (operations, s)
 
 (* Intrenal functions for swap hops *)
 function internal_token_to_token_swap(
@@ -449,14 +356,13 @@ function token_to_token_route(
     )];
     case p of
     | InitializeExchange(n) -> skip
-    | TokenToTokenPayment(n) -> skip
     | TokenToTokenRoutePayment(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
 
         (* validate input params *)
-        if List.size(params.swaps) < 2n (* non-zero amount of tokens exchanged *)
+        if List.size(params.swaps) < 1n (* non-zero amount of tokens exchanged *)
         then failwith ("Dex/too-few-swaps") else skip;
         if params.amount_in = 0n (* non-zero amount of tokens exchanged *)
         then failwith ("Dex/zero-amount-in") else skip;
@@ -550,7 +456,6 @@ function invest_liquidity(
     case p of
     | InitializeExchange(n) -> skip
     | TokenToTokenRoutePayment(n) -> skip
-    | TokenToTokenPayment(n) -> skip
     | InvestLiquidity(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
@@ -660,7 +565,6 @@ function divest_liquidity(
     )];
     case p of
     | InitializeExchange(token_amount) -> skip
-    | TokenToTokenPayment(n) -> skip
     | TokenToTokenRoutePayment(n) -> skip
     | InvestLiquidity(n) -> skip
     | DivestLiquidity(params) -> {

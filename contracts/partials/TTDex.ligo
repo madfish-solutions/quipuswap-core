@@ -15,10 +15,9 @@ based on the argument type.
 block {
     const idx : nat = case p of
       | InitializeExchange(n) -> 0n
-      | TokenToTokenPayment(n) -> 1n
-      | TokenToTokenRoutePayment(n) -> 2n
-      | InvestLiquidity(n) -> 3n
-      | DivestLiquidity(n) -> 4n
+      | TokenToTokenRoutePayment(n) -> 1n
+      | InvestLiquidity(n) -> 2n
+      | DivestLiquidity(n) -> 3n
     end;
   const res : return = case s.dex_lambdas[idx] of
     Some(f) -> f(p, s.storage, this)

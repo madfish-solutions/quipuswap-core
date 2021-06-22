@@ -224,23 +224,29 @@ export class TTDex extends TokenFA2 {
         );
       }
     }
+    const swaps = [
+      {
+        pair: {
+          token_a_address: tokenAAddress,
+          token_b_address: tokenBAddress,
+          token_a_id: tokenAid,
+          token_b_id: tokenBid,
+          token_a_type: {
+            [standard.toLowerCase() == "mixed"
+              ? "fa2"
+              : standard.toLowerCase()]: null,
+          },
+          token_b_type: {
+            [standard.toLowerCase() == "mixed"
+              ? "fa12"
+              : standard.toLowerCase()]: null,
+          },
+        },
+        operation: { [opType]: null },
+      },
+    ];
     const operation = await this.contract.methods
-      .use(
-        "tokenToTokenPayment",
-        tokenAAddress,
-        tokenAid,
-        standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),
-        null,
-        tokenBAddress,
-        tokenBid,
-        standard.toLowerCase() == "mixed" ? "fa12" : standard.toLowerCase(),
-        null,
-        opType,
-        null,
-        amountIn,
-        minAmountOut,
-        receiver
-      )
+      .use("tokenToTokenRoutePayment", swaps, amountIn, minAmountOut, receiver)
       .send();
     await confirmOperation(tezos, operation.hash);
     return operation;
