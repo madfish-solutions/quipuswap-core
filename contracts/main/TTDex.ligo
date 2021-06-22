@@ -1,7 +1,8 @@
 #define FA2_STANDARD_ENABLED
 #define TOKEN_TO_TOKEN_ENABLED
-#include "../partials/TTDex.ligo"
+#include "../partials/ITTDex.ligo"
 #include "../partials/TTMethodDex.ligo"
+#include "../partials/TTDex.ligo"
 
 (* DexFA2 - Contract for exchanges for XTZ - FA2 token pair *)
 function main (const p : full_action; const s : full_dex_storage) : full_return is

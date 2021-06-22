@@ -1,5 +1,3 @@
-#include "./ITTDex.ligo"
-
 (* Route exchange-specific action
 
 Due to the fabulous storage, gas and operation size limits
@@ -11,7 +9,10 @@ The function is responsible for fiding the appropriate method
 based on the argument type.
 
 *)
-[@inline] function call_dex (const p : dex_action; const this : address; const s : full_dex_storage) :  full_return is
+[@inline] function call_dex(
+  const p : dex_action;
+  const this : address;
+  const s : full_dex_storage) : full_return is
 block {
     const idx : nat = case p of
       | InitializeExchange(n) -> 0n
@@ -37,13 +38,21 @@ The function is responsible for fiding the appropriate method
 based on the provided index.
 
 *)
-[@inline] function call_token (const p : token_action; const this : address; const idx : nat; const s : full_dex_storage) :  full_return is
+[@inline] function call_token(
+  const p : token_action;
+  const this : address;
+  const idx : nat;
+  const s : full_dex_storage) : full_return is
 block {
   const res : return = case s.token_lambdas[idx] of
     Some(f) -> f(p, s.storage, this)
     | None -> (failwith("Dex/function-not-set") : return)
   end;
   s.storage := res.1;
+  res.0 := Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(this)) # res.0;
 } with (res.0, s)
 
 [@inline] function close (const s : full_dex_storage) :  full_dex_storage is
@@ -58,7 +67,9 @@ block {
 } with s
 
 (* Return the reserves to the contracts. *)
-[@inline] function get_reserves (const params : get_reserves_params; const s : full_dex_storage) : full_return is
+[@inline] function get_reserves(
+  const params : get_reserves_params;
+  const s : full_dex_storage) : full_return is
 block {
   const pair : pair_info = case s.storage.pairs[params.token_id] of
     None -> record [
@@ -77,7 +88,10 @@ block {
   ], s)
 
 (* Set the dex function code to factory storage *)
-[@inline] function set_dex_function (const idx : nat; const f : dex_func; const s : full_dex_storage) : full_dex_storage is
+[@inline] function set_dex_function(
+  const idx : nat;
+  const f : dex_func;
+  const s : full_dex_storage) : full_dex_storage is
 block {
   case s.dex_lambdas[idx] of
     Some(n) -> failwith("Dex/function-set")
@@ -86,7 +100,10 @@ block {
 } with s
 
 (* Set the token function code to factory storage *)
-[@inline] function set_token_function (const idx : nat; const f : token_func; const s : full_dex_storage) : full_dex_storage is
+[@inline] function set_token_function(
+  const idx : nat;
+  const f : token_func;
+  const s : full_dex_storage) : full_dex_storage is
 block {
   case s.token_lambdas[idx] of
     Some(n) -> failwith("Dex/function-set")

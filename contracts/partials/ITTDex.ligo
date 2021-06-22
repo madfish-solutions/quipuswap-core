@@ -4,7 +4,7 @@
 
 (* record that represents account shares *)
 type account_info is record [
-  balance           : nat; (* liquid tokens *)
+  balance           : nat; (* LP tokens *)
   allowances        : set (address); (* accounts allowed to act on behalf of the user *)
 ]
 
@@ -23,8 +23,8 @@ type token_type is
 | Fa2
 
 type pair_info is record [
-  token_a_pool        : nat; (* tez reserves in the pool *)
-  token_b_pool        : nat; (* token reserves in the pool *)
+  token_a_pool        : nat; (* token A reserves in the pool *)
+  token_b_pool        : nat; (* token B reserves in the pool *)
   total_supply        : nat; (* total shares count *)
 ]
 
@@ -41,7 +41,7 @@ type token_pair is bytes
 
 (* record for the dex storage *)
 type dex_storage is record [
-  entered             : bool;
+  entered             : bool; (* reentrancy protection *)
   pairs_count         : nat; (* total shares count *)
   tokens              : big_map(nat, tokens_info); (* all the tokens list *)
   token_to_id         : big_map(token_pair, nat); (* all the tokens list *)
@@ -56,15 +56,15 @@ type swap_slice_type is record [
 ]
 
 type swap_side is record [
-  pool : nat;
-  token : address;
-  id: nat;
-  standard: token_type;
+  pool                    : nat;
+  token                   : address;
+  id                      : nat;
+  standard                : token_type;
 ]
 
 type swap_data is record [
-  to_: swap_side;
-  from_: swap_side;
+  to_                     : swap_side;
+  from_                   : swap_side;
 ]
 
 type internal_swap_type is record [
@@ -81,9 +81,9 @@ type internal_swap_type is record [
 type token_to_token_route_params is
   [@layout:comb]
   record [
-    swaps                 : list(swap_slice_type);
+    swaps                 : list(swap_slice_type); (* swap operations list*)
     amount_in             : nat; (* amount of tokens to be exchanged *)
-    min_amount_out        : nat; (* min amount of XTZ received to accept exchange *)
+    min_amount_out        : nat; (* min amount of tokens received to accept exchange *)
     receiver              : address; (* tokens receiver *)
   ]
 
@@ -91,24 +91,24 @@ type invest_liquidity_params is
   [@layout:comb]
   record [
     pair            : tokens_info;
-    token_a_in      : nat; (* min amount of XTZ received to accept the divestment *)
-    token_b_in      : nat; (* min amount of tokens received to accept the divestment *)
+    token_a_in      : nat; (* min amount of tokens A invested  *)
+    token_b_in      : nat; (* min amount of tokens B invested *)
   ]
 
 type divest_liquidity_params is
   [@layout:comb]
   record [
     pair                 : tokens_info;
-    min_token_a_out      : nat; (* min amount of XTZ received to accept the divestment *)
-    min_token_b_out      : nat; (* min amount of tokens received to accept the divestment *)
+    min_token_a_out      : nat; (* min amount of tokens A received to accept the divestment *)
+    min_token_b_out      : nat; (* min amount of tokens B received to accept the divestment *)
     shares               : nat; (* amount of shares to be burnt *)
   ]
 
 type dex_action is
 | InitializeExchange          of invest_liquidity_params  (* sets initial liquidity *)
-| TokenToTokenRoutePayment    of token_to_token_route_params  (* exchanges XTZ to tokens and sends them to receiver *)
-| InvestLiquidity             of invest_liquidity_params  (* mints min shares after investing tokens and XTZ *)
-| DivestLiquidity             of divest_liquidity_params  (* burns shares and sends tokens and XTZ to the owner *)
+| TokenToTokenRoutePayment    of token_to_token_route_params  (* exchanges token to another token and sends them to receiver *)
+| InvestLiquidity             of invest_liquidity_params  (* mints min shares after investing tokens *)
+| DivestLiquidity             of divest_liquidity_params  (* burns shares and sends tokens to the owner *)
 
 type use_params is dex_action
 type get_reserves_params is record [
