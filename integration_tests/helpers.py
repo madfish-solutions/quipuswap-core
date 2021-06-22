@@ -46,6 +46,7 @@ initial_storage = dict(
 )
 
 initial_tt_storage = dict(
+    entered = False,
     pairs_count=0,
     tokens = {},
     token_to_id = {},
@@ -141,8 +142,11 @@ def parse_as_fa2(values):
 def parse_token_transfers(res):
     token_transfers = []
     for op in res.operations:
-        tx = parse_token_transfer(op)
-        token_transfers.append(tx)
+        if op["kind"] == "transaction":
+            entrypoint = op["parameters"]["entrypoint"]
+            if entrypoint == "transfer":
+                tx = parse_token_transfer(op)
+                token_transfers.append(tx)
     return token_transfers
 
 def parse_token_transfer(op):
@@ -171,10 +175,11 @@ def parse_ops(res):
             if entrypoint == "default":
                 tx = parse_tez_transfer(op)
                 result.append(tx)
-            elif entrypoint != "validate":
+            elif entrypoint == "transfer":
                 tx = parse_token_transfer(op)
                 result.append(tx)
-
+            elif entrypoint == "close":
+                result.append({"type" : "close"})
     return result
 
 # calculates shares balance
@@ -270,7 +275,10 @@ class LocalChain():
                 contract_balance = self.contract_balances[address] 
                 if dest not in contract_balance:
                     contract_balance[dest] = 0
-                contract_balance[dest] += amount    
+                contract_balance[dest] += amount 
+            # imitate closing of the function for convenience
+            elif op["type"] == "close":
+                self.storage["storage"]["entered"] = False   
 
         return res
 

@@ -89,10 +89,101 @@ class TokenToTokenRouterTest(TestCase):
         ))
         transfers = parse_token_transfers(res)
         token_c_out = next(v for v in transfers if v["destination"] == julian)
-
         self.assertEqual(routed_out["amount"], token_c_out["amount"])
  
+    def test_tt_router_triangle(self):
+        token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"
+        token_b = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton"
+        token_c = "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC"
 
+        pair_ab = {
+            "token_a_address" : token_a,
+            "token_a_id" : 0,
+            "token_b_address" : token_b,
+            "token_b_id" : 1,
+            "token_a_type": "fa2",
+            "token_b_type": "fa2"
+        }
+        pair_bc = {
+            "token_a_address" : token_b,
+            "token_a_id" : 1,
+            "token_b_address" : token_c,
+            "token_b_id" : 2,
+            "token_a_type": "fa12",
+            "token_b_type": "fa12"
+        }
+        pair_ac = {
+            "token_a_address" : token_a,
+            "token_a_id" : 0,
+            "token_b_address" : token_c,
+            "token_b_id" : 2,
+            "token_a_type": "fa2",
+            "token_b_type": "fa12"
+        }
+        amount_in=10_000
+
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000_000_000, 100_000_000_000))
+        res = chain.execute(self.dex.initializeExchange(pair_bc, 100_000_000_000, 100_000_000_000))
+        res = chain.execute(self.dex.initializeExchange(pair_ac, 100_000_000_000, 100_000_000_000))
+
+        # interpret the call without applying it
+        res = chain.interpret(self.dex.tokenToTokenRoutePayment({
+            "swaps" : [
+                {
+                    "pair": pair_ab, 
+                    "operation": "sell",
+                },
+                {
+                    "pair": pair_bc, 
+                    "operation": "sell",
+                },
+                {
+                    "pair": pair_ac, 
+                    "operation": "buy",
+                }
+            ],
+            "amount_in" : amount_in,
+            "min_amount_out" : 1, 
+            "receiver" : julian
+        }))
+        transfers = parse_token_transfers(res)
+        
+        token_a_out = next(v for v in transfers if v["destination"] == julian)
+        self.assertEqual(token_a_out["amount"], 9909) # ~ 9910 by compound interest formula
+
+    def test_tt_router_rhombus(self):
+        token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"
+        token_b = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton"
+
+        pair_ab = {
+            "token_a_address" : token_a,
+            "token_a_id" : 0,
+            "token_b_address" : token_b,
+            "token_b_id" : 1,
+            "token_a_type": "fa2",
+            "token_b_type": "fa2"
+        }
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000_000_000, 100_000_000_000))
+        res = chain.interpret(self.dex.tokenToTokenRoutePayment({
+            "swaps" : [
+                {
+                    "pair": pair_ab, 
+                    "operation": "sell",
+                },
+                {
+                    "pair": pair_ab, 
+                    "operation": "buy",
+                }
+            ],
+            "amount_in" : 10_000,
+            "min_amount_out" : 1, 
+            "receiver" : julian
+        }))
+        transfers = parse_token_transfers(res)
+        token_out = next(v for v in transfers if v["destination"] == julian)
+        self.assertEqual(token_out["amount"], 9939)
 
     def test_tt_router_impossible_path(self):
         token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"

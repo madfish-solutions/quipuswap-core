@@ -175,6 +175,15 @@ class TokenToTokenTest(TestCase):
         with self.assertRaises(MichelsonRuntimeError):
             res = chain.execute(self.dex.divestLiquidity(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=100), sender=julian)
 
+    def test_tt_amount(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair, 100_000, 100_000))
+
+        res = chain.execute(self.dex.tokenToTokenPayment(pair=pair, operation="buy", amount_in=10_000, min_amount_out=1, receiver=julian))
+
+        transfers = parse_token_transfers(res)
+        print(transfers)
+
     def test_tt_same_token_in_pair(self):
         chain = LocalChain(token_to_token=True)
         
@@ -183,8 +192,95 @@ class TokenToTokenTest(TestCase):
             "token_a_id" : 0,
             "token_b_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
             "token_b_id" : 0,
-            "standard": "fa2"
+            "token_a_type": "fa2",
+            "token_b_type": "fa2"
         }
 
         with self.assertRaises(MichelsonRuntimeError):
             res = chain.execute(self.dex.initializeExchange(pair, 100_000, 200_000))
+        
+    def test_tt_small_amounts(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair, 10, 10))
+
+        res = chain.execute(self.dex.tokenToTokenPayment(pair=pair, operation="sell", amount_in=2, min_amount_out=1, receiver=julian))
+
+        transfers = parse_token_transfers(res)
+        token_out = next(v for v in transfers if v["destination"] == julian)
+        self.assertEqual(token_out["amount"], 1)
+
+    def test_tt_miniscule_amounts(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair, 10, 10))
+
+        res = chain.execute(self.dex.tokenToTokenPayment(pair=pair, operation="sell", amount_in=1, min_amount_out=1, receiver=julian))
+
+        transfers = parse_token_transfers(res)
+        token_out = next(v for v in transfers if v["destination"] == julian)
+        self.assertEqual(token_out["amount"], 1)
+
+
+    def test_tt_multiple_small_invests(self):
+        chain = LocalChain(token_to_token=True)
+        invests = [
+            [10_000_000, 1],
+            [1, 10_000_000],
+            [10_000_000, 10_000_000],
+            [1, 1]
+        ]
+
+        ratios = [1, 0.01, 100]
+
+        for ratio in ratios:
+            res = chain.execute(self.dex.initializeExchange(pair, 100, int(100 * ratio)))
+
+            for i in range(3):
+                res = chain.execute(self.dex.investLiquidity(pair=pair, token_a_in=100, token_b_in=int(100 * ratio)))
+
+            all_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
+
+            res = chain.execute(self.dex.divestLiquidity(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=all_shares))
+
+            transfers = parse_token_transfers(res)
+            self.assertEqual(transfers[0]["amount"], int(400 * ratio))
+            self.assertEqual(transfers[1]["amount"], 400)
+
+
+    def test_tt_divest_big_a_small_b(self):
+        me = self.dex.context.get_sender()
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair, 100_000_000, 50), sender=alice)
+        
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.investLiquidity(pair, 2_000_000 - 1, 1))
+
+        res = chain.execute(self.dex.investLiquidity(pair, 3_600_000, 1))
+        transfers = parse_token_transfers(res)
+        self.assertEqual(transfers[0]["amount"], 1)
+        self.assertEqual(transfers[1]["amount"], 2_000_000)
+
+        all_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
+        res = chain.execute(self.dex.divestLiquidity(pair, 1, 1, all_shares))
+        transfers = parse_token_transfers(res)
+        self.assertEqual(transfers[0]["amount"], 1)
+        self.assertEqual(transfers[1]["amount"], 2_000_000)
+
+    def test_tt_divest_small_a_big_b(self):
+        me = self.dex.context.get_sender()
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.initializeExchange(pair, 50, 100_000_000), sender=alice)
+        
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.investLiquidity(pair, 1, 2_000_000 - 1))
+
+        res = chain.execute(self.dex.investLiquidity(pair, 1, 3_600_000))
+        transfers = parse_token_transfers(res)
+        self.assertEqual(transfers[0]["amount"], 2_000_000)
+        self.assertEqual(transfers[1]["amount"], 1)
+
+        all_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
+        res = chain.execute(self.dex.divestLiquidity(pair, 1, 1, all_shares))
+        transfers = parse_token_transfers(res)
+        self.assertEqual(transfers[0]["amount"], 2_000_000)
+        self.assertEqual(transfers[1]["amount"], 1)
+        
