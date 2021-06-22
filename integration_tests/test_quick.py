@@ -343,7 +343,7 @@ class DexTest(TestCase):
         (tez, token) = parse_transfers(res)
         print("Got token", token)
 
-    def test_aliens_farm_manipulation(self):
+    def test_farm_manipulation(self):
         decimals = pow(10,8)
         total_paul_supply = 100_000_000 * decimals
         
