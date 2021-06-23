@@ -119,7 +119,7 @@ export class TTDex extends TokenFA2 {
 
     const operation = await this.contract.methods
       .use(
-        "initializeExchange",
+        "addPair",
         tokenAAddress,
         tokenAid,
         standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),
@@ -177,7 +177,7 @@ export class TTDex extends TokenFA2 {
       }
     }
     const operation = await this.contract.methods
-      .use("tokenToTokenRoutePayment", swaps, amountIn, minAmountOut, receiver)
+      .use("swap", swaps, amountIn, minAmountOut, receiver)
       .send();
     await confirmOperation(tezos, operation.hash);
     return operation;
@@ -246,7 +246,7 @@ export class TTDex extends TokenFA2 {
       },
     ];
     const operation = await this.contract.methods
-      .use("tokenToTokenRoutePayment", swaps, amountIn, minAmountOut, receiver)
+      .use("swap", swaps, amountIn, minAmountOut, receiver)
       .send();
     await confirmOperation(tezos, operation.hash);
     return operation;
@@ -291,7 +291,7 @@ export class TTDex extends TokenFA2 {
     }
     const operation = await this.contract.methods
       .use(
-        "investLiquidity",
+        "invest",
         pair.token_a_address,
         pair.token_a_id,
         standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),
@@ -319,7 +319,7 @@ export class TTDex extends TokenFA2 {
     let pair = this.storage.tokens[pairId];
     const operation = await this.contract.methods
       .use(
-        "divestLiquidity",
+        "divest",
         pair.token_a_address,
         pair.token_a_id,
         standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),

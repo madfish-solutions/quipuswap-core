@@ -15,10 +15,10 @@ based on the argument type.
   const s : full_dex_storage) : full_return is
 block {
     const idx : nat = case p of
-      | InitializeExchange(n) -> 0n
-      | TokenToTokenRoutePayment(n) -> 1n
-      | InvestLiquidity(n) -> 2n
-      | DivestLiquidity(n) -> 3n
+      | AddPair(n) -> 0n
+      | Swap(n) -> 1n
+      | Invest(n) -> 2n
+      | Divest(n) -> 3n
     end;
   const res : return = case s.dex_lambdas[idx] of
     Some(f) -> f(p, s.storage, this)

@@ -195,7 +195,7 @@ function initialize_exchange(
   block {
     var operations: list(operation) := list[];
     case p of
-      InitializeExchange(params) -> {
+      AddPair(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
@@ -269,9 +269,9 @@ function initialize_exchange(
             params.pair.token_b_type
           ) # operations;
       }
-    | TokenToTokenRoutePayment(n) -> skip
-    | InvestLiquidity(n) -> skip
-    | DivestLiquidity(n) -> skip
+    | Swap(n) -> skip
+    | Invest(n) -> skip
+    | Divest(n) -> skip
     end
 } with (operations, s)
 
@@ -350,8 +350,8 @@ function token_to_token_route(
   block {
     var operations: list(operation) := list[];
     case p of
-    | InitializeExchange(n) -> skip
-    | TokenToTokenRoutePayment(params) -> {
+    | AddPair(n) -> skip
+    | Swap(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
@@ -431,8 +431,8 @@ function token_to_token_route(
         end;
         operations := last_operation # operations;
       }
-    | InvestLiquidity(n) -> skip
-    | DivestLiquidity(n) -> skip
+    | Invest(n) -> skip
+    | Divest(n) -> skip
     end
   } with (operations, s)
 
@@ -445,9 +445,9 @@ function invest_liquidity(
   block {
     var operations: list(operation) := list[];
     case p of
-    | InitializeExchange(n) -> skip
-    | TokenToTokenRoutePayment(n) -> skip
-    | InvestLiquidity(params) -> {
+    | AddPair(n) -> skip
+    | Swap(n) -> skip
+    | Invest(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
@@ -539,7 +539,7 @@ function invest_liquidity(
             params.pair.token_b_type
           ) # operations;
       }
-    | DivestLiquidity(n) -> skip
+    | Divest(n) -> skip
     end
   } with (operations, s)
 
@@ -551,10 +551,10 @@ function divest_liquidity(
   block {
     var operations: list(operation) := list[];
     case p of
-    | InitializeExchange(token_amount) -> skip
-    | TokenToTokenRoutePayment(n) -> skip
-    | InvestLiquidity(n) -> skip
-    | DivestLiquidity(params) -> {
+    | AddPair(token_amount) -> skip
+    | Swap(n) -> skip
+    | Invest(n) -> skip
+    | Divest(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;

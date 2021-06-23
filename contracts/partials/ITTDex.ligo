@@ -108,10 +108,10 @@ type divest_liquidity_params is
   ]
 
 type dex_action is
-| InitializeExchange          of invest_liquidity_params  (* sets initial liquidity *)
-| TokenToTokenRoutePayment    of token_to_token_route_params  (* exchanges token to another token and sends them to receiver *)
-| InvestLiquidity             of invest_liquidity_params  (* mints min shares after investing tokens *)
-| DivestLiquidity             of divest_liquidity_params  (* burns shares and sends tokens to the owner *)
+| AddPair                 of invest_liquidity_params  (* sets initial liquidity *)
+| Swap                    of token_to_token_route_params  (* exchanges token to another token and sends them to receiver *)
+| Invest                  of invest_liquidity_params  (* mints min shares after investing tokens *)
+| Divest                  of divest_liquidity_params  (* burns shares and sends tokens to the owner *)
 
 type use_params is dex_action
 type get_reserves_params is record [
