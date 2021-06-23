@@ -269,9 +269,9 @@ function initialize_exchange(
             params.pair.token_b_type
           ) # operations;
       }
-    | Swap(n) -> skip
-    | Invest(n) -> skip
-    | Divest(n) -> skip
+    | Swap(_) -> skip
+    | Invest(_) -> skip
+    | Divest(_) -> skip
     end
 } with (operations, s)
 
@@ -350,7 +350,7 @@ function token_to_token_route(
   block {
     var operations: list(operation) := list[];
     case p of
-    | AddPair(n) -> skip
+    | AddPair(_) -> skip
     | Swap(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
@@ -431,8 +431,8 @@ function token_to_token_route(
         end;
         operations := last_operation # operations;
       }
-    | Invest(n) -> skip
-    | Divest(n) -> skip
+    | Invest(_) -> skip
+    | Divest(_) -> skip
     end
   } with (operations, s)
 
@@ -445,8 +445,8 @@ function invest_liquidity(
   block {
     var operations: list(operation) := list[];
     case p of
-    | AddPair(n) -> skip
-    | Swap(n) -> skip
+    | AddPair(_) -> skip
+    | Swap(_) -> skip
     | Invest(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
@@ -539,7 +539,7 @@ function invest_liquidity(
             params.pair.token_b_type
           ) # operations;
       }
-    | Divest(n) -> skip
+    | Divest(_) -> skip
     end
   } with (operations, s)
 
@@ -551,9 +551,9 @@ function divest_liquidity(
   block {
     var operations: list(operation) := list[];
     case p of
-    | AddPair(token_amount) -> skip
-    | Swap(n) -> skip
-    | Invest(n) -> skip
+    | AddPair(_) -> skip
+    | Swap(_) -> skip
+    | Invest(_) -> skip
     | Divest(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
