@@ -210,6 +210,20 @@ class TokenToTokenTest(TestCase):
         token_out = next(v for v in transfers if v["destination"] == julian)
         self.assertEqual(token_out["amount"], 1)
 
+    
+    def test_tt_multiple_singular_invests(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 10, 10), sender=alice)
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1))
+        
+        res = chain.execute(self.dex.divest(pair, 1, 1, 3))
+
+        transfers = parse_token_transfers(res)
+        self.assertEqual(transfers[0]["amount"], 3)
+        self.assertEqual(transfers[1]["amount"], 3)
+
     def test_tt_miniscule_amounts(self):
         chain = LocalChain(token_to_token=True)
         res = chain.execute(self.dex.addPair(pair, 2, pow(10, 128)))

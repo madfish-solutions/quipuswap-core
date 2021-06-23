@@ -233,3 +233,113 @@ class TokenToTokenRouterTest(TestCase):
                 "min_amount_out" : 1, 
                 "receiver" : julian
             }))
+
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.interpret(self.dex.swap({
+                "swaps" : [
+                    {
+                        "pair": pair_ab, 
+                        "operation": "sell",
+                    },
+                    {
+                        "pair": pair_ab, 
+                        "operation": "sell",
+                    }
+                ],
+                "amount_in" : 334,
+                "min_amount_out" : 1, 
+                "receiver" : julian
+            }))
+
+
+    def test_tt_router_not_enough_liqudity(self):
+        token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"
+        token_b = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton"
+        token_c = "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC"
+
+        pair_ab = {
+            "token_a_address" : token_a,
+            "token_a_id" : 0,
+            "token_b_address" : token_b,
+            "token_b_id" : 1,
+            "token_a_type": "fa2",
+            "token_b_type": "fa2"
+        }
+        pair_bc = {
+            "token_a_address" : token_b,
+            "token_a_id" : 1,
+            "token_b_address" : token_c,
+            "token_b_id" : 2,
+            "token_a_type": "fa12",
+            "token_b_type": "fa12"
+        }
+        pair_ac = {
+            "token_a_address" : token_a,
+            "token_a_id" : 0,
+            "token_b_address" : token_c,
+            "token_b_id" : 2,
+            "token_a_type": "fa2",
+            "token_b_type": "fa12"
+        }
+
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair_ab, 100_000, 100_000))
+        res = chain.execute(self.dex.addPair(pair_bc, 10_000, 10_000))
+        res = chain.execute(self.dex.addPair(pair_ac, 1_000_000, 1_000_000))
+
+        # not enough at the very beginning
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.swap({
+                "swaps" : [
+                    {
+                        "pair": pair_ab, 
+                        "operation": "sell",
+                    }
+                ],
+                "amount_in" : 51_000,
+                "min_amount_out" : 1, 
+                "receiver" : julian
+            }))
+
+            print(parse_token_transfers(res))
+
+        # not enough at the end
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.swap({
+                "swaps" : [
+                    {
+                        "pair": pair_ab, 
+                        "operation": "sell",
+                    },
+                    {
+                        "pair": pair_bc, 
+                        "operation": "sell",
+                    }
+                ],
+                "amount_in" : 10_000,
+                "min_amount_out" : 1, 
+                "receiver" : julian
+            }))
+        
+        # not enough in the middle
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.swap({
+                "swaps" : [
+                    {
+                        "pair": pair_ab, 
+                        "operation": "sell",
+                    },
+                    {
+                        "pair": pair_bc, 
+                        "operation": "sell",
+                    },
+                    {
+                        "pair": pair_ac, 
+                        "operation": "buy",
+                    }
+                ],
+                "amount_in" : 10_000,
+                "min_amount_out" : 1, 
+                "receiver" : julian
+            }))
+       
