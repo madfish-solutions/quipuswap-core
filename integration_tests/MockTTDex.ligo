@@ -2,7 +2,7 @@
 
 #define FA2_STANDARD_ENABLED
 
-#include "../contracts/partials/TTDex.ligo"
+#include "../contracts/partials/ITTDex.ligo"
 #include "../contracts/partials/TTMethodDex.ligo"
 #include "../contracts/partials/TTMethodFA2.ligo"
 
@@ -21,13 +21,16 @@ based on the argument type.
 [@inline] function call_dex (const p : dex_action; const this : address; const s : full_dex_storage) :  full_return is
 block {
   const res : return = case p of
-    | InitializeExchange(n) -> initialize_exchange(p, s.storage, this)
-    | TokenToTokenRoutePayment(n) -> token_to_token_route(p, s.storage, this)
-    | TokenToTokenPayment(n) -> token_to_token(p, s.storage, this)
-    | InvestLiquidity(n) -> invest_liquidity(p, s.storage, this)
-    | DivestLiquidity(n) -> divest_liquidity(p, s.storage, this)
+    | AddPair(_) -> initialize_exchange(p, s.storage, this)
+    | Swap(_) -> token_to_token_route(p, s.storage, this)
+    | Invest(_) -> invest_liquidity(p, s.storage, this)
+    | Divest(_) -> divest_liquidity(p, s.storage, this)
   end;
   s.storage := res.1;
+  res.0 := Tezos.transaction(
+    unit,
+    0mutez,
+    get_close_entrypoint(this)) # res.0;
 } with (res.0, s)
 
 (* Route token-specific action
@@ -44,9 +47,9 @@ based on the provided index.
 [@inline] function call_token (const p : token_action; const this : address; const idx : nat; const s : full_dex_storage) :  full_return is
 block {
   const res : return = case p of
-    | ITransfer(n) -> transfer(p, s.storage, this)
-    | IBalance_of(n) -> get_balance_of(p, s.storage, this)
-    | IUpdate_operators(n) -> update_operators(p, s.storage, this)
+    | ITransfer(_) -> transfer(p, s.storage, this)
+    | IBalance_of(_) -> get_balance_of(p, s.storage, this)
+    | IUpdate_operators(_) -> update_operators(p, s.storage, this)
   end;
   s.storage := res.1;
 } with (res.0, s)
@@ -54,7 +57,7 @@ block {
 (* Return the reserves to the contracts. *)
 [@inline] function get_reserves (const params : get_reserves_params; const s : full_dex_storage) : full_return is
 block {
-  const pair : pair_info = case s.storage.pairs[params.token_id] of
+  const pair : pair_info = case s.storage.pairs[params.pair_id] of
     None -> record [
       token_a_pool    = 0n;
       token_b_pool    = 0n;
@@ -70,6 +73,17 @@ block {
     params.receiver)
   ], s)
 
+[@inline] function close (const s : full_dex_storage) :  full_dex_storage is
+block {
+  if not s.storage.entered then
+    failwith("Dex/not-entered")
+  else skip;
+  if Tezos.sender =/= Tezos.self_address then
+    failwith("Dex/not-self")
+  else skip;
+  s.storage.entered := False;
+} with s
+
 
 (* DexFA2 - Contract for exchanges for XTZ - FA2 token pair *)
 function main (const p : full_action; const s : full_dex_storage) : full_return is
@@ -81,6 +95,9 @@ function main (const p : full_action; const s : full_dex_storage) : full_return 
       | Balance_of(params)                -> call_token(IBalance_of(params), this, 2n, s)
       | Update_operators(params)          -> call_token(IUpdate_operators(params), this, 1n, s)
       | Get_reserves(params)              -> get_reserves(params, s)
-      | SetDexFunction(params)            -> ((nil:list(operation)), if params.index > 3n then (failwith("Dex/wrong-index") : full_dex_storage) else set_dex_function(params.index, params.func, s))
-      | SetTokenFunction(params)          -> ((nil:list(operation)), if params.index > 2n then (failwith("Dex/wrong-index") : full_dex_storage) else set_token_function(params.index, params.func, s))
+      | Close                             -> ((nil:list(operation)), close(s))
+      
+      (* do nothing for mock *)
+      | SetDexFunction(params)            -> ((nil:list(operation)), s)
+      | SetTokenFunction(params)          -> ((nil:list(operation)), s)
     end

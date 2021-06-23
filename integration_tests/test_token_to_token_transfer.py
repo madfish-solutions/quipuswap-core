@@ -28,7 +28,7 @@ class TokenToTokenTransferTest(TestCase):
 
     def test_tt_transfer_divest(self):
         chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.initializeExchange(pair,100_000, 10_000), sender=alice)
+        res = chain.execute(self.dex.addPair(pair,100_000, 10_000), sender=alice)
         transfer = self.dex.transfer(
             [{ "from_" : alice,
                 "txs" : [{
@@ -42,22 +42,22 @@ class TokenToTokenTransferTest(TestCase):
 
         # alice cant divest a single share after transfer
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.interpret(self.dex.divestLiquidity(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=1), sender=alice)
+            res = chain.interpret(self.dex.divest(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=1), sender=alice)
 
         # bob successfully divests his shares
-        res = chain.execute(self.dex.divestLiquidity(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=10_000), sender=bob)
+        res = chain.execute(self.dex.divest(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=10_000), sender=bob)
 
-        ops = parse_ops(res)
-        token_a_out_after = ops[0]["amount"]
-        token_b_out_after = ops[1]["amount"]
+        transfers = parse_token_transfers(res)
+        token_a_out_after = transfers[0]["amount"]
+        token_b_out_after = transfers[1]["amount"]
 
 
-        self.assertEqual(token_a_out_after, 100_000)
-        self.assertEqual(token_b_out_after, 10_000)
+        self.assertEqual(token_b_out_after, 100_000)
+        self.assertEqual(token_a_out_after, 10_000)
 
     def test_tt_cant_double_transfer(self):
         chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.initializeExchange(pair,100_000, 10_000), sender=alice)
+        res = chain.execute(self.dex.addPair(pair,100_000, 10_000), sender=alice)
         transfer = self.dex.transfer(
             [{ "from_" : alice,
                 "txs" : [

@@ -41,11 +41,11 @@ class TokenToTokenRouterTest(TestCase):
         amount_in=10_000
 
         chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000, 300_000))
-        res = chain.execute(self.dex.initializeExchange(pair_bc, 500_000, 700_000))
+        res = chain.execute(self.dex.addPair(pair_ab, 100_000, 300_000))
+        res = chain.execute(self.dex.addPair(pair_bc, 500_000, 700_000))
 
         # interpret the call without applying it
-        res = chain.interpret(self.dex.tokenToTokenRoutePayment({
+        res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
                     "pair": pair_ab, 
@@ -70,9 +70,11 @@ class TokenToTokenRouterTest(TestCase):
         self.assertEqual(routed_out["token_address"], token_c)
 
         # same swap but one by one
-        res = chain.interpret(self.dex.tokenToTokenPayment(
-            pair=pair_ab,
-            operation="sell",
+        res = chain.interpret(self.dex.swap(
+            swaps=[{
+                "pair": pair_ab,
+                "operation": "sell",
+            }],
             amount_in=amount_in,
             min_amount_out=1,
             receiver=julian
@@ -80,9 +82,11 @@ class TokenToTokenRouterTest(TestCase):
         transfers = parse_token_transfers(res)
         token_b_out = next(v for v in transfers if v["destination"] == julian)
 
-        res = chain.interpret(self.dex.tokenToTokenPayment(
-            pair=pair_bc,
-            operation="sell",
+        res = chain.interpret(self.dex.swap(
+             swaps=[{
+                "pair": pair_bc,
+                "operation": "sell",
+            }],
             amount_in=token_b_out["amount"],
             min_amount_out=1,
             receiver=julian
@@ -123,12 +127,12 @@ class TokenToTokenRouterTest(TestCase):
         amount_in=10_000
 
         chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000_000_000, 100_000_000_000))
-        res = chain.execute(self.dex.initializeExchange(pair_bc, 100_000_000_000, 100_000_000_000))
-        res = chain.execute(self.dex.initializeExchange(pair_ac, 100_000_000_000, 100_000_000_000))
+        res = chain.execute(self.dex.addPair(pair_ab, 100_000_000_000, 100_000_000_000))
+        res = chain.execute(self.dex.addPair(pair_bc, 100_000_000_000, 100_000_000_000))
+        res = chain.execute(self.dex.addPair(pair_ac, 100_000_000_000, 100_000_000_000))
 
         # interpret the call without applying it
-        res = chain.interpret(self.dex.tokenToTokenRoutePayment({
+        res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
                     "pair": pair_ab, 
@@ -165,8 +169,8 @@ class TokenToTokenRouterTest(TestCase):
             "token_b_type": "fa2"
         }
         chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.initializeExchange(pair_ab, 100_000_000_000, 100_000_000_000))
-        res = chain.interpret(self.dex.tokenToTokenRoutePayment({
+        res = chain.execute(self.dex.addPair(pair_ab, 100_000_000_000, 100_000_000_000))
+        res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
                     "pair": pair_ab, 
@@ -209,12 +213,12 @@ class TokenToTokenRouterTest(TestCase):
         }
 
         chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.initializeExchange(pair_ab, 1111, 3333))
-        res = chain.execute(self.dex.initializeExchange(pair_cd, 5555, 7777))
+        res = chain.execute(self.dex.addPair(pair_ab, 1111, 3333))
+        res = chain.execute(self.dex.addPair(pair_cd, 5555, 7777))
 
         # can't find path
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.interpret(self.dex.tokenToTokenRoutePayment({
+            res = chain.interpret(self.dex.swap({
                 "swaps" : [
                     {
                         "pair": pair_ab, 
