@@ -107,7 +107,7 @@ module.exports = async (deployer, network, accounts) => {
 
       operation = await dex.methods
         .use(
-          "initializeExchange",
+          "addPair",
           ordered
             ? token0Instance.address.toString()
             : token1Instance.address.toString(),
@@ -154,7 +154,7 @@ module.exports = async (deployer, network, accounts) => {
       if (standard === "MIXED") {
         operation = await dex.methods
           .use(
-            "initializeExchange",
+            "addPair",
             ordered
               ? token0Instance.address.toString()
               : token1Instance.address.toString(),
@@ -171,7 +171,7 @@ module.exports = async (deployer, network, accounts) => {
       } else {
         operation = await dex.methods
           .use(
-            "initializeExchange",
+            "addPair",
             ordered
               ? token0Instance.address.toString()
               : token1Instance.address.toString(),
