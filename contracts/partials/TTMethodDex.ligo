@@ -185,6 +185,17 @@ function typed_transfer(
         contract_address)
     end;
 
+(* Helper function to transfer the asset based on its standard *)
+function check_token_id(
+  const token_id : nat;
+  const standard: token_type) : unit is
+    case standard of
+      Fa12 -> if token_id = 0n
+        then unit
+        else (failwith("Dex/non-zero-token-id") : unit)
+    | Fa2 -> unit
+    end;
+
 #include "../partials/TTMethodFA2.ligo"
 
 (* Initialize exchange after the previous liquidity was drained *)
@@ -206,6 +217,10 @@ function initialize_exchange(
         then failwith("Dex/wrong-token-id") else skip;
         if params.pair.token_a_address > params.pair.token_b_address
         then failwith("Dex/wrong-pair") else skip;
+
+        (* check fa1.2 token ids *)
+        check_token_id(params.pair.token_a_id, params.pair.token_a_type);
+        check_token_id(params.pair.token_b_id, params.pair.token_b_type);
 
         (* read pair info*)
         const res : (pair_info * nat) = get_pair(params.pair, s);
