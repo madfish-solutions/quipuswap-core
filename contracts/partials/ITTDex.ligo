@@ -165,5 +165,3 @@ type full_return is list (operation) * full_dex_storage
 
 const fee_rate : nat = 333n; (* exchange fee rate distributed among the liquidity providers *)
 
-const token_func_count : nat = 2n; (* number of token-related functions *)
-
