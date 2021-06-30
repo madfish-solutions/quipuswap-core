@@ -7,3 +7,4 @@ faucet*
 deploy
 .test*
 .vscode/
+__pycache__
