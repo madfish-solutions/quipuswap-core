@@ -87,9 +87,9 @@ class TokenToTokenTest(TestCase):
         res = chain.execute(self.dex.addPair(second_pair, 10_000, 100_000))
 
         res = chain.interpret(self.dex.swap(swaps=[dict(pair=pair, operation="buy")], amount_in=100, min_amount_out=1, receiver=julian))
-        ops = parse_ops(res)
-        token_a_out_before = ops[0]["amount"]
-        token_b_out_before = ops[1]["amount"]
+        transfers = parse_token_transfers(res)
+        token_a_out_before = transfers[0]["amount"]
+        token_b_out_before = transfers[1]["amount"]
 
         # perform a swap on the second pair
         res = chain.execute(self.dex.swap(swaps=[dict(pair=second_pair, operation="buy")], amount_in=100, min_amount_out=1, receiver=julian))
@@ -98,9 +98,9 @@ class TokenToTokenTest(TestCase):
 
         # ensure first token price in unscathed
         res = chain.interpret(self.dex.swap(swaps=[dict(pair=pair, operation="buy")], amount_in=100, min_amount_out=1, receiver=julian))
-        ops = parse_ops(res)
-        token_a_out_after = ops[0]["amount"]
-        token_b_out_after = ops[1]["amount"]
+        transfers = parse_token_transfers(res)
+        token_a_out_after = transfers[0]["amount"]
+        token_b_out_after = transfers[1]["amount"]
 
         self.assertEqual(token_a_out_before, token_a_out_after)
         self.assertEqual(token_b_out_before, token_b_out_after)
@@ -198,7 +198,7 @@ class TokenToTokenTest(TestCase):
         }
 
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.execute(self.dex.addPair(pair, 100_000, 200_000))
+            res = chain.execute(self.dex.addPair(pair, 100_000, 200_000_000))
         
     def test_tt_small_amounts(self):
         chain = LocalChain(token_to_token=True)
@@ -236,12 +236,6 @@ class TokenToTokenTest(TestCase):
 
     def test_tt_multiple_small_invests(self):
         chain = LocalChain(token_to_token=True)
-        invests = [
-            [10_000_000, 1],
-            [1, 10_000_000],
-            [10_000_000, 10_000_000],
-            [1, 1]
-        ]
 
         ratios = [1, 0.01, 100]
 
@@ -297,4 +291,50 @@ class TokenToTokenTest(TestCase):
         transfers = parse_token_transfers(res)
         self.assertEqual(transfers[0]["amount"], 2_000_000)
         self.assertEqual(transfers[1]["amount"], 1)
-        
+
+    def test_tt_reinitialize(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 10, 10))
+        res = chain.execute(self.dex.divest(pair, 1, 1, 10))
+
+        # following fails
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.invest(pair, 10, 10))
+
+        res = chain.execute(self.dex.addPair(pair, 10, 10))
+
+    def test_tt_divest_smallest(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 3, 3), sender=alice)
+        res = chain.execute(self.dex.invest(pair, 2, 2))
+
+        res = chain.execute(self.dex.swap([dict(pair=pair, operation="sell")], 2, 1, julian), sender=julian)
+        print("between pool", res.storage["storage"]["pairs"][0])
+
+        res = chain.execute(self.dex.divest(pair, 1, 1, 3), sender=alice)
+        transfers = parse_token_transfers(res)
+        print("\nalice withdraw", transfers[1]["amount"], transfers[0]["amount"])
+
+        res = chain.execute(self.dex.divest(pair, 1, 1, 2))
+        transfers = parse_token_transfers(res)
+        print("my withdraw", transfers[1]["amount"], transfers[0]["amount"])
+
+        print("\nalt chain")
+        altchain = LocalChain(token_to_token=True)
+
+        res = altchain.execute(self.dex.addPair(pair, 3, 3), sender=alice)
+        res = altchain.execute(self.dex.invest(pair, 2, 2))
+
+        res = altchain.execute(self.dex.swap([dict(pair=pair, operation="sell")], 2, 1, julian), sender=julian)
+
+        res = altchain.execute(self.dex.divest(pair, 1, 1, 2))
+        transfers = parse_token_transfers(res)
+        print("\nmy withdraw", transfers[1]["amount"], transfers[0]["amount"])
+
+        res = altchain.execute(self.dex.divest(pair, 1, 1, 3), sender=alice)
+        transfers = parse_token_transfers(res)
+        print("alice withdraw", transfers[1]["amount"], transfers[0]["amount"])
+
+
+
+

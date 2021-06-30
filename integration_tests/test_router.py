@@ -124,8 +124,6 @@ class TokenToTokenRouterTest(TestCase):
             "token_a_type": "fa2",
             "token_b_type": "fa12"
         }
-        amount_in=10_000
-
         chain = LocalChain(token_to_token=True)
         res = chain.execute(self.dex.addPair(pair_ab, 100_000_000_000, 100_000_000_000))
         res = chain.execute(self.dex.addPair(pair_bc, 100_000_000_000, 100_000_000_000))
@@ -147,14 +145,14 @@ class TokenToTokenRouterTest(TestCase):
                     "operation": "buy",
                 }
             ],
-            "amount_in" : amount_in,
+            "amount_in" : 10_000,
             "min_amount_out" : 1, 
             "receiver" : julian
         }))
         transfers = parse_token_transfers(res)
         
-        token_a_out = next(v for v in transfers if v["destination"] == julian)
-        self.assertEqual(token_a_out["amount"], 9909) # ~ 9910 by compound interest formula
+        token_c_out = next(v for v in transfers if v["destination"] == julian)
+        self.assertEqual(token_c_out["amount"], 9909) # ~ 9910 by compound interest formula
 
     def test_tt_router_rhombus(self):
         token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"
