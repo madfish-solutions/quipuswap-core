@@ -294,13 +294,13 @@ export class TTDex extends TokenFA2 {
         "invest",
         pair.token_a_address,
         pair.token_a_id,
-        minShares,
         standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),
         null,
         pair.token_b_address,
         pair.token_b_id,
         standard.toLowerCase() == "mixed" ? "fa12" : standard.toLowerCase(),
         null,
+        minShares,
         tokenAAmount,
         tokenBAmount
       )
