@@ -142,6 +142,10 @@ contract("InvestTTLiquidity()", function () {
 
     it("success in case of min shares of 1", async function () {
       const pairAddress = context.dex.contract.address;
+      const maxTokenAAmount = 1000;
+      const maxTokenBAmount = 1000;
+      const tokenAAmount = 1;
+      const tokenBAmount = 100;
       await context.tokens[0].updateStorage({
         ledger: [aliceAddress, pairAddress],
       });
@@ -170,7 +174,12 @@ contract("InvestTTLiquidity()", function () {
         pairAddress
       ].balance;
       const initDexPair = context.dex.storage.pairs[0];
-      await context.dex.investLiquidity("0", tokenAAmount, tokenBAmount, 1);
+      await context.dex.investLiquidity(
+        "0",
+        maxTokenAAmount,
+        maxTokenBAmount,
+        1
+      );
       await context.tokens[0].updateStorage({
         ledger: [aliceAddress, pairAddress],
       });
@@ -321,8 +330,10 @@ contract("InvestTTLiquidity()", function () {
   describe("Test purchased shares", () => {
     before(async () => {});
 
-    it("success in case of more then 0 tokens purchesed", async function () {
+    it("success in case of more then 0 shares purchesed", async function () {
       const pairAddress = context.dex.contract.address;
+      const tokenAAmount = 1000;
+      const tokenBAmount = 100000;
       await context.tokens[0].updateStorage({
         ledger: [aliceAddress, pairAddress],
       });
@@ -351,7 +362,7 @@ contract("InvestTTLiquidity()", function () {
         pairAddress
       ].balance;
       const initDexPair = context.dex.storage.pairs[0];
-      await context.dex.investLiquidity("0", tokenAAmount, tokenBAmount, 1);
+      await context.dex.investLiquidity("0", tokenAAmount, tokenBAmount, 1000);
       await context.tokens[0].updateStorage({
         ledger: [aliceAddress, pairAddress],
       });
@@ -416,7 +427,7 @@ contract("InvestTTLiquidity()", function () {
         1,
         bobAddress
       );
-      await rejects(context.dex.investLiquidity("0", 1, 1, 1), (err) => {
+      await rejects(context.dex.investLiquidity("0", 1, 1, 0), (err) => {
         ok(err.message == "Dex/wrong-params", "Error message mismatch");
         return true;
       });
