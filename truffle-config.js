@@ -17,6 +17,13 @@ module.exports = {
       secretKey: alice.sk,
       type: "tezos",
     },
+    granadanet: {
+      host: "https://granadanet.smartpy.io",
+      port: 443,
+      network_id: "*",
+      secretKey: alice.sk,
+      type: "tezos",
+    },
     delphinet: {
       host: "https://delphinet.smartpy.io",
       port: 443,

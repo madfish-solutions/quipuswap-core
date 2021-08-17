@@ -5,8 +5,8 @@
   "scripts": {
     "clean": "rm -rf ./build",
     "migrate": "yarn clean && truffle migrate",
-    "migrate-delphinet": "yarn clean && truffle migrate --network delphinet",
-    "migrate-delphinet-reset": "yarn clean && truffle migrate --network delphinet --reset",
+    "migrate-granadanet": "yarn clean && truffle migrate --network granadanet",
+    "migrate-granadanet-reset": "yarn clean && truffle migrate --network granadanet --reset",
     "compile-dex": "node scripts/cli.js build-dex --no-json -o contracts",
     "compile": "yarn clean && yarn compile-dex && truffle compile",
     "start-sandbox": "ganache-cli --flavor tezos --seed alice --hardfork edo",
