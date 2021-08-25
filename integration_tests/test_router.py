@@ -15,7 +15,6 @@ class TokenToTokenRouterTest(TestCase):
         dex_code = open("./integration_tests/MockTTDex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
     
-    # TODO check triangle abritrage
     def test_tt_token_to_token_router(self):
         token_a = "KT1PgHxzUXruWG5XAahQzJAjkk4c2sPcM3Ca"
         token_b = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton"
@@ -31,10 +30,10 @@ class TokenToTokenRouterTest(TestCase):
         }
         pair_bc = {
             "token_a_address" : token_b,
-            "token_a_id" : 0,
+            "token_a_id" : 1,
             "token_b_address" : token_c,
             "token_b_id" : 0,
-            "token_a_type": "fa12",
+            "token_a_type": "fa2",
             "token_b_type": "fa12"
         }
 

@@ -108,7 +108,7 @@ class TokenToTokenTest(TestCase):
 
     def test_tt_uninitialized(self):
         with self.assertRaises(MichelsonRuntimeError):
-            res = self.dex.invest(pair=pair, token_a_in=10_000, token_b_in=10_000).interpret(amount=1)
+            res = self.dex.invest(pair=pair, token_a_in=10_000, token_b_in=10_000, shares=10_000).interpret(amount=1)
 
         with self.assertRaises(MichelsonRuntimeError):
             res = self.dex.divest(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=100).interpret(amount=1)
@@ -119,32 +119,11 @@ class TokenToTokenTest(TestCase):
         with self.assertRaises(MichelsonRuntimeError):
             res = self.dex.swap(swaps=[dict(pair=pair, operation="sell")], amount_in=10, min_amount_out=10, receiver=julian).interpret(amount=1)
 
-
-    def test_tt_invest_ridiculous_rate(self):
-        chain = LocalChain(token_to_token=True)
-        res = chain.execute(self.dex.addPair(pair, 100, 100_000))
-
-        invariant_before = calc_pool_rate(res, pair=0)
-        
-        # invest at okay rate
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=100_000))
-
-        # invest at ridiculous rate
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=10_000, token_b_in=100_000))
-        
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=100_000_000))
-        
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1_000, token_b_in=1_000))
-
-        invariant_after = calc_pool_rate(res, pair=0)
-        self.assertEqual(invariant_before, invariant_after)   
-
-
     def test_tt_fee_is_distributed_evenly(self):
         chain = LocalChain(token_to_token=True)
         # invest equally by Alice and Bob
         res = chain.execute(self.dex.addPair(pair, 100_000, 100_000), sender=alice)
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100_000, token_b_in=100_000), sender=bob)
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100_000, token_b_in=100_000, shares=100_000), sender=bob)
 
         # perform a few back and forth swaps
         for i in range(0, 5):
@@ -170,7 +149,7 @@ class TokenToTokenTest(TestCase):
         chain = LocalChain(token_to_token=True)
         res = chain.execute(self.dex.addPair(pair, 100, 100_000))
         
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=100_000))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=100_000, shares=100))
         
         # should fail due to Julian not owning any shares 
         with self.assertRaises(MichelsonRuntimeError):
@@ -214,9 +193,9 @@ class TokenToTokenTest(TestCase):
     def test_tt_multiple_singular_invests(self):
         chain = LocalChain(token_to_token=True)
         res = chain.execute(self.dex.addPair(pair, 10, 10), sender=alice)
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1))
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1))
-        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1, shares=1))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1, shares=1))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1, shares=1))
         
         res = chain.execute(self.dex.divest(pair, 1, 1, 3))
 
@@ -243,7 +222,9 @@ class TokenToTokenTest(TestCase):
             res = chain.execute(self.dex.addPair(pair, 100, int(100 * ratio)))
 
             for i in range(3):
-                res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=int(100 * ratio)))
+                token_b_amount = int(100 * ratio)
+                shares = calc_shares(100, token_b_amount) 
+                res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=token_b_amount, shares=shares))
 
             all_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
 
@@ -260,9 +241,9 @@ class TokenToTokenTest(TestCase):
         res = chain.execute(self.dex.addPair(pair, 100_000_000, 50), sender=alice)
         
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.execute(self.dex.invest(pair, 2_000_000 - 1, 1))
+            res = chain.execute(self.dex.invest(pair=pair, token_a_in=2_000_000 - 1, token_b_in=1, shares=1))
 
-        res = chain.execute(self.dex.invest(pair, 3_600_000, 1))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=3_600_000, token_b_in=1, shares=1))
         transfers = parse_token_transfers(res)
         self.assertEqual(transfers[0]["amount"], 1)
         self.assertEqual(transfers[1]["amount"], 2_000_000)
@@ -279,9 +260,9 @@ class TokenToTokenTest(TestCase):
         res = chain.execute(self.dex.addPair(pair, 50, 100_000_000), sender=alice)
         
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.execute(self.dex.invest(pair, 1, 2_000_000 - 1))
+            res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=2_000_000 - 1, shares=1))
 
-        res = chain.execute(self.dex.invest(pair, 1, 3_600_000))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=3_600_000, shares=1))
         transfers = parse_token_transfers(res)
         self.assertEqual(transfers[0]["amount"], 2_000_000)
         self.assertEqual(transfers[1]["amount"], 1)
@@ -299,14 +280,14 @@ class TokenToTokenTest(TestCase):
 
         # following fails
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.execute(self.dex.invest(pair, 10, 10))
+            res = chain.execute(self.dex.invest(pair, 10, 10, 1))
 
         res = chain.execute(self.dex.addPair(pair, 10, 10))
 
     def test_tt_divest_smallest(self):
         chain = LocalChain(token_to_token=True)
         res = chain.execute(self.dex.addPair(pair, 3, 3), sender=alice)
-        res = chain.execute(self.dex.invest(pair, 2, 2))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=2, token_b_in=2, shares=2))
 
         res = chain.execute(self.dex.swap([dict(pair=pair, operation="sell")], 2, 1, julian), sender=julian)
         print("between pool", res.storage["storage"]["pairs"][0])
@@ -323,7 +304,7 @@ class TokenToTokenTest(TestCase):
         altchain = LocalChain(token_to_token=True)
 
         res = altchain.execute(self.dex.addPair(pair, 3, 3), sender=alice)
-        res = altchain.execute(self.dex.invest(pair, 2, 2))
+        res = altchain.execute(self.dex.invest(pair=pair, token_a_in=2, token_b_in=2, shares=2))
 
         res = altchain.execute(self.dex.swap([dict(pair=pair, operation="sell")], 2, 1, julian), sender=julian)
 
@@ -335,6 +316,53 @@ class TokenToTokenTest(TestCase):
         transfers = parse_token_transfers(res)
         print("alice withdraw", transfers[1]["amount"], transfers[0]["amount"])
 
+    def test_tt_invest_min_a_shares(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 100, 100_000))
+
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=100_000, shares=99))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=100_000, shares=100))
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.invest(pair=pair, token_a_in=100, token_b_in=100_000, shares=101))
+
+    def test_tt_invest_min_b_shares(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 100_000, 100))
+
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100_000, token_b_in=100, shares=99))
+        res = chain.execute(self.dex.invest(pair=pair, token_a_in=100_000, token_b_in=100, shares=100))
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.invest(pair=pair, token_a_in=100_000, token_b_in=100, shares=101))
+            
+
+    def test_tt_invest_smallest(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 10, 10))
+
+        with self.assertRaises(MichelsonRuntimeError):
+           res = chain.execute(self.dex.invest(pair=pair, token_a_in=2, token_b_in=3, shares=3))
+
+        with self.assertRaises(MichelsonRuntimeError):
+           res = chain.execute(self.dex.invest(pair=pair, token_a_in=3, token_b_in=2, shares=3))
+
+    def test_tt_invert_proportion(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 51, 49))
+
+        total_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
+        self.assertEqual(total_shares, 49)
+
+        # we can invest 1:1 token yet
+        # res = chain.interpret(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1, shares=1))
 
 
+        res = chain.execute(self.dex.swap(swaps=[dict(pair=pair, operation="buy")], amount_in=4, min_amount_out=1, receiver=alice), sender=alice)
+        ops = parse_ops(res)
+        amount_bought = ops[1]["amount"]
+        
+        # there are 48 tokens on one side, so no way to divest 1 whole share
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.divest(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=1))
 
+        # TODO why can't we invest one-to-one?
+        # res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=1, shares=1))

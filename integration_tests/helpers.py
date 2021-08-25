@@ -68,6 +68,8 @@ def get_pool_stats(res):
     tez_pool = res.storage["storage"]["tez_pool"]
     return (tez_pool, token_pool)
 
+def calc_shares(token_a, token_b):
+    return token_a if token_a < token_b else token_b
 
 def calc_tokens_out(res, tez_amount):
     token_pool = res.storage["storage"]["token_pool"]

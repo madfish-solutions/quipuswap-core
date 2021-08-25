@@ -154,3 +154,11 @@ class DexVotingTest(TestCase):
         self.assertEqual(balance_before, balance_after_first_vote)
         self.assertEqual(balance_before, balance_after_veto)
         self.assertEqual(balance_before, balance_after_second_vote)
+
+
+    def test_voting_not_enough_balance(self):
+        chain = LocalChain()
+        res = chain.execute(self.dex.initializeExchange(100), amount=100)
+
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.vote(voter=me, candidate=julian, value=101))

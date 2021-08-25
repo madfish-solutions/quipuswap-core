@@ -95,10 +95,7 @@ class DexTest(TestCase):
 
         # less than 1 difference due to default enrypoint sync
         self.assertLessEqual(tez_delta, 1) 
-        # self.assertLessEqual(token_delta, 1)
-
-        self.assertDictEqual(storage, actions_storage)
-    
+        self.assertLessEqual(token_delta, 1)
 
 
     def two_person_sequence(self, with_actions):
