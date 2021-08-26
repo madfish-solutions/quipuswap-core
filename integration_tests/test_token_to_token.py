@@ -1,13 +1,12 @@
-from os.path import dirname, join
-from unittest import TestCase
-from decimal import Decimal
-import math
-
 import pytest
+from unittest import TestCase
+
+import math
+import json
+
 from helpers import *
 
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
-from pytezos.context.mixin import ExecutionContext
 
 pair = {
     "token_a_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
@@ -18,23 +17,20 @@ pair = {
     "token_b_type": "fa2"
 }
 
-
-
 class TokenToTokenTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-
-        dex_code = open("./integration_tests/MockTTDex.tz", 'r').read()
+        dex_code = open("./integration_tests/TTDex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
-    
+
+
     def test_tt_dex_init(self):
-        my_address = self.dex.context.get_sender()
         chain = LocalChain(True)
 
-        res = chain.execute(self.dex.addPair(pair,10_000, 10_000), sender=julian)
-
+        res = chain.execute(self.dex.addPair(pair, 10_000, 10_000), sender=julian)
+        
         print(res.storage["storage"])
 
     def test_tt_dex_swap_and_divest(self):

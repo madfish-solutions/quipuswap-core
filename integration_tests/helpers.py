@@ -1,4 +1,4 @@
-
+from initial_storage import make_full_storage, initial_storage, initial_tt_storage
 from os import urandom
 from pytezos import pytezos 
 from pytezos.crypto.encoding import base58_encode
@@ -19,44 +19,6 @@ contract_self_address = 'KT1BEqzn5Wx8uJrZNvuS9DVHmLvG9td3fDLi'
 # the same as Pytezos' `contract.context.get_sender()`. The default Tezos.sender
 me = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU"
 
-initial_storage = dict(
-    token_id = 0,
-    tez_pool = 0,
-    token_pool = 0,
-    total_supply = 0,
-    token_address = "tz1irF8HUsQp2dLhKNMhteG1qALNU9g3pfdN",
-    ledger = {},
-    voters = {},
-    vetos = {},
-    votes = {},
-    baker_validator = "tz1ZZZZZZZZZZZZZZZZZZZZZZZZZZZZNkiRg",
-    veto = 0,
-    last_veto = 0,
-    current_delegated = None,
-    current_candidate = None,
-    total_votes = 0,
-    total_reward = 0,
-    reward_paid = 0,
-    reward = 0,
-    reward_per_share = 0,
-    last_update_time = 0,
-    period_finish = 0,
-    reward_per_sec = 0,
-    user_rewards = {},
-)
-
-initial_tt_storage = dict(
-    entered = False,
-    pairs_count=0,
-    tokens = {},
-    token_to_id = {},
-    pairs = {},
-    ledger = {},
-)
-
-initial_full_storage = {
-    'dex_lambdas': {}, 'metadata': {}, 'token_lambdas': {}, 'storage': None
-}
 
 def print_pool_stats(res):
     print("\n")
@@ -228,15 +190,12 @@ def operator_add(owner, operator, token_id=0):
         }
     }
 
-
 class LocalChain():
     def __init__(self, token_to_token=False):
-        full_storage = initial_full_storage
         if token_to_token:
-            full_storage["storage"] = initial_tt_storage 
+            self.storage = make_full_storage(initial_tt_storage) 
         else:
-            full_storage["storage"] = initial_storage 
-        self.storage = full_storage 
+            self.storage = make_full_storage(initial_storage) 
 
         self.balance = 0
         self.now = 0
