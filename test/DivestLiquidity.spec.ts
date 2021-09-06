@@ -34,7 +34,7 @@ if (standard !== "MIXED") {
         await context.pairs[0].divestLiquidity(1, 1, initTez);
         await rejects(
           context.pairs[0].divestLiquidity(1, 1, burntShares),
-          (err) => {
+          (err: any) => {
             ok(err.message == "Dex/not-launched", "Error message mismatch");
             return true;
           }
@@ -98,20 +98,23 @@ if (standard !== "MIXED") {
       before(async () => {});
 
       it("revert in case of 0 burnt shares", async function () {
-        await rejects(context.pairs[0].divestLiquidity(1, 1, 0), (err) => {
+        await rejects(context.pairs[0].divestLiquidity(1, 1, 0), (err: any) => {
           ok(err.message == "Dex/zero-burn-shares", "Error message mismatch");
           return true;
         });
       });
 
       it("revert in case of too high expected burnt shares", async function () {
-        await rejects(context.pairs[0].divestLiquidity(1, 1, 20000), (err) => {
-          ok(
-            err.message == "Dex/insufficient-shares",
-            "Error message mismatch"
-          );
-          return true;
-        });
+        await rejects(
+          context.pairs[0].divestLiquidity(1, 1, 20000),
+          (err: any) => {
+            ok(
+              err.message == "Dex/insufficient-shares",
+              "Error message mismatch"
+            );
+            return true;
+          }
+        );
       });
 
       it("success in case of burnt shares of 1", async function () {
@@ -293,10 +296,13 @@ if (standard !== "MIXED") {
         const share = 1;
         await context.pairs[0].initializeExchange(initToken, initTez);
         await context.pairs[0].tokenToTezPayment(100000, 1, bobAddress);
-        await rejects(context.pairs[0].divestLiquidity(1, 1, share), (err) => {
-          ok(err.message == "Dex/high-expectation", "Error message mismatch");
-          return true;
-        });
+        await rejects(
+          context.pairs[0].divestLiquidity(1, 1, share),
+          (err: any) => {
+            ok(err.message == "Dex/high-expectation", "Error message mismatch");
+            return true;
+          }
+        );
       });
 
       it("revert in case of calculated tokens are zero", async function () {
@@ -306,10 +312,13 @@ if (standard !== "MIXED") {
         await context.pairs[0].initializeExchange(initToken, initTez);
         await context.pairs[0].tezToTokenPayment(1, 100000, bobAddress);
         const share = 1;
-        await rejects(context.pairs[0].divestLiquidity(1, 1, share), (err) => {
-          ok(err.message == "Dex/high-expectation", "Error message mismatch");
-          return true;
-        });
+        await rejects(
+          context.pairs[0].divestLiquidity(1, 1, share),
+          (err: any) => {
+            ok(err.message == "Dex/high-expectation", "Error message mismatch");
+            return true;
+          }
+        );
       });
     });
 
@@ -325,7 +334,7 @@ if (standard !== "MIXED") {
         const share = 100;
         await rejects(
           context.pairs[0].divestLiquidity(1, 100000000, share),
-          (err) => {
+          (err: any) => {
             ok(err.message == "Dex/high-expectation", "Error message mismatch");
             return true;
           }
@@ -336,7 +345,7 @@ if (standard !== "MIXED") {
         const share = 100;
         await rejects(
           context.pairs[0].divestLiquidity(100000000, 1, share),
-          (err) => {
+          (err: any) => {
             ok(err.message == "Dex/high-expectation", "Error message mismatch");
             return true;
           }
@@ -345,18 +354,24 @@ if (standard !== "MIXED") {
 
       it("revert in case of expected tokens are 0", async function () {
         const share = 1;
-        await rejects(context.pairs[0].divestLiquidity(0, 1, share), (err) => {
-          ok(err.message == "Dex/dust-output", "Error message mismatch");
-          return true;
-        });
+        await rejects(
+          context.pairs[0].divestLiquidity(0, 1, share),
+          (err: any) => {
+            ok(err.message == "Dex/dust-output", "Error message mismatch");
+            return true;
+          }
+        );
       });
 
       it("revert in case of expected tez are 0", async function () {
         const share = 1;
-        await rejects(context.pairs[0].divestLiquidity(1, 0, share), (err) => {
-          ok(err.message == "Dex/dust-output", "Error message mismatch");
-          return true;
-        });
+        await rejects(
+          context.pairs[0].divestLiquidity(1, 0, share),
+          (err: any) => {
+            ok(err.message == "Dex/dust-output", "Error message mismatch");
+            return true;
+          }
+        );
       });
 
       it("success in case the of the expected amount smaller than calculated", async function () {

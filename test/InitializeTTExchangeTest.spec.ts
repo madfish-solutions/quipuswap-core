@@ -68,7 +68,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount: 0,
           tokenBAmount,
         }),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-a", "Error message mismatch");
           return true;
         }
@@ -83,7 +83,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           tokenBAmount: 0,
         }),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-b", "Error message mismatch");
           return true;
         }
@@ -174,7 +174,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           tokenBAmount,
         }),
-        (err) => {
+        (err: any) => {
           strictEqual(
             err.message,
             "Dex/non-zero-reserves",
@@ -205,7 +205,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           tokenBAmount
         ),
-        (err) => {
+        (err: any) => {
           strictEqual(
             err.message,
             "Dex/non-zero-reserves",
@@ -302,7 +302,7 @@ contract("InitializeTTExchange()", function () {
           0,
           tokenBAmount
         ),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-a", "Error message mismatch");
           return true;
         }
@@ -317,7 +317,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           0
         ),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-b", "Error message mismatch");
           return true;
         }

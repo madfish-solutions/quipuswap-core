@@ -36,7 +36,7 @@ if (standard !== "MIXED") {
             tezAmount,
             false
           ),
-          (err) => {
+          (err: any) => {
             ok(
               err.message == "FA2_NOT_OPERATOR" ||
                 err.message == "NotEnoughAllowance",
@@ -54,7 +54,7 @@ if (standard !== "MIXED") {
             tezAmount: 0,
             tokenAmount,
           }),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Dex/not-allowed",
@@ -72,7 +72,7 @@ if (standard !== "MIXED") {
             tezAmount,
             tokenAmount: 0,
           }),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Dex/not-allowed",
@@ -149,7 +149,7 @@ if (standard !== "MIXED") {
             tezAmount,
             tokenAmount,
           }),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Factory/exchange-launched",
@@ -165,7 +165,7 @@ if (standard !== "MIXED") {
       it("revert in case liquidity isn't zero", async function () {
         await rejects(
           context.pairs[0].initializeExchange(tokenAmount, tezAmount),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Dex/non-zero-reserves",
@@ -184,7 +184,7 @@ if (standard !== "MIXED") {
         );
         await rejects(
           context.pairs[0].initializeExchange(tokenAmount, tezAmount, false),
-          (err) => {
+          (err: any) => {
             ok(
               err.message == "FA2_NOT_OPERATOR" ||
                 err.message == "NotEnoughAllowance",
@@ -254,7 +254,7 @@ if (standard !== "MIXED") {
       it("revert in case the amount of token is zero", async function () {
         await rejects(
           context.pairs[0].initializeExchange(0, tezAmount),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Dex/non-zero-reserves",
@@ -268,7 +268,7 @@ if (standard !== "MIXED") {
       it("revert in case the amount of XTZ is zero", async function () {
         await rejects(
           context.pairs[0].initializeExchange(tokenAmount, 0),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Dex/non-zero-reserves",

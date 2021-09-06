@@ -116,7 +116,7 @@ if (standard !== "MIXED") {
             xtzAmount,
             bobAddress
           ),
-          (err) => {
+          (err: any) => {
             ok(err.message == errorMsg, "Error message mismatch");
             return true;
           }

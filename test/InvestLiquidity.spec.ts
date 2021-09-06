@@ -35,7 +35,7 @@ if (standard !== "MIXED") {
         await context.pairs[0].divestLiquidity(1, 1, initTez);
         await rejects(
           context.pairs[0].investLiquidity(tokenAmount, tezAmount, newShares),
-          (err) => {
+          (err: any) => {
             ok(err.message == "Dex/not-launched", "Error message mismatch");
             return true;
           }
@@ -329,7 +329,7 @@ if (standard !== "MIXED") {
 
       it("revert in case of 0 purchased shares", async function () {
         await context.pairs[0].tezToTokenPayment(1, 100, bobAddress);
-        await rejects(context.pairs[0].investLiquidity(1, 1, 1), (err) => {
+        await rejects(context.pairs[0].investLiquidity(1, 1, 1), (err: any) => {
           ok(err.message == "Dex/wrong-params", "Error message mismatch");
           return true;
         });

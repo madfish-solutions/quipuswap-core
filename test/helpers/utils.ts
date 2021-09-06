@@ -12,14 +12,14 @@ export function getLigo(isDockerizedLigo: boolean): string {
     path = `docker run -v $PWD:$PWD --rm -i ligolang/ligo:${ligoVersion}`;
     try {
       execSync(`${path}  --help`);
-    } catch (err) {
+    } catch (err: any) {
       path = "ligo";
       execSync(`${path}  --help`);
     }
   } else {
     try {
       execSync(`${path}  --help`);
-    } catch (err) {
+    } catch (err: any) {
       path = `docker run -v $PWD:$PWD --rm -i ligolang/ligo:${ligoVersion}`;
       execSync(`${path}  --help`);
     }

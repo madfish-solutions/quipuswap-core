@@ -130,7 +130,7 @@ contract("BuyToken()", function () {
           amountOut,
           aliceAddress
         ),
-        (err) => {
+        (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }

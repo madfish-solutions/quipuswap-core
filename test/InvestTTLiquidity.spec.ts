@@ -32,7 +32,7 @@ contract("InvestTTLiquidity()", function () {
       await context.dex.divestLiquidity("0", 1, 1, tokenAAmount);
       await rejects(
         context.dex.investLiquidity("0", tokenAAmount, tokenBAmount, 100),
-        (err) => {
+        (err: any) => {
           ok(err.message == "Dex/not-launched", "Error message mismatch");
           return true;
         }
@@ -427,7 +427,7 @@ contract("InvestTTLiquidity()", function () {
         1,
         bobAddress
       );
-      await rejects(context.dex.investLiquidity("0", 1, 1, 0), (err) => {
+      await rejects(context.dex.investLiquidity("0", 1, 1, 0), (err: any) => {
         ok(err.message == "Dex/wrong-params", "Error message mismatch");
         return true;
       });

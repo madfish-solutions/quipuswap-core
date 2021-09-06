@@ -140,7 +140,7 @@ if (standard !== "MIXED") {
     function defaultFailCase(decription, sender, amount, errorMsg) {
       it(decription, async function () {
         await context.updateActor(sender);
-        await rejects(context.pairs[0].sendReward(amount), (err) => {
+        await rejects(context.pairs[0].sendReward(amount), (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         });

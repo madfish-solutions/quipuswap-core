@@ -126,10 +126,13 @@ if (standard !== "MIXED") {
     ) {
       it(decription, async function () {
         await context.updateActor(sender);
-        await rejects(context.pairs[0].vote(voter, candidate, value), (err) => {
-          ok(err.message == errorMsg, "Error message mismatch");
-          return true;
-        });
+        await rejects(
+          context.pairs[0].vote(voter, candidate, value),
+          (err: any) => {
+            ok(err.message == errorMsg, "Error message mismatch");
+            return true;
+          }
+        );
       });
     }
 

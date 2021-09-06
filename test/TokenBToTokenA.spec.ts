@@ -174,7 +174,7 @@ contract("TokenBToTokenA()", function () {
           tokenBAmount,
           bobAddress
         ),
-        (err) => {
+        (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }

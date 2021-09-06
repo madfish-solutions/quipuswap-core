@@ -46,7 +46,7 @@ export async function confirmOperation(
         return opEntry;
       }
     }
-  } catch (err) {
+  } catch (err: any) {
     if (process.env.NODE_ENV === "development") {
       console.error(err);
     }

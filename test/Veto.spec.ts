@@ -128,7 +128,7 @@ if (standard !== "MIXED") {
     function vetoFailCase(decription, sender, vetor, value, errorMsg) {
       it(decription, async function () {
         await context.updateActor(sender);
-        await rejects(context.pairs[0].veto(vetor, value), (err) => {
+        await rejects(context.pairs[0].veto(vetor, value), (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         });

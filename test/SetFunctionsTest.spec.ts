@@ -56,7 +56,7 @@ if (standard !== "MIXED") {
       it("revert replacement of Dex functions to Factory", async function () {
         await rejects(
           context.factory.setDexFunction(1, "initialize_exchange"),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Factory/function-set",
@@ -70,7 +70,7 @@ if (standard !== "MIXED") {
       it("revert replacement of Token functions to Factory", async function () {
         await rejects(
           context.factory.setTokenFunction(1, "transfer"),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Factory/function-set",
@@ -86,7 +86,7 @@ if (standard !== "MIXED") {
       it("revert adding more than 9 exchange functions to Factory", async function () {
         await rejects(
           context.factory.setDexFunction(9, "initialize_exchange"),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Factory/wrong-index",
@@ -100,7 +100,7 @@ if (standard !== "MIXED") {
       it("revert adding more than 5 token functions to Factory", async function () {
         await rejects(
           context.factory.setTokenFunction(5, "transfer"),
-          (err) => {
+          (err: any) => {
             strictEqual(
               err.message,
               "Factory/wrong-index",
