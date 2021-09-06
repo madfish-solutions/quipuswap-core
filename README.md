@@ -40,7 +40,7 @@ The solution consists of 6 types of contracts:
 
 - Installed NodeJS (tested with NodeJS v12+)
 
-- Installed Yarn (NPM isn't working properly with `ganache-cli@6.11.0-tezos.0`)
+- Installed Yarn
 
 - Installed Ligo:
 
