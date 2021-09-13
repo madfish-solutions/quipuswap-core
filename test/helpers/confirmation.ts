@@ -6,7 +6,7 @@ import {
 import { TezosToolkit, OpKind } from "@taquito/taquito";
 
 export const SYNC_INTERVAL = 0;
-export const CONFIRM_TIMEOUT = 30_000 * 3;
+export const CONFIRM_TIMEOUT = 30_000 * 4;
 
 export type ConfirmOperationOptions = {
   initializedAt?: number;
