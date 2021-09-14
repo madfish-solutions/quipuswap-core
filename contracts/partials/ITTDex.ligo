@@ -10,17 +10,24 @@ type account_info is record [
 
 type token_transfer_params_fa2 is list (transfer_param)
 type token_identifier_fa2 is record [
-    token_address     : address;
-    token_id          : nat;
-  ]
+  token_address     : address;
+  token_id          : nat;
+]
 type token_transfer_params_fa12 is michelson_pair(address, "from", michelson_pair(address, "to", nat, "value"), "")
 type token_identifier_fa12 is address
 type transfer_type_fa12 is TransferTypeFA12 of token_transfer_params_fa12
 type transfer_type_fa2 is TransferTypeFA2 of token_transfer_params_fa2
+type balance_of_fa12_params is address * contract(nat)
+type balance_of_fa12_type   is BalanceOfTypeFA12 of balance_of_fa12_params
+type balance_of_fa2_type    is BalanceOfTypeFA2 of balance_params
 
 type token_type is
 | Fa12
 | Fa2
+
+type token_name is
+| A
+| B
 
 type pair_info is record [
   token_a_pool        : nat; (* token A reserves in the pool *)
@@ -39,9 +46,15 @@ type tokens_info is record [
 
 type token_pair is bytes
 
+type balance_info is record [
+  balance_a             : option (nat);
+  balance_b             : option (nat);
+]
+
 (* record for the dex storage *)
 type dex_storage is record [
   entered             : bool; (* reentrancy protection *)
+  tmp                 : balance_info;
   pairs_count         : nat; (* total shares count *)
   tokens              : big_map(nat, tokens_info); (* all the tokens list *)
   token_to_id         : big_map(token_pair, nat); (* all the tokens list *)
@@ -90,6 +103,14 @@ type token_to_token_route_params is
     receiver              : address; (* tokens receiver *)
   ]
 
+type ensured_route_params is
+  [@layout:comb]
+  record [
+    swaps                 : list(swap_slice_type); (* swap operations list*)
+    min_amount_out        : nat; (* min amount of tokens received to accept exchange *)
+    receiver              : address; (* tokens receiver *)
+  ]
+
 type initialize_params is
   [@layout:comb]
   record [
@@ -107,6 +128,13 @@ type invest_liquidity_params is
     token_b_in      : nat; (* min amount of tokens B invested *)
   ]
 
+type ensured_invest_params is
+  [@layout:comb]
+  record [
+    pair            : tokens_info; (* exchange pair info *)
+    shares          : nat; (* the amount of shares to receive *)
+  ]
+
 type divest_liquidity_params is
   [@layout:comb]
   record [
@@ -118,8 +146,11 @@ type divest_liquidity_params is
 
 type dex_action is
 | AddPair                 of initialize_params  (* sets initial liquidity *)
+| EnsuredAddPair          of tokens_info  (* sets initial liquidity *)
 | Swap                    of token_to_token_route_params  (* exchanges token to another token and sends them to receiver *)
+| EnsuredSwap             of ensured_route_params  (* exchanges token to another token and sends them to receiver *)
 | Invest                  of invest_liquidity_params  (* mints min shares after investing tokens *)
+| EnsuredInvest           of ensured_invest_params  (* mints min shares after investing tokens *)
 | Divest                  of divest_liquidity_params  (* burns shares and sends tokens to the owner *)
 
 type use_params is dex_action
