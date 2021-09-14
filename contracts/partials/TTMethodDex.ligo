@@ -218,6 +218,24 @@ function get_fa2_balance_entrypoint(const token : address): contract(balance_par
   | None -> (failwith("Dex/balance-of-ep") : contract(balance_params))
   end
 
+function get_ensured_initialize_entrypoint(const token : address): contract(ensured_add_params) is
+  case (Tezos.get_entrypoint_opt("%ensuredAddPair", token): option(contract(ensured_add_params))) of
+  | Some(contr) -> contr
+  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_add_params))
+  end
+
+function get_ensured_invest_entrypoint(const token : address): contract(ensured_invest_params) is
+  case (Tezos.get_entrypoint_opt("%ensuredInvest", token): option(contract(ensured_invest_params))) of
+  | Some(contr) -> contr
+  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_invest_params))
+  end
+
+function get_ensured_swap_entrypoint(const token : address): contract(ensured_route_params) is
+  case (Tezos.get_entrypoint_opt("%ensuredSwap", token): option(contract(ensured_route_params))) of
+  | Some(contr) -> contr
+  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_route_params))
+  end
+
 (* Helper function to transfer fa2 tokens *)
 function get_balance_fa2(
   const user : address;
@@ -338,24 +356,24 @@ function initialize_exchange(
         else s.entered := True;
 
         (* check preconditions *)
-        if params.token_a_address = params.token_b_address
-        and params.token_a_id >= params.token_b_id
+        if params.pair.token_a_address = params.pair.token_b_address
+        and params.pair.token_a_id >= params.pair.token_b_id
         then failwith("Dex/wrong-token-id") else skip;
-        if params.token_a_address > params.token_b_address
+        if params.pair.token_a_address > params.pair.token_b_address
         then failwith("Dex/wrong-pair") else skip;
 
         (* check fa1.2 token ids *)
-        check_token_id(params.token_a_id, params.token_a_type);
-        check_token_id(params.token_b_id, params.token_b_type);
+        check_token_id(params.pair.token_a_id, params.pair.token_a_type);
+        check_token_id(params.pair.token_b_id, params.pair.token_b_type);
 
         (* read pair info*)
-        const res : (pair_info * nat) = get_pair(params, s);
+        const res : (pair_info * nat) = get_pair(params.pair, s);
         const pair : pair_info = res.0;
         const token_id : nat = res.1;
 
         (* update counter if needed *)
         if s.pairs_count = token_id then {
-          s.token_to_id[Bytes.pack(params)] := token_id;
+          s.token_to_id[Bytes.pack(params.pair)] := token_id;
           s.pairs_count := s.pairs_count + 1n;
         } else skip;
 
@@ -391,7 +409,7 @@ function initialize_exchange(
           else token_b_in;
 
         (* distribute initial shares *)
-        s.ledger[(Tezos.sender, token_id)] := record [
+        s.ledger[(params.receiver, token_id)] := record [
             balance    = init_shares;
             allowances = (set [] : set(address));
           ];
@@ -399,7 +417,7 @@ function initialize_exchange(
 
         (* update storage *)
         s.pairs[token_id] := pair;
-        s.tokens[token_id] := params;
+        s.tokens[token_id] := params.pair;
 
         (* prepare operations to get change if any *)
         // operations :=
@@ -488,8 +506,15 @@ function preinitialize_exchange(
             params.pair.token_b_address,
             params.pair.token_b_type,
             B(unit)
-          )
-          // TODO: continue execution
+          );
+          Tezos.transaction(
+            record [
+              pair=params.pair;
+              receiver=Tezos.sender;
+            ],
+            0mutez,
+            get_ensured_initialize_entrypoint(this)
+          );
         ];
       }
     | EnsuredAddPair(n) -> skip
@@ -622,35 +647,52 @@ function token_to_token_route(
                 first_swap.pair.token_a_type,
                 A(unit)
               );
+              Tezos.transaction(
+                record [
+                  swaps=params.swaps;
+                  min_amount_out=params.min_amount_out;
+                  receiver=Tezos.sender;
+                ],
+                0mutez,
+                get_ensured_swap_entrypoint(this)
+              );
             ];
             (* TODO : add continue *)
           }
         | Buy -> {
           operations := list [
-            (* from *)
-            typed_get_balance(
-              this,
-              first_swap.pair.token_b_id,
-              first_swap.pair.token_b_address,
-              first_swap.pair.token_b_type,
-              B(unit)
-            );
-            typed_transfer(Tezos.sender,
-              this,
-              params.amount_in,
-              first_swap.pair.token_b_id,
-              first_swap.pair.token_b_address,
-              first_swap.pair.token_b_type
-            );
-            typed_get_balance(
-              this,
-              first_swap.pair.token_b_id,
-              first_swap.pair.token_b_address,
-              first_swap.pair.token_b_type,
-              B(unit)
-            );
-          ];
-            (* TODO : add continue *)
+              (* from *)
+              typed_get_balance(
+                this,
+                first_swap.pair.token_b_id,
+                first_swap.pair.token_b_address,
+                first_swap.pair.token_b_type,
+                B(unit)
+              );
+              typed_transfer(Tezos.sender,
+                this,
+                params.amount_in,
+                first_swap.pair.token_b_id,
+                first_swap.pair.token_b_address,
+                first_swap.pair.token_b_type
+              );
+              typed_get_balance(
+                this,
+                first_swap.pair.token_b_id,
+                first_swap.pair.token_b_address,
+                first_swap.pair.token_b_type,
+                B(unit)
+              );
+              Tezos.transaction(
+                record [
+                  swaps=params.swaps;
+                  min_amount_out=params.min_amount_out;
+                  receiver=Tezos.sender;
+                ],
+                0mutez,
+                get_ensured_swap_entrypoint(this)
+              );
+            ];
           }
         end;
       }
@@ -807,8 +849,16 @@ function invest_liquidity(
             params.pair.token_b_address,
             params.pair.token_b_type,
             B(unit)
-          )
-          // TODO: continue execution
+          );
+          Tezos.transaction(
+            record [
+              pair=params.pair;
+              shares=params.shares;
+              receiver=Tezos.sender;
+            ],
+            0mutez,
+            get_ensured_invest_entrypoint(this)
+          );
         ];
       }
     | EnsuredAddPair(n) -> skip
@@ -891,12 +941,12 @@ function ensured_invest(
         if tokens_b_required > token_b_in (* required tez doesn't exceed max allowed by user *)
         then failwith("Dex/low-max-token-b-in") else skip;
 
-        var account : account_info := get_account((Tezos.sender, token_id), s);
+        var account : account_info := get_account((params.receiver, token_id), s);
         const share : nat = account.balance;
 
         (* update user's shares *)
         account.balance := share + params.shares;
-        s.ledger[(Tezos.sender, token_id)] := account;
+        s.ledger[(params.receiver, token_id)] := account;
 
         (* update reserves *)
         pair.token_a_pool := pair.token_a_pool + tokens_a_required;

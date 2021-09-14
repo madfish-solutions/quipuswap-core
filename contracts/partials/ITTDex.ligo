@@ -132,7 +132,15 @@ type ensured_invest_params is
   [@layout:comb]
   record [
     pair            : tokens_info; (* exchange pair info *)
+    receiver            : address; (* exchange pair info *)
     shares          : nat; (* the amount of shares to receive *)
+  ]
+
+type ensured_add_params is
+  [@layout:comb]
+  record [
+    pair            : tokens_info; (* exchange pair info *)
+    receiver        : address; (* exchange pair info *)
   ]
 
 type divest_liquidity_params is
@@ -146,7 +154,7 @@ type divest_liquidity_params is
 
 type dex_action is
 | AddPair                 of initialize_params  (* sets initial liquidity *)
-| EnsuredAddPair          of tokens_info  (* sets initial liquidity *)
+| EnsuredAddPair          of ensured_add_params  (* sets initial liquidity *)
 | Swap                    of token_to_token_route_params  (* exchanges token to another token and sends them to receiver *)
 | EnsuredSwap             of ensured_route_params  (* exchanges token to another token and sends them to receiver *)
 | Invest                  of invest_liquidity_params  (* mints min shares after investing tokens *)
