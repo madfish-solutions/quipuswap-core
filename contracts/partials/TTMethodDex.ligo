@@ -386,36 +386,47 @@ function token_to_token_route(
         end;
 
         (* declare helper variables *)
-        var token_id_in : nat := first_swap.pair.token_a_id;
-        var token_address_in : address := first_swap.pair.token_a_address;
+        const token_in_address : address = case first_swap.operation of 
+          | Sell -> first_swap.pair.token_a_address
+          | Buy -> first_swap.pair.token_b_address
+        end;
+
+        const token_in_id : nat = case first_swap.operation of
+          | Sell -> first_swap.pair.token_a_id
+          | Buy -> first_swap.pair.token_b_id
+        end;
+
+        const token_in_standard: token_type = case first_swap.operation of
+          | Sell -> first_swap.pair.token_a_type
+          | Buy -> first_swap.pair.token_b_type
+        end;
 
         (* prepare operation to withdraw user's tokens *)
-        case first_swap.operation of
-        | Sell -> {
-          operations :=
-            (* from *)
-            typed_transfer(Tezos.sender,
-              this,
-              params.amount_in,
-              first_swap.pair.token_a_id,
-              first_swap.pair.token_a_address,
-              first_swap.pair.token_a_type
-            ) # operations;
-          }
-        | Buy -> {
-          token_id_in := first_swap.pair.token_b_id;
-          token_address_in := first_swap.pair.token_b_address;
-          operations :=
-            (* from *)
-            typed_transfer(Tezos.sender,
-              this,
-              params.amount_in,
-              first_swap.pair.token_b_id,
-              first_swap.pair.token_b_address,
-              first_swap.pair.token_b_type
-            ) # operations;
-          }
-        end;
+        operations :=
+          typed_transfer(
+            Tezos.sender,
+            Tezos.self_address,
+            params.amount_in,
+            token_in_id,
+            token_in_address,
+            token_in_standard
+          ) # operations;
+
+        (* perform internal swaps *)
+        const tmp : internal_swap_type = List.fold(
+          internal_token_to_token_swap,
+          params.swaps,
+          record [
+            s = s;
+            amount_in = params.amount_in;
+            operation = (None : option(operation));
+            sender = Tezos.self_address;
+            receiver = params.receiver;
+            token_id_in = token_in_id;
+            token_address_in = token_in_address;
+            referrer = params.referrer;
+          ]
+        );
 
         (* perform internal swaps *)
         const tmp : internal_swap_type = List.fold(
