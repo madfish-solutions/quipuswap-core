@@ -273,12 +273,6 @@ contract("SellTokenWithRoute()", function () {
       "Dex/high-out"
     );
     tokenToTokenFailCase(
-      "revert in case of 10000% of reserves to be swapped",
-      100000000,
-      1,
-      "Dex/high-out"
-    );
-    tokenToTokenFailCase(
       "revert in case of 1% of reserves to be swapped",
       12,
       1,

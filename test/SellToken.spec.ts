@@ -132,8 +132,6 @@ contract("SellToken()", function () {
           aliceAddress
         ),
         (err: any) => {
-          console.log(err.message);
-          console.log(errorMsg);
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }

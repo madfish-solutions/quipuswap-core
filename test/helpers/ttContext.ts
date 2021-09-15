@@ -95,7 +95,6 @@ export class TTContext {
 
   async setDexFunctions(): Promise<void> {
     for (let dexFunction of dexFunctions) {
-      console.log(dexFunction);
       await this.dex.setDexFunction(dexFunction.index, dexFunction.name);
     }
     await this.dex.updateStorage({
@@ -117,7 +116,6 @@ export class TTContext {
 
   async setTokenDexFunctions(): Promise<void> {
     for (let tokenFunction of tokenFunctions["FA2"]) {
-      console.log(tokenFunction);
       await this.dex.setTokenFunction(tokenFunction.index, tokenFunction.name);
     }
     await this.dex.updateStorage({
@@ -126,7 +124,6 @@ export class TTContext {
   }
   async setBalanceDexFunctions(): Promise<void> {
     for (let balFunction of balFunctions) {
-      console.log(balFunction);
       await this.dex.setBalFunction(balFunction.index, balFunction.name);
     }
     await this.dex.updateStorage({
