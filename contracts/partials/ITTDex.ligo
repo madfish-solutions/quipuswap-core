@@ -153,13 +153,20 @@ type divest_liquidity_params is
   ]
 
 type dex_action is
+(* User's entrypoints *)
 | AddPair                 of initialize_params  (* sets initial liquidity *)
-| EnsuredAddPair          of ensured_add_params  (* sets initial liquidity *)
 | Swap                    of token_to_token_route_params  (* exchanges token to another token and sends them to receiver *)
-| EnsuredSwap             of ensured_route_params  (* exchanges token to another token and sends them to receiver *)
 | Invest                  of invest_liquidity_params  (* mints min shares after investing tokens *)
-| EnsuredInvest           of ensured_invest_params  (* mints min shares after investing tokens *)
 | Divest                  of divest_liquidity_params  (* burns shares and sends tokens to the owner *)
+(* For internal usage*)
+| EnsuredAddPair          of ensured_add_params  (* sets initial liquidity *)
+| EnsuredSwap             of ensured_route_params  (* exchanges token to another token and sends them to receiver *)
+| EnsuredInvest           of ensured_invest_params  (* mints min shares after investing tokens *)
+(* Callback *)
+| BalanceAFA12            of nat (* process token balance *)
+| BalanceBFA12            of nat (* process token balance *)
+| BalanceAFA2             of list(balance_of_response) (* process token balance *)
+| BalanceBFA2             of list(balance_of_response) (* process token balance *)
 
 type use_params is dex_action
 type get_reserves_params is record [

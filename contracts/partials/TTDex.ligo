@@ -16,12 +16,16 @@ based on the argument type.
 block {
     const idx : nat = case p of
       | AddPair(n) -> 0n
-      | EnsuredAddPair(n) -> 1n
-      | Swap(n) -> 2n
-      | EnsuredSwap(n) -> 3n
-      | Invest(n) -> 4n
-      | EnsuredInvest(n) -> 5n
-      | Divest(n) -> 6n
+      | Swap(n) -> 1n
+      | Invest(n) -> 2n
+      | Divest(n) -> 3n
+      | EnsuredAddPair(n) -> 4n
+      | EnsuredSwap(n) -> 5n
+      | EnsuredInvest(n) -> 6n
+      | BalanceAFA12(n) -> 7n
+      | BalanceBFA12(n) -> 8n
+      | BalanceAFA2(n) -> 9n
+      | BalanceBFA2(n) -> 10n
     end;
   const res : return = case s.dex_lambdas[idx] of
     Some(f) -> f(p, s.storage, this)

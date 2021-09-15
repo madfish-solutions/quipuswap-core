@@ -340,7 +340,7 @@ function check_token_id(
 #include "../partials/TTMethodFA2.ligo"
 
 (* Initialize exchange after the previous liquidity was drained *)
-function initialize_exchange(
+function ensured_initialize_exchange(
   const p : dex_action;
   const s : dex_storage;
   const this: address) :  return is
@@ -445,11 +445,15 @@ function initialize_exchange(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
     end
 } with (operations, s)
 
 (* Initialize exchange after the previous liquidity was drained *)
-function preinitialize_exchange(
+function initialize_exchange(
   const p : dex_action;
   const s : dex_storage;
   const this: address) :  return is
@@ -460,6 +464,11 @@ function preinitialize_exchange(
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
+
+        s.tmp := record [
+          balance_a = (None : option(nat));
+          balance_b = (None : option(nat));
+        ];
 
         (* prepare operations to get initial liquidity *)
         operations := list [
@@ -523,6 +532,10 @@ function preinitialize_exchange(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
     end
 } with (operations, s)
 
@@ -615,6 +628,11 @@ function token_to_token_route(
         if params.min_amount_out = 0n (* non-zero amount of tokens to receive *)
         then failwith ("Dex/zero-min-amount-out") else skip;
 
+        s.tmp := record [
+          balance_a = (None : option(nat));
+          balance_b = (None : option(nat));
+        ];
+
         (* get the first exchange info *)
         const first_swap : swap_slice_type = case List.head_opt(params.swaps) of
           Some(swap) -> swap
@@ -701,6 +719,10 @@ function token_to_token_route(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -785,6 +807,10 @@ function ensured_route(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -803,6 +829,11 @@ function invest_liquidity(
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
+
+        s.tmp := record [
+          balance_a = (None : option(nat));
+          balance_b = (None : option(nat));
+        ];
 
         (* prepare operations to get initial liquidity *)
         operations := list [
@@ -865,6 +896,10 @@ function invest_liquidity(
     | EnsuredSwap(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -981,6 +1016,10 @@ function ensured_invest(
     | EnsuredSwap(n) -> skip
     | Invest(n) -> skip
     | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -1079,5 +1118,149 @@ function divest_liquidity(
             params.pair.token_b_type
           ) # operations;
       }
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
+    end
+  } with (operations, s)
+
+(* Remove liquidity (both tokens) from the pool by burning shares *)
+function update_balance_fa_12_a(
+  const p : dex_action;
+  const s : dex_storage;
+  const this: address) :  return is
+  block {
+    var operations: list(operation) := list[];
+    case p of
+    | AddPair(token_amount) -> skip
+    | EnsuredAddPair(n) -> skip
+    | Swap(n) -> skip
+    | EnsuredSwap(n) -> skip
+    | Invest(n) -> skip
+    | EnsuredInvest(n) -> skip
+    | Divest(n) -> skip
+    | BalanceAFA12(new_balance) -> {
+      s.tmp.balance_a := Some(case s.tmp.balance_a of
+      | Some(prev_balance) ->
+        if prev_balance < new_balance
+        then (failwith("Dex/balance-decremented") : nat)
+        else abs(prev_balance - new_balance)
+      | None -> new_balance
+      end);
+    }
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
+    end
+  } with (operations, s)
+
+(* Remove liquidity (both tokens) from the pool by burning shares *)
+function update_balance_fa_12_b(
+  const p : dex_action;
+  const s : dex_storage;
+  const this: address) :  return is
+  block {
+    var operations: list(operation) := list[];
+    case p of
+    | AddPair(token_amount) -> skip
+    | EnsuredAddPair(n) -> skip
+    | Swap(n) -> skip
+    | EnsuredSwap(n) -> skip
+    | Invest(n) -> skip
+    | EnsuredInvest(n) -> skip
+    | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(new_balance) -> {
+      s.tmp.balance_b := Some(case s.tmp.balance_b of
+      | Some(prev_balance) ->
+        if prev_balance < new_balance
+        then (failwith("Dex/balance-decremented") : nat)
+        else abs(prev_balance - new_balance)
+      | None -> new_balance
+      end);
+    }
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(n) -> skip
+    end
+  } with (operations, s)
+
+(* Remove liquidity (both tokens) from the pool by burning shares *)
+function update_balance_fa_2_a(
+  const p : dex_action;
+  const s : dex_storage;
+  const this: address) :  return is
+  block {
+    var operations: list(operation) := list[];
+    case p of
+    | AddPair(token_amount) -> skip
+    | EnsuredAddPair(n) -> skip
+    | Swap(n) -> skip
+    | EnsuredSwap(n) -> skip
+    | Invest(n) -> skip
+    | EnsuredInvest(n) -> skip
+    | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(responses) -> {
+      const response : balance_of_response =
+        case List.head_opt(responses) of
+        | Some(head) -> head
+        | None -> (failwith("Dex/no-balance-response") : balance_of_response)
+        end;
+
+      if response.request.owner =/= this
+      then failwith("Dex/wrong-balance-owner")
+      else skip;
+
+      s.tmp.balance_a := Some(case s.tmp.balance_a of
+      | Some(prev_balance) ->
+        if prev_balance < response.balance
+        then (failwith("Dex/balance-decremented") : nat)
+        else abs(prev_balance - response.balance)
+      | None -> response.balance
+      end);
+    }
+    | BalanceBFA2(n) -> skip
+    end
+  } with (operations, s)
+
+(* Remove liquidity (both tokens) from the pool by burning shares *)
+function update_balance_fa_2_b(
+  const p : dex_action;
+  const s : dex_storage;
+  const this: address) :  return is
+  block {
+    var operations: list(operation) := list[];
+    case p of
+    | AddPair(token_amount) -> skip
+    | EnsuredAddPair(n) -> skip
+    | Swap(n) -> skip
+    | EnsuredSwap(n) -> skip
+    | Invest(n) -> skip
+    | EnsuredInvest(n) -> skip
+    | Divest(n) -> skip
+    | BalanceAFA12(n) -> skip
+    | BalanceBFA12(n) -> skip
+    | BalanceAFA2(n) -> skip
+    | BalanceBFA2(responses) -> {
+      const response : balance_of_response =
+        case List.head_opt(responses) of
+        | Some(head) -> head
+        | None -> (failwith("Dex/no-balance-response") : balance_of_response)
+        end;
+
+      if response.request.owner =/= this
+      then failwith("Dex/wrong-balance-owner")
+      else skip;
+
+      s.tmp.balance_b := Some(case s.tmp.balance_b of
+      | Some(prev_balance) ->
+        if prev_balance < response.balance
+        then (failwith("Dex/balance-decremented") : nat)
+        else abs(prev_balance - response.balance)
+      | None -> response.balance
+      end);
+    }
     end
   } with (operations, s)

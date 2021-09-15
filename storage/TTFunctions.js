@@ -15,6 +15,34 @@ module.exports.dexFunctions = [
     index: 3,
     name: "divest_liquidity",
   },
+  {
+    index: 4,
+    name: "ensured_initialize_exchange",
+  },
+  {
+    index: 5,
+    name: "ensured_route",
+  },
+  {
+    index: 6,
+    name: "ensured_invest",
+  },
+  {
+    index: 7,
+    name: "update_balance_fa_12_a",
+  },
+  {
+    index: 8,
+    name: "update_balance_fa_12_b",
+  },
+  {
+    index: 9,
+    name: "update_balance_fa_2_a",
+  },
+  {
+    index: 10,
+    name: "update_balance_fa_2_b",
+  },
 ];
 
 let tokenFunctions = [

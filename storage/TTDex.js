@@ -3,6 +3,10 @@ const { MichelsonMap } = require("@taquito/michelson-encoder");
 module.exports = {
   storage: {
     pairs_count: "0",
+    tmp: {
+      balance_a: null,
+      balance_b: null,
+    },
     tokens: MichelsonMap.fromLiteral({}),
     token_to_id: MichelsonMap.fromLiteral({}),
     pairs: MichelsonMap.fromLiteral({}),
