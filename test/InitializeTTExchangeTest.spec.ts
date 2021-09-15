@@ -14,8 +14,7 @@ contract("InitializeTTExchange()", function () {
 
   before(async () => {
     context = await TTContext.init([], false, "alice", false);
-    await context.setDexFunction(0, "initialize_exchange");
-    await context.setDexFunction(3, "divest_liquidity");
+    await context.setAllDexFunctions();
   });
 
   it("should have an empty token list after deployment", async function () {

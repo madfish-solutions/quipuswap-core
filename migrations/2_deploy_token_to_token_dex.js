@@ -53,7 +53,6 @@ module.exports = async (deployer, network, accounts) => {
   const ligo = getLigo(true);
 
   for (dexFunction of dexFunctions) {
-    console.log(dexFunction);
     const stdout = execSync(
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
@@ -69,7 +68,6 @@ module.exports = async (deployer, network, accounts) => {
     await confirmOperation(tezos, operation.hash);
   }
   for (balFunction of balFunctions) {
-    console.log(balFunction);
     const stdout = execSync(
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetBalanceFunction(record index =${balFunction.index}n; func = ${balFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
@@ -85,7 +83,6 @@ module.exports = async (deployer, network, accounts) => {
     await confirmOperation(tezos, operation.hash);
   }
   for (tokenFunction of tokenFunctions[standard]) {
-    console.log(tokenFunction);
     const stdout = execSync(
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
