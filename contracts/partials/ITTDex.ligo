@@ -162,11 +162,13 @@ type dex_action is
 | EnsuredAddPair          of ensured_add_params  (* sets initial liquidity *)
 | EnsuredSwap             of ensured_route_params  (* exchanges token to another token and sends them to receiver *)
 | EnsuredInvest           of ensured_invest_params  (* mints min shares after investing tokens *)
+
+type balance_action is
 (* Callback *)
-| BalanceAFA12            of nat (* process token balance *)
-| BalanceBFA12            of nat (* process token balance *)
-| BalanceAFA2             of list(balance_of_response) (* process token balance *)
-| BalanceBFA2             of list(balance_of_response) (* process token balance *)
+| IBalanceAFA12            of nat (* process token balance *)
+| IBalanceBFA12            of nat (* process token balance *)
+| IBalanceAFA2             of list(balance_of_response) (* process token balance *)
+| IBalanceBFA2             of list(balance_of_response) (* process token balance *)
 
 type use_params is dex_action
 type get_reserves_params is record [
@@ -186,9 +188,14 @@ type token_action is
 type return is list (operation) * dex_storage
 type dex_func is (dex_action * dex_storage * address) -> return
 type token_func is (token_action * dex_storage * address) -> return
+type bal_func is (balance_action * dex_storage * address) -> return
 
 type set_token_function_params is record [
   func    : token_func; (* code of the function *)
+  index   : nat; (* the key in functions map *)
+]
+type set_bal_function_params is record [
+  func    : bal_func; (* code of the function *)
   index   : nat; (* the key in functions map *)
 ]
 
@@ -205,8 +212,13 @@ type full_action is
 | Update_operators        of update_operator_params (* updates the token operators *)
 | Get_reserves            of get_reserves_params (* returns the underlying token reserves *)
 | Close                   of unit (* entrypoint to prevent reentrancy *)
+| BalanceAFA12            of nat (* process token balance *)
+| BalanceBFA12            of nat (* process token balance *)
+| BalanceAFA2             of list(balance_of_response) (* process token balance *)
+| BalanceBFA2             of list(balance_of_response) (* process token balance *)
 | SetDexFunction          of set_dex_function_params (* sets the dex specific function. Is used before the whole system is launched *)
 | SetTokenFunction        of set_token_function_params (* sets the FA function, is used before the whole system is launched *)
+| SetBalanceFunction      of set_bal_function_params (* sets the FA function, is used before the whole system is launched *)
 
 (* real dex storage *)
 type full_dex_storage is record
@@ -214,6 +226,7 @@ type full_dex_storage is record
   metadata            : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
   dex_lambdas         : big_map(nat, dex_func); (* map with exchange-related functions code *)
   token_lambdas       : big_map(nat, token_func); (* map with token-related functions code *)
+  balance_lambdas     : big_map(nat, bal_func); (* map with token-related functions code *)
 end
 
 type full_return is list (operation) * full_dex_storage

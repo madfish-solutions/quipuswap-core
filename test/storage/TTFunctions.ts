@@ -27,20 +27,23 @@ export let dexFunctions = [
     index: 6,
     name: "ensured_invest",
   },
+];
+
+export let balFunctions = [
   {
-    index: 7,
+    index: 0,
     name: "update_balance_fa_12_a",
   },
   {
-    index: 8,
+    index: 1,
     name: "update_balance_fa_12_b",
   },
   {
-    index: 9,
+    index: 2,
     name: "update_balance_fa_2_a",
   },
   {
-    index: 10,
+    index: 3,
     name: "update_balance_fa_2_b",
   },
 ];

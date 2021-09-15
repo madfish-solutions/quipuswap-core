@@ -14,5 +14,6 @@ export default {
   },
   metadata: MichelsonMap.fromLiteral({}),
   dex_lambdas: MichelsonMap.fromLiteral({}),
+  balance_lambdas: MichelsonMap.fromLiteral({}),
   token_lambdas: MichelsonMap.fromLiteral({}),
 };

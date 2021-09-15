@@ -7,7 +7,11 @@ import { prepareProviderOptions } from "./utils";
 import dexStorage from "../storage/TTDex";
 import tokenFA12Storage from "../storage/TokenFA12";
 import tokenFA2Storage from "../storage/TokenFA2";
-import { dexFunctions, tokenFunctions } from "../storage/TTFunctions";
+import {
+  dexFunctions,
+  tokenFunctions,
+  balFunctions,
+} from "../storage/TTFunctions";
 import { TokenFA2 } from "./tokenFA2";
 import { Token } from "./token";
 import { TezosToolkit } from "@taquito/taquito";
@@ -91,6 +95,7 @@ export class TTContext {
 
   async setDexFunctions(): Promise<void> {
     for (let dexFunction of dexFunctions) {
+      console.log(dexFunction);
       await this.dex.setDexFunction(dexFunction.index, dexFunction.name);
     }
     await this.dex.updateStorage({
@@ -118,10 +123,19 @@ export class TTContext {
       token_lambdas: [...Array(5).keys()],
     });
   }
+  async setBalanceDexFunctions(): Promise<void> {
+    for (let balFunction of balFunctions["FA2"]) {
+      await this.dex.setBalFunction(balFunction.index, balFunction.name);
+    }
+    await this.dex.updateStorage({
+      token_lambdas: [...Array(5).keys()],
+    });
+  }
 
   async setAllDexFunctions(): Promise<void> {
     await this.setDexFunctions();
     await this.setTokenDexFunctions();
+    await this.setBalanceDexFunctions();
     await this.dex.updateStorage({
       dex_lambdas: [...Array(9).keys()],
       token_lambdas: [...Array(5).keys()],

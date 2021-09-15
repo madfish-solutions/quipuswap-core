@@ -6,7 +6,11 @@ const dexStorage = require("../storage/TTDex");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 const { MichelsonMap } = require("@taquito/michelson-encoder");
-const { dexFunctions, tokenFunctions } = require("../storage/TTFunctions");
+const {
+  dexFunctions,
+  tokenFunctions,
+  balFunctions,
+} = require("../storage/TTFunctions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + usedStandard);
 const TokenFA12 = artifacts.require("TokenFA12");
@@ -16,6 +20,7 @@ const tokenFA12Storage = require("../storage/TokenFA12");
 const tokenFA2Storage = require("../storage/TokenFA2");
 const { getLigo } = require("../scripts/utils");
 const accountsStored = require("../scripts/sandbox/accounts");
+const { confirmOperation } = require("./confirmation");
 
 const initialTezAmount = 1;
 const initialTokenAmount = 1000000;
@@ -48,6 +53,7 @@ module.exports = async (deployer, network, accounts) => {
   const ligo = getLigo(true);
 
   for (dexFunction of dexFunctions) {
+    console.log(dexFunction);
     const stdout = execSync(
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
@@ -57,12 +63,29 @@ module.exports = async (deployer, network, accounts) => {
       amount: 0,
       parameter: {
         entrypoint: "setDexFunction",
-        value: JSON.parse(stdout.toString()).args[0].args[0].args[0],
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
       },
     });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
+  }
+  for (balFunction of balFunctions) {
+    console.log(balFunction);
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetBalanceFunction(record index =${balFunction.index}n; func = ${balFunction.name}; end)'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await tezos.contract.transfer({
+      to: dexInstance.address,
+      amount: 0,
+      parameter: {
+        entrypoint: "setBalanceFunction",
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
+      },
+    });
+    await confirmOperation(tezos, operation.hash);
   }
   for (tokenFunction of tokenFunctions[standard]) {
+    console.log(tokenFunction);
     const stdout = execSync(
       `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
@@ -72,10 +95,10 @@ module.exports = async (deployer, network, accounts) => {
       amount: 0,
       parameter: {
         entrypoint: "setTokenFunction",
-        value: JSON.parse(stdout.toString()).args[0].args[0].args[0],
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
       },
     });
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
   }
 
   if (network !== "mainnet") {
@@ -99,7 +122,7 @@ module.exports = async (deployer, network, accounts) => {
       let operation = await token0Instance.methods
         .approve(dexInstance.address.toString(), initialTokenAmount)
         .send();
-      await operation.confirmation();
+      await confirmOperation(tezos, operation.hash);
       operation = await token1Instance.methods
         .approve(dexInstance.address.toString(), initialTokenAmount)
         .send();
@@ -116,7 +139,7 @@ module.exports = async (deployer, network, accounts) => {
           },
         ])
         .send();
-      await operation.confirmation();
+      await confirmOperation(tezos, operation.hash);
       if (standard == "MIXED") {
         operation = await token1Instance.methods
           .approve(dexInstance.address.toString(), initialTokenAmount)
@@ -134,7 +157,7 @@ module.exports = async (deployer, network, accounts) => {
           ])
           .send();
       }
-      await operation.confirmation();
+      await confirmOperation(tezos, operation.hash);
     }
     operation = await dex.methods
       .use(
@@ -156,6 +179,6 @@ module.exports = async (deployer, network, accounts) => {
       )
       .send();
 
-    await operation.confirmation();
+    await confirmOperation(tezos, operation.hash);
   }
 };

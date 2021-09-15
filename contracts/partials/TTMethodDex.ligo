@@ -301,8 +301,8 @@ function typed_get_balance(
     case standard of
       Fa12 -> {
         const callback : contract(nat) = case name of
-        | A -> get_bal_fa12_a(contract_address)
-        | B -> get_bal_fa12_b(contract_address)
+        | A -> get_bal_fa12_a(account)
+        | B -> get_bal_fa12_b(account)
         end;
         op := Some(get_balance_fa12(
           account,
@@ -311,8 +311,8 @@ function typed_get_balance(
         }
     | Fa2 -> {
         const callback : contract(list(balance_of_response)) = case name of
-        | A -> get_bal_fa2_a(contract_address)
-        | B -> get_bal_fa2_b(contract_address)
+        | A -> get_bal_fa2_a(account)
+        | B -> get_bal_fa2_b(account)
         end;
         op := Some(get_balance_fa2(
           account,
@@ -348,12 +348,9 @@ function ensured_initialize_exchange(
     var operations: list(operation) := list[];
     case p of
       EnsuredAddPair(params) -> {
-        if not s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
         if Tezos.sender =/= this
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
+        then failwith("Dex/not-self")
+        else skip;
 
         (* check preconditions *)
         if params.pair.token_a_address = params.pair.token_b_address
@@ -445,10 +442,6 @@ function ensured_initialize_exchange(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
     end
 } with (operations, s)
 
@@ -532,10 +525,6 @@ function initialize_exchange(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
     end
 } with (operations, s)
 
@@ -719,10 +708,6 @@ function token_to_token_route(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -737,12 +722,9 @@ function ensured_route(
     case p of
     | AddPair(n) -> skip
     | EnsuredSwap(params) -> {
-        if not s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
         if Tezos.sender =/= this
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
+        then failwith("Dex/not-self")
+        else skip;
 
         (* get the first exchange info *)
         const first_swap : swap_slice_type = case List.head_opt(params.swaps) of
@@ -807,10 +789,6 @@ function ensured_route(
     | Invest(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -896,10 +874,6 @@ function invest_liquidity(
     | EnsuredSwap(n) -> skip
     | EnsuredInvest(n) -> skip
     | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -915,12 +889,9 @@ function ensured_invest(
     | AddPair(n) -> skip
     | Swap(n) -> skip
     | EnsuredInvest(params) -> {
-        if not s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
         if Tezos.sender =/= this
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
+        then failwith("Dex/not-self")
+        else skip;
 
         (* check preconditions *)
         if params.pair.token_a_address = params.pair.token_b_address
@@ -1016,10 +987,6 @@ function ensured_invest(
     | EnsuredSwap(n) -> skip
     | Invest(n) -> skip
     | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
@@ -1118,91 +1085,66 @@ function divest_liquidity(
             params.pair.token_b_type
           ) # operations;
       }
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_12_a(
-  const p : dex_action;
+  const p : balance_action;
   const s : dex_storage;
   const this: address) :  return is
   block {
     var operations: list(operation) := list[];
     case p of
-    | AddPair(token_amount) -> skip
-    | EnsuredAddPair(n) -> skip
-    | Swap(n) -> skip
-    | EnsuredSwap(n) -> skip
-    | Invest(n) -> skip
-    | EnsuredInvest(n) -> skip
-    | Divest(n) -> skip
-    | BalanceAFA12(new_balance) -> {
+    | IBalanceAFA12(new_balance) -> {
       s.tmp.balance_a := Some(case s.tmp.balance_a of
       | Some(prev_balance) ->
-        if prev_balance < new_balance
+        if prev_balance > new_balance
         then (failwith("Dex/balance-decremented") : nat)
-        else abs(prev_balance - new_balance)
+        else abs(new_balance - prev_balance)
       | None -> new_balance
       end);
     }
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
+    | IBalanceBFA12(n) -> skip
+    | IBalanceAFA2(n) -> skip
+    | IBalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_12_b(
-  const p : dex_action;
+  const p : balance_action;
   const s : dex_storage;
   const this: address) :  return is
   block {
     var operations: list(operation) := list[];
     case p of
-    | AddPair(token_amount) -> skip
-    | EnsuredAddPair(n) -> skip
-    | Swap(n) -> skip
-    | EnsuredSwap(n) -> skip
-    | Invest(n) -> skip
-    | EnsuredInvest(n) -> skip
-    | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(new_balance) -> {
+    | IBalanceAFA12(n) -> skip
+    | IBalanceBFA12(new_balance) -> {
       s.tmp.balance_b := Some(case s.tmp.balance_b of
       | Some(prev_balance) ->
-        if prev_balance < new_balance
+        if prev_balance > new_balance
         then (failwith("Dex/balance-decremented") : nat)
-        else abs(prev_balance - new_balance)
+        else abs(new_balance - prev_balance)
       | None -> new_balance
       end);
     }
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(n) -> skip
+    | IBalanceAFA2(n) -> skip
+    | IBalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_2_a(
-  const p : dex_action;
+  const p : balance_action;
   const s : dex_storage;
   const this: address) :  return is
   block {
     var operations: list(operation) := list[];
     case p of
-    | AddPair(token_amount) -> skip
-    | EnsuredAddPair(n) -> skip
-    | Swap(n) -> skip
-    | EnsuredSwap(n) -> skip
-    | Invest(n) -> skip
-    | EnsuredInvest(n) -> skip
-    | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(responses) -> {
+    | IBalanceAFA12(n) -> skip
+    | IBalanceBFA12(n) -> skip
+    | IBalanceAFA2(responses) -> {
       const response : balance_of_response =
         case List.head_opt(responses) of
         | Some(head) -> head
@@ -1215,35 +1157,28 @@ function update_balance_fa_2_a(
 
       s.tmp.balance_a := Some(case s.tmp.balance_a of
       | Some(prev_balance) ->
-        if prev_balance < response.balance
+        if prev_balance > response.balance
         then (failwith("Dex/balance-decremented") : nat)
-        else abs(prev_balance - response.balance)
+        else abs(response.balance - prev_balance)
       | None -> response.balance
       end);
     }
-    | BalanceBFA2(n) -> skip
+    | IBalanceBFA2(n) -> skip
     end
   } with (operations, s)
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_2_b(
-  const p : dex_action;
+  const p : balance_action;
   const s : dex_storage;
   const this: address) :  return is
   block {
     var operations: list(operation) := list[];
     case p of
-    | AddPair(token_amount) -> skip
-    | EnsuredAddPair(n) -> skip
-    | Swap(n) -> skip
-    | EnsuredSwap(n) -> skip
-    | Invest(n) -> skip
-    | EnsuredInvest(n) -> skip
-    | Divest(n) -> skip
-    | BalanceAFA12(n) -> skip
-    | BalanceBFA12(n) -> skip
-    | BalanceAFA2(n) -> skip
-    | BalanceBFA2(responses) -> {
+    | IBalanceAFA12(n) -> skip
+    | IBalanceBFA12(n) -> skip
+    | IBalanceAFA2(n) -> skip
+    | IBalanceBFA2(responses) -> {
       const response : balance_of_response =
         case List.head_opt(responses) of
         | Some(head) -> head
@@ -1256,9 +1191,9 @@ function update_balance_fa_2_b(
 
       s.tmp.balance_b := Some(case s.tmp.balance_b of
       | Some(prev_balance) ->
-        if prev_balance < response.balance
+        if prev_balance > response.balance
         then (failwith("Dex/balance-decremented") : nat)
-        else abs(prev_balance - response.balance)
+        else abs(response.balance - prev_balance)
       | None -> response.balance
       end);
     }

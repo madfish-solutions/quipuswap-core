@@ -383,7 +383,7 @@ export class TTDex extends TokenFA2 {
       amount: 0,
       parameter: {
         entrypoint: "setDexFunction",
-        value: JSON.parse(stdout.toString()).args[0].args[0].args[0],
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
       },
     });
     await confirmOperation(tezos, operation.hash);
@@ -400,7 +400,24 @@ export class TTDex extends TokenFA2 {
       amount: 0,
       parameter: {
         entrypoint: "setTokenFunction",
-        value: JSON.parse(stdout.toString()).args[0].args[0].args[0],
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
+      },
+    });
+    await confirmOperation(tezos, operation.hash);
+  }
+
+  async setBalFunction(index: number, lambdaName: string): Promise<void> {
+    let ligo = getLigo(true);
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetBalanceFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await tezos.contract.transfer({
+      to: this.contract.address,
+      amount: 0,
+      parameter: {
+        entrypoint: "setBalanceFunction",
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
       },
     });
     await confirmOperation(tezos, operation.hash);

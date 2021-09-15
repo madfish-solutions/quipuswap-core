@@ -1,3 +1,16 @@
+[@inline] function call_balance(
+  const p : balance_action;
+  const this : address;
+  const idx : nat;
+  const s : full_dex_storage) : full_return is
+block {
+  const res : return = case s.balance_lambdas[idx] of
+    Some(f) -> f(p, s.storage, this)
+    | None -> (failwith("Dex/function-not-set") : return)
+  end;
+  s.storage := res.1;
+} with (res.0, s)
+
 (* Route exchange-specific action
 
 Due to the fabulous storage, gas and operation size limits
@@ -22,20 +35,18 @@ block {
       | EnsuredAddPair(n) -> 4n
       | EnsuredSwap(n) -> 5n
       | EnsuredInvest(n) -> 6n
-      | BalanceAFA12(n) -> 7n
-      | BalanceBFA12(n) -> 8n
-      | BalanceAFA2(n) -> 9n
-      | BalanceBFA2(n) -> 10n
     end;
   const res : return = case s.dex_lambdas[idx] of
     Some(f) -> f(p, s.storage, this)
     | None -> (failwith("Dex/function-not-set") : return)
   end;
   s.storage := res.1;
-  res.0 := Tezos.transaction(
-    unit,
-    0mutez,
-    get_close_entrypoint(this)) # res.0;
+  if idx > 2n then
+    res.0 := Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(this)) # res.0
+  else skip;
 } with (res.0, s)
 
 (* Route token-specific action
@@ -115,5 +126,17 @@ block {
   case s.token_lambdas[idx] of
     Some(n) -> failwith("Dex/function-set")
     | None -> s.token_lambdas[idx] := f
+  end;
+} with s
+
+(* Set the token function code to factory storage *)
+[@inline] function set_balance_function(
+  const idx : nat;
+  const f : bal_func;
+  const s : full_dex_storage) : full_dex_storage is
+block {
+  case s.balance_lambdas[idx] of
+    Some(n) -> failwith("Dex/function-set")
+    | None -> s.balance_lambdas[idx] := f
   end;
 } with s
