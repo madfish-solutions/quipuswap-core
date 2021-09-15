@@ -3,6 +3,7 @@ import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
+import { isConstructorDeclaration } from "typescript";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("SellToken()", function () {
@@ -131,6 +132,8 @@ contract("SellToken()", function () {
           aliceAddress
         ),
         (err: any) => {
+          console.log(err.message);
+          console.log(errorMsg);
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }
@@ -149,12 +152,6 @@ contract("SellToken()", function () {
       "revert in case of 100% of reserves to be swapped",
       100000,
       300,
-      "Dex/high-out"
-    );
-    tokenToTokenFailCase(
-      "revert in case of 10000% of reserves to be swapped",
-      100000000,
-      1,
       "Dex/high-out"
     );
     tokenToTokenFailCase(

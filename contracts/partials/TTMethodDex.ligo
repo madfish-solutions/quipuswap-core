@@ -415,26 +415,6 @@ function ensured_initialize_exchange(
         (* update storage *)
         s.pairs[token_id] := pair;
         s.tokens[token_id] := params.pair;
-
-        (* prepare operations to get change if any *)
-        // operations :=
-        //   typed_transfer(
-        //     Tezos.sender,
-        //     this,
-        //     params.token_a_in,
-        //     params.pair.token_a_id,
-        //     params.pair.token_a_address,
-        //     params.pair.token_a_type
-        //   ) # operations;
-        // operations :=
-        //   typed_transfer(
-        //     Tezos.sender,
-        //     this,
-        //     params.token_b_in,
-        //     params.pair.token_b_id,
-        //     params.pair.token_b_address,
-        //     params.pair.token_b_type
-        //   ) # operations;
       }
     | AddPair(n) -> skip
     | Swap(n) -> skip
@@ -658,7 +638,7 @@ function token_to_token_route(
                 record [
                   swaps=params.swaps;
                   min_amount_out=params.min_amount_out;
-                  receiver=Tezos.sender;
+                  receiver=params.receiver;
                 ],
                 0mutez,
                 get_ensured_swap_entrypoint(this)
@@ -694,7 +674,7 @@ function token_to_token_route(
                 record [
                   swaps=params.swaps;
                   min_amount_out=params.min_amount_out;
-                  receiver=Tezos.sender;
+                  receiver=params.receiver;
                 ],
                 0mutez,
                 get_ensured_swap_entrypoint(this)
@@ -962,26 +942,29 @@ function ensured_invest(
         pair.total_supply := pair.total_supply + params.shares;
         s.pairs[token_id] := pair;
 
-        (* prepare operations to get initial liquidity *)
-        (* TODO: send change if any *)
-        // operations :=
-        //   typed_transfer(
-        //     Tezos.sender,
-        //     this,
-        //     tokens_a_required,
-        //     params.pair.token_a_id,
-        //     params.pair.token_a_address,
-        //     params.pair.token_a_type
-        //   ) # operations;
-        // operations :=
-        //   typed_transfer(
-        //     Tezos.sender,
-        //     this,
-        //     tokens_b_required,
-        //     params.pair.token_b_id,
-        //     params.pair.token_b_address,
-        //     params.pair.token_b_type
-        //   ) # operations;
+        (* send cahnge *)
+        if tokens_a_required < token_a_in then
+          operations :=
+            typed_transfer(
+              this,
+              params.receiver,
+              abs(tokens_a_required - token_a_in),
+              params.pair.token_a_id,
+              params.pair.token_a_address,
+              params.pair.token_a_type
+            ) # operations
+        else skip;
+        if tokens_b_required < token_b_in then
+          operations :=
+            typed_transfer(
+              this,
+              params.receiver,
+              abs(tokens_b_required - token_b_in),
+              params.pair.token_b_id,
+              params.pair.token_b_address,
+              params.pair.token_b_type
+            ) # operations
+        else skip;
       }
     | EnsuredAddPair(n) -> skip
     | EnsuredSwap(n) -> skip
