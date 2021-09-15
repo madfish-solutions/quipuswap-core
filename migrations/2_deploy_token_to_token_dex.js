@@ -23,7 +23,7 @@ const defaultTokenId = 0;
 
 module.exports = async (deployer, network, accounts) => {
   tezos = new TezosToolkit(tezos.rpc.url);
-  // if (network === "development") return;
+  if (network === "development") return;
   const secretKey = accountsStored.alice.sk.trim();
   tezos.setProvider({
     config: {
