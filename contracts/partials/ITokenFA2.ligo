@@ -13,8 +13,8 @@ type token_metadata_info is
   ]
 
 const default_token_id : token_id = 0n;
-(* contract storage *)
-type storage is
+(* contract storage_type *)
+type storage_type is
   record [
     total_supply              : nat;
     ledger                    : big_map (address, account);
@@ -22,7 +22,7 @@ type storage is
     metadata                  : big_map(string, bytes);
   ]
 
-type return is list (operation) * storage
+type return_type is list (operation) * storage_type
 
 type transfer_destination is
   [@layout:comb]

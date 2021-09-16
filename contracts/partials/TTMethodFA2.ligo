@@ -8,7 +8,7 @@ function get_allowance (const owner_account : account_info; const spender : addr
     (* Perform single transfer *)
     function make_transfer(const s : dex_storage; const transfer : transfer_destination) : dex_storage is
       block {
-        (* Retrieve sender account from storage *)
+        (* Retrieve sender account from storage_type *)
         const user_key : (address * nat) = (user_trx_params.from_, transfer.token_id);
         const sender_account : account_info = get_account(user_key, s);
 
@@ -25,7 +25,7 @@ function get_allowance (const owner_account : account_info; const spender : addr
         (* Update sender balance *)
         sender_account.balance := abs(sender_account.balance - transfer.amount);
 
-        (* Update storage *)
+        (* Update storage_type *)
         s.ledger[user_key] := sender_account;
 
         (* Create or get destination account *)
@@ -34,7 +34,7 @@ function get_allowance (const owner_account : account_info; const spender : addr
         (* Update destination balance *)
         dest_account.balance := dest_account.balance + transfer.amount;
 
-        (* Update storage *)
+        (* Update storage_type *)
         s.ledger[(transfer.to_, transfer.token_id)] := dest_account;
     } with s;
 } with (List.fold (make_transfer, user_trx_params.txs, s))
@@ -55,7 +55,7 @@ function iterate_update_operator (const s : dex_storage; const params : update_o
       (* Set operator *)
       sender_account.allowances := Set.add(param.operator, sender_account.allowances);
 
-      (* Update storage *)
+      (* Update storage_type *)
       s.ledger[(param.owner, param.token_id)] := sender_account;
     }
     | Remove_operator(param) -> {
@@ -70,14 +70,14 @@ function iterate_update_operator (const s : dex_storage; const params : update_o
       (* Set operator *)
       sender_account.allowances := Set.remove(param.operator, sender_account.allowances);
 
-      (* Update storage *)
+      (* Update storage_type *)
       s.ledger[(param.owner, param.token_id)] := sender_account;
     }
     end
   } with s
 
 
-function transfer (const p : token_action; var s : dex_storage; const this : address) : return is
+function transfer (const p : token_action; var s : dex_storage; const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -89,7 +89,7 @@ function transfer (const p : token_action; var s : dex_storage; const this : add
     end
   } with (operations, s)
 
-function get_balance_of (const p : token_action; const s : dex_storage; const this : address) : return is
+function get_balance_of (const p : token_action; const s : dex_storage; const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -98,7 +98,7 @@ function get_balance_of (const p : token_action; const s : dex_storage; const th
       (* Perform single balance lookup *)
       function look_up_balance(const l: list (balance_of_response); const request : balance_of_request) : list (balance_of_response) is
         block {
-          (* Retrieve the asked account balance from storage *)
+          (* Retrieve the asked account balance from storage_type *)
           const sender_account : account_info = get_account((request.owner, request.token_id), s);
 
           (* Form the response *)
@@ -116,7 +116,7 @@ function get_balance_of (const p : token_action; const s : dex_storage; const th
     end
   } with (operations, s)
 
-function update_operators (const p : token_action; const s : dex_storage; const this : address) : return is
+function update_operators (const p : token_action; const s : dex_storage; const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of

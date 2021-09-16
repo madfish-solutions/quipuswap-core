@@ -343,7 +343,7 @@ function check_token_id(
 function ensured_initialize_exchange(
   const p : dex_action;
   const s : dex_storage;
-  const this: address) :  return is
+  const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -412,7 +412,7 @@ function ensured_initialize_exchange(
           ];
         pair.total_supply := init_shares;
 
-        (* update storage *)
+        (* update storage_type *)
         s.pairs[token_id] := pair;
         s.tokens[token_id] := params.pair;
       }
@@ -429,7 +429,7 @@ function ensured_initialize_exchange(
 function initialize_exchange(
   const p : dex_action;
   const s : dex_storage;
-  const this: address) :  return is
+  const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -557,7 +557,7 @@ function internal_token_to_token_swap(
     tmp.token_address_in := swap.to_.token;
     tmp.token_id_in := swap.to_.id;
 
-    (* update storage *)
+    (* update storage_type *)
     const updated_pair : pair_info = form_pools(
       swap.from_.pool,
       swap.to_.pool,
@@ -579,7 +579,7 @@ note: tokens should be approved before the operation *)
 function token_to_token_route(
   const p : dex_action;
   const s : dex_storage;
-  const this : address) : return is
+  const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -696,7 +696,7 @@ note: tokens should be approved before the operation *)
 function ensured_route(
   const p : dex_action;
   const s : dex_storage;
-  const this : address) : return is
+  const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -754,7 +754,7 @@ function ensured_route(
         if tmp.amount_in < params.min_amount_out
         then failwith ("Dex/wrong-min-out") else skip;
 
-        (* update storage*)
+        (* update storage_type*)
         s := tmp.s;
 
         (* add token transfer to user's account to operations *)
@@ -777,7 +777,7 @@ note: tokens should be approved before the operation *)
 function invest_liquidity(
   const p : dex_action;
   const s : dex_storage;
-  const this: address) : return is
+  const this: address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -862,7 +862,7 @@ note: tokens should be approved before the operation *)
 function ensured_invest(
   const p : dex_action;
   const s : dex_storage;
-  const this: address) : return is
+  const this: address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -977,7 +977,7 @@ function ensured_invest(
 function divest_liquidity(
   const p : dex_action;
   const s : dex_storage;
-  const this: address) :  return is
+  const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -1045,7 +1045,7 @@ function divest_liquidity(
         pair.token_a_pool := abs(pair.token_a_pool - token_a_divested);
         pair.token_b_pool := abs(pair.token_b_pool - token_b_divested);
 
-        (* update storage *)
+        (* update storage_type *)
         s.pairs[token_id] := pair;
 
         (* prepare operations with tokens to user *)
@@ -1075,7 +1075,7 @@ function divest_liquidity(
 function update_balance_fa_12_a(
   const p : balance_action;
   const s : dex_storage;
-  const this: address) :  return is
+  const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -1098,7 +1098,7 @@ function update_balance_fa_12_a(
 function update_balance_fa_12_b(
   const p : balance_action;
   const s : dex_storage;
-  const this: address) :  return is
+  const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -1121,7 +1121,7 @@ function update_balance_fa_12_b(
 function update_balance_fa_2_a(
   const p : balance_action;
   const s : dex_storage;
-  const this: address) :  return is
+  const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -1154,7 +1154,7 @@ function update_balance_fa_2_a(
 function update_balance_fa_2_b(
   const p : balance_action;
   const s : dex_storage;
-  const this: address) :  return is
+  const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of

@@ -51,7 +51,7 @@ type balance_info is record [
   balance_b             : option (nat);
 ]
 
-(* record for the dex storage *)
+(* record for the dex storage_type *)
 type dex_storage is record [
   entered             : bool; (* reentrancy protection *)
   tmp                 : balance_info;
@@ -84,7 +84,7 @@ type swap_data is record [
 ]
 
 type internal_swap_type is record [
-  s                       : dex_storage; (* storage state *)
+  s                       : dex_storage; (* storage_type state *)
   amount_in               : nat; (* amount of tokens to be sold *)
   token_address_in        : address; (* address of sold token *)
   token_id_in             : nat; (* identifier of sold token *)
@@ -185,10 +185,10 @@ type token_action is
 | IBalance_of              of balance_params (* returns the balance of the account *)
 | IUpdate_operators        of update_operator_params (* updates the token operators *)
 
-type return is list (operation) * dex_storage
-type dex_func is (dex_action * dex_storage * address) -> return
-type token_func is (token_action * dex_storage * address) -> return
-type bal_func is (balance_action * dex_storage * address) -> return
+type return_type is list (operation) * dex_storage
+type dex_func is (dex_action * dex_storage * address) -> return_type
+type token_func is (token_action * dex_storage * address) -> return_type
+type bal_func is (balance_action * dex_storage * address) -> return_type
 
 type set_token_function_params is record [
   func    : token_func; (* code of the function *)
@@ -220,10 +220,10 @@ type full_action is
 | SetTokenFunction        of set_token_function_params (* sets the FA function, is used before the whole system is launched *)
 | SetBalanceFunction      of set_bal_function_params (* sets the FA function, is used before the whole system is launched *)
 
-(* real dex storage *)
+(* real dex storage_type *)
 type full_dex_storage is record
-  storage             : dex_storage; (* real dex storage *)
-  metadata            : big_map(string, bytes); (* metadata storage according to TZIP-016 *)
+  storage_type             : dex_storage; (* real dex storage_type *)
+  metadata            : big_map(string, bytes); (* metadata storage_type according to TZIP-016 *)
   dex_lambdas         : big_map(nat, dex_func); (* map with exchange-related functions code *)
   token_lambdas       : big_map(nat, token_func); (* map with token-related functions code *)
   balance_lambdas     : big_map(nat, bal_func); (* map with token-related functions code *)

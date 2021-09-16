@@ -10,15 +10,15 @@ type account is
     allowances      : map (trusted, amt);
   ]
 
-(* contract storage *)
-type storage is
+(* contract storage_type *)
+type storage_type is
   record [
     total_supply     : amt;
     ledger          : big_map (address, account);
   ]
 
-(* define return for readability *)
-type return is list (operation) * storage
+(* define return_type for readability *)
+type return_type is list (operation) * storage_type
 
 (* define noop for readability *)
 const noOperations : list (operation) = nil;

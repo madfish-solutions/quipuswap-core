@@ -4,16 +4,16 @@
   const idx : nat;
   const s : full_dex_storage) : full_return is
 block {
-  const res : return = case s.balance_lambdas[idx] of
-    Some(f) -> f(p, s.storage, this)
-    | None -> (failwith("Dex/function-not-set") : return)
+  const res : return_type = case s.balance_lambdas[idx] of
+    Some(f) -> f(p, s.storage_type, this)
+    | None -> (failwith("Dex/function-not-set") : return_type)
   end;
-  s.storage := res.1;
+  s.storage_type := res.1;
 } with (res.0, s)
 
 (* Route exchange-specific action
 
-Due to the fabulous storage, gas and operation size limits
+Due to the fabulous storage_type, gas and operation size limits
 the only way to have all the nessary functions is to store
 them in big_map and dispatch the exact function code before
 the execution.
@@ -36,11 +36,11 @@ block {
       | EnsuredSwap(n) -> 5n
       | EnsuredInvest(n) -> 6n
     end;
-  const res : return = case s.dex_lambdas[idx] of
-    Some(f) -> f(p, s.storage, this)
-    | None -> (failwith("Dex/function-not-set") : return)
+  const res : return_type = case s.dex_lambdas[idx] of
+    Some(f) -> f(p, s.storage_type, this)
+    | None -> (failwith("Dex/function-not-set") : return_type)
   end;
-  s.storage := res.1;
+  s.storage_type := res.1;
   if idx > 2n then
     res.0 := Tezos.transaction(
       unit,
@@ -51,7 +51,7 @@ block {
 
 (* Route token-specific action
 
-Due to the fabulous storage, gas and operation size limits
+Due to the fabulous storage_type, gas and operation size limits
 the only way to have all the nessary functions is to store
 them in big_map and dispatch the exact function code before
 the execution.
@@ -66,22 +66,22 @@ based on the provided index.
   const idx : nat;
   const s : full_dex_storage) : full_return is
 block {
-  const res : return = case s.token_lambdas[idx] of
-    Some(f) -> f(p, s.storage, this)
-    | None -> (failwith("Dex/function-not-set") : return)
+  const res : return_type = case s.token_lambdas[idx] of
+    Some(f) -> f(p, s.storage_type, this)
+    | None -> (failwith("Dex/function-not-set") : return_type)
   end;
-  s.storage := res.1;
+  s.storage_type := res.1;
 } with (res.0, s)
 
 [@inline] function close (const s : full_dex_storage) :  full_dex_storage is
 block {
-  if not s.storage.entered then
+  if not s.storage_type.entered then
     failwith("Dex/not-entered")
   else skip;
   if Tezos.sender =/= Tezos.self_address then
     failwith("Dex/not-self")
   else skip;
-  s.storage.entered := False;
+  s.storage_type.entered := False;
 } with s
 
 (* Return the reserves to the contracts. *)
@@ -89,7 +89,7 @@ block {
   const params : get_reserves_params;
   const s : full_dex_storage) : full_return is
 block {
-  const pair : pair_info = case s.storage.pairs[params.pair_id] of
+  const pair : pair_info = case s.storage_type.pairs[params.pair_id] of
     None -> record [
       token_a_pool    = 0n;
       token_b_pool    = 0n;
@@ -105,7 +105,7 @@ block {
     params.receiver)
   ], s)
 
-(* Set the dex function code to factory storage *)
+(* Set the dex function code to factory storage_type *)
 [@inline] function set_dex_function(
   const idx : nat;
   const f : dex_func;
@@ -117,7 +117,7 @@ block {
   end;
 } with s
 
-(* Set the token function code to factory storage *)
+(* Set the token function code to factory storage_type *)
 [@inline] function set_token_function(
   const idx : nat;
   const f : token_func;
@@ -129,7 +129,7 @@ block {
   end;
 } with s
 
-(* Set the token function code to factory storage *)
+(* Set the token function code to factory storage_type *)
 [@inline] function set_balance_function(
   const idx : nat;
   const f : bal_func;

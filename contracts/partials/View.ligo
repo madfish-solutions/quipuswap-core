@@ -8,7 +8,7 @@ type token_metadata_info is
   ]
 
 type func_type is nat -> token_metadata_info
-type storage is big_map(nat, func_type)
+type storage_type is big_map(nat, func_type)
 
 function get_metadata (const token_id : nat) : token_metadata_info is
   record [
@@ -23,8 +23,8 @@ function get_metadata (const token_id : nat) : token_metadata_info is
     ]
   ]
 
-function main (const f : func_type ; const s : storage) :
-  (list(operation) * storage) is
+function main (const f : func_type ; const s : storage_type) :
+  (list(operation) * storage_type) is
   block {
       s[0n] := f;
    } with ((nil : list(operation)), s)
