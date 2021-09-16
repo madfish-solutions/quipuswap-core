@@ -1,24 +1,22 @@
 (* Implimentation of the FA1.2 specification in PascaLIGO *)
 
 (* Define types *)
-type trusted is address
+type trusted            is address
 type amt is nat
 
-type account is
-  record [
-    balance         : amt;
-    allowances      : map (trusted, amt);
-  ]
+type account            is record [
+  balance                 : amt;
+  allowances              : map (trusted, amt);
+]
 
 (* contract storage_type *)
-type storage_type is
-  record [
-    total_supply     : amt;
-    ledger          : big_map (address, account);
-  ]
+type storage_type       is record [
+  total_supply            : amt;
+  ledger                  : big_map (address, account);
+]
 
 (* define return_type for readability *)
-type return_type is list (operation) * storage_type
+type return_type        is list (operation) * storage_type
 
 (* define noop for readability *)
 const noOperations : list (operation) = nil;

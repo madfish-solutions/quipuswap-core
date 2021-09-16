@@ -1,12 +1,12 @@
 (* Helper function to get allowance for an account *)
-function get_allowance (const owner_account : account_info; const spender : address; const s : dex_storage) : bool is
+function get_allowance (const owner_account : account_info; const spender : address; const s : storage_type) : bool is
   owner_account.allowances contains spender
 
 (* Perform transfers from one owner *)
-[@inline] function iterate_transfer (const s : dex_storage; const user_trx_params : transfer_param) : dex_storage is
+[@inline] function iterate_transfer (const s : storage_type; const user_trx_params : transfer_param) : storage_type is
   block {
     (* Perform single transfer *)
-    function make_transfer(const s : dex_storage; const transfer : transfer_destination) : dex_storage is
+    function make_transfer(const s : storage_type; const transfer : transfer_destination) : storage_type is
       block {
         (* Retrieve sender account from storage_type *)
         const user_key : (address * nat) = (user_trx_params.from_, transfer.token_id);
@@ -40,7 +40,7 @@ function get_allowance (const owner_account : account_info; const spender : addr
 } with (List.fold (make_transfer, user_trx_params.txs, s))
 
 (* Perform single operator update *)
-function iterate_update_operator (const s : dex_storage; const params : update_operator_param) : dex_storage is
+function iterate_update_operator (const s : storage_type; const params : update_operator_param) : storage_type is
   block {
     case params of
     | Add_operator(param) -> {
@@ -77,7 +77,7 @@ function iterate_update_operator (const s : dex_storage; const params : update_o
   } with s
 
 
-function transfer (const p : token_action; var s : dex_storage; const this : address) : return_type is
+function transfer (const p : token_action_type; var s : storage_type; const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -89,12 +89,12 @@ function transfer (const p : token_action; var s : dex_storage; const this : add
     end
   } with (operations, s)
 
-function get_balance_of (const p : token_action; const s : dex_storage; const this : address) : return_type is
+function get_balance_of (const p : token_action_type; const s : storage_type; const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
     | ITransfer(params) -> skip
-    | IBalance_of(balance_params) -> {
+    | IBalance_of(bal_fa2_type) -> {
       (* Perform single balance lookup *)
       function look_up_balance(const l: list (balance_of_response); const request : balance_of_request) : list (balance_of_response) is
         block {
@@ -109,14 +109,14 @@ function get_balance_of (const p : token_action; const s : dex_storage; const th
         } with response # l;
 
       (* Collect balances info *)
-      const accumulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
-      operations := list[Tezos.transaction(accumulated_response, 0mutez, balance_params.callback)];
+      const accumulated_response : list (balance_of_response) = List.fold(look_up_balance, bal_fa2_type.requests, (nil: list(balance_of_response)));
+      operations := list[Tezos.transaction(accumulated_response, 0mutez, bal_fa2_type.callback)];
     }
     | IUpdate_operators(params) -> skip
     end
   } with (operations, s)
 
-function update_operators (const p : token_action; const s : dex_storage; const this : address) : return_type is
+function update_operators (const p : token_action_type; const s : storage_type; const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
     case p of

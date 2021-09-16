@@ -30,4 +30,4 @@ jobs:
         run: yarn compile && yarn test
         env:
           EXCHANGE_TOKEN_STANDARD: ${{ matrix.standard }}
-          LIGO_VERSION: "0.9.0"
+          LIGO_VERSION: "0.24.0"

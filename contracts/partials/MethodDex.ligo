@@ -1,7 +1,7 @@
 (* Helper function to get account *)
 function get_account(
   const key : (address * nat);
-  const s : dex_storage) : account_info is
+  const s : storage_type) : account_info is
   case s.ledger[key] of
     None -> record [
       balance    = 0n;
@@ -12,15 +12,15 @@ function get_account(
 
 (* Helper function to get token pair *)
 function get_pair(
-  const key : tokens_info;
-  const s : dex_storage) : (pair_info * nat) is
+  const key : tokens_type;
+  const s : storage_type) : (pair_type * nat) is
   block {
-    const token_bytes : token_pair = Bytes.pack(key);
+    const token_bytes : bytes = Bytes.pack(key);
     const token_id : nat = case s.token_to_id[token_bytes] of
         None -> s.pairs_count
       | Some(instance) -> instance
       end;
-    const pair : pair_info = case s.pairs[token_id] of
+    const pair : pair_type = case s.pairs[token_id] of
         None -> record [
           token_a_pool    = 0n;
           token_b_pool    = 0n;
@@ -35,7 +35,7 @@ function form_pools(
   const from_pool: nat;
   const to_pool: nat;
   const supply: nat;
-  const direction: swap_type) : pair_info is
+  const direction: swap_type) : pair_type is
   case direction of
     Buy -> record [
       token_a_pool = to_pool;
@@ -51,17 +51,17 @@ function form_pools(
 
 (* Helper function to unwrap the pair for swap *)
 function form_swap_data(
-  const pair: pair_info;
-  const swap: tokens_info;
-  const direction: swap_type) : swap_data is
+  const pair: pair_type;
+  const swap: tokens_type;
+  const direction: swap_type) : swap_data_type is
   block {
-    const side_a : swap_side = record [
+    const side_a : swap_side_type = record [
       pool = pair.token_a_pool;
       token = swap.token_a_address;
       id = swap.token_a_id;
       standard = swap.token_a_type;
     ];
-    const side_b : swap_side = record [
+    const side_b : swap_side_type = record [
       pool = pair.token_b_pool;
       token = swap.token_b_address;
       id = swap.token_b_id;
@@ -83,7 +83,7 @@ function wrap_fa2_transfer_trx(
   const owner : address;
   const receiver : address;
   const value : nat;
-  const token_id : nat) : transfer_type_fa2 is
+  const token_id : nat) : entry_fa2_type is
   TransferTypeFA2(list[
     record[
       from_ = owner;
@@ -99,47 +99,47 @@ function wrap_fa2_transfer_trx(
 function wrap_fa12_transfer_trx(
   const owner : address;
   const receiver : address;
-  const value : nat) : transfer_type_fa12 is
+  const value : nat) : entry_fa12_type is
   TransferTypeFA12(owner, (receiver, value))
 
 (* Helper function to get fa2 token contract *)
 function get_fa2_token_contract(
-  const token_address : address) : contract(transfer_type_fa2) is
+  const token_address : address) : contract(entry_fa2_type) is
   case (Tezos.get_entrypoint_opt(
       "%transfer",
-      token_address) : option(contract(transfer_type_fa2))) of
+      token_address) : option(contract(entry_fa2_type))) of
     Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(transfer_type_fa2))
+  | None -> (failwith("Dex/not-token") : contract(entry_fa2_type))
   end;
 
 (* Helper function to get fa1.2 token contract *)
 function get_fa12_token_contract(
-  const token_address : address) : contract(transfer_type_fa12) is
+  const token_address : address) : contract(entry_fa12_type) is
   case (Tezos.get_entrypoint_opt(
       "%transfer",
-      token_address) : option(contract(transfer_type_fa12))) of
+      token_address) : option(contract(entry_fa12_type))) of
     Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
+  | None -> (failwith("Dex/not-token") : contract(entry_fa12_type))
   end;
 
 (* Helper function to get fa2 token contract *)
 function get_fa2_balance_entrypoint(
-  const token_address : address) : contract(transfer_type_fa2) is
+  const token_address : address) : contract(entry_fa2_type) is
   case (Tezos.get_entrypoint_opt(
       "%transfer",
-      token_address) : option(contract(transfer_type_fa2))) of
+      token_address) : option(contract(entry_fa2_type))) of
     Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(transfer_type_fa2))
+  | None -> (failwith("Dex/not-token") : contract(entry_fa2_type))
   end;
 
 (* Helper function to get fa1.2 token contract *)
 function get_fa12_balance_entrypoint(
-  const token_address : address) : contract(transfer_type_fa12) is
+  const token_address : address) : contract(entry_fa12_type) is
   case (Tezos.get_entrypoint_opt(
       "%transfer",
-      token_address) : option(contract(transfer_type_fa12))) of
+      token_address) : option(contract(entry_fa12_type))) of
     Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(transfer_type_fa12))
+  | None -> (failwith("Dex/not-token") : contract(entry_fa12_type))
   end;
 
 (* Helper function to get the reentrancy entrypoint of the current contract *)
@@ -206,34 +206,34 @@ function get_bal_fa2_b(const self : address) : contract(list(balance_of_response
   | None -> (failwith("Dex/balanceBFa2") : contract(list(balance_of_response)))
   end
 
-function get_fa12_balance_entrypoint(const token : address) : contract(balance_of_fa12_params) is
-  case (Tezos.get_entrypoint_opt("%getBalance", token): option(contract(balance_of_fa12_params))) of
+function get_fa12_balance_entrypoint(const token : address) : contract(bal_fa12_type) is
+  case (Tezos.get_entrypoint_opt("%getBalance", token): option(contract(bal_fa12_type))) of
   | Some(contr) -> contr
-  | None -> (failwith("Dex/balance-of-ep") : contract(balance_of_fa12_params))
+  | None -> (failwith("Dex/balance-of-ep") : contract(bal_fa12_type))
   end
 
-function get_fa2_balance_entrypoint(const token : address): contract(balance_params) is
-  case (Tezos.get_entrypoint_opt("%balance_of", token): option(contract(balance_params))) of
+function get_fa2_balance_entrypoint(const token : address): contract(bal_fa2_type) is
+  case (Tezos.get_entrypoint_opt("%balance_of", token): option(contract(bal_fa2_type))) of
   | Some(contr) -> contr
-  | None -> (failwith("Dex/balance-of-ep") : contract(balance_params))
+  | None -> (failwith("Dex/balance-of-ep") : contract(bal_fa2_type))
   end
 
-function get_ensured_initialize_entrypoint(const token : address): contract(ensured_add_params) is
-  case (Tezos.get_entrypoint_opt("%ensuredAddPair", token): option(contract(ensured_add_params))) of
+function get_ensured_initialize_entrypoint(const token : address): contract(ensured_add_type) is
+  case (Tezos.get_entrypoint_opt("%ensuredAddPair", token): option(contract(ensured_add_type))) of
   | Some(contr) -> contr
-  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_add_params))
+  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_add_type))
   end
 
-function get_ensured_invest_entrypoint(const token : address): contract(ensured_invest_params) is
-  case (Tezos.get_entrypoint_opt("%ensuredInvest", token): option(contract(ensured_invest_params))) of
+function get_ensured_invest_entrypoint(const token : address): contract(ensured_invest_type) is
+  case (Tezos.get_entrypoint_opt("%ensuredInvest", token): option(contract(ensured_invest_type))) of
   | Some(contr) -> contr
-  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_invest_params))
+  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_invest_type))
   end
 
-function get_ensured_swap_entrypoint(const token : address): contract(ensured_route_params) is
-  case (Tezos.get_entrypoint_opt("%ensuredSwap", token): option(contract(ensured_route_params))) of
+function get_ensured_swap_entrypoint(const token : address): contract(ensured_route_type) is
+  case (Tezos.get_entrypoint_opt("%ensuredSwap", token): option(contract(ensured_route_type))) of
   | Some(contr) -> contr
-  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_route_params))
+  | None -> (failwith("Dex/no-entrypoint") : contract(ensured_route_type))
   end
 
 (* Helper function to transfer fa2 tokens *)
@@ -337,12 +337,12 @@ function check_token_id(
     | Fa2 -> unit
     end;
 
-#include "../partials/TTMethodFA2.ligo"
+#include "../partials/MethodFA2.ligo"
 
 (* Initialize exchange after the previous liquidity was drained *)
 function ensured_initialize_exchange(
-  const p : dex_action;
-  const s : dex_storage;
+  const p : action_type;
+  const s : storage_type;
   const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
@@ -364,8 +364,8 @@ function ensured_initialize_exchange(
         check_token_id(params.pair.token_b_id, params.pair.token_b_type);
 
         (* read pair info*)
-        const res : (pair_info * nat) = get_pair(params.pair, s);
-        const pair : pair_info = res.0;
+        const res : (pair_type * nat) = get_pair(params.pair, s);
+        const pair : pair_type = res.0;
         const token_id : nat = res.1;
 
         (* update counter if needed *)
@@ -427,8 +427,8 @@ function ensured_initialize_exchange(
 
 (* Initialize exchange after the previous liquidity was drained *)
 function initialize_exchange(
-  const p : dex_action;
-  const s : dex_storage;
+  const p : action_type;
+  const s : storage_type;
   const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
@@ -510,8 +510,8 @@ function initialize_exchange(
 
 (* Intrenal functions for swap hops *)
 function internal_token_to_token_swap(
-  const tmp : internal_swap_type;
-  const params : swap_slice_type ) : internal_swap_type is
+  const tmp : tmp_swap_type;
+  const params : swap_slice_type ) : tmp_swap_type is
   block {
     (* check preconditions *)
     if params.pair.token_a_address = params.pair.token_b_address
@@ -521,10 +521,10 @@ function internal_token_to_token_swap(
     then failwith("Dex/wrong-pair") else skip;
 
     (* get pair info*)
-    const res : (pair_info * nat) = get_pair(params.pair, tmp.s);
-    const pair : pair_info = res.0;
+    const res : (pair_type * nat) = get_pair(params.pair, tmp.s);
+    const pair : pair_type = res.0;
     const token_id : nat = res.1;
-    const swap: swap_data = form_swap_data(pair, params.pair, params.operation);
+    const swap: swap_data_type = form_swap_data(pair, params.pair, params.operation);
 
     (* ensure there is liquidity *)
     if pair.token_a_pool * pair.token_b_pool = 0n
@@ -558,7 +558,7 @@ function internal_token_to_token_swap(
     tmp.token_id_in := swap.to_.id;
 
     (* update storage_type *)
-    const updated_pair : pair_info = form_pools(
+    const updated_pair : pair_type = form_pools(
       swap.from_.pool,
       swap.to_.pool,
       pair.total_supply,
@@ -577,8 +577,8 @@ function internal_token_to_token_swap(
 (* Exchange tokens to tokens with multiple hops,
 note: tokens should be approved before the operation *)
 function token_to_token_route(
-  const p : dex_action;
-  const s : dex_storage;
+  const p : action_type;
+  const s : storage_type;
   const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
@@ -694,8 +694,8 @@ function token_to_token_route(
 (* Exchange tokens to tokens with multiple hops,
 note: tokens should be approved before the operation *)
 function ensured_route(
-  const p : dex_action;
-  const s : dex_storage;
+  const p : action_type;
+  const s : storage_type;
   const this : address) : return_type is
   block {
     var operations: list(operation) := list[];
@@ -736,7 +736,7 @@ function ensured_route(
         end;
 
         (* perform internal swaps *)
-        const tmp : internal_swap_type = List.fold(
+        const tmp : tmp_swap_type = List.fold(
           internal_token_to_token_swap,
           params.swaps,
           record [
@@ -775,8 +775,8 @@ function ensured_route(
 (* Provide liquidity (both tokens) to the pool,
 note: tokens should be approved before the operation *)
 function invest_liquidity(
-  const p : dex_action;
-  const s : dex_storage;
+  const p : action_type;
+  const s : storage_type;
   const this: address) : return_type is
   block {
     var operations: list(operation) := list[];
@@ -860,8 +860,8 @@ function invest_liquidity(
 (* Provide liquidity (both tokens) to the pool,
 note: tokens should be approved before the operation *)
 function ensured_invest(
-  const p : dex_action;
-  const s : dex_storage;
+  const p : action_type;
+  const s : storage_type;
   const this: address) : return_type is
   block {
     var operations: list(operation) := list[];
@@ -881,8 +881,8 @@ function ensured_invest(
         then failwith("Dex/wrong-pair") else skip;
 
         (* read pair info*)
-        const res : (pair_info * nat) = get_pair(params.pair, s);
-        const pair : pair_info = res.0;
+        const res : (pair_type * nat) = get_pair(params.pair, s);
+        const pair : pair_type = res.0;
         const token_id : nat = res.1;
 
         (* ensure there is liquidity *)
@@ -975,8 +975,8 @@ function ensured_invest(
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function divest_liquidity(
-  const p : dex_action;
-  const s : dex_storage;
+  const p : action_type;
+  const s : storage_type;
   const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
@@ -1000,8 +1000,8 @@ function divest_liquidity(
         then failwith("Dex/wrong-pair") else skip;
 
         (* read pair info*)
-        const res : (pair_info * nat) = get_pair(params.pair, s);
-        const pair : pair_info = res.0;
+        const res : (pair_type * nat) = get_pair(params.pair, s);
+        const pair : pair_type = res.0;
         const token_id : nat = res.1;
 
         (* ensure pair exist *)
@@ -1073,8 +1073,8 @@ function divest_liquidity(
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_12_a(
-  const p : balance_action;
-  const s : dex_storage;
+  const p : bal_action_type;
+  const s : storage_type;
   const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
@@ -1096,8 +1096,8 @@ function update_balance_fa_12_a(
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_12_b(
-  const p : balance_action;
-  const s : dex_storage;
+  const p : bal_action_type;
+  const s : storage_type;
   const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
@@ -1119,8 +1119,8 @@ function update_balance_fa_12_b(
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_2_a(
-  const p : balance_action;
-  const s : dex_storage;
+  const p : bal_action_type;
+  const s : storage_type;
   const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];
@@ -1152,8 +1152,8 @@ function update_balance_fa_2_a(
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_2_b(
-  const p : balance_action;
-  const s : dex_storage;
+  const p : bal_action_type;
+  const s : storage_type;
   const this: address) :  return_type is
   block {
     var operations: list(operation) := list[];

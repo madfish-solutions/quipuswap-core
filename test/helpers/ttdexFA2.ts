@@ -10,7 +10,7 @@ import { confirmOperation } from "./confirmation";
 
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-export class TTDex extends TokenFA2 {
+export class Dex extends TokenFA2 {
   public contract: ContractAbstraction<ContractProvider>;
   public storage: TTDexStorage;
 
@@ -18,8 +18,8 @@ export class TTDex extends TokenFA2 {
     super(contract);
   }
 
-  static async init(dexAddress: string): Promise<TTDex> {
-    return new TTDex(await tezos.contract.at(dexAddress));
+  static async init(dexAddress: string): Promise<Dex> {
+    return new Dex(await tezos.contract.at(dexAddress));
   }
 
   async updateStorage(
@@ -375,7 +375,7 @@ export class TTDex extends TokenFA2 {
   async setDexFunction(index: number, lambdaName: string): Promise<void> {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -392,7 +392,7 @@ export class TTDex extends TokenFA2 {
   async setTokenFunction(index: number, lambdaName: string): Promise<void> {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -409,7 +409,7 @@ export class TTDex extends TokenFA2 {
   async setBalFunction(index: number, lambdaName: string): Promise<void> {
     let ligo = getLigo(true);
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetBalanceFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetBalanceFunction(record index =${index}n; func = ${lambdaName}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({

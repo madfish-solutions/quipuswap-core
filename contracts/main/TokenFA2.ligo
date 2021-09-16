@@ -99,7 +99,7 @@ function iterate_update_operator (const s : storage_type; const params : update_
   } with s
 
 (* Perform balance look up *)
-function get_balance_of (const balance_params : balance_params; const s : storage_type) : list(operation) is
+function get_balance_of (const bal_fa2_type : bal_fa2_type; const s : storage_type) : list(operation) is
   block {
 
     (* Perform single balance lookup *)
@@ -121,11 +121,11 @@ function get_balance_of (const balance_params : balance_params; const s : storag
       } with response # l;
 
     (* Collect balances info *)
-    const accumulated_response : list (balance_of_response) = List.fold(look_up_balance, balance_params.requests, (nil: list(balance_of_response)));
-  } with list [transaction(accumulated_response, 0tz, balance_params.callback)]
+    const accumulated_response : list (balance_of_response) = List.fold(look_up_balance, bal_fa2_type.requests, (nil: list(balance_of_response)));
+  } with list [transaction(accumulated_response, 0tz, bal_fa2_type.callback)]
 
 (* TokenFA2 - Mock FA2 token for tests *)
-function main (const action : token_action; var s : storage_type) : return_type is
+function main (const action : token_action_type; var s : storage_type) : return_type is
   block {
     skip
   } with case action of

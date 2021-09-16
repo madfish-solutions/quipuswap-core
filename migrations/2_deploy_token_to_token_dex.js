@@ -1,8 +1,8 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 const usedStandard = standard == "MIXED" ? "FA2" : standard;
-const TTDex = artifacts.require("TTDex");
+const Dex = artifacts.require("Dex");
 const MetadataStorage = artifacts.require("MetadataStorage");
-const dexStorage = require("../storage/TTDex");
+const dexStorage = require("../storage/Dex");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 const { MichelsonMap } = require("@taquito/michelson-encoder");
@@ -46,15 +46,15 @@ module.exports = async (deployer, network, accounts) => {
       "ascii"
     ).toString("hex"),
   });
-  await deployer.deploy(TTDex, dexStorage);
-  const dexInstance = await TTDex.deployed();
-  console.log(`TTDex address: ${dexInstance.address}`);
+  await deployer.deploy(Dex, dexStorage);
+  const dexInstance = await Dex.deployed();
+  console.log(`Dex address: ${dexInstance.address}`);
 
   const ligo = getLigo(true);
 
   for (dexFunction of dexFunctions) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetDexFunction(record index =${dexFunction.index}n; func = ${dexFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -69,7 +69,7 @@ module.exports = async (deployer, network, accounts) => {
   }
   for (balFunction of balFunctions) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetBalanceFunction(record index =${balFunction.index}n; func = ${balFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetBalanceFunction(record index =${balFunction.index}n; func = ${balFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({
@@ -84,7 +84,7 @@ module.exports = async (deployer, network, accounts) => {
   }
   for (tokenFunction of tokenFunctions[standard]) {
     const stdout = execSync(
-      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/TTDex.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetTokenFunction(record index =${tokenFunction.index}n; func = ${tokenFunction.name}; end)'`,
       { maxBuffer: 1024 * 500 }
     );
     const operation = await tezos.contract.transfer({

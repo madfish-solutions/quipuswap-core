@@ -1,10 +1,10 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-import { TTDex as TTDexFA2 } from "./ttdexFA2";
+import { Dex as TTDexFA2 } from "./ttdexFA2";
 import { TokenFA12 } from "./tokenFA12";
 import { prepareProviderOptions } from "./utils";
 
-import dexStorage from "../storage/TTDex";
+import dexStorage from "../storage/Dex";
 import tokenFA12Storage from "../storage/TokenFA12";
 import tokenFA2Storage from "../storage/TokenFA2";
 import {
@@ -20,7 +20,7 @@ import BigNumber from "bignumber.js";
 type Dex = TTDexFA2;
 const CTokenFA12 = artifacts.require("TokenFA12");
 const CTokenFA2 = artifacts.require("TokenFA2");
-const CDex = artifacts.require("TTDex");
+const CDex = artifacts.require("Dex");
 
 export class TTContext {
   public dex: Dex;

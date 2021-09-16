@@ -1,11 +1,12 @@
-#define FA2_STANDARD_ENABLED
-#define TOKEN_TO_TOKEN_ENABLED
-#include "../partials/ITTDex.ligo"
-#include "../partials/TTMethodDex.ligo"
-#include "../partials/TTDex.ligo"
+#include "../partials/IDex.ligo"
+#include "../partials/MethodDex.ligo"
+#include "../partials/Dex.ligo"
 
 (* DexFA2 - Contract for exchanges for XTZ - FA2 token pair *)
-function main (const p : full_action; const s : full_dex_storage) : full_return is
+function main(
+  const p               : full_action_type;
+  const s               : full_storage_type)
+                        : full_return_type is
   block {
      const this: address = Tezos.self_address;
   } with case p of
@@ -19,7 +20,19 @@ function main (const p : full_action; const s : full_dex_storage) : full_return 
       | BalanceBFA2(params)               -> call_balance(IBalanceBFA2(params), this, 3n, s)
       | Get_reserves(params)              -> get_reserves(params, s)
       | Close                             -> ((nil:list(operation)), close(s))
-      | SetBalanceFunction(params)        -> ((nil:list(operation)), if params.index > 3n then (failwith("Dex/wrong-index") : full_dex_storage) else set_balance_function(params.index, params.func, s))
-      | SetDexFunction(params)            -> ((nil:list(operation)), if params.index > 6n then (failwith("Dex/wrong-index") : full_dex_storage) else set_dex_function(params.index, params.func, s))
-      | SetTokenFunction(params)          -> ((nil:list(operation)), if params.index > 2n then (failwith("Dex/wrong-index") : full_dex_storage) else set_token_function(params.index, params.func, s))
+      | SetBalanceFunction(params)        ->
+        ((nil:list(operation)),
+          if params.index > bal_func_count
+          then (failwith("Dex/wrong-index") : full_storage_type)
+          else set_balance_function(params.index, params.func, s))
+      | SetDexFunction(params)            ->
+        ((nil:list(operation)),
+          if params.index > dex_func_count
+          then (failwith("Dex/wrong-index") : full_storage_type)
+          else set_dex_function(params.index, params.func, s))
+      | SetTokenFunction(params)          ->
+        ((nil:list(operation)),
+          if params.index > token_func_count
+          then (failwith("Dex/wrong-index") : full_storage_type)
+          else set_token_function(params.index, params.func, s))
     end
