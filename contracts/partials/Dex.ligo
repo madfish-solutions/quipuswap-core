@@ -52,7 +52,7 @@ function call_dex(
     then res.0 := Tezos.transaction(
       unit,
       0mutez,
-      get_close_entrypoint(Tezos.self_address)) # res.0
+      get_close_entrypoint(unit)) # res.0
     else skip;
   } with (res.0, s)
 

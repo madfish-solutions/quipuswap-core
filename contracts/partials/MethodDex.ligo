@@ -1,8 +1,71 @@
+
+(* Initialize exchange after the previous liquidity was drained *)
+function initialize_exchange(
+  const p               : action_type;
+  var s                 : storage_type)
+                        : return_type is
+  block {
+    var operations: list(operation) := list[];
+    case p of
+      AddPair(params) -> {
+        if s.entered
+        then failwith("Dex/reentrancy")
+        else s.entered := True;
+
+        s.tmp := record [
+          balance_a = (None : option(nat));
+          balance_b = (None : option(nat));
+        ];
+
+        (* prepare operations to get initial liquidity *)
+        operations := list [
+          typed_get_balance(
+            params.pair.token_a_type,
+            A(unit)
+          );
+          typed_get_balance(
+            params.pair.token_b_type,
+            B(unit)
+          );
+          typed_transfer(
+            Tezos.sender,
+            Tezos.self_address,
+            params.token_a_in,
+            params.pair.token_a_type
+          );
+          typed_transfer(
+            Tezos.sender,
+            Tezos.self_address,
+            params.token_b_in,
+            params.pair.token_b_type
+          );
+          typed_get_balance(
+            params.pair.token_a_type,
+            A(unit)
+          );
+          typed_get_balance(
+            params.pair.token_b_type,
+            B(unit)
+          );
+          Tezos.transaction(
+            record [
+              pair=params.pair;
+              receiver=Tezos.sender;
+            ],
+            0mutez,
+            get_ensured_initialize_entrypoint(Tezos.self_address)
+          );
+        ];
+      }
+    | _                 -> skip
+    end
+} with (operations, s)
+
 (* Initialize exchange after the previous liquidity was drained *)
 function ensured_initialize_exchange(
   const p               : action_type;
   var s                 : storage_type)
-                        :  return_type is
+                        : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
@@ -12,17 +75,9 @@ function ensured_initialize_exchange(
         else skip;
 
         (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address
-        and params.pair.token_a_id >= params.pair.token_b_id
+        if params.pair.token_a_type > params.pair.token_b_type
         then failwith("Dex/wrong-token-id")
         else skip;
-        if params.pair.token_a_address > params.pair.token_b_address
-        then failwith("Dex/wrong-pair")
-        else skip;
-
-        (* check fa1.2 token ids *)
-        check_token_id(params.pair.token_a_id, params.pair.token_a_type);
-        check_token_id(params.pair.token_b_id, params.pair.token_b_type);
 
         (* read pair info*)
         const res : (pair_type * nat) = get_pair(params.pair, s);
@@ -47,6 +102,12 @@ function ensured_initialize_exchange(
           Some(balance_b) -> token_b_in := balance_b
         | None -> failwith("Dex/balanca-b-not-updated")
         end;
+        if token_a_in < 1n (* no token A invested *)
+        then failwith("Dex/no-token-a")
+        else skip;
+        if token_b_in < 1n (* no token B invested *)
+        then failwith("Dex/no-token-b")
+        else skip;
 
         (* check preconditions *)
         if pair.token_a_pool * pair.token_b_pool =/= 0n (* no reserves *)
@@ -54,12 +115,6 @@ function ensured_initialize_exchange(
         else skip;
         if pair.total_supply =/= 0n  (* no shares owned *)
         then failwith("Dex/non-zero-shares")
-        else skip;
-        if token_a_in < 1n (* no token A invested *)
-        then failwith("Dex/no-token-a")
-        else skip;
-        if token_b_in < 1n (* no token B invested *)
-        then failwith("Dex/no-token-b")
         else skip;
 
         (* update pool reserves *)
@@ -83,87 +138,10 @@ function ensured_initialize_exchange(
         s.pairs[token_id] := pair;
         s.tokens[token_id] := params.pair;
       }
-    | _                                 -> skip
+    | _                 -> skip
     end
 } with (operations, s)
 
-(* Initialize exchange after the previous liquidity was drained *)
-function initialize_exchange(
-  const p               : action_type;
-  var s                 : storage_type)
-                        : return_type is
-  block {
-    var operations: list(operation) := list[];
-    case p of
-      AddPair(params) -> {
-        if s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
-
-        s.tmp := record [
-          balance_a = (None : option(nat));
-          balance_b = (None : option(nat));
-        ];
-
-        (* prepare operations to get initial liquidity *)
-        operations := list [
-          typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_a_id,
-            params.pair.token_a_address,
-            params.pair.token_a_type,
-            A(unit)
-          );
-          typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_b_id,
-            params.pair.token_b_address,
-            params.pair.token_b_type,
-            B(unit)
-          );
-          typed_transfer(
-            Tezos.sender,
-            Tezos.self_address,
-            params.token_a_in,
-            params.pair.token_a_id,
-            params.pair.token_a_address,
-            params.pair.token_a_type
-          );
-          typed_transfer(
-            Tezos.sender,
-            Tezos.self_address,
-            params.token_b_in,
-            params.pair.token_b_id,
-            params.pair.token_b_address,
-            params.pair.token_b_type
-          );
-          typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_a_id,
-            params.pair.token_a_address,
-            params.pair.token_a_type,
-            A(unit)
-          );
-          typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_b_id,
-            params.pair.token_b_address,
-            params.pair.token_b_type,
-            B(unit)
-          );
-          Tezos.transaction(
-            record [
-              pair=params.pair;
-              receiver=Tezos.sender;
-            ],
-            0mutez,
-            get_ensured_initialize_entrypoint(Tezos.self_address)
-          );
-        ];
-      }
-    | _                                 -> skip
-    end
-} with (operations, s)
 
 (* Intrenal functions for swap hops *)
 function internal_token_to_token_swap(
@@ -172,11 +150,7 @@ function internal_token_to_token_swap(
                         : tmp_swap_type is
   block {
     (* check preconditions *)
-    if params.pair.token_a_address = params.pair.token_b_address
-      and params.pair.token_a_id >= params.pair.token_b_id
-    then failwith("Dex/wrong-token-id")
-    else skip;
-    if params.pair.token_a_address > params.pair.token_b_address
+    if params.pair.token_a_type > params.pair.token_b_type
     then failwith("Dex/wrong-pair")
     else skip;
 
@@ -195,15 +169,14 @@ function internal_token_to_token_swap(
     then failwith ("Dex/zero-amount-in")
     else skip;
     (* ensure the route is corresponding *)
-    if swap.from_.token =/= tmp.token_address_in
-      or swap.from_.id =/= tmp.token_id_in
+    if swap.from_.token =/= tmp.token_in
     then failwith("Dex/wrong-route")
     else skip;
 
     (* calculate amount out *)
-    const from_in_with_fee : nat = tmp.amount_in * 997n;
+    const from_in_with_fee : nat = tmp.amount_in * fee_num;
     const numerator : nat = from_in_with_fee * swap.to_.pool;
-    const denominator : nat = swap.from_.pool * 1000n + from_in_with_fee;
+    const denominator : nat = swap.from_.pool * fee_denom + from_in_with_fee;
 
     (* calculate swapped token amount *)
     const out : nat = numerator / denominator;
@@ -214,8 +187,7 @@ function internal_token_to_token_swap(
 
     (* update info for the next hop *)
     tmp.amount_in := out;
-    tmp.token_address_in := swap.to_.token;
-    tmp.token_id_in := swap.to_.id;
+    tmp.token_in := swap.to_.token;
 
     (* update storage_type *)
     const updated_pair : pair_type = form_pools(
@@ -227,10 +199,11 @@ function internal_token_to_token_swap(
 
     (* prepare operations to withdraw user's tokens *)
     tmp.operation := Some(
-      typed_transfer(tmp.sender, tmp.receiver, out,
-        swap.to_.id,
-        swap.to_.token,
-        swap.to_.standard
+      typed_transfer(
+        tmp.sender,
+        tmp.receiver,
+        out,
+        swap.to_.token
       ));
   } with tmp
 
@@ -243,7 +216,7 @@ function token_to_token_route(
   block {
     var operations: list(operation) := list[];
     case p of
-    | Swap(params) -> {
+      Swap(params) -> {
         if s.entered
         then failwith("Dex/reentrancy")
         else s.entered := True;
@@ -277,23 +250,16 @@ function token_to_token_route(
           operations := list [
               (* from *)
               typed_get_balance(
-                Tezos.self_address,
-                first_swap.pair.token_a_id,
-                first_swap.pair.token_a_address,
                 first_swap.pair.token_a_type,
                 A(unit)
               );
-              typed_transfer(Tezos.sender,
+              typed_transfer(
+                Tezos.sender,
                 Tezos.self_address,
                 params.amount_in,
-                first_swap.pair.token_a_id,
-                first_swap.pair.token_a_address,
                 first_swap.pair.token_a_type
               ) ;
               typed_get_balance(
-                Tezos.self_address,
-                first_swap.pair.token_a_id,
-                first_swap.pair.token_a_address,
                 first_swap.pair.token_a_type,
                 A(unit)
               );
@@ -307,29 +273,20 @@ function token_to_token_route(
                 get_ensured_swap_entrypoint(Tezos.self_address)
               );
             ];
-            (* TODO : add continue *)
           }
         | Buy -> {
           operations := list [
               (* from *)
               typed_get_balance(
-                Tezos.self_address,
-                first_swap.pair.token_b_id,
-                first_swap.pair.token_b_address,
                 first_swap.pair.token_b_type,
                 B(unit)
               );
               typed_transfer(Tezos.sender,
                 Tezos.self_address,
                 params.amount_in,
-                first_swap.pair.token_b_id,
-                first_swap.pair.token_b_address,
                 first_swap.pair.token_b_type
               );
               typed_get_balance(
-                Tezos.self_address,
-                first_swap.pair.token_b_id,
-                first_swap.pair.token_b_address,
                 first_swap.pair.token_b_type,
                 B(unit)
               );
@@ -372,8 +329,7 @@ function ensured_route(
           end;
 
         (* declare helper variables *)
-        var token_id_in : nat := first_swap.pair.token_a_id;
-        var token_address_in : address := first_swap.pair.token_a_address;
+        var token : token_type := first_swap.pair.token_a_type;
         var amount_in : nat := 0n;
 
         (* prepare operation to withdraw user's tokens *)
@@ -384,8 +340,7 @@ function ensured_route(
             | None -> failwith("Dex/balanca-a-not-updated")
             end
         | Buy -> {
-          token_id_in := first_swap.pair.token_b_id;
-          token_address_in := first_swap.pair.token_b_address;
+          token := first_swap.pair.token_b_type;
           case s.tmp.balance_b of
             Some(balance_b) -> amount_in := balance_b
           | None -> failwith("Dex/balanca-b-not-updated")
@@ -403,8 +358,7 @@ function ensured_route(
             operation = (None : option(operation));
             sender = Tezos.self_address;
             receiver = params.receiver;
-            token_id_in = token_id_in;
-            token_address_in = token_address_in;
+            token_in = token;
           ]
         );
 
@@ -450,16 +404,10 @@ function invest_liquidity(
         (* prepare operations to get initial liquidity *)
         operations := list [
           typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_a_id,
-            params.pair.token_a_address,
             params.pair.token_a_type,
             A(unit)
           );
           typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_b_id,
-            params.pair.token_b_address,
             params.pair.token_b_type,
             B(unit)
           );
@@ -467,29 +415,19 @@ function invest_liquidity(
             Tezos.sender,
             Tezos.self_address,
             params.token_a_in,
-            params.pair.token_a_id,
-            params.pair.token_a_address,
             params.pair.token_a_type
           );
           typed_transfer(
             Tezos.sender,
             Tezos.self_address,
             params.token_b_in,
-            params.pair.token_b_id,
-            params.pair.token_b_address,
             params.pair.token_b_type
           );
           typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_a_id,
-            params.pair.token_a_address,
             params.pair.token_a_type,
             A(unit)
           );
           typed_get_balance(
-            Tezos.self_address,
-            params.pair.token_b_id,
-            params.pair.token_b_address,
             params.pair.token_b_type,
             B(unit)
           );
@@ -523,11 +461,7 @@ function ensured_invest(
         else skip;
 
         (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address
-        and params.pair.token_a_id >= params.pair.token_b_id
-        then failwith("Dex/wrong-token-id")
-        else skip;
-        if params.pair.token_a_address > params.pair.token_b_address
+        if params.pair.token_a_type > params.pair.token_b_type
         then failwith("Dex/wrong-pair")
         else skip;
 
@@ -609,8 +543,6 @@ function ensured_invest(
               Tezos.self_address,
               params.receiver,
               abs(tokens_a_required - token_a_in),
-              params.pair.token_a_id,
-              params.pair.token_a_address,
               params.pair.token_a_type
             ) # operations
         else skip;
@@ -620,8 +552,6 @@ function ensured_invest(
               Tezos.self_address,
               params.receiver,
               abs(tokens_b_required - token_b_in),
-              params.pair.token_b_id,
-              params.pair.token_b_address,
               params.pair.token_b_type
             ) # operations
         else skip;
@@ -644,11 +574,7 @@ function divest_liquidity(
         else s.entered := True;
 
         (* check preconditions *)
-        if params.pair.token_a_address = params.pair.token_b_address
-          and params.pair.token_a_id >= params.pair.token_b_id
-        then failwith("Dex/wrong-token-id")
-        else skip;
-        if params.pair.token_a_address > params.pair.token_b_address
+        if params.pair.token_a_type > params.pair.token_b_type
         then failwith("Dex/wrong-pair")
         else skip;
 
@@ -713,8 +639,6 @@ function divest_liquidity(
             Tezos.self_address,
             Tezos.sender,
             token_a_divested,
-            params.pair.token_a_id,
-            params.pair.token_a_address,
             params.pair.token_a_type
           ) # operations;
         operations :=
@@ -722,8 +646,6 @@ function divest_liquidity(
             Tezos.self_address,
             Tezos.sender,
             token_b_divested,
-            params.pair.token_b_id,
-            params.pair.token_b_address,
             params.pair.token_b_type
           ) # operations;
       }
@@ -740,12 +662,13 @@ function update_balance_fa_12_a(
     var operations: list(operation) := list[];
     case p of
       IBalanceAFA12(new_balance) -> {
-      s.tmp.balance_a := Some(case s.tmp.balance_a of
-      | Some(prev_balance) ->
-        if prev_balance > new_balance
-        then (failwith("Dex/balance-decremented") : nat)
-        else abs(new_balance - prev_balance)
-      | None -> new_balance
+      s.tmp.balance_a := Some(
+        case s.tmp.balance_a of
+          Some(prev_balance) ->
+            if prev_balance > new_balance
+            then (failwith("Dex/balance-decremented") : nat)
+            else abs(new_balance - prev_balance)
+        | None -> new_balance
       end);
     }
     | _                                 -> skip
@@ -776,12 +699,13 @@ function update_balance_fa_12_b(
 
 (* Remove liquidity (both tokens) from the pool by burning shares *)
 function update_balance_fa_2_a(
-  const p : bal_action_type;
-  var s : storage_type) :  return_type is
+  const p               : bal_action_type;
+  var s                 : storage_type)
+                        :  return_type is
   block {
     var operations: list(operation) := list[];
     case p of
-    | IBalanceAFA2(responses) -> {
+      IBalanceAFA2(responses) -> {
       const response : balance_of_response =
         case List.head_opt(responses) of
           Some(head) -> head

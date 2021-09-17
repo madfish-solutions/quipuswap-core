@@ -16,9 +16,14 @@ type bal_fa12_type      is address * contract(nat)
 type balance_fa12_type  is BalanceOfTypeFA12 of bal_fa12_type
 type balance_fa2_type   is BalanceOfTypeFA2 of bal_fa2_type
 
-type token_type         is
-| Fa12
-| Fa2
+type fa2_token_type     is record [
+  token_address           : address; (* token A address *)
+  token_id                : nat; (* token A identifier *)
+]
+
+type token_type        is
+| Fa12                    of address
+| Fa2                     of fa2_token_type
 
 type token_name         is
 | A
@@ -31,10 +36,6 @@ type pair_type          is record [
 ]
 
 type tokens_type        is record [
-  token_a_address         : address; (* token A address *)
-  token_b_address         : address; (* token B address *)
-  token_a_id              : nat; (* token A identifier *)
-  token_b_id              : nat; (* token B identifier *)
   token_a_type            : token_type; (* token A standard *)
   token_b_type            : token_type; (* token B standard *)
 ]
@@ -67,9 +68,7 @@ type swap_slice_type    is record [
 
 type swap_side_type     is record [
   pool                    : nat; (* pair identifier*)
-  token                   : address; (* token address*)
-  id                      : nat; (* token aidentifier *)
-  standard                : token_type; (* token standard *)
+  token                   : token_type; (* token standard *)
 ]
 
 type swap_data_type     is record [
@@ -80,8 +79,7 @@ type swap_data_type     is record [
 type tmp_swap_type      is record [
   s                       : storage_type; (* storage_type state *)
   amount_in               : nat; (* amount of tokens to be sold *)
-  token_address_in        : address; (* address of sold token *)
-  token_id_in             : nat; (* identifier of sold token *)
+  token_in                : token_type; (* address of sold token *)
   operation               : option(operation); (* exchange operation type *)
   sender                  : address; (* address of the sender *)
   receiver                : address; (* address of the receiver *)
@@ -213,3 +211,5 @@ const fee_rate          : nat = 333n; (* exchange fee rate distributed among the
 const bal_func_count    : nat = 3n;
 const dex_func_count    : nat = 6n;
 const token_func_count  : nat = 2n;
+const fee_denom         : nat = 1000n;
+const fee_num           : nat = 997n;

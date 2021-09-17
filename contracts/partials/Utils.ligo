@@ -63,15 +63,11 @@ function form_swap_data(
   block {
     const side_a : swap_side_type = record [
         pool            = pair.token_a_pool;
-        token           = swap.token_a_address;
-        id              = swap.token_a_id;
-        standard        = swap.token_a_type;
+        token           = swap.token_a_type;
       ];
     const side_b : swap_side_type = record [
         pool            = pair.token_b_pool;
-        token           = swap.token_b_address;
-        id              = swap.token_b_id;
-        standard        = swap.token_b_type;
+        token           = swap.token_b_type;
       ];
   } with case direction of
       Sell -> record [
@@ -83,24 +79,6 @@ function form_swap_data(
         to_             = side_a;
       ]
     end;
-
-(* Helper function to prepare the token transfer *)
-function wrap_fa2_transfer_trx(
-  const owner           : address;
-  const receiver        : address;
-  const value           : nat;
-  const token_id        : nat)
-                        : entry_fa2_type is
-  TransferTypeFA2(list[
-    record[
-      from_ = owner;
-      txs = list [ record [
-          to_           = receiver;
-          token_id      = token_id;
-          amount        = value;
-        ] ]
-    ]
-  ])
 
 (* Helper function to get fa2 token contract *)
 function get_fa2_token_contract(
@@ -122,67 +100,47 @@ function get_fa12_token_contract(
   | None -> (failwith("Dex/not-token") : contract(entry_fa12_type))
   end;
 
-(* Helper function to get fa2 token contract *)
-function get_fa2_balance_entrypoint(
-  const token_address   : address)
-                        : contract(entry_fa2_type) is
-  case (Tezos.get_entrypoint_opt("%transfer", token_address)
-      : option(contract(entry_fa2_type))) of
-    Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(entry_fa2_type))
-  end;
-
-(* Helper function to get fa1.2 token contract *)
-function get_fa12_balance_entrypoint(
-  const token_address   : address)
-                        : contract(entry_fa12_type) is
-  case (Tezos.get_entrypoint_opt("%transfer", token_address)
-     : option(contract(entry_fa12_type))) of
-    Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(entry_fa12_type))
-  end;
-
 (* Helper function to get the reentrancy entrypoint of the current contract *)
 function get_close_entrypoint(
-  const self            : address)
+  const _               : unit)
                         : contract(unit) is
-  case (Tezos.get_entrypoint_opt("%close", self)
+  case (Tezos.get_entrypoint_opt("%close", Tezos.self_address)
      : option(contract(unit))) of
     Some(contr) -> contr
   | None -> (failwith("Dex/no-close-entrypoint") : contract(unit))
   end;
 
 function get_bal_fa12_a(
-  const self            : address)
+  const _               : unit)
                         : contract(nat) is
-  case (Tezos.get_entrypoint_opt("%balanceAFA12", self)
+  case (Tezos.get_entrypoint_opt("%balanceAFA12", Tezos.self_address)
       : option(contract(nat))) of
     Some(contr) -> contr
   | None -> (failwith("Dex/balanceAFa12") : contract(nat))
   end
 
 function get_bal_fa12_b(
-  const self            : address)
+  const _               : unit)
                         : contract(nat) is
-  case (Tezos.get_entrypoint_opt("%balanceBFA12", self)
+  case (Tezos.get_entrypoint_opt("%balanceBFA12", Tezos.self_address)
      : option(contract(nat))) of
     Some(contr) -> contr
   | None -> (failwith("Dex/balanceBFa12") : contract(nat))
   end
 
 function get_bal_fa2_a(
-  const self            : address)
+  const _               : unit)
                         : contract(list(balance_of_response)) is
-  case (Tezos.get_entrypoint_opt("%balanceAFA2", self)
+  case (Tezos.get_entrypoint_opt("%balanceAFA2", Tezos.self_address)
      : option(contract(list(balance_of_response)))) of
     Some(contr) -> contr
   | None -> (failwith("Dex/balanceAFa2") : contract(list(balance_of_response)))
   end
 
 function get_bal_fa2_b(
-  const self            : address)
+  const _               : unit)
                         : contract(list(balance_of_response)) is
-  case (Tezos.get_entrypoint_opt("%balanceBFA2", self)
+  case (Tezos.get_entrypoint_opt("%balanceBFA2", Tezos.self_address)
      : option(contract(list(balance_of_response)))) of
     Some(contr) -> contr
   | None -> (failwith("Dex/balanceBFa2") : contract(list(balance_of_response)))
@@ -235,7 +193,6 @@ function get_ensured_swap_entrypoint(
 
 (* Helper function to transfer fa2 tokens *)
 function get_balance_fa2(
-  const user            : address;
   const token_id        : nat;
   const token           : address;
   const callback        : contract(list(balance_of_response)))
@@ -244,7 +201,7 @@ function get_balance_fa2(
     record [
       requests = list [
         record [
-          owner    = user;
+          owner    = Tezos.self_address;
           token_id = token_id;
         ]
       ];
@@ -256,79 +213,71 @@ function get_balance_fa2(
 
 (* Helper function to transfer fa1.2 tokens *)
 function get_balance_fa12(
-  const user            : address;
   const token           : address;
   const callback        : contract(nat))
                         : operation is
   Tezos.transaction(
-    (user, callback),
+    (Tezos.self_address, callback),
     0mutez,
     get_fa12_balance_entrypoint(token)
   );
 
 (* Helper function to transfer the asset based on its standard *)
 function typed_transfer(
-  const owner         : address;
+  const owner           : address;
   const receiver        : address;
   const amount_         : nat;
-  const token_id        : nat;
-  const token           : address;
-  const standard        : token_type)
+  const token           : token_type)
                         : operation is
-    case standard of
-      Fa12 -> Tezos.transaction(
+    case token of
+      Fa12(token_address) -> Tezos.transaction(
         TransferTypeFA12(owner, (receiver, amount_)),
         0mutez,
-        get_fa12_token_contract(token)
+        get_fa12_token_contract(token_address)
       )
-    | Fa2 -> Tezos.transaction(
+    | Fa2(token_info) -> Tezos.transaction(
         TransferTypeFA2(list[
           record[
             from_ = owner;
             txs = list [ record [
                 to_           = receiver;
-                token_id      = token_id;
+                token_id      = token_info.token_id;
                 amount        = amount_;
               ] ]
           ]
         ]),
         0mutez,
-        get_fa2_token_contract(token)
+        get_fa2_token_contract(token_info.token_address)
       )
     end;
 
 (* Helper function to transfer the asset based on its standard *)
 function typed_get_balance(
-  const account         : address;
-  const token_id        : nat;
-  const token           : address;
-  const standard        : token_type;
+  const token           : token_type;
   const name            : token_name)
                         : operation is
   block {
     var op : option(operation) := (None : option(operation));
-    case standard of
-      Fa12 -> {
+    case token of
+      Fa12(token) -> {
         const callback : contract(nat) =
           case name of
-            A -> get_bal_fa12_a(account)
-          | B -> get_bal_fa12_b(account)
+            A -> get_bal_fa12_a(unit)
+          | B -> get_bal_fa12_b(unit)
           end;
         op := Some(get_balance_fa12(
-          account,
           token,
           callback));
         }
-    | Fa2 -> {
+    | Fa2(token_info) -> {
         const callback : contract(list(balance_of_response)) =
           case name of
-            A -> get_bal_fa2_a(account)
-          | B -> get_bal_fa2_b(account)
+            A -> get_bal_fa2_a(unit)
+          | B -> get_bal_fa2_b(unit)
           end;
         op := Some(get_balance_fa2(
-          account,
-          token_id,
-          token,
+          token_info.token_id,
+          token_info.token_address,
           callback));
       }
     end;
@@ -336,15 +285,3 @@ function typed_get_balance(
       Some(o) -> o
     | None -> (failwith("Dex/no-balance") : operation)
     end
-
-(* Helper function to transfer the asset based on its standard *)
-function check_token_id(
-  const token_id        : nat;
-  const standard        : token_type)
-                        : unit is
-  case standard of
-    Fa12 -> if token_id = 0n
-      then unit
-      else (failwith("Dex/non-zero-token-id") : unit)
-  | Fa2 -> unit
-  end;
