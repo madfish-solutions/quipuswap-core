@@ -165,9 +165,9 @@ type token_action_type  is
 | IUpdate_operators       of operator_type (* updates the token operators *)
 
 type return_type        is list (operation) * storage_type
-type dex_func_type      is (action_type * storage_type * address) -> return_type
-type token_func_type    is (token_action_type * storage_type * address) -> return_type
-type bal_func_type      is (bal_action_type * storage_type * address) -> return_type
+type dex_func_type      is (action_type * storage_type) -> return_type
+type token_func_type    is (token_action_type * storage_type) -> return_type
+type bal_func_type      is (bal_action_type * storage_type) -> return_type
 
 type set_token_func_type is record [
   func                    : token_func_type; (* code of the function *)

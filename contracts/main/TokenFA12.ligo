@@ -11,7 +11,7 @@ function getAccount (const addr : address; const s : storage_type) : account is
   end;
 
 (* Helper function to get allowance for an account *)
-function getAllowance (const ownerAccount : account; const spender : address; const s : storage_type) : amt is
+function getAllowance (const ownerAccount : account; const spender : address) : amt is
   case ownerAccount.allowances[spender] of
     Some (amt) -> amt
   | None -> 0n
@@ -26,7 +26,7 @@ function transfer (const from_ : address; const to_ : address; const value : amt
     else skip;
 
     (* Retrieve sender account from storage_type *)
-    const senderAccount : account = getAccount(from_, s);
+    var senderAccount : account := getAccount(from_, s);
 
     (* Balance check *)
     if senderAccount.balance < value then
@@ -35,7 +35,7 @@ function transfer (const from_ : address; const to_ : address; const value : amt
 
     (* Check this address can spend the tokens *)
     if from_ =/= Tezos.sender then block {
-      const spenderAllowance : amt = getAllowance(senderAccount, Tezos.sender, s);
+      const spenderAllowance : amt = getAllowance(senderAccount, Tezos.sender);
 
       if spenderAllowance < value then
         failwith("NotEnoughAllowance")
@@ -73,7 +73,7 @@ function approve (const spender : address; const value : amt; var s : storage_ty
     var senderAccount : account := getAccount(Tezos.sender, s);
 
     (* Get current spender allowance *)
-    const spenderAllowance : amt = getAllowance(senderAccount, spender, s);
+    // const spenderAllowance : amt = getAllowance(senderAccount, spender, s);
 
     (* Prevent a corresponding attack vector *)
     // if spenderAllowance > 0n and value > 0n then
@@ -98,7 +98,7 @@ function getBalance (const owner : address; const contr : contract(amt); var s :
 function getAllowances (const owner : address; const spender : address; const contr : contract(amt); var s : storage_type) : return_type is
   block {
     const ownerAccount : account = getAccount(owner, s);
-    const spenderAllowance : amt = getAllowance(ownerAccount, spender, s);
+    const spenderAllowance : amt = getAllowance(ownerAccount, spender);
   } with (list [transaction(spenderAllowance, 0tz, contr)], s)
 
 (* View function that forwards the totalSupply to a contract *)

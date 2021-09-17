@@ -13,17 +13,17 @@ function get_account (const addr : address; const s : storage_type) : account is
 (* Perform transfers from one owner *)
 function iterate_transfer (const s : storage_type; const user_trx_params : transfer_param) : storage_type is
   block {
-    (* Retrieve sender account from storage_type *)
-    const sender_account : account = get_account(user_trx_params.from_, s);
-
-    (* Check permissions *)
-    if user_trx_params.from_ = Tezos.sender or sender_account.allowances contains Tezos.sender then
-      skip
-    else failwith("FA2_NOT_OPERATOR");
-
     (* Perform single transfer *)
-    function make_transfer(const s : storage_type; const transfer : transfer_destination) : storage_type is
+    function make_transfer(var s : storage_type; const transfer : transfer_destination) : storage_type is
       block {
+        (* Retrieve sender account from storage_type *)
+        var sender_account : account := get_account(user_trx_params.from_, s);
+
+        (* Check permissions *)
+        if user_trx_params.from_ = Tezos.sender or sender_account.allowances contains Tezos.sender then
+          skip
+        else failwith("FA2_NOT_OPERATOR");
+
         (* Token id check *)
         if default_token_id =/= transfer.token_id then
           failwith("FA2_TOKEN_UNDEFINED")
@@ -52,7 +52,7 @@ function iterate_transfer (const s : storage_type; const user_trx_params : trans
 } with (List.fold (make_transfer, user_trx_params.txs, s))
 
 (* Perform single operator update *)
-function iterate_update_operator (const s : storage_type; const params : update_operator_param) : storage_type is
+function iterate_update_operator (var s : storage_type; const params : update_operator_param) : storage_type is
   block {
     case params of
     | Add_operator(param) -> {

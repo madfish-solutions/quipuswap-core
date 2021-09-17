@@ -3,7 +3,7 @@
 (* Add or remove the admin permissions for address; only called by one of the current owners *)
 function update_owner(
   const params          : set_owner_type;
-  const s               : storage_type)
+  var s                 : storage_type)
                         : return_type is
   block {
     if s.owners contains Tezos.sender
@@ -18,7 +18,7 @@ function update_owner(
 (* Update the metadata for the token; only called by one of the current owners *)
 function update_metadata(
   const new_metadata    : metadata_type;
-  const s               : storage_type)
+  var s                 : storage_type)
                         : return_type is
   block {
     if s.owners contains Tezos.sender
@@ -30,10 +30,10 @@ function update_metadata(
 (* MetadataStorage - Contract to store and upgrade the shares token metadata *)
 function main(
   const p               : action_type;
-  const s               : storage_type)
+  var s                 : storage_type)
                         : return_type is
   case p of
-    | Update_owners(params)         -> update_owner(params, s)
+      Update_owners(params)         -> update_owner(params, s)
     | Update_storage(new_metadata)  -> update_metadata(new_metadata, s)
     | Get_metadata(receiver)        -> (list [
         transaction(s.metadata, 0tz, receiver)

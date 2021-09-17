@@ -1,14 +1,13 @@
 [@inline]
 function call_balance(
   const p               : bal_action_type;
-  const this            : address;
   const idx             : nat;
-  const s               : full_storage_type)
+  var s                 : full_storage_type)
                         : full_return_type is
   block {
     const res : return_type =
       case s.balance_lambdas[idx] of
-        Some(f) -> f(p, s.storage, this)
+        Some(f) -> f(p, s.storage)
       | None -> (failwith("Dex/function-not-set") : return_type)
       end;
     s.storage := res.1;
@@ -28,24 +27,23 @@ based on the argument type.
 [@inline]
 function call_dex(
   const p               : action_type;
-  const this            : address;
-  const s               : full_storage_type)
+  var s                 : full_storage_type)
                         : full_return_type is
   block {
     const idx : nat =
       case p of
-        AddPair(n)        -> 0n
-      | Swap(n)           -> 1n
-      | Invest(n)         -> 2n
-      | Divest(n)         -> 3n
-      | EnsuredAddPair(n) -> 4n
-      | EnsuredSwap(n)    -> 5n
-      | EnsuredInvest(n)  -> 6n
+        AddPair(_)        -> 0n
+      | Swap(_)           -> 1n
+      | Invest(_)         -> 2n
+      | Divest(_)         -> 3n
+      | EnsuredAddPair(_) -> 4n
+      | EnsuredSwap(_)    -> 5n
+      | EnsuredInvest(_)  -> 6n
       end;
 
-    const res : return_type =
+    var res : return_type :=
       case s.dex_lambdas[idx] of
-        Some(f)             -> f(p, s.storage, this)
+        Some(f)             -> f(p, s.storage)
       | None                -> (failwith("Dex/function-not-set") : return_type)
       end;
     s.storage := res.1;
@@ -54,7 +52,7 @@ function call_dex(
     then res.0 := Tezos.transaction(
       unit,
       0mutez,
-      get_close_entrypoint(this)) # res.0
+      get_close_entrypoint(Tezos.self_address)) # res.0
     else skip;
   } with (res.0, s)
 
@@ -71,14 +69,13 @@ based on the provided index.
 *)
 [@inline] function call_token(
   const p               : token_action_type;
-  const this            : address;
   const idx             : nat;
-  const s               : full_storage_type)
+  var s                 : full_storage_type)
                         : full_return_type is
   block {
     const res : return_type =
       case s.token_lambdas[idx] of
-        Some(f) -> f(p, s.storage, this)
+        Some(f) -> f(p, s.storage)
       | None -> (failwith("Dex/function-not-set") : return_type)
       end;
     s.storage := res.1;
@@ -86,8 +83,8 @@ based on the provided index.
 
 [@inline]
 function close(
-  const s               : full_storage_type)
-                        :  full_storage_type is
+  var s                 : full_storage_type)
+                        : full_storage_type is
   block {
     if not s.storage.entered
     then failwith("Dex/not-entered")
@@ -127,11 +124,11 @@ function get_reserves(
 function set_dex_function(
   const idx             : nat;
   const f               : dex_func_type;
-  const s               : full_storage_type)
+  var s                 : full_storage_type)
                         : full_storage_type is
   block {
     case s.dex_lambdas[idx] of
-      Some(n) -> failwith("Dex/function-set")
+      Some(_) -> failwith("Dex/function-set")
     | None -> s.dex_lambdas[idx] := f
     end;
   } with s
@@ -141,11 +138,11 @@ function set_dex_function(
 function set_token_function(
   const idx             : nat;
   const f               : token_func_type;
-  const s               : full_storage_type)
+  var s                 : full_storage_type)
                         : full_storage_type is
   block {
     case s.token_lambdas[idx] of
-      Some(n) -> failwith("Dex/function-set")
+      Some(_) -> failwith("Dex/function-set")
     | None -> s.token_lambdas[idx] := f
     end;
   } with s
@@ -155,11 +152,11 @@ function set_token_function(
 function set_balance_function(
   const idx             : nat;
   const f               : bal_func_type;
-  const s               : full_storage_type)
+  var s                 : full_storage_type)
                         : full_storage_type is
   block {
     case s.balance_lambdas[idx] of
-      Some(n) -> failwith("Dex/function-set")
+      Some(_) -> failwith("Dex/function-set")
     | None -> s.balance_lambdas[idx] := f
     end;
   } with s
