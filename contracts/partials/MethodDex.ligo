@@ -303,7 +303,7 @@ function token_to_token_route(
           }
         end;
       }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -378,7 +378,7 @@ function ensured_route(
           end;
         operations := last_operation # operations;
       }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -442,7 +442,7 @@ function invest_liquidity(
           );
         ];
       }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -556,7 +556,7 @@ function ensured_invest(
             ) # operations
         else skip;
       }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -649,7 +649,7 @@ function divest_liquidity(
             params.pair.token_b_type
           ) # operations;
       }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -671,7 +671,7 @@ function update_balance_fa_12_a(
         | None -> new_balance
       end);
     }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -693,7 +693,7 @@ function update_balance_fa_12_b(
         | None -> new_balance
         end);
     }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -725,7 +725,7 @@ function update_balance_fa_2_a(
         | None -> response.balance
         end);
     }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -757,6 +757,6 @@ function update_balance_fa_2_b(
         | None -> response.balance
         end);
     }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)

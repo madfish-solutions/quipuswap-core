@@ -5,62 +5,50 @@ module.exports.dexFunctions = [
   },
   {
     index: 1,
-    name: "tez_to_token",
+    name: "token_to_token_route",
   },
   {
     index: 2,
-    name: "token_to_tez",
-  },
-  {
-    index: 3,
-    name: "withdraw_profit",
-  },
-  {
-    index: 4,
     name: "invest_liquidity",
   },
   {
-    index: 5,
+    index: 3,
     name: "divest_liquidity",
   },
   {
+    index: 4,
+    name: "ensured_initialize_exchange",
+  },
+  {
+    index: 5,
+    name: "ensured_route",
+  },
+  {
     index: 6,
-    name: "vote",
-  },
-  {
-    index: 7,
-    name: "veto",
-  },
-  {
-    index: 8,
-    name: "receive_reward",
+    name: "ensured_invest",
   },
 ];
 
-let tokenFunctionsFA12 = [
+module.exports.balFunctions = [
   {
     index: 0,
-    name: "transfer",
+    name: "update_balance_fa_12_a",
   },
   {
     index: 1,
-    name: "approve",
+    name: "update_balance_fa_12_b",
   },
   {
     index: 2,
-    name: "get_balance",
+    name: "update_balance_fa_2_a",
   },
   {
     index: 3,
-    name: "get_allowance_to_contract",
-  },
-  {
-    index: 4,
-    name: "get_total_supply",
+    name: "update_balance_fa_2_b",
   },
 ];
 
-let tokenFunctionsFA2 = [
+let tokenFunctions = [
   {
     index: 0,
     name: "transfer",
@@ -75,6 +63,7 @@ let tokenFunctionsFA2 = [
   },
 ];
 module.exports.tokenFunctions = {
-  FA12: tokenFunctionsFA12,
-  FA2: tokenFunctionsFA2,
+  FA12: tokenFunctions,
+  MIXED: tokenFunctions,
+  FA2: tokenFunctions,
 };

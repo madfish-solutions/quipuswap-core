@@ -101,7 +101,7 @@ function transfer(
     | ITransfer(params) -> {
       s := List.fold(iterate_transfer, params, s);
     }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -133,14 +133,14 @@ function get_balance_of(
       (* Collect balances info *)
       const accumulated_response : list (balance_of_response) =
         List.fold(look_up_balance,
-        bal_fa2_type.requests,
-        (nil: list(balance_of_response)));
+          bal_fa2_type.requests,
+          (nil: list(balance_of_response)));
       operations := list[Tezos.transaction(
         accumulated_response,
         0mutez,
         bal_fa2_type.callback)];
     }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)
 
@@ -151,9 +151,9 @@ function update_operators(
   block {
     var operations: list(operation) := list[];
     case p of
-    | IUpdate_operators(params) -> {
-      s := List.fold(iterate_update_operator, params, s);
+      IUpdate_operators(params) -> {
+        s := List.fold(iterate_update_operator, params, s);
     }
-    | _                                 -> skip
+    | _                 -> skip
     end
   } with (operations, s)

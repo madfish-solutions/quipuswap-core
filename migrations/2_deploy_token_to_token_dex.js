@@ -10,7 +10,7 @@ const {
   dexFunctions,
   tokenFunctions,
   balFunctions,
-} = require("../storage/TTFunctions");
+} = require("../storage/Functions");
 const { execSync } = require("child_process");
 const Token = artifacts.require("Token" + usedStandard);
 const TokenFA12 = artifacts.require("TokenFA12");
@@ -28,7 +28,7 @@ const defaultTokenId = 0;
 
 module.exports = async (deployer, network, accounts) => {
   tezos = new TezosToolkit(tezos.rpc.url);
-  if (network === "development") return;
+  // if (network === "development") return;
   const secretKey = accountsStored.alice.sk.trim();
   tezos.setProvider({
     config: {
@@ -115,33 +115,46 @@ module.exports = async (deployer, network, accounts) => {
     const dex = await tezos.contract.at(dexInstance.address.toString());
     const ordered =
       token0Instance.address.toString() < token1Instance.address.toString();
-    if (standard === "FA12") {
-      let operation = await token0Instance.methods
-        .approve(dexInstance.address.toString(), initialTokenAmount)
-        .send();
-      await confirmOperation(tezos, operation.hash);
-      operation = await token1Instance.methods
-        .approve(dexInstance.address.toString(), initialTokenAmount)
-        .send();
-      await operation.confirmation();
-    } else {
-      let operation = await token0Instance.methods
-        .update_operators([
-          {
-            add_operator: {
-              owner: accounts[0],
-              operator: dexInstance.address.toString(),
-              token_id: defaultTokenId,
-            },
-          },
-        ])
-        .send();
-      await confirmOperation(tezos, operation.hash);
-      if (standard == "MIXED") {
+    let operation;
+    switch (standard.toLocaleLowerCase()) {
+      case "fa12":
+        operation = await token0Instance.methods
+          .approve(dexInstance.address.toString(), initialTokenAmount)
+          .send();
+        await confirmOperation(tezos, operation.hash);
         operation = await token1Instance.methods
           .approve(dexInstance.address.toString(), initialTokenAmount)
           .send();
-      } else {
+        await operation.confirmation();
+        operation = await dex.methods
+          .use(
+            "addPair",
+            "fa12",
+            ordered
+              ? token0Instance.address.toString()
+              : token1Instance.address.toString(),
+            "fa12",
+            ordered
+              ? token1Instance.address.toString()
+              : token0Instance.address.toString(),
+            initialTokenAmount,
+            initialTokenAmount
+          )
+          .send();
+        break;
+      case "fa2":
+        operation = await token0Instance.methods
+          .update_operators([
+            {
+              add_operator: {
+                owner: accounts[0],
+                operator: dexInstance.address.toString(),
+                token_id: defaultTokenId,
+              },
+            },
+          ])
+          .send();
+        await confirmOperation(tezos, operation.hash);
         operation = await token1Instance.methods
           .update_operators([
             {
@@ -153,28 +166,56 @@ module.exports = async (deployer, network, accounts) => {
             },
           ])
           .send();
-      }
-      await confirmOperation(tezos, operation.hash);
+        await confirmOperation(tezos, operation.hash);
+        operation = await dex.methods
+          .use(
+            "addPair",
+            "fa2",
+            ordered
+              ? token0Instance.address.toString()
+              : token1Instance.address.toString(),
+            defaultTokenId,
+            "fa2",
+            ordered
+              ? token1Instance.address.toString()
+              : token0Instance.address.toString(),
+            defaultTokenId,
+            initialTokenAmount,
+            initialTokenAmount
+          )
+          .send();
+        break;
+      case "mixed":
+        operation = await token0Instance.methods
+          .update_operators([
+            {
+              add_operator: {
+                owner: accounts[0],
+                operator: dexInstance.address.toString(),
+                token_id: defaultTokenId,
+              },
+            },
+          ])
+          .send();
+        await confirmOperation(tezos, operation.hash);
+        operation = await token1Instance.methods
+          .approve(dexInstance.address.toString(), initialTokenAmount)
+          .send();
+        await confirmOperation(tezos, operation.hash);
+        operation = await dex.methods
+          .use(
+            "addPair",
+            "fa12",
+            token1Instance.address.toString(),
+            "fa2",
+            token0Instance.address.toString(),
+            defaultTokenId,
+            initialTokenAmount,
+            initialTokenAmount
+          )
+          .send();
+        break;
     }
-    operation = await dex.methods
-      .use(
-        "addPair",
-        ordered
-          ? token0Instance.address.toString()
-          : token1Instance.address.toString(),
-        0,
-        standard == "MIXED" ? "fa2" : standard.toLocaleLowerCase(),
-        null,
-        ordered
-          ? token1Instance.address.toString()
-          : token0Instance.address.toString(),
-        0,
-        standard == "MIXED" ? "fa12" : standard.toLocaleLowerCase(),
-        null,
-        initialTokenAmount,
-        initialTokenAmount
-      )
-      .send();
 
     await confirmOperation(tezos, operation.hash);
   }
