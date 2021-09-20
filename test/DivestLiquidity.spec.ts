@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/ttContext";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
@@ -6,7 +6,7 @@ import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("DivestTTLiquidity()", function () {
-  let context: TTContext;
+  let context: Context;
   const tokenAAmount: number = 1000;
   const tokenBAmount: number = 100000;
   const aliceAddress: string = accounts.alice.pkh;
@@ -18,7 +18,7 @@ contract("DivestTTLiquidity()", function () {
   const burntShares: number = 200;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
     await context.createPair({
       tokenAAmount,

@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/ttContext";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
@@ -6,14 +6,14 @@ import { TokenFA2 } from "./helpers/tokenFA2";
 import { TokenFA12 } from "./helpers/tokenFA12";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-contract("InitializeTTExchange()", function () {
-  let context: TTContext;
+contract.only("InitializeExchange()", function () {
+  let context: Context;
   let aliceAddress: string = accounts.alice.pkh;
   const tokenAAmount: number = 10000;
   const tokenBAmount: number = 1000;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
   });
 
@@ -155,14 +155,38 @@ contract("InitializeTTExchange()", function () {
         context.dex.storage.pairs[0].token_b_pool.toNumber(),
         tokenBAmount
       );
-      strictEqual(
-        context.dex.storage.tokens["0"].token_a_address,
-        tokenAAddress
-      );
-      strictEqual(
-        context.dex.storage.tokens["0"].token_b_address,
-        tokenBAddress
-      );
+      switch (standard.toLocaleLowerCase()) {
+        case "fa12":
+          strictEqual(
+            context.dex.storage.tokens["0"].token_a_type.fa12,
+            tokenAAddress
+          );
+          strictEqual(
+            context.dex.storage.tokens["0"].token_b_type.fa12,
+            tokenBAddress
+          );
+          break;
+        case "fa2":
+          strictEqual(
+            context.dex.storage.tokens["0"].token_a_type.fa2.token_address,
+            tokenAAddress
+          );
+          strictEqual(
+            context.dex.storage.tokens["0"].token_b_type.fa2.token_address,
+            tokenBAddress
+          );
+          break;
+        case "mixed":
+          strictEqual(
+            context.dex.storage.tokens["0"].token_a_type.fa12,
+            tokenAAddress
+          );
+          strictEqual(
+            context.dex.storage.tokens["0"].token_b_type.fa2.token_address,
+            tokenBAddress
+          );
+          break;
+      }
     });
 
     it("revert in case the pair exists", async function () {
@@ -282,14 +306,38 @@ contract("InitializeTTExchange()", function () {
         context.dex.storage.pairs[0].token_b_pool.toNumber(),
         tokenBAmount
       );
-      strictEqual(
-        context.dex.storage.tokens["0"].token_a_address,
-        tokenAAddress
-      );
-      strictEqual(
-        context.dex.storage.tokens["0"].token_b_address,
-        tokenBAddress
-      );
+      switch (standard.toLocaleLowerCase()) {
+        case "fa12":
+          strictEqual(
+            context.dex.storage.tokens["0"].token_a_type.fa12,
+            tokenAAddress
+          );
+          strictEqual(
+            context.dex.storage.tokens["0"].token_b_type.fa12,
+            tokenBAddress
+          );
+          break;
+        case "fa2":
+          strictEqual(
+            context.dex.storage.tokens["0"].token_a_type.fa2.token_address,
+            tokenAAddress
+          );
+          strictEqual(
+            context.dex.storage.tokens["0"].token_b_type.fa2.token_address,
+            tokenBAddress
+          );
+          break;
+        case "mixed":
+          strictEqual(
+            context.dex.storage.tokens["0"].token_a_type.fa12,
+            tokenAAddress
+          );
+          strictEqual(
+            context.dex.storage.tokens["0"].token_b_type.fa2.token_address,
+            tokenBAddress
+          );
+          break;
+      }
     });
 
     it("revert in case the amount of token A is zero", async function () {

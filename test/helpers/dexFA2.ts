@@ -3,7 +3,7 @@ import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-ope
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
 import { BigNumber } from "bignumber.js";
 import { TokenFA2 } from "./tokenFA2";
-import { TTDexStorage, SwapSliceType } from "./types";
+import { DexStorage, SwapSliceType } from "./types";
 import { getLigo } from "./utils";
 import { execSync } from "child_process";
 import { confirmOperation } from "./confirmation";
@@ -12,7 +12,7 @@ const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 export class Dex extends TokenFA2 {
   public contract: ContractAbstraction<ContractProvider>;
-  public storage: TTDexStorage;
+  public storage: DexStorage;
 
   constructor(contract: ContractAbstraction<ContractProvider>) {
     super(contract);
@@ -43,7 +43,8 @@ export class Dex extends TokenFA2 {
       token_lambdas: {},
     };
     for (let key in maps) {
-      if (["dex_lambdas", "token_lambdas"].includes(key)) continue;
+      if (["dex_lambdas", "token_lambdas", "bal_lambdas"].includes(key))
+        continue;
       this.storage[key] = await maps[key].reduce(async (prev, current) => {
         try {
           return {
@@ -61,7 +62,8 @@ export class Dex extends TokenFA2 {
       }, Promise.resolve({}));
     }
     for (let key in maps) {
-      if (!["dex_lambdas", "token_lambdas"].includes(key)) continue;
+      if (!["dex_lambdas", "token_lambdas", "bal_lambdas"].includes(key))
+        continue;
       this[key] = await maps[key].reduce(async (prev, current) => {
         try {
           return {
@@ -86,52 +88,84 @@ export class Dex extends TokenFA2 {
     tokenBid: BigNumber = new BigNumber(0),
     approve: boolean = true
   ): Promise<TransactionOperation> {
-    if (approve) {
-      if (["FA2", "MIXED"].includes(standard)) {
-        await this.approveFA2Token(
-          tokenAAddress,
-          tokenAid,
-          tokenAAmount,
-          this.contract.address
-        );
-      } else {
+    var operation;
+    switch (standard.toLocaleLowerCase()) {
+      case "fa12":
         await this.approveFA12Token(
           tokenAAddress,
           tokenAAmount,
           this.contract.address
         );
-      }
-      if ("FA2" == standard) {
+        await this.approveFA12Token(
+          tokenBAddress,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "addPair",
+            "fa12",
+            tokenAAddress,
+            "fa12",
+            tokenBAddress,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "fa2":
+        await this.approveFA2Token(
+          tokenAAddress,
+          tokenAid,
+          tokenAAmount || 1,
+          this.contract.address
+        );
+        await this.approveFA2Token(
+          tokenBAddress,
+          tokenBid,
+          tokenBAmount || 1,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "addPair",
+            "fa2",
+            tokenAAddress,
+            tokenAid,
+            "fa2",
+            tokenBAddress,
+            tokenBid,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "mixed":
+        await this.approveFA12Token(
+          tokenAAddress,
+          tokenAAmount,
+          this.contract.address
+        );
         await this.approveFA2Token(
           tokenBAddress,
           tokenBid,
           tokenBAmount,
           this.contract.address
         );
-      } else {
-        await this.approveFA12Token(
-          tokenBAddress,
-          tokenBAmount,
-          this.contract.address
-        );
-      }
+        operation = await this.contract.methods
+          .use(
+            "addPair",
+            "fa12",
+            tokenAAddress,
+            "fa2",
+            tokenBAddress,
+            tokenBid,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
     }
-
-    const operation = await this.contract.methods
-      .use(
-        "addPair",
-        tokenAAddress,
-        tokenAid,
-        standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),
-        null,
-        tokenBAddress,
-        tokenBid,
-        standard.toLowerCase() == "mixed" ? "fa12" : standard.toLowerCase(),
-        null,
-        tokenAAmount,
-        tokenBAmount
-      )
-      .send();
     await confirmOperation(tezos, operation.hash);
     return operation;
   }
@@ -140,40 +174,59 @@ export class Dex extends TokenFA2 {
     swaps: SwapSliceType[],
     amountIn: number,
     minAmountOut: number,
-    receiver: string,
-    tokenAid: BigNumber = new BigNumber(0),
-    tokenBid: BigNumber = new BigNumber(0)
+    receiver: string
   ): Promise<TransactionOperation> {
     let firstSwap = swaps[0];
     if (Object.keys(firstSwap.operation)[0] == "buy") {
-      if (["FA2"].includes(standard)) {
-        await this.approveFA2Token(
-          firstSwap.pair.token_b_address,
-          tokenBid,
-          amountIn,
-          this.contract.address
-        );
-      } else {
-        await this.approveFA12Token(
-          firstSwap.pair.token_b_address,
-          amountIn,
-          this.contract.address
-        );
+      switch (standard.toLocaleLowerCase()) {
+        case "fa12":
+          await this.approveFA12Token(
+            firstSwap.pair.token_b_type.fa12,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "fa2":
+          await this.approveFA2Token(
+            firstSwap.pair.token_b_type.fa2.token_address,
+            firstSwap.pair.token_b_type.fa2.token_id,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "mixed":
+          await this.approveFA2Token(
+            firstSwap.pair.token_b_type.fa2.token_address,
+            firstSwap.pair.token_b_type.fa2.token_id,
+            amountIn,
+            this.contract.address
+          );
+          break;
       }
     } else {
-      if (["FA2", "MIXED"].includes(standard)) {
-        await this.approveFA2Token(
-          firstSwap.pair.token_a_address,
-          tokenAid,
-          amountIn,
-          this.contract.address
-        );
-      } else {
-        await this.approveFA12Token(
-          firstSwap.pair.token_a_address,
-          amountIn,
-          this.contract.address
-        );
+      switch (standard.toLocaleLowerCase()) {
+        case "fa12":
+          await this.approveFA12Token(
+            firstSwap.pair.token_a_type.fa12,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "fa2":
+          await this.approveFA2Token(
+            firstSwap.pair.token_a_type.fa2.token_address,
+            firstSwap.pair.token_a_type.fa2.token_id,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "mixed":
+          await this.approveFA12Token(
+            firstSwap.pair.token_a_type.fa12,
+            amountIn,
+            this.contract.address
+          );
+          break;
       }
     }
     const operation = await this.contract.methods
@@ -260,51 +313,87 @@ export class Dex extends TokenFA2 {
   ): Promise<TransactionOperation> {
     await this.updateStorage({ tokens: [pairId] });
     let pair = this.storage.tokens[pairId];
-    if (["FA2", "MIXED"].includes(standard)) {
-      await this.approveFA2Token(
-        pair.token_a_address,
-        pair.token_a_id,
-
-        tokenAAmount,
-        this.contract.address
-      );
-    } else {
-      await this.approveFA12Token(
-        pair.token_a_address,
-        tokenAAmount,
-        this.contract.address
-      );
+    let operation;
+    switch (standard.toLocaleLowerCase()) {
+      case "fa12":
+        await this.approveFA12Token(
+          pair.token_a_type.fa12,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA12Token(
+          pair.token_b_type.fa12,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "invest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa12",
+            pair.token_b_type.fa12,
+            minShares,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "fa2":
+        await this.approveFA2Token(
+          pair.token_a_type.fa2.token_address,
+          pair.token_a_type.fa2.token_id,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA2Token(
+          pair.token_b_type.fa2.token_address,
+          pair.token_b_type.fa2.token_id,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "invest",
+            "fa2",
+            pair.token_a_type.fa2.token_address,
+            pair.token_a_type.fa2.token_id,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            minShares,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "mixed":
+        await this.approveFA12Token(
+          pair.token_a_type.fa12,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA2Token(
+          pair.token_b_type.fa2.token_address,
+          pair.token_b_type.fa2.token_id,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "invest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            minShares,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
     }
-    if ("FA2" == standard) {
-      await this.approveFA2Token(
-        pair.token_b_address,
-        pair.token_b_id,
-        tokenBAmount,
-        this.contract.address
-      );
-    } else {
-      await this.approveFA12Token(
-        pair.token_b_address,
-        tokenBAmount,
-        this.contract.address
-      );
-    }
-    const operation = await this.contract.methods
-      .use(
-        "invest",
-        pair.token_a_address,
-        pair.token_a_id,
-        standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),
-        null,
-        pair.token_b_address,
-        pair.token_b_id,
-        standard.toLowerCase() == "mixed" ? "fa12" : standard.toLowerCase(),
-        null,
-        minShares,
-        tokenAAmount,
-        tokenBAmount
-      )
-      .send();
     await confirmOperation(tezos, operation.hash);
     return operation;
   }
@@ -317,22 +406,55 @@ export class Dex extends TokenFA2 {
   ): Promise<TransactionOperation> {
     await this.updateStorage({ tokens: [pairId] });
     let pair = this.storage.tokens[pairId];
-    const operation = await this.contract.methods
-      .use(
-        "divest",
-        pair.token_a_address,
-        pair.token_a_id,
-        standard.toLowerCase() == "mixed" ? "fa2" : standard.toLowerCase(),
-        null,
-        pair.token_b_address,
-        pair.token_b_id,
-        standard.toLowerCase() == "mixed" ? "fa12" : standard.toLowerCase(),
-        null,
-        tokenAAmount,
-        tokenBAmount,
-        sharesBurned
-      )
-      .send();
+    console.log(pair);
+    let operation;
+    switch (standard.toLocaleLowerCase()) {
+      case "fa12":
+        operation = await this.contract.methods
+          .use(
+            "divest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa12",
+            pair.token_b_type.fa12,
+            tokenAAmount,
+            tokenBAmount,
+            sharesBurned
+          )
+          .send();
+        break;
+      case "fa2":
+        operation = await this.contract.methods
+          .use(
+            "divest",
+            "fa2",
+            pair.token_a_type.fa2.token_address,
+            pair.token_a_type.fa2.token_id,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            tokenAAmount,
+            tokenBAmount,
+            sharesBurned
+          )
+          .send();
+        break;
+      case "mixed":
+        operation = await this.contract.methods
+          .use(
+            "divest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            tokenAAmount,
+            tokenBAmount,
+            sharesBurned
+          )
+          .send();
+        break;
+    }
     await confirmOperation(tezos, operation.hash);
     return operation;
   }

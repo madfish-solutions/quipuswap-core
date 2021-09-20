@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/ttContext";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
@@ -7,7 +7,7 @@ import { isConstructorDeclaration } from "typescript";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("SellToken()", function () {
-  let context: TTContext;
+  let context: Context;
   const tokenAAmount: number = 100000;
   const tokenBAmount: number = 1000;
   const aliceAddress: string = accounts.alice.pkh;
@@ -15,7 +15,7 @@ contract("SellToken()", function () {
   let tokenBAddress;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
     await context.createPair({
       tokenAAmount,

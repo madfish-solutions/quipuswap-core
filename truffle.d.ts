@@ -29,7 +29,7 @@ declare interface Artifacts {
   require(name: "DexFA12"): Contract<DexContractInstance>;
   require(name: "DexFA2"): Contract<DexContractInstance>;
   require(name: "Dex"): Contract<DexContractInstance>;
-  require(name: "TTDexFA12"): Contract<DexContractInstance>;
+  require(name: "DexFA12"): Contract<DexContractInstance>;
 }
 
 declare interface TokenContractInstance {
