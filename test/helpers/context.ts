@@ -1,77 +1,65 @@
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-import { Dex as DexFA12 } from "./dexFA12";
-import { Dex as DexFA2 } from "./dexFA2";
-import { Factory } from "./factory";
+import { Dex } from "./dexFA2";
 import { TokenFA12 } from "./tokenFA12";
 import { prepareProviderOptions } from "./utils";
 
-import factoryStorage from "../storage/Factory";
+import dexStorage from "../storage/Dex";
 import tokenFA12Storage from "../storage/TokenFA12";
 import tokenFA2Storage from "../storage/TokenFA2";
-import { dexFunctions, tokenFunctions } from "../storage/Functions";
+import {
+  dexFunctions,
+  tokenFunctions,
+  balFunctions,
+} from "../storage/Functions";
 import { TokenFA2 } from "./tokenFA2";
 import { Token } from "./token";
 import { TezosToolkit } from "@taquito/taquito";
+import BigNumber from "bignumber.js";
 
-let tokenStorage, CDex, CToken, CFactory;
-type Dex = DexFA12 | DexFA2;
-const BakerRegistry = artifacts.require("BakerRegistry");
-if (standard == "FA12") {
-  tokenStorage = tokenFA12Storage;
-  CDex = artifacts.require("DexFA12");
-  CToken = artifacts.require("TokenFA12");
-  CFactory = artifacts.require("TestFactoryFA12");
-} else {
-  tokenStorage = tokenFA2Storage;
-  CDex = artifacts.require("DexFA2");
-  CToken = artifacts.require("TokenFA2");
-  CFactory = artifacts.require("TestFactoryFA2");
-}
+const CTokenFA12 = artifacts.require("TokenFA12");
+const CTokenFA2 = artifacts.require("TokenFA2");
+const CDex = artifacts.require("Dex");
 
 export class Context {
-  public factory: Factory;
-  public pairs: Dex[];
+  public dex: Dex;
   public tokens: Token[];
 
-  constructor(factory: Factory, pairs: Dex[], tokens: Token[]) {
-    this.factory = factory;
-    this.pairs = pairs;
+  constructor(dex: Dex, tokens: Token[]) {
+    this.dex = dex;
     this.tokens = tokens;
   }
 
   static async init(
-    pairsConfigs: { tezAmount: number; tokenAmount: number }[] = [
-      { tezAmount: 10000, tokenAmount: 1000000 },
+    pairsConfigs: {
+      tokenAAddress?: string | null;
+      tokenBAddress?: string | null;
+      tokenAId?: string | null;
+      tokenBId?: string | null;
+      tokenAAmount: number;
+      tokenBAmount: number;
+    }[] = [
+      {
+        tokenAAmount: 1000000,
+        tokenBAmount: 1000000,
+      },
     ],
-    setFactoryFunctions: boolean = false,
+    setDexFunctions: boolean = false,
     accountName: string = "alice",
-    useDeployedFactory: boolean = true
+    useDeployedDex: boolean = true
   ): Promise<Context> {
     let config = await prepareProviderOptions(accountName);
     tezos = new TezosToolkit(tezos.rpc.url);
     tezos.setProvider(config);
 
-    factoryStorage.baker_validator = (
-      await BakerRegistry.deployed()
-    ).address.toString();
+    let dexInstance = useDeployedDex
+      ? await CDex.deployed()
+      : await CDex.new(dexStorage);
+    const dex = await Dex.init(dexInstance.address.toString());
 
-    const currentBlock = await tezos.rpc.getBlock();
-    let factoryInstance = useDeployedFactory
-      ? await CFactory.deployed()
-      : await CFactory.new(
-          factoryStorage,
-          currentBlock.protocol.startsWith("PsDELPH1")
-            ? {
-                gas: 490000,
-                fee: 10000000,
-              }
-            : {}
-        );
-    let factory = await Factory.init(factoryInstance.address.toString());
-    let context = new Context(factory, [], []);
-    if (setFactoryFunctions) {
-      await context.setAllFactoryFunctions();
+    let context = new Context(dex, []);
+    if (setDexFunctions) {
+      await context.setAllDexFunctions();
     }
 
     await context.createPairs(pairsConfigs);
@@ -80,63 +68,73 @@ export class Context {
   }
 
   async updateActor(accountName: string = "alice"): Promise<void> {
-    await this.factory.updateProvider(accountName);
+    await this.dex.updateProvider(accountName);
   }
 
   async flushPairs(): Promise<void> {
     this.tokens = [];
-    this.pairs = [];
+    this.dex = undefined;
     await this.updateActor();
   }
 
-  async createToken(): Promise<string> {
-    let tokenInstance = await CToken.new(tokenStorage);
-    let tokenAddress = tokenInstance.address.toString();
-    this.tokens.push(
-      standard === "FA2"
-        ? await TokenFA2.init(tokenAddress)
-        : await TokenFA12.init(tokenAddress)
-    );
-    return tokenAddress;
+  async createToken(type = null, push = true): Promise<string> {
+    if (!type) type = standard;
+    if (type == "FA2") {
+      let tokenInstance = await CTokenFA2.new(tokenFA2Storage);
+      let tokenAddress = tokenInstance.address.toString();
+      if (push) this.tokens.push(await TokenFA2.init(tokenAddress));
+      return tokenAddress;
+    } else {
+      let tokenInstance = await CTokenFA12.new(tokenFA12Storage);
+      let tokenAddress = tokenInstance.address.toString();
+      if (push) this.tokens.push(await TokenFA12.init(tokenAddress));
+      return tokenAddress;
+    }
   }
 
-  async setDexFactoryFunctions(): Promise<void> {
+  async setDexFunctions(): Promise<void> {
     for (let dexFunction of dexFunctions) {
-      await this.factory.setDexFunction(dexFunction.index, dexFunction.name);
+      await this.dex.setDexFunction(dexFunction.index, dexFunction.name);
     }
-    await this.factory.updateStorage({
+    await this.dex.updateStorage({
       dex_lambdas: [...Array(9).keys()],
     });
   }
 
-  async setDexFactoryFunction(index: number, name: string): Promise<void> {
-    await this.factory.updateStorage({
+  async setDexFunction(index: number, name: string): Promise<void> {
+    await this.dex.updateStorage({
       dex_lambdas: [index],
     });
-    if (!this.factory.storage.dex_lambdas[index]) {
-      await this.factory.setDexFunction(index, name);
-      await this.factory.updateStorage({
+    if (!this.dex.storage.dex_lambdas[index]) {
+      await this.dex.setDexFunction(index, name);
+      await this.dex.updateStorage({
         dex_lambdas: [index],
       });
     }
   }
 
-  async setTokenFactoryFunctions(): Promise<void> {
-    for (let tokenFunction of tokenFunctions[standard]) {
-      await this.factory.setTokenFunction(
-        tokenFunction.index,
-        tokenFunction.name
-      );
+  async setTokenDexFunctions(): Promise<void> {
+    for (let tokenFunction of tokenFunctions["FA2"]) {
+      await this.dex.setTokenFunction(tokenFunction.index, tokenFunction.name);
     }
-    await this.factory.updateStorage({
+    await this.dex.updateStorage({
+      token_lambdas: [...Array(5).keys()],
+    });
+  }
+  async setBalanceDexFunctions(): Promise<void> {
+    for (let balFunction of balFunctions) {
+      await this.dex.setBalFunction(balFunction.index, balFunction.name);
+    }
+    await this.dex.updateStorage({
       token_lambdas: [...Array(5).keys()],
     });
   }
 
-  async setAllFactoryFunctions(): Promise<void> {
-    await this.setDexFactoryFunctions();
-    await this.setTokenFactoryFunctions();
-    await this.factory.updateStorage({
+  async setAllDexFunctions(): Promise<void> {
+    await this.setDexFunctions();
+    await this.setTokenDexFunctions();
+    await this.setBalanceDexFunctions();
+    await this.dex.updateStorage({
       dex_lambdas: [...Array(9).keys()],
       token_lambdas: [...Array(5).keys()],
     });
@@ -144,42 +142,87 @@ export class Context {
 
   async createPair(
     pairConfig: {
-      tezAmount: number;
-      tokenAmount: number;
-      tokenAddress?: string | null;
+      tokenAAddress?: string | null;
+      tokenBAddress?: string | null;
+      tokenAId?: string | null;
+      tokenBId?: string | null;
+      tokenAAmount: number;
+      tokenBAmount: number;
     } = {
-      tezAmount: 10000,
-      tokenAmount: 1000000,
+      tokenAAmount: 1000000,
+      tokenBAmount: 1000000,
+    },
+    allowReplace: boolean = true
+  ): Promise<BigNumber> {
+    let tokenAAddress;
+    let tokenBAddress;
+    do {
+      tokenBAddress =
+        pairConfig.tokenBAddress ||
+        (await this.createToken(
+          standard == "MIXED" ? "FA12" : standard,
+          false
+        ));
+      tokenAAddress =
+        pairConfig.tokenAAddress ||
+        (await this.createToken(standard == "MIXED" ? "FA2" : standard, false));
+      if (
+        allowReplace &&
+        standard !== "MIXED" &&
+        tokenAAddress > tokenBAddress
+      ) {
+        const tmp = tokenAAddress;
+        tokenAAddress = tokenBAddress;
+        tokenBAddress = tmp;
+      }
+    } while (tokenAAddress > tokenBAddress);
+    switch (standard) {
+      case "FA2":
+        if (pairConfig.tokenAAddress != tokenAAddress)
+          this.tokens.push(await TokenFA2.init(tokenAAddress));
+        if (pairConfig.tokenBAddress != tokenBAddress)
+          this.tokens.push(await TokenFA2.init(tokenBAddress));
+        break;
+      case "FA12":
+        if (pairConfig.tokenAAddress != tokenAAddress)
+          this.tokens.push(await TokenFA12.init(tokenAAddress));
+        if (pairConfig.tokenBAddress != tokenBAddress)
+          this.tokens.push(await TokenFA12.init(tokenBAddress));
+        break;
+      case "MIXED":
+        if (pairConfig.tokenAAddress != tokenAAddress)
+          this.tokens.push(await TokenFA2.init(tokenAAddress));
+        if (pairConfig.tokenBAddress != tokenBAddress)
+          this.tokens.push(await TokenFA12.init(tokenBAddress));
+        break;
+      default:
+        break;
     }
-  ): Promise<string> {
-    pairConfig.tokenAddress =
-      pairConfig.tokenAddress || (await this.createToken());
-    await this.factory.launchExchange(
-      pairConfig.tokenAddress,
-      pairConfig.tokenAmount,
-      pairConfig.tezAmount
+    pairConfig.tokenAAddress = tokenAAddress;
+    pairConfig.tokenBAddress = tokenBAddress;
+    await this.dex.initializeExchange(
+      pairConfig.tokenAAddress,
+      pairConfig.tokenBAddress,
+      pairConfig.tokenAAmount,
+      pairConfig.tokenBAmount
     );
-    this.pairs.push(
-      standard == "FA12"
-        ? await DexFA12.init(
-            this.factory.storage.token_to_exchange[pairConfig.tokenAddress]
-          )
-        : await DexFA2.init(
-            this.factory.storage.token_to_exchange[pairConfig.tokenAddress]
-          )
-    );
-    return this.factory.storage.token_to_exchange[pairConfig.tokenAddress];
+    return this.dex.storage.token_to_id[
+      this.dex.storage.pairs_count.toString()
+    ];
   }
 
   async createPairs(
     pairConfigs: {
-      tezAmount: number;
-      tokenAmount: number;
-      tokenAddress?: string | null;
+      tokenAAddress?: string | null;
+      tokenBAddress?: string | null;
+      tokenAId?: string | null;
+      tokenBId?: string | null;
+      tokenAAmount: number;
+      tokenBAmount: number;
     }[] = [
       {
-        tezAmount: 10000,
-        tokenAmount: 1000000,
+        tokenAAmount: 1000000,
+        tokenBAmount: 1000000,
       },
     ]
   ): Promise<void> {

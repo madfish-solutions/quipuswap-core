@@ -12,7 +12,7 @@ The solution consists of 6 types of contracts:
 
 1. `Factory` - singleton used to deploy new TokenX-XTZ exchange pair;
 2. `Dex` - contract for TokenX-XTZ pair exchanges;
-3. `TTDex` - contract for TokenX-TokenY pair exchanges;
+3. `Dex` - contract for TokenX-TokenY pair exchanges;
 4. `Token` - FA token implementation.
 5. `BakerRegistry` - bakery registrar.
 6. `MetadataStorage` - contract to store and upgrade the shares token metadata.
@@ -26,7 +26,7 @@ The solution consists of 6 types of contracts:
 |──────── main/ # the contracts to be compiled
 |──────── partial/ # the code parts imported by main contracts
 ├──  test/ # test cases
-├──  storage/ # initial storage for contract originations
+├──  storage_type/ # initial storage_type for contract originations
 ├──  scripts/ # cli for dex/factory actions
 ├──  test.md # cases covered by tests
 ├──  README.md # current file
@@ -40,7 +40,7 @@ The solution consists of 6 types of contracts:
 
 - Installed NodeJS (tested with NodeJS v12+)
 
-- Installed Yarn (NPM isn't working properly with `ganache-cli@6.11.0-tezos.0`)
+- Installed Yarn
 
 - Installed Ligo:
 

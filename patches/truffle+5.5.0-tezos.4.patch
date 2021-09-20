@@ -7,7 +7,7 @@ index a84a254..ef05d8b 100755
  var compiler = {
      name: "ligo",
 -    version: "next"
-+    version: "0.9.0"
++    version: "0.24.0"
  };
  var LIGO_PATTERN = "**/*.{ligo,mligo,religo}";
  var compile = {};
@@ -16,7 +16,7 @@ index a84a254..ef05d8b 100755
  // Check that ligo is available
  function checkLigo(callback) {
 -    child_process_1.exec("docker run --rm -i ligolang/ligo:next --help", function (err, stdout, stderr) {
-+    child_process_1.exec("docker run --rm -i ligolang/ligo:0.9.0 --help", function (err, stdout, stderr) {
++    child_process_1.exec("docker run --rm -i ligolang/ligo:0.24.0 --help", function (err, stdout, stderr) {
          if (err)
              return callback(colors_1.default.red("Error executing ligo:") + "\n" + stderr);
          callback(null);
@@ -25,7 +25,7 @@ index a84a254..ef05d8b 100755
              "--rm",
              "-i",
 -            "ligolang/ligo:next",
-+            "ligolang/ligo:0.9.0",
++            "ligolang/ligo:0.24.0",
              "compile-contract",
              "--michelson-format=json",
              fullInternalSourcePath,

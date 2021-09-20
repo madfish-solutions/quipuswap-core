@@ -1,12 +1,15 @@
 import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
 import { BatchOperation } from "@taquito/taquito/dist/types/operations/batch-operation";
 import { TransactionOperation } from "@taquito/taquito/dist/types/operations/transaction-operation";
-import { confirmOperation } from "./confirmation";
+import { BigNumber } from "bignumber.js";
 import { TokenFA2 } from "./tokenFA2";
-import { defaultTokenId } from "./tokenFA2";
-import { DexStorage } from "./types";
-import { tezPrecision } from "./utils";
+import { DexStorage, SwapSliceType } from "./types";
+import { getLigo } from "./utils";
+import { execSync } from "child_process";
+import { confirmOperation } from "./confirmation";
+
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
+
 export class Dex extends TokenFA2 {
   public contract: ContractAbstraction<ContractProvider>;
   public storage: DexStorage;
@@ -21,43 +24,51 @@ export class Dex extends TokenFA2 {
 
   async updateStorage(
     maps: {
-      ledger?: string[];
-      voters?: string[];
-      vetos?: string[];
-      votes?: string[];
-      user_rewards?: string[];
+      tokens?: string[];
+      token_to_id?: string[];
+      pairs?: string[];
+      ledger?: any[];
+      dex_lambdas?: number[];
+      token_lambdas?: number[];
     } = {}
   ): Promise<void> {
     const storage: any = await this.contract.storage();
     this.storage = {
-      tez_pool: storage.storage.tez_pool,
-      token_pool: storage.storage.token_pool,
-      baker_validator: storage.storage.baker_validator,
-      token_address: storage.storage.token_address,
-      total_supply: storage.storage.total_supply,
-      last_veto: storage.storage.last_veto,
+      pairs_count: storage.storage.pairs_count,
+      tokens: {},
+      token_to_id: {},
+      pairs: {},
       ledger: {},
-      voters: {},
-      vetos: {},
-      votes: {},
-      veto: storage.storage.veto,
-      current_delegated: storage.storage.current_delegated,
-      current_candidate: storage.storage.current_candidate,
-      total_votes: storage.storage.total_votes,
-      reward: storage.storage.reward,
-      total_reward: storage.storage.total_reward,
-      reward_per_share: storage.storage.reward_per_share,
-      reward_per_sec: storage.storage.reward_per_sec,
-      last_update_time: storage.storage.last_update_time,
-      period_finish: storage.storage.period_finish,
-      user_rewards: {},
+      dex_lambdas: {},
+      token_lambdas: {},
     };
     for (let key in maps) {
+      if (["dex_lambdas", "token_lambdas", "bal_lambdas"].includes(key))
+        continue;
       this.storage[key] = await maps[key].reduce(async (prev, current) => {
         try {
           return {
             ...(await prev),
-            [current]: await storage.storage[key].get(current),
+            [key == "ledger" ? current[0] : current]: await storage.storage[
+              key
+            ].get(current),
+          };
+        } catch (ex) {
+          console.log(ex);
+          return {
+            ...(await prev),
+          };
+        }
+      }, Promise.resolve({}));
+    }
+    for (let key in maps) {
+      if (!["dex_lambdas", "token_lambdas", "bal_lambdas"].includes(key))
+        continue;
+      this[key] = await maps[key].reduce(async (prev, current) => {
+        try {
+          return {
+            ...(await prev),
+            [current]: await storage[key].get(current.toString()),
           };
         } catch (ex) {
           return {
@@ -67,199 +78,394 @@ export class Dex extends TokenFA2 {
       }, Promise.resolve({}));
     }
   }
+
   async initializeExchange(
-    tokenAmount: number,
-    tezAmount: number,
+    tokenAAddress: string,
+    tokenBAddress: string,
+    tokenAAmount: number,
+    tokenBAmount: number,
+    tokenAid: BigNumber = new BigNumber(0),
+    tokenBid: BigNumber = new BigNumber(0),
     approve: boolean = true
   ): Promise<TransactionOperation> {
-    if (approve) await this.approveToken(tokenAmount, this.contract.address);
-    const operation = await this.contract.methods
-      .use("initializeExchange", tokenAmount)
-      .send({ amount: tezAmount / tezPrecision });
+    var operation;
+    switch (standard.toLocaleLowerCase()) {
+      case "fa12":
+        await this.approveFA12Token(
+          tokenAAddress,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA12Token(
+          tokenBAddress,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "addPair",
+            "fa12",
+            tokenAAddress,
+            "fa12",
+            tokenBAddress,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "fa2":
+        await this.approveFA2Token(
+          tokenAAddress,
+          tokenAid,
+          tokenAAmount || 1,
+          this.contract.address
+        );
+        await this.approveFA2Token(
+          tokenBAddress,
+          tokenBid,
+          tokenBAmount || 1,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "addPair",
+            "fa2",
+            tokenAAddress,
+            tokenAid,
+            "fa2",
+            tokenBAddress,
+            tokenBid,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "mixed":
+        await this.approveFA12Token(
+          tokenAAddress,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA2Token(
+          tokenBAddress,
+          tokenBid,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "addPair",
+            "fa12",
+            tokenAAddress,
+            "fa2",
+            tokenBAddress,
+            tokenBid,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+    }
     await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
-  async tezToTokenPayment(
-    minTokens: number,
-    tezAmount: number,
+  async tokenToTokenRoutePayment(
+    swaps: SwapSliceType[],
+    amountIn: number,
+    minAmountOut: number,
     receiver: string
   ): Promise<TransactionOperation> {
+    let firstSwap = swaps[0];
+    if (Object.keys(firstSwap.operation)[0] == "buy") {
+      switch (standard.toLocaleLowerCase()) {
+        case "fa12":
+          await this.approveFA12Token(
+            firstSwap.pair.token_b_type.fa12,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "fa2":
+          await this.approveFA2Token(
+            firstSwap.pair.token_b_type.fa2.token_address,
+            firstSwap.pair.token_b_type.fa2.token_id,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "mixed":
+          await this.approveFA2Token(
+            firstSwap.pair.token_b_type.fa2.token_address,
+            firstSwap.pair.token_b_type.fa2.token_id,
+            amountIn,
+            this.contract.address
+          );
+          break;
+      }
+    } else {
+      switch (standard.toLocaleLowerCase()) {
+        case "fa12":
+          await this.approveFA12Token(
+            firstSwap.pair.token_a_type.fa12,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "fa2":
+          await this.approveFA2Token(
+            firstSwap.pair.token_a_type.fa2.token_address,
+            firstSwap.pair.token_a_type.fa2.token_id,
+            amountIn,
+            this.contract.address
+          );
+          break;
+        case "mixed":
+          await this.approveFA12Token(
+            firstSwap.pair.token_a_type.fa12,
+            amountIn,
+            this.contract.address
+          );
+          break;
+      }
+    }
     const operation = await this.contract.methods
-      .use("tezToTokenPayment", minTokens, receiver)
-      .send({ amount: tezAmount / tezPrecision });
-    await confirmOperation(tezos, operation.hash);
-    return operation;
-  }
-
-  async tezToTokenSwap(
-    minTokens: number,
-    tezAmount: number
-  ): Promise<TransactionOperation> {
-    return await this.tezToTokenPayment(
-      minTokens,
-      tezAmount,
-      await tezos.signer.publicKeyHash()
-    );
-  }
-
-  async tokenToTezPayment(
-    tokenAmount: number,
-    minTezOut: number,
-    receiver: string
-  ): Promise<TransactionOperation[]> {
-    const tokensOperation = await this.approveToken(
-      tokenAmount,
-      this.contract.address
-    );
-    const operation = await this.contract.methods
-      .use("tokenToTezPayment", tokenAmount, minTezOut, receiver)
+      .use("swap", swaps, amountIn, minAmountOut, receiver)
       .send();
     await confirmOperation(tezos, operation.hash);
-    return [tokensOperation, operation];
-  }
-
-  async tokenToTezSwap(
-    tokenAmount: number,
-    minTezOut: number
-  ): Promise<TransactionOperation[]> {
-    return await this.tokenToTezPayment(
-      tokenAmount,
-      minTezOut,
-      await tezos.signer.publicKeyHash()
-    );
+    return operation;
   }
 
   async tokenToTokenPayment(
-    tokenAmount: number,
-    minTokensOut: number,
-    secondDexContract: ContractAbstraction<ContractProvider>,
-    middleTezAmount: number,
-    receiver: string
-  ): Promise<BatchOperation[]> {
-    await this.updateStorage();
-    let token = await tezos.contract.at(this.storage.token_address);
-    const minTez = Math.floor(middleTezAmount * 0.9);
-    const batch = tezos
-      .batch([])
-      .withTransfer(
-        token.methods
-          .update_operators([
-            {
-              add_operator: {
-                owner: await tezos.signer.publicKeyHash(),
-                operator: this.contract.address,
-                token_id: defaultTokenId,
-              },
-            },
-          ])
-          .toTransferParams()
-      )
-      .withTransfer(
-        this.contract.methods
-          .use(
-            "tokenToTezPayment",
-            tokenAmount,
-            middleTezAmount ? middleTezAmount : 1,
-            await tezos.signer.publicKeyHash()
-          )
-          .toTransferParams()
-      )
-      .withTransfer(
-        secondDexContract.methods
-          .use("tezToTokenPayment", minTokensOut, receiver)
-          .toTransferParams({ amount: middleTezAmount / tezPrecision })
-      );
-    const operation = await batch.send();
+    tokenAAddress: string,
+    tokenBAddress: string,
+    opType: string,
+    amountIn: number,
+    minAmountOut: number,
+    receiver: string,
+    tokenAid: BigNumber = new BigNumber(0),
+    tokenBid: BigNumber = new BigNumber(0)
+  ): Promise<TransactionOperation> {
+    if (opType == "buy") {
+      if (["FA2"].includes(standard)) {
+        await this.approveFA2Token(
+          tokenBAddress,
+          tokenBid,
+          amountIn,
+          this.contract.address
+        );
+      } else {
+        await this.approveFA12Token(
+          tokenBAddress,
+          amountIn,
+          this.contract.address
+        );
+      }
+    } else {
+      if (["FA2", "MIXED"].includes(standard)) {
+        await this.approveFA2Token(
+          tokenAAddress,
+          tokenAid,
+          amountIn,
+          this.contract.address
+        );
+      } else {
+        await this.approveFA12Token(
+          tokenAAddress,
+          amountIn,
+          this.contract.address
+        );
+      }
+    }
+    const swaps = [
+      {
+        pair: {
+          token_a_address: tokenAAddress,
+          token_b_address: tokenBAddress,
+          token_a_id: tokenAid,
+          token_b_id: tokenBid,
+          token_a_type: {
+            [standard.toLowerCase() == "mixed"
+              ? "fa2"
+              : standard.toLowerCase()]: null,
+          },
+          token_b_type: {
+            [standard.toLowerCase() == "mixed"
+              ? "fa12"
+              : standard.toLowerCase()]: null,
+          },
+        },
+        operation: { [opType]: null },
+      },
+    ];
+    const operation = await this.contract.methods
+      .use("swap", swaps, amountIn, minAmountOut, receiver)
+      .send();
     await confirmOperation(tezos, operation.hash);
-    return [operation];
-  }
-
-  async tokenToTokenSwap(
-    tokenAmount: number,
-    minTokensOut: number,
-    secondDexContract: ContractAbstraction<ContractProvider>,
-    middleTezAmount: number
-  ): Promise<BatchOperation[]> {
-    return await this.tokenToTokenPayment(
-      tokenAmount,
-      minTokensOut,
-      secondDexContract,
-      middleTezAmount,
-      await tezos.signer.publicKeyHash()
-    );
+    return operation;
   }
 
   async investLiquidity(
-    tokenAmount: number,
-    tezAmount: number,
+    pairId: string,
+    tokenAAmount: number,
+    tokenBAmount: number,
     minShares: number
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
-    const operation = await this.contract.methods
-      .use("investLiquidity", tokenAmount)
-      .send({ amount: tezAmount / tezPrecision });
+    await this.updateStorage({ tokens: [pairId] });
+    let pair = this.storage.tokens[pairId];
+    let operation;
+    switch (standard.toLocaleLowerCase()) {
+      case "fa12":
+        await this.approveFA12Token(
+          pair.token_a_type.fa12,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA12Token(
+          pair.token_b_type.fa12,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "invest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa12",
+            pair.token_b_type.fa12,
+            minShares,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "fa2":
+        await this.approveFA2Token(
+          pair.token_a_type.fa2.token_address,
+          pair.token_a_type.fa2.token_id,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA2Token(
+          pair.token_b_type.fa2.token_address,
+          pair.token_b_type.fa2.token_id,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "invest",
+            "fa2",
+            pair.token_a_type.fa2.token_address,
+            pair.token_a_type.fa2.token_id,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            minShares,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+      case "mixed":
+        await this.approveFA12Token(
+          pair.token_a_type.fa12,
+          tokenAAmount,
+          this.contract.address
+        );
+        await this.approveFA2Token(
+          pair.token_b_type.fa2.token_address,
+          pair.token_b_type.fa2.token_id,
+          tokenBAmount,
+          this.contract.address
+        );
+        operation = await this.contract.methods
+          .use(
+            "invest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            minShares,
+            tokenAAmount,
+            tokenBAmount
+          )
+          .send();
+        break;
+    }
     await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
   async divestLiquidity(
-    tokenAmount: number,
-    tezAmount: number,
+    pairId: string,
+    tokenAAmount: number,
+    tokenBAmount: number,
     sharesBurned: number
   ): Promise<TransactionOperation> {
-    await this.approveToken(tokenAmount, this.contract.address);
-    const operation = await this.contract.methods
-      .use("divestLiquidity", tezAmount, tokenAmount, sharesBurned)
-      .send();
+    await this.updateStorage({ tokens: [pairId] });
+    let pair = this.storage.tokens[pairId];
+    console.log(pair);
+    let operation;
+    switch (standard.toLocaleLowerCase()) {
+      case "fa12":
+        operation = await this.contract.methods
+          .use(
+            "divest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa12",
+            pair.token_b_type.fa12,
+            tokenAAmount,
+            tokenBAmount,
+            sharesBurned
+          )
+          .send();
+        break;
+      case "fa2":
+        operation = await this.contract.methods
+          .use(
+            "divest",
+            "fa2",
+            pair.token_a_type.fa2.token_address,
+            pair.token_a_type.fa2.token_id,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            tokenAAmount,
+            tokenBAmount,
+            sharesBurned
+          )
+          .send();
+        break;
+      case "mixed":
+        operation = await this.contract.methods
+          .use(
+            "divest",
+            "fa12",
+            pair.token_a_type.fa12,
+            "fa2",
+            pair.token_b_type.fa2.token_address,
+            pair.token_b_type.fa2.token_id,
+            tokenAAmount,
+            tokenBAmount,
+            sharesBurned
+          )
+          .send();
+        break;
+    }
     await confirmOperation(tezos, operation.hash);
     return operation;
   }
 
-  async vote(
-    voter: string,
-    delegate: string,
-    value: number
-  ): Promise<TransactionOperation> {
-    const operation = await this.contract.methods
-      .use("vote", delegate, value, voter)
-      .send();
-    await confirmOperation(tezos, operation.hash);
-    return operation;
-  }
-
-  async veto(voter: string, value: number): Promise<TransactionOperation> {
-    const operation = await this.contract.methods
-      .use("veto", value, voter)
-      .send();
-    await confirmOperation(tezos, operation.hash);
-    return operation;
-  }
-
-  async withdrawProfit(receiver: string): Promise<TransactionOperation> {
-    const operation = await this.contract.methods
-      .use("withdrawProfit", receiver)
-      .send();
-    await confirmOperation(tezos, operation.hash);
-    return operation;
-  }
-
-  async sendReward(amount: number): Promise<TransactionOperation> {
-    const operation = await tezos.contract.transfer({
-      to: this.contract.address,
-      amount: amount,
-      mutez: true,
-    });
-    await confirmOperation(tezos, operation.hash);
-    return operation;
-  }
-
-  async approveToken(
+  async approveFA2Token(
+    tokenAddress: string,
+    tokenId: BigNumber,
     tokenAmount: number,
     address: string
   ): Promise<TransactionOperation> {
     await this.updateStorage();
-    let tokenAddress = this.storage.token_address;
     let token = await tezos.contract.at(tokenAddress);
     let operation = await token.methods
       .update_operators([
@@ -267,12 +473,75 @@ export class Dex extends TokenFA2 {
           [tokenAmount ? "add_operator" : "remove_operator"]: {
             owner: await tezos.signer.publicKeyHash(),
             operator: address,
-            token_id: defaultTokenId,
+            token_id: tokenId,
           },
         },
       ])
       .send();
     await confirmOperation(tezos, operation.hash);
     return operation;
+  }
+
+  async approveFA12Token(
+    tokenAddress: string,
+    tokenAmount: number,
+    address: string
+  ): Promise<TransactionOperation> {
+    await this.updateStorage();
+    let token = await tezos.contract.at(tokenAddress);
+    let operation = await token.methods.approve(address, tokenAmount).send();
+    await confirmOperation(tezos, operation.hash);
+    return operation;
+  }
+
+  async setDexFunction(index: number, lambdaName: string): Promise<void> {
+    let ligo = getLigo(true);
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetDexFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await tezos.contract.transfer({
+      to: this.contract.address,
+      amount: 0,
+      parameter: {
+        entrypoint: "setDexFunction",
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
+      },
+    });
+    await confirmOperation(tezos, operation.hash);
+  }
+
+  async setTokenFunction(index: number, lambdaName: string): Promise<void> {
+    let ligo = getLigo(true);
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetTokenFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await tezos.contract.transfer({
+      to: this.contract.address,
+      amount: 0,
+      parameter: {
+        entrypoint: "setTokenFunction",
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
+      },
+    });
+    await confirmOperation(tezos, operation.hash);
+  }
+
+  async setBalFunction(index: number, lambdaName: string): Promise<void> {
+    let ligo = getLigo(true);
+    const stdout = execSync(
+      `${ligo} compile-parameter --michelson-format=json $PWD/contracts/main/Dex.ligo main 'SetBalanceFunction(record index =${index}n; func = ${lambdaName}; end)'`,
+      { maxBuffer: 1024 * 500 }
+    );
+    const operation = await tezos.contract.transfer({
+      to: this.contract.address,
+      amount: 0,
+      parameter: {
+        entrypoint: "setBalanceFunction",
+        value: JSON.parse(stdout.toString()).args[0].args[0].args[0].args[0],
+      },
+    });
+    await confirmOperation(tezos, operation.hash);
   }
 }
