@@ -1,6 +1,7 @@
 #include "../partials/IMetadataStorage.ligo"
 
-(* Add or remove the admin permissions for address; only called by one of the current owners *)
+(* Add or remove the admin permissions for address;
+ only called by one of the current owners *)
 function update_owner(
   const params          : set_owner_type;
   var s                 : storage_type)
@@ -15,7 +16,8 @@ function update_owner(
     else s.owners := Set.remove (params.owner, s.owners);
   } with ((nil : list (operation)), s)
 
-(* Update the metadata for the token; only called by one of the current owners *)
+(* Update the metadata for the token;
+only called by one of the current owners *)
 function update_metadata(
   const new_metadata    : metadata_type;
   var s                 : storage_type)

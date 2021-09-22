@@ -1,8 +1,6 @@
 #include "./TypesFA2.ligo"
 
-(* Storage types *)
-
-(* record that represents account shares *)
+(* Represents account info *)
 type account_info       is record [
   balance                 : nat; (* LP tokens *)
   allowances              : set (address); (* accounts allowed to act on behalf of the user *)

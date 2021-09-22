@@ -1,9 +1,4 @@
-(* Route exchange-specific action
-
-Due to the fabulous storage, gas and operation size limits
-the only way to have all the nessary functions is to store
-them in big_map and dispatch the exact function code before
-the execution.
+(*
 
 The function is responsible for fiding the appropriate method
 based on the argument type.
@@ -16,10 +11,10 @@ function call_dex(
                         : full_return_type is
   block {
     const idx : nat = case p of
-      AddPair(n)          -> 0n
-    | Swap(n)             -> 1n
-    | Invest(n)           -> 2n
-    | Divest(n)           -> 3n
+      AddPair(_)          -> 0n
+    | Swap(_)             -> 1n
+    | Invest(_)           -> 2n
+    | Divest(_)           -> 3n
     end;
 
     var res : return_type :=
@@ -30,12 +25,7 @@ function call_dex(
     s.storage := res.1;
 } with (res.0, s)
 
-(* Route token-specific action
-
-Due to the fabulous storage, gas and operation size limits
-the only way to have all the nessary functions is to store
-them in big_map and dispatch the exact function code before
-the execution.
+(*
 
 The function is responsible for fiding the appropriate method
 based on the provided index.

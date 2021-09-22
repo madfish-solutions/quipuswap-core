@@ -4,7 +4,7 @@
 #include "../partials/MethodDex.ligo"
 #include "../partials/Dex.ligo"
 
-(* DexFA2 - Contract for exchanges for XTZ - FA2 token pair *)
+(* Dex - Contract for exchanges between FA12 and FA2 tokens *)
 function main(
   const p               : full_action_type;
   const s               : full_storage_type)
