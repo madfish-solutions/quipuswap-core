@@ -7,9 +7,7 @@ function initialize_exchange(
     var operations: list(operation) := list[];
     case p of
       AddPair(params) -> {
-        if s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
+        s.entered := check_reentrancy(s.entered);
         if params.pair.token_a_type > params.pair.token_b_type
         then failwith("Dex/wrong-token-id")
         else skip;
@@ -139,9 +137,7 @@ function token_to_token_route(
     var operations: list(operation) := list[];
     case p of
       Swap(params) -> {
-        if s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
+        s.entered := check_reentrancy(s.entered);
         if List.size(params.swaps) < 1n
         then failwith ("Dex/too-few-swaps")
         else skip;
@@ -221,9 +217,7 @@ function invest_liquidity(
     var operations: list(operation) := list[];
     case p of
       Invest(params) -> {
-        if s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
+        s.entered := check_reentrancy(s.entered);
         if params.pair.token_a_type > params.pair.token_b_type
         then failwith("Dex/wrong-pair")
         else skip;
@@ -305,9 +299,7 @@ function divest_liquidity(
     var operations: list(operation) := list[];
     case p of
       Divest(params) -> {
-        if s.entered
-        then failwith("Dex/reentrancy")
-        else s.entered := True;
+        s.entered := check_reentrancy(s.entered);
         if params.pair.token_a_type > params.pair.token_b_type
         then failwith("Dex/wrong-pair")
         else skip;

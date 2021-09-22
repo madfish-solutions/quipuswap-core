@@ -23,6 +23,10 @@ function call_dex(
       | None              -> (failwith("Dex/function-not-set") : return_type)
       end;
     s.storage := res.1;
+    res.0 := Tezos.transaction(
+      unit,
+      0mutez,
+      get_close_entrypoint(unit)) # res.0;
 } with (res.0, s)
 
 (*

@@ -138,3 +138,12 @@ function typed_transfer(
         get_fa2_token_contract(token_info.token_address)
       )
     end;
+
+(* Helper function to get the reentrancy entrypoint of the current contract *)
+[@inline]
+function check_reentrancy(
+  const entered         : bool)
+                        : bool is
+  if entered
+  then failwith("Dex/reentrancy")
+  else True
