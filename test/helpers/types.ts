@@ -20,7 +20,7 @@ export declare type SwapSliceType = {
   operation: { [key: string]: any };
 };
 
-export declare type TTDexStorage = {
+export declare type DexStorage = {
   dex_lambdas: { [key: string]: any };
   token_lambdas: { [key: string]: any };
   pairs_count: BigNumber;

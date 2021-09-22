@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/ttContext";
+import { TTContext } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";

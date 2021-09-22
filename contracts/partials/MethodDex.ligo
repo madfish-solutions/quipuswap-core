@@ -7,9 +7,9 @@ function initialize_exchange(
     var operations: list(operation) := list[];
     case p of
       AddPair(params) -> {
-        if Tezos.sender =/= Tezos.self_address
-        then failwith("Dex/not-self")
-        else skip;
+        if s.entered
+        then failwith("Dex/reentrancy")
+        else s.entered := True;
 
         (* check preconditions *)
         if params.pair.token_a_type > params.pair.token_b_type
