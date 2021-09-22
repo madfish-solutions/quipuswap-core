@@ -145,15 +145,18 @@ export class Context {
     let tokenAAddress;
     let tokenBAddress;
     do {
+      tokenAAddress =
+        pairConfig.tokenAAddress ||
+        (await this.createToken(
+          standard.toLocaleLowerCase() == "mixed" ? "FA12" : standard,
+          false
+        ));
       tokenBAddress =
         pairConfig.tokenBAddress ||
         (await this.createToken(
-          standard == "MIXED" ? "FA12" : standard,
+          standard.toLocaleLowerCase() == "mixed" ? "FA2" : standard,
           false
         ));
-      tokenAAddress =
-        pairConfig.tokenAAddress ||
-        (await this.createToken(standard == "MIXED" ? "FA2" : standard, false));
       if (
         allowReplace &&
         standard !== "MIXED" &&
@@ -179,9 +182,9 @@ export class Context {
         break;
       case "MIXED":
         if (pairConfig.tokenAAddress != tokenAAddress)
-          this.tokens.push(await TokenFA2.init(tokenAAddress));
+          this.tokens.push(await TokenFA12.init(tokenAAddress));
         if (pairConfig.tokenBAddress != tokenBAddress)
-          this.tokens.push(await TokenFA12.init(tokenBAddress));
+          this.tokens.push(await TokenFA2.init(tokenBAddress));
         break;
       default:
         break;

@@ -6,7 +6,7 @@ import { TokenFA2 } from "./helpers/tokenFA2";
 import { TokenFA12 } from "./helpers/tokenFA12";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
-contract("InitializeTTExchange()", function () {
+contract.only("InitializeTTExchange()", function () {
   let context: Context;
   let aliceAddress: string = accounts.alice.pkh;
   const tokenAAmount: number = 10000;
@@ -28,11 +28,11 @@ contract("InitializeTTExchange()", function () {
     let tokenBAddress: string;
     before(async () => {
       do {
-        tokenBAddress = await context.createToken(
+        tokenAAddress = await context.createToken(
           standard == "MIXED" ? "FA12" : standard,
           false
         );
-        tokenAAddress = await context.createToken(
+        tokenBAddress = await context.createToken(
           standard == "MIXED" ? "FA2" : standard,
           false
         );
@@ -52,8 +52,8 @@ contract("InitializeTTExchange()", function () {
           context.tokens.push(await TokenFA12.init(tokenBAddress));
           break;
         case "MIXED":
-          context.tokens.push(await TokenFA2.init(tokenAAddress));
-          context.tokens.push(await TokenFA12.init(tokenBAddress));
+          context.tokens.push(await TokenFA12.init(tokenAAddress));
+          context.tokens.push(await TokenFA2.init(tokenBAddress));
           break;
         default:
           break;
