@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/context";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
@@ -6,7 +6,7 @@ import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("SellTokenWithRoute()", function () {
-  let context: TTContext;
+  let context: Context;
   const tokenAAmount: number = 100000;
   const tokenBAmount: number = 10000;
   const tokenCAmount: number = 10000;
@@ -17,7 +17,7 @@ contract("SellTokenWithRoute()", function () {
   let reverseOrder;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
     await context.createPair({
       tokenAAmount,
@@ -251,7 +251,7 @@ contract("SellTokenWithRoute()", function () {
           amountOut,
           aliceAddress
         ),
-        (err) => {
+        (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }

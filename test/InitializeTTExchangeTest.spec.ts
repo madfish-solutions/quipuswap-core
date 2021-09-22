@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/context";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
@@ -7,13 +7,13 @@ import { TokenFA12 } from "./helpers/tokenFA12";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("InitializeTTExchange()", function () {
-  let context: TTContext;
+  let context: Context;
   let aliceAddress: string = accounts.alice.pkh;
   const tokenAAmount: number = 10000;
   const tokenBAmount: number = 1000;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setDexFunction(0, "initialize_exchange");
     await context.setDexFunction(3, "divest_liquidity");
   });
@@ -68,7 +68,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount: 0,
           tokenBAmount,
         }),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-a", "Error message mismatch");
           return true;
         }
@@ -83,7 +83,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           tokenBAmount: 0,
         }),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-b", "Error message mismatch");
           return true;
         }
@@ -174,7 +174,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           tokenBAmount,
         }),
-        (err) => {
+        (err: any) => {
           strictEqual(
             err.message,
             "Dex/non-zero-reserves",
@@ -205,7 +205,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           tokenBAmount
         ),
-        (err) => {
+        (err: any) => {
           strictEqual(
             err.message,
             "Dex/non-zero-reserves",
@@ -302,7 +302,7 @@ contract("InitializeTTExchange()", function () {
           0,
           tokenBAmount
         ),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-a", "Error message mismatch");
           return true;
         }
@@ -317,7 +317,7 @@ contract("InitializeTTExchange()", function () {
           tokenAAmount,
           0
         ),
-        (err) => {
+        (err: any) => {
           strictEqual(err.message, "Dex/no-token-b", "Error message mismatch");
           return true;
         }

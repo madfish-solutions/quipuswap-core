@@ -30,30 +30,6 @@ export declare type DexStorage = {
   ledger: { [key: string]: AccountInfo };
 };
 
-export declare type DexStorage = {
-  tez_pool: BigNumber;
-  token_pool: BigNumber;
-  baker_validator: string;
-  token_address: string;
-  total_supply: BigNumber;
-  ledger: { [key: string]: AccountInfo };
-  voters: { [key: string]: VoteInfo };
-  vetos: { [key: string]: string };
-  votes: { [key: string]: BigNumber };
-  veto: BigNumber;
-  current_delegated: string | null | undefined;
-  current_candidate: string | null | undefined;
-  total_votes: BigNumber;
-  reward: BigNumber;
-  total_reward: BigNumber;
-  reward_per_share: BigNumber;
-  reward_per_sec: BigNumber;
-  last_update_time: string;
-  period_finish: string;
-  user_rewards: { [key: string]: UserRewardInfo };
-  last_veto: number;
-};
-
 export declare type MetadataStorage = {
   metadata: { [key: string]: Buffer };
   owners: string[];

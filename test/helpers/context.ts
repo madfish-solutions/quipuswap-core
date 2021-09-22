@@ -18,7 +18,7 @@ const CTokenFA12 = artifacts.require("TokenFA12");
 const CTokenFA2 = artifacts.require("TokenFA2");
 const CDex = artifacts.require("Dex");
 
-export class TTContext {
+export class Context {
   public dex: Dex;
   public tokens: Token[];
 
@@ -44,7 +44,7 @@ export class TTContext {
     setDexFunctions: boolean = false,
     accountName: string = "alice",
     useDeployedDex: boolean = true
-  ): Promise<TTContext> {
+  ): Promise<Context> {
     let config = await prepareProviderOptions(accountName);
     tezos = new TezosToolkit(tezos.rpc.url);
     tezos.setProvider(config);
@@ -54,7 +54,7 @@ export class TTContext {
       : await CDex.new(dexStorage);
     const dex = await DexFA2.init(dexInstance.address.toString());
 
-    let context = new TTContext(dex, []);
+    let context = new Context(dex, []);
     if (setDexFunctions) {
       await context.setAllDexFunctions();
     }
