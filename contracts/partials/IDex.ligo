@@ -72,7 +72,7 @@ type swap_data_type     is record [
 type tmp_swap_type      is record [
   s                       : storage_type; (* storage_type state *)
   amount_in               : nat; (* amount of tokens to be sold *)
-  token_in                : token_type; (* address of sold token *)
+  token_in                : token_type; (* type of sold token *)
   operation               : option(operation); (* exchange operation type *)
   receiver                : address; (* address of the receiver *)
 ]
@@ -161,8 +161,8 @@ type full_storage_type  is record [
 
 type full_return_type   is list (operation) * full_storage_type
 
-const fee_rate          : nat = 333n; (* exchange fee rate distributed among the liquidity providers *)
-const dex_func_count    : nat = 6n;
+const fee_rate          : nat = 333n;
+const dex_func_count    : nat = 3n;
 const token_func_count  : nat = 2n;
 const fee_denom         : nat = 1000n;
 const fee_num           : nat = 997n;
