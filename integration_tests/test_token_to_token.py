@@ -3,18 +3,25 @@ from unittest import TestCase
 
 import math
 import json
+import copy
 
 from helpers import *
 
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
 
 pair = {
-    "token_a_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
-    "token_a_id" : 0,
-    "token_b_address" : "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC",
-    "token_b_id" : 1,
-    "token_a_type": "fa2",
-    "token_b_type": "fa2"
+    "token_a_type" : {
+        "fa2": {
+            "token_address": "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+            "token_id": 0
+        }
+    },
+    "token_b_type": {
+        "fa2": {
+            "token_address": "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC",
+            "token_id": 1
+        }
+    },
 }
 
 class TokenToTokenTest(TestCase):
@@ -22,7 +29,7 @@ class TokenToTokenTest(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-        dex_code = open("./integration_tests/TTDex.tz", 'r').read()
+        dex_code = open("./integration_tests/compiled/Dex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
 
 
@@ -75,8 +82,8 @@ class TokenToTokenTest(TestCase):
 
 
     def test_two_pairs_dont_interfere(self):
-        second_pair = pair.copy()
-        second_pair["token_b_id"] += 1
+        second_pair = copy.deepcopy(pair)
+        second_pair["token_b_type"]["fa2"]["token_id"] += 1
 
         chain = LocalChain(token_to_token=True)
         res = chain.execute(self.dex.addPair(pair, 100_000_000, 100_000))
@@ -163,17 +170,35 @@ class TokenToTokenTest(TestCase):
     def test_tt_same_token_in_pair(self):
         chain = LocalChain(token_to_token=True)
         
-        pair = {
-            "token_a_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
-            "token_a_id" : 0,
-            "token_b_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
-            "token_b_id" : 0,
-            "token_a_type": "fa2",
-            "token_b_type": "fa2"
+        pair_fa12 = {
+            "token_a_type" : {
+                "fa12": "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+            },
+            "token_b_type": {
+                "fa12": "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+            },
+        }
+
+        pair_fa2 = {
+            "token_a_type" : {
+                "fa2": {
+                    "token_address": "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+                    "token_id": 0
+                }
+            },
+            "token_b_type": {
+                "fa2": {
+                    "token_address": "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+                    "token_id": 0
+                }
+            },
         }
 
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.execute(self.dex.addPair(pair, 100_000, 200_000_000))
+            res = chain.execute(self.dex.addPair(pair_fa12, 100_000, 200_000_000))
+
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.addPair(pair_fa2, 100_000, 200_000_000))
         
     def test_tt_small_amounts(self):
         chain = LocalChain(token_to_token=True)
@@ -241,8 +266,8 @@ class TokenToTokenTest(TestCase):
 
         res = chain.execute(self.dex.invest(pair=pair, token_a_in=3_600_000, token_b_in=1, shares=1))
         transfers = parse_token_transfers(res)
-        self.assertEqual(transfers[0]["amount"], 1)
-        self.assertEqual(transfers[1]["amount"], 2_000_000)
+        self.assertEqual(transfers[1]["amount"], 1)
+        self.assertEqual(transfers[0]["amount"], 2_000_000)
 
         all_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
         res = chain.execute(self.dex.divest(pair, 1, 1, all_shares))
@@ -260,8 +285,8 @@ class TokenToTokenTest(TestCase):
 
         res = chain.execute(self.dex.invest(pair=pair, token_a_in=1, token_b_in=3_600_000, shares=1))
         transfers = parse_token_transfers(res)
-        self.assertEqual(transfers[0]["amount"], 2_000_000)
-        self.assertEqual(transfers[1]["amount"], 1)
+        self.assertEqual(transfers[1]["amount"], 2_000_000)
+        self.assertEqual(transfers[0]["amount"], 1)
 
         all_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
         res = chain.execute(self.dex.divest(pair, 1, 1, all_shares))

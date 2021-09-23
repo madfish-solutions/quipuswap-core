@@ -1,4 +1,4 @@
-from initial_storage import make_full_storage, initial_storage, initial_tt_storage
+from initial_storage import make_full_storage, initial_tt_storage
 from os import urandom
 from pytezos import pytezos 
 from pytezos.crypto.encoding import base58_encode

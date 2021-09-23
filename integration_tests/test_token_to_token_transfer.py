@@ -9,12 +9,18 @@ from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
 from pytezos.context.mixin import ExecutionContext
 
 pair = {
-    "token_a_address" : "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
-    "token_a_id" : 0,
-    "token_b_address" : "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC",
-    "token_b_id" : 1,
-    "token_a_type": "fa2",
-    "token_b_type": "fa2"
+    "token_a_type" : {
+        "fa2": {
+            "token_address": "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+            "token_id": 0
+        }
+    },
+    "token_b_type": {
+        "fa2": {
+            "token_address": "KT1Wz32jY2WEwWq8ZaA2C6cYFHGchFYVVczC",
+            "token_id": 1
+        }
+    },
 }
 
 class TokenToTokenTransferTest(TestCase):
@@ -23,7 +29,7 @@ class TokenToTokenTransferTest(TestCase):
     def setUpClass(cls):
         cls.maxDiff = None
 
-        dex_code = open("./integration_tests/MockTTDex.tz", 'r').read()
+        dex_code = open("./integration_tests/compiled/Dex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
 
     def test_tt_transfer_divest(self):

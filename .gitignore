@@ -8,3 +8,4 @@ deploy
 .test*
 .vscode/
 __pycache__
+integration_tests/compiled
