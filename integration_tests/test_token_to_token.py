@@ -378,17 +378,41 @@ class TokenToTokenTest(TestCase):
         total_shares = res.storage["storage"]["ledger"][(me,0)]["balance"]
         self.assertEqual(total_shares, 49)
 
-        # we can invest 1:1 token yet
-        # res = chain.interpret(self.dex.invest(pair_id=0, token_a_in=1, token_b_in=1, shares=1))
-
+        # we can invest 1:1 token
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.interpret(self.dex.invest(pair_id=0, token_a_in=1, token_b_in=1, shares=1))
 
         res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=4, min_amount_out=1, receiver=alice), sender=alice)
         ops = parse_ops(res)
         amount_bought = ops[1]["amount"]
+        self.assertEqual(amount_bought, 3)
         
-        # there are 48 tokens on one side, so no way to divest 1 whole share
+        # there are 48 token A, so no way to divest 1 whole share, since 48 // 49 == 0
         with self.assertRaises(MichelsonRuntimeError):
             res = chain.execute(self.dex.divest(pair_id=0, min_token_a_out=1, min_token_b_out=1, shares=1))
 
-        # TODO why can't we invest one-to-one?
-        # res = chain.execute(self.dex.invest(pair_id=0, token_a_in=1, token_b_in=1, shares=1))
+        # can't invest 1:1 since ratio is slightly biased (48:53)
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.invest(pair_id=0, token_a_in=1, token_b_in=1, shares=1))
+
+    def test_tt_zero_min_req(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 51, 49))
+
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=0, receiver=me))
+        transfers = parse_token_transfers(res)
+        self.assertEqual(transfers[0]["amount"], 0)
+        self.assertEqual(transfers[0]["destination"], me)
+        self.assertEqual(transfers[1]["amount"], 1)
+        self.assertEqual(transfers[1]["destination"], contract_self_address)
+
+    def test_tt_zero_min_divest(self):
+        chain = LocalChain(token_to_token=True)
+        res = chain.execute(self.dex.addPair(pair, 51, 49))
+
+        res = chain.execute(self.dex.divest(pair_id=0, min_token_a_out=0, min_token_b_out=0, shares=1))
+        transfers = parse_token_transfers(res)
+        self.assertEqual(transfers[0]["amount"], 0)
+        self.assertEqual(transfers[0]["destination"], me)
+        self.assertEqual(transfers[1]["amount"], 1)
+        self.assertEqual(transfers[1]["destination"], contract_self_address)
