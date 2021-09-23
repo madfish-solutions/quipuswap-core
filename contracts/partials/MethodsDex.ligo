@@ -156,8 +156,8 @@ function token_to_token_route(
 
         const token : token_type = 
           case first_swap.operation of
-            Sell -> first_swap.pair.token_a_type
-          | Buy -> first_swap.pair.token_b_type
+            A_to_b -> first_swap.pair.token_a_type
+          | B_to_a -> first_swap.pair.token_b_type
         end;
 
         operations :=

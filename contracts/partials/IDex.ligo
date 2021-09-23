@@ -51,8 +51,8 @@ type storage_type       is record [
 
 (* operation type *)
 type swap_type          is
-| Sell (* exchange token A to token B *)
-| Buy (* exchange token B to token A *)
+| A_to_b (* exchange token A to token B *)
+| B_to_a (* exchange token B to token A *)
 
 type swap_slice_type    is record [
   pair                    : tokens_type; (* exchange pair info *)
