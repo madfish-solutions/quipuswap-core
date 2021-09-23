@@ -154,29 +154,20 @@ function token_to_token_route(
           | None -> (failwith("Dex/zero-swaps") : swap_slice_type)
           end;
 
-        var token : token_type := first_swap.pair.token_a_type;
-
-        case first_swap.operation of
-          Sell -> {
-          operations :=
-            typed_transfer(
-              Tezos.sender,
-              Tezos.self_address,
-              params.amount_in,
-              first_swap.pair.token_a_type
-            ) # operations;
-          }
-        | Buy -> {
-          token := first_swap.pair.token_b_type;
-          operations :=
-            typed_transfer(
-              Tezos.sender,
-              Tezos.self_address,
-              params.amount_in,
-              first_swap.pair.token_b_type
-            ) # operations;
-          }
+        const token : token_type = 
+          case first_swap.operation of
+            Sell -> first_swap.pair.token_a_type
+          | Buy -> first_swap.pair.token_b_type
         end;
+
+        operations :=
+          typed_transfer(
+            Tezos.sender,
+            Tezos.self_address,
+            params.amount_in,
+            token
+          ) # operations;
+
 
         const tmp : tmp_swap_type = List.fold(
           internal_token_to_token_swap,
