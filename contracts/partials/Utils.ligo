@@ -17,7 +17,7 @@ function get_pair(
   const s               : storage_type)
                         : pair_type is
   case s.pairs[pair_id] of
-    None -> failwith("Dex/not-launched")
+    None -> failwith(err_pair_not_listed)
   | Some(instance) -> instance
   end;
 
@@ -27,7 +27,7 @@ function get_tokens(
   const s               : storage_type)
                         : tokens_type is
   case s.tokens[pair_id] of
-    None -> failwith("Dex/not-launched")
+    None -> failwith(err_pair_not_listed)
   | Some(instance) -> instance
   end;
 
@@ -107,7 +107,7 @@ function get_fa2_token_contract(
   case (Tezos.get_entrypoint_opt("%transfer", token_address)
       : option(contract(entry_fa2_type))) of
     Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(entry_fa2_type))
+  | None -> (failwith(err_wrong_token_entrypoint) : contract(entry_fa2_type))
   end;
 
 (* Helper function to get fa1.2 token contract *)
@@ -117,7 +117,7 @@ function get_fa12_token_contract(
   case (Tezos.get_entrypoint_opt("%transfer", token_address)
      : option(contract(entry_fa12_type))) of
     Some(contr) -> contr
-  | None -> (failwith("Dex/not-token") : contract(entry_fa12_type))
+  | None -> (failwith(err_wrong_token_entrypoint) : contract(entry_fa12_type))
   end;
 
 (* Helper function to transfer the asset based on its standard *)
@@ -155,7 +155,7 @@ function check_reentrancy(
   const entered         : bool)
                         : bool is
   if entered
-  then failwith("Dex/reentrancy")
+  then failwith(err_reentrancy)
   else True
 
 [@inline]
@@ -167,5 +167,5 @@ function div_ceil(
     Some(result) -> if result.1 > 0n
       then result.0 + 1n
       else result.0
-  | None -> failwith("Dex/no-liquidity")
+  | None -> failwith(err_no_liquidity)
   end;

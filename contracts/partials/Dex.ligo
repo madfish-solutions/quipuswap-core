@@ -22,7 +22,7 @@ function call_dex(
     var res : return_type :=
       case s.dex_lambdas[idx] of
         Some(f)           -> f(p, s.storage)
-      | None              -> (failwith("Dex/function-not-set") : return_type)
+      | None              -> (failwith(err_unknown_func) : return_type)
       end;
     s.storage := res.1;
     res.0 := Tezos.transaction(
@@ -47,7 +47,7 @@ function call_token(
     const res : return_type =
       case s.token_lambdas[idx] of
         Some(f) -> f(p, s.storage)
-      | None -> (failwith("Dex/function-not-set") : return_type)
+      | None -> (failwith(err_unknown_func) : return_type)
       end;
     s.storage := res.1;
   } with (res.0, s)
@@ -58,10 +58,10 @@ function close(
                         : full_storage_type is
   block {
     if not s.storage.entered
-    then failwith("Dex/not-entered")
+    then failwith(err_not_entered)
     else skip;
     if Tezos.sender =/= Tezos.self_address
-    then failwith("Dex/not-self")
+    then failwith(err_sender_not_self)
     else skip;
     s.storage.entered := False;
   } with s
@@ -97,7 +97,7 @@ function set_dex_function(
                         : full_storage_type is
   block {
     case s.dex_lambdas[idx] of
-      Some(_) -> failwith("Dex/function-set")
+      Some(_) -> failwith(err_func_set)
     | None -> s.dex_lambdas[idx] := f
     end;
   } with s
@@ -110,7 +110,7 @@ function set_token_function(
                         : full_storage_type is
   block {
     case s.token_lambdas[idx] of
-      Some(_) -> failwith("Dex/function-set")
+      Some(_) -> failwith(err_func_set)
     | None -> s.token_lambdas[idx] := f
     end;
   } with s
