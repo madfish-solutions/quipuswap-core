@@ -48,10 +48,10 @@ class TokenToTokenTransferTest(TestCase):
 
         # alice cant divest a single share after transfer
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.interpret(self.dex.divest(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=1), sender=alice)
+            res = chain.interpret(self.dex.divest(pair_id=0, min_token_a_out=1, min_token_b_out=1, shares=1), sender=alice)
 
         # bob successfully divests his shares
-        res = chain.execute(self.dex.divest(pair=pair, min_token_a_out=1, min_token_b_out=1, shares=10_000), sender=bob)
+        res = chain.execute(self.dex.divest(pair_id=0, min_token_a_out=1, min_token_b_out=1, shares=10_000), sender=bob)
 
         transfers = parse_token_transfers(res)
         token_a_out_after = transfers[0]["amount"]

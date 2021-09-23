@@ -93,11 +93,11 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "a_to_b",
                 },
                 {
-                    "pair": pair_bc, 
+                    "pair_id": 1, 
                     "operation": "a_to_b",
                 }
             ],
@@ -117,7 +117,7 @@ class TokenToTokenRouterTest(TestCase):
         # same swap but one by one
         res = chain.interpret(self.dex.swap(
             swaps=[{
-                "pair": pair_ab,
+                "pair_id": 0,
                 "operation": "a_to_b",
             }],
             amount_in=amount_in,
@@ -129,7 +129,7 @@ class TokenToTokenRouterTest(TestCase):
 
         res = chain.interpret(self.dex.swap(
              swaps=[{
-                "pair": pair_bc,
+                "pair_id": 1,
                 "operation": "a_to_b",
             }],
             amount_in=token_b_out["amount"],
@@ -150,15 +150,15 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "a_to_b",
                 },
                 {
-                    "pair": pair_bc, 
+                    "pair_id": 1, 
                     "operation": "a_to_b",
                 },
                 {
-                    "pair": pair_ac, 
+                    "pair_id": 2, 
                     "operation": "b_to_a",
                 }
             ],
@@ -177,11 +177,11 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "a_to_b",
                 },
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "b_to_a",
                 }
             ],
@@ -203,11 +203,11 @@ class TokenToTokenRouterTest(TestCase):
             res = chain.interpret(self.dex.swap({
                 "swaps" : [
                     {
-                        "pair": pair_ab, 
+                        "pair_id": 0, 
                         "operation": "a_to_b",
                     },
                     {
-                        "pair": pair_cd, 
+                        "pair_id": 1, 
                         "operation": "a_to_b",
                     }
                 ],
@@ -220,11 +220,11 @@ class TokenToTokenRouterTest(TestCase):
             res = chain.interpret(self.dex.swap({
                 "swaps" : [
                     {
-                        "pair": pair_ab, 
+                        "pair_id": 0, 
                         "operation": "a_to_b",
                     },
                     {
-                        "pair": pair_ab, 
+                        "pair_id": 0, 
                         "operation": "a_to_b",
                     }
                 ],
@@ -244,7 +244,7 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "a_to_b",
                 }
             ],
@@ -261,11 +261,11 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "a_to_b",
                 },
                 {
-                    "pair": pair_bc, 
+                    "pair_id": 1, 
                     "operation": "a_to_b",
                 }
             ],
@@ -282,15 +282,15 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "a_to_b",
                 },
                 {
-                    "pair": pair_bc, 
+                    "pair_id": 1, 
                     "operation": "a_to_b",
                 },
                 {
-                    "pair": pair_ac, 
+                    "pair_id": 2, 
                     "operation": "b_to_a",
                 }
             ],
@@ -339,11 +339,11 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap({
             "swaps" : [
                 {
-                    "pair": pair_ab, 
+                    "pair_id": 0, 
                     "operation": "b_to_a",
                 },
                 {
-                    "pair": pair_bc, 
+                    "pair_id": 1, 
                     "operation": "a_to_b",
                 }
             ],
