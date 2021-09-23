@@ -8,7 +8,7 @@ function initialize_exchange(
     case p of
       AddPair(params) -> {
         s.entered := check_reentrancy(s.entered);
-        if params.pair.token_a_type > params.pair.token_b_type
+        if params.pair.token_a_type >= params.pair.token_b_type
         then failwith("Dex/wrong-token-id")
         else skip;
 
@@ -79,10 +79,6 @@ function internal_token_to_token_swap(
   const params          : swap_slice_type)
                         : tmp_swap_type is
   block {
-    if params.pair.token_a_type > params.pair.token_b_type
-    then failwith("Dex/wrong-pair")
-    else skip;
-
     const res : (pair_type * nat) = get_pair(params.pair, tmp.s);
     const pair : pair_type = res.0;
     const pair_id : nat = res.1;
@@ -209,9 +205,6 @@ function invest_liquidity(
     case p of
       Invest(params) -> {
         s.entered := check_reentrancy(s.entered);
-        if params.pair.token_a_type > params.pair.token_b_type
-        then failwith("Dex/wrong-pair")
-        else skip;
 
         const res : (pair_type * nat) = get_pair(params.pair, s);
         var pair : pair_type := res.0;
@@ -291,9 +284,6 @@ function divest_liquidity(
     case p of
       Divest(params) -> {
         s.entered := check_reentrancy(s.entered);
-        if params.pair.token_a_type > params.pair.token_b_type
-        then failwith("Dex/wrong-pair")
-        else skip;
 
         const res : (pair_type * nat) = get_pair(params.pair, s);
         var pair : pair_type := res.0;
