@@ -1,6 +1,5 @@
 #include "./TypesFA2.ligo"
 
-(* Represents account info *)
 type account_info       is record [
   balance                 : nat; (* LP tokens *)
   allowances              : set (address); (* accounts allowed to act on behalf of the user *)
@@ -38,8 +37,6 @@ type tokens_type        is record [
   token_b_type            : token_type; (* token B standard *)
 ]
 
-
-(* record for the dex storage_type *)
 type storage_type       is record [
   entered                 : bool; (* reentrancy protection *)
   pairs_count             : nat; (* total shares count *)
@@ -49,7 +46,6 @@ type storage_type       is record [
   ledger                  : big_map((address * nat), account_info); (* account info per address *)
 ]
 
-(* operation type *)
 type swap_type          is
 | A_to_b (* exchange token A to token B *)
 | B_to_a (* exchange token B to token A *)
@@ -77,7 +73,6 @@ type tmp_swap_type      is record [
   receiver                : address; (* address of the receiver *)
 ]
 
-(* Entrypoint arguments *)
 type route_type         is [@layout:comb] record [
   swaps                   : list(swap_slice_type); (* swap operations list*)
   amount_in               : nat; (* amount of tokens to be exchanged *)
@@ -116,7 +111,6 @@ type reserves_type      is record [
   pair_id                 : nat; (* pair identifier *)
 ]
 
-(* Main function parameter types specific for FA2 standard*)
 type transfer_type      is list (transfer_param)
 type operator_type      is list (update_operator_param)
 
@@ -139,7 +133,6 @@ type set_dex_func_type  is record [
   index                   : nat; (* the key in functions map *)
 ]
 
-(* full list of dex entrypoints *)
 type full_action_type   is
 | Use                     of action_type
 | Transfer                of transfer_type (* transfer asset from one account to another *)
@@ -150,7 +143,6 @@ type full_action_type   is
 | SetDexFunction          of set_dex_func_type (* sets the dex specific function. Is used before the whole system is launched *)
 | SetTokenFunction        of set_token_func_type (* sets the FA function, is used before the whole system is launched *)
 
-(* real dex storage_type *)
 type full_storage_type  is record [
   storage                 : storage_type; (* real dex storage_type *)
   metadata                : big_map(string, bytes); (* metadata storage_type according to TZIP-016 *)
