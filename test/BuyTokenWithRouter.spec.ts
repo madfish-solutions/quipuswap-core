@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/ttContext";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
@@ -9,7 +9,7 @@ import { Parser } from "@taquito/michel-codec";
 export const michelParser = new Parser();
 
 contract("BuyTokenWithRoute()", function () {
-  let context: TTContext;
+  let context: Context;
   const tokenAAmount: number = 100000;
   const tokenBAmount: number = 10000;
   const tokenCAmount: number = 10000;
@@ -20,7 +20,7 @@ contract("BuyTokenWithRoute()", function () {
   let reverseOrder;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
     await context.createPair({
       tokenAAmount,
@@ -254,7 +254,7 @@ contract("BuyTokenWithRoute()", function () {
           amountOut,
           aliceAddress
         ),
-        (err) => {
+        (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }

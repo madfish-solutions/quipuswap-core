@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/ttContext";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
@@ -6,7 +6,7 @@ import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("DivestTTLiquidity()", function () {
-  let context: TTContext;
+  let context: Context;
   const tokenAAmount: number = 1000;
   const tokenBAmount: number = 100000;
   const aliceAddress: string = accounts.alice.pkh;
@@ -18,7 +18,7 @@ contract("DivestTTLiquidity()", function () {
   const burntShares: number = 200;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
     await context.createPair({
       tokenAAmount,
@@ -36,7 +36,7 @@ contract("DivestTTLiquidity()", function () {
       await context.dex.divestLiquidity("0", 1, 1, tokenAAmount);
       await rejects(
         context.dex.divestLiquidity("0", 1, 1, burntShares),
-        (err) => {
+        (err: any) => {
           ok(err.message == "Dex/not-launched", "Error message mismatch");
           return true;
         }
@@ -140,17 +140,23 @@ contract("DivestTTLiquidity()", function () {
 
   describe("Test various burnt shares", () => {
     it("revert in case of 0 burnt shares", async function () {
-      await rejects(context.dex.divestLiquidity("0", 1, 1, 0), (err) => {
+      await rejects(context.dex.divestLiquidity("0", 1, 1, 0), (err: any) => {
         ok(err.message == "Dex/zero-burn-shares", "Error message mismatch");
         return true;
       });
     });
 
     it("revert in case of too high expected burnt shares", async function () {
-      await rejects(context.dex.divestLiquidity("0", 1, 1, 20000), (err) => {
-        ok(err.message == "Dex/insufficient-shares", "Error message mismatch");
-        return true;
-      });
+      await rejects(
+        context.dex.divestLiquidity("0", 1, 1, 20000),
+        (err: any) => {
+          ok(
+            err.message == "Dex/insufficient-shares",
+            "Error message mismatch"
+          );
+          return true;
+        }
+      );
     });
 
     it("success in case of burnt shares of 1", async function () {
@@ -437,10 +443,13 @@ contract("DivestTTLiquidity()", function () {
         1,
         bobAddress
       );
-      await rejects(context.dex.divestLiquidity("0", 1, 1, share), (err) => {
-        ok(err.message == "Dex/high-expectation", "Error message mismatch");
-        return true;
-      });
+      await rejects(
+        context.dex.divestLiquidity("0", 1, 1, share),
+        (err: any) => {
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
+          return true;
+        }
+      );
       await context.dex.divestLiquidity("0", 1, 1, initTokenB);
     });
 
@@ -462,10 +471,13 @@ contract("DivestTTLiquidity()", function () {
         1,
         bobAddress
       );
-      await rejects(context.dex.divestLiquidity("0", 1, 1, share), (err) => {
-        ok(err.message == "Dex/high-expectation", "Error message mismatch");
-        return true;
-      });
+      await rejects(
+        context.dex.divestLiquidity("0", 1, 1, share),
+        (err: any) => {
+          ok(err.message == "Dex/high-expectation", "Error message mismatch");
+          return true;
+        }
+      );
       await context.dex.divestLiquidity("0", 1, 1, initTokenA);
     });
   });
@@ -486,7 +498,7 @@ contract("DivestTTLiquidity()", function () {
       const share = 100;
       await rejects(
         context.dex.divestLiquidity("0", 1, 100000000, share),
-        (err) => {
+        (err: any) => {
           ok(err.message == "Dex/high-expectation", "Error message mismatch");
           return true;
         }
@@ -497,7 +509,7 @@ contract("DivestTTLiquidity()", function () {
       const share = 100;
       await rejects(
         context.dex.divestLiquidity("0", 100000000, 1, share),
-        (err) => {
+        (err: any) => {
           ok(err.message == "Dex/high-expectation", "Error message mismatch");
           return true;
         }
@@ -506,18 +518,24 @@ contract("DivestTTLiquidity()", function () {
 
     it("revert in case of expected tokens are 0", async function () {
       const share = 1;
-      await rejects(context.dex.divestLiquidity("0", 0, 1, share), (err) => {
-        ok(err.message == "Dex/dust-output", "Error message mismatch");
-        return true;
-      });
+      await rejects(
+        context.dex.divestLiquidity("0", 0, 1, share),
+        (err: any) => {
+          ok(err.message == "Dex/dust-output", "Error message mismatch");
+          return true;
+        }
+      );
     });
 
     it("revert in case of expected tez are 0", async function () {
       const share = 1;
-      await rejects(context.dex.divestLiquidity("0", 1, 0, share), (err) => {
-        ok(err.message == "Dex/dust-output", "Error message mismatch");
-        return true;
-      });
+      await rejects(
+        context.dex.divestLiquidity("0", 1, 0, share),
+        (err: any) => {
+          ok(err.message == "Dex/dust-output", "Error message mismatch");
+          return true;
+        }
+      );
     });
 
     it("success in case the of the expected amount smaller than calculated", async function () {
