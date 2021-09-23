@@ -7,12 +7,11 @@ function initialize_exchange(
     var operations: list(operation) := list[];
     case p of
       AddPair(params) -> {
-        s.entered := check_reentrancy(s.entered);
         if params.pair.token_a_type >= params.pair.token_b_type
         then failwith("Dex/wrong-token-id")
         else skip;
 
-        const res : (pair_type * nat) = get_pair(params.pair, s);
+        const res : (pair_type * nat) = get_pair_info(params.pair, s);
         var pair : pair_type := res.0;
         const token_id : nat = res.1;
 
@@ -30,9 +29,6 @@ function initialize_exchange(
         then failwith("Dex/no-token-b")
         else skip;
 
-        if pair.token_a_pool * pair.token_b_pool =/= 0n
-        then failwith("Dex/non-zero-reserves")
-        else skip;
         if pair.total_supply =/= 0n
         then failwith("Dex/non-zero-shares")
         else skip;
@@ -79,17 +75,16 @@ function internal_token_to_token_swap(
   const params          : swap_slice_type)
                         : tmp_swap_type is
   block {
-    const res : (pair_type * nat) = get_pair(params.pair, tmp.s);
-    const pair : pair_type = res.0;
-    const pair_id : nat = res.1;
+    const pair : pair_type = get_pair(params.pair_id, tmp.s);
+    const tokens : tokens_type = get_tokens(params.pair_id, tmp.s);
     var swap: swap_data_type :=
-      form_swap_data(pair, params.pair, params.operation);
+      form_swap_data(pair, tokens, params.operation);
 
     if pair.token_a_pool * pair.token_b_pool = 0n
     then failwith("Dex/not-launched")
     else skip;
     if tmp.amount_in = 0n
-    then failwith ("Dex/zero-amount-in")
+    then failwith("Dex/zero-amount-in")
     else skip;
     if swap.from_.token =/= tmp.token_in
     then failwith("Dex/wrong-route")
@@ -112,7 +107,7 @@ function internal_token_to_token_swap(
       swap.to_.pool,
       pair.total_supply,
       params.operation);
-    tmp.s.pairs[pair_id] := updated_pair;
+    tmp.s.pairs[params.pair_id] := updated_pair;
 
     tmp.operation := Some(
       typed_transfer(
@@ -133,15 +128,8 @@ function token_to_token_route(
     var operations: list(operation) := list[];
     case p of
       Swap(params) -> {
-        s.entered := check_reentrancy(s.entered);
         if List.size(params.swaps) < 1n
-        then failwith ("Dex/too-few-swaps")
-        else skip;
-        if params.amount_in = 0n
-        then failwith ("Dex/zero-amount-in")
-        else skip;
-        if params.min_amount_out = 0n
-        then failwith ("Dex/zero-min-amount-out")
+        then failwith("Dex/too-few-swaps")
         else skip;
 
         const first_swap : swap_slice_type =
@@ -150,10 +138,11 @@ function token_to_token_route(
           | None -> (failwith("Dex/zero-swaps") : swap_slice_type)
           end;
 
-        const token : token_type = 
+        const tokens : tokens_type = get_tokens(first_swap.pair_id, s);
+        const token : token_type =
           case first_swap.operation of
-            A_to_b -> first_swap.pair.token_a_type
-          | B_to_a -> first_swap.pair.token_b_type
+            A_to_b -> tokens.token_a_type
+          | B_to_a -> tokens.token_b_type
         end;
 
         operations :=
@@ -163,7 +152,6 @@ function token_to_token_route(
             params.amount_in,
             token
           ) # operations;
-
 
         const tmp : tmp_swap_type = List.fold(
           internal_token_to_token_swap,
@@ -178,7 +166,7 @@ function token_to_token_route(
         );
 
         if tmp.amount_in < params.min_amount_out
-        then failwith ("Dex/wrong-min-out")
+        then failwith("Dex/wrong-min-out")
         else skip;
 
         s := tmp.s;
@@ -186,7 +174,7 @@ function token_to_token_route(
         const last_operation : operation =
           case tmp.operation of
             Some(o) -> o
-          | None -> (failwith("Dex/too-few-swaps") : operation)
+          | None -> failwith("Dex/too-few-swaps")
           end;
         operations := last_operation # operations;
       }
@@ -204,11 +192,7 @@ function invest_liquidity(
     var operations: list(operation) := list[];
     case p of
       Invest(params) -> {
-        s.entered := check_reentrancy(s.entered);
-
-        const res : (pair_type * nat) = get_pair(params.pair, s);
-        var pair : pair_type := res.0;
-        const token_id : nat = res.1;
+        var pair : pair_type := get_pair(params.pair_id, s);
 
         if pair.token_a_pool * pair.token_b_pool = 0n
         then failwith("Dex/not-launched")
@@ -217,25 +201,11 @@ function invest_liquidity(
         then failwith("Dex/wrong-params")
         else skip;
 
-        var tokens_a_required : nat :=
-          params.shares * pair.token_a_pool / pair.total_supply;
-        if params.shares * pair.token_a_pool >
-          tokens_a_required * pair.total_supply
-        then tokens_a_required := tokens_a_required + 1n
-        else skip;
-        var tokens_b_required : nat :=
-          params.shares * pair.token_b_pool / pair.total_supply;
-        if params.shares * pair.token_b_pool >
-          tokens_b_required * pair.total_supply
-        then tokens_b_required := tokens_b_required + 1n
-        else skip;
+        var tokens_a_required : nat := div_ceil(params.shares
+          * pair.token_a_pool, pair.total_supply);
+        var tokens_b_required : nat := div_ceil(params.shares
+          * pair.token_b_pool, pair.total_supply);
 
-        if tokens_a_required = 0n
-        then failwith("Dex/zero-token-a-in")
-        else skip;
-        if tokens_b_required = 0n
-        then failwith("Dex/zero-token-b-in")
-        else skip;
         if tokens_a_required > params.token_a_in
         then failwith("Dex/low-max-token-a-in")
         else skip;
@@ -243,30 +213,32 @@ function invest_liquidity(
         then failwith("Dex/low-max-token-b-in")
         else skip;
 
-        var account : account_info := get_account((Tezos.sender, token_id), s);
+        var account : account_info := get_account((Tezos.sender,
+          params.pair_id), s);
         const share : nat = account.balance;
 
         account.balance := share + params.shares;
-        s.ledger[(Tezos.sender, token_id)] := account;
+        s.ledger[(Tezos.sender, params.pair_id)] := account;
 
         pair.token_a_pool := pair.token_a_pool + tokens_a_required;
         pair.token_b_pool := pair.token_b_pool + tokens_b_required;
 
         pair.total_supply := pair.total_supply + params.shares;
-        s.pairs[token_id] := pair;
+        s.pairs[params.pair_id] := pair;
 
+        const tokens : tokens_type = get_tokens(params.pair_id, s);
         operations := list [
           typed_transfer(
             Tezos.sender,
             Tezos.self_address,
             tokens_a_required,
-            params.pair.token_a_type
+            tokens.token_a_type
           );
           typed_transfer(
             Tezos.sender,
             Tezos.self_address,
             tokens_b_required,
-            params.pair.token_b_type
+            tokens.token_b_type
           );
         ];
       }
@@ -278,25 +250,22 @@ function invest_liquidity(
 function divest_liquidity(
   const p               : action_type;
   var s                 : storage_type)
-                        :  return_type is
+                        : return_type is
   block {
     var operations: list(operation) := list[];
     case p of
       Divest(params) -> {
-        s.entered := check_reentrancy(s.entered);
+        var pair : pair_type := get_pair(params.pair_id, s);
+        const tokens : tokens_type = get_tokens(params.pair_id, s);
 
-        const res : (pair_type * nat) = get_pair(params.pair, s);
-        var pair : pair_type := res.0;
-        const token_id : nat = res.1;
-
-        if s.pairs_count = token_id
+        if s.pairs_count = params.pair_id
         then failwith("Dex/pair-not-exist")
         else skip;
         if pair.token_a_pool * pair.token_b_pool = 0n
         then failwith("Dex/not-launched")
         else skip;
 
-        var account : account_info := get_account((Tezos.sender, token_id), s);
+        var account : account_info := get_account((Tezos.sender, params.pair_id), s);
         const share : nat = account.balance;
 
         if params.shares = 0n
@@ -307,7 +276,7 @@ function divest_liquidity(
         else skip;
 
         account.balance := abs(share - params.shares);
-        s.ledger[(Tezos.sender, token_id)] := account;
+        s.ledger[(Tezos.sender, params.pair_id)] := account;
 
         const token_a_divested : nat =
           pair.token_a_pool * params.shares / pair.total_supply;
@@ -327,21 +296,21 @@ function divest_liquidity(
         pair.token_a_pool := abs(pair.token_a_pool - token_a_divested);
         pair.token_b_pool := abs(pair.token_b_pool - token_b_divested);
 
-        s.pairs[token_id] := pair;
+        s.pairs[params.pair_id] := pair;
 
         operations :=
           typed_transfer(
             Tezos.self_address,
             Tezos.sender,
             token_a_divested,
-            params.pair.token_a_type
+            tokens.token_a_type
           ) # operations;
         operations :=
           typed_transfer(
             Tezos.self_address,
             Tezos.sender,
             token_b_divested,
-            params.pair.token_b_type
+            tokens.token_b_type
           ) # operations;
       }
     | _                 -> skip

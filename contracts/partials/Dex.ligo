@@ -10,6 +10,8 @@ function call_dex(
   var s                 : full_storage_type)
                         : full_return_type is
   block {
+    s.storage.entered := check_reentrancy(s.storage.entered);
+
     const idx : nat = case p of
       AddPair(_)          -> 0n
     | Swap(_)             -> 1n

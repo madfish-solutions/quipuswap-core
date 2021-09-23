@@ -11,8 +11,28 @@ function get_account(
   | Some(instance) -> instance
   end;
 
-(* Helper function to get token pair *)
+(* Helper function to get pair info *)
 function get_pair(
+  const pair_id         : nat;
+  const s               : storage_type)
+                        : pair_type is
+  case s.pairs[pair_id] of
+    None -> failwith("Dex/not-launched")
+  | Some(instance) -> instance
+  end;
+
+(* Helper function to get pair info *)
+function get_tokens(
+  const pair_id         : nat;
+  const s               : storage_type)
+                        : tokens_type is
+  case s.tokens[pair_id] of
+    None -> failwith("Dex/not-launched")
+  | Some(instance) -> instance
+  end;
+
+(* Helper function to get token pair *)
+function get_pair_info(
   const key             : tokens_type;
   const s               : storage_type)
                         : (pair_type * nat) is
@@ -147,3 +167,15 @@ function check_reentrancy(
   if entered
   then failwith("Dex/reentrancy")
   else True
+
+[@inline]
+function div_ceil(
+  const numerator       : nat;
+  const denominator     : nat)
+                        : nat is
+  case ediv(numerator, denominator) of
+    Some(result) -> if result.1 > 0n
+      then result.0 + 1n
+      else result.0
+  | None -> failwith("Dex/no-liquidity")
+  end;

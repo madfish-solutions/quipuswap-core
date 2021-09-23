@@ -45,7 +45,7 @@ type storage_type       is record [
   pairs_count             : nat; (* total shares count *)
   tokens                  : big_map(nat, tokens_type); (* all the tokens list *)
   token_to_id             : big_map(bytes, nat); (* all the tokens list *)
-  pairs                   : big_map(nat, pair_type); (* account info per address *)
+  pairs                   : big_map(nat, pair_type); (* pair info per token id *)
   ledger                  : big_map((address * nat), account_info); (* account info per address *)
 ]
 
@@ -55,7 +55,7 @@ type swap_type          is
 | B_to_a (* exchange token B to token A *)
 
 type swap_slice_type    is record [
-  pair                    : tokens_type; (* exchange pair info *)
+  pair_id                 : nat; (* pair identifier *)
   operation               : swap_type; (* exchange operation *)
 ]
 
@@ -92,21 +92,20 @@ type initialize_params  is [@layout:comb] record [
 ]
 
 type invest_type        is [@layout:comb] record [
-  pair                    : tokens_type; (* exchange pair info *)
+  pair_id                 : nat; (* pair identifier *)
   shares                  : nat; (* the amount of shares to receive *)
   token_a_in              : nat; (* min amount of tokens A invested  *)
   token_b_in              : nat; (* min amount of tokens B invested *)
 ]
 
 type divest_type        is [@layout:comb] record [
-  pair                    : tokens_type; (* exchange pair info *)
+  pair_id                 : nat; (* pair identifier *)
   min_token_a_out         : nat; (* min amount of tokens A received to accept the divestment *)
   min_token_b_out         : nat; (* min amount of tokens B received to accept the divestment *)
   shares                  : nat; (* amount of shares to be burnt *)
 ]
 
 type action_type        is
-(* User's entrypoints *)
   AddPair                 of initialize_params  (* sets initial liquidity *)
 | Swap                    of route_type  (* exchanges token to another token and sends them to receiver *)
 | Invest                  of invest_type  (* mints min shares after investing tokens *)
