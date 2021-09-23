@@ -1,7 +1,7 @@
 #include "../partials/IDex.ligo"
 #include "../partials/Utils.ligo"
-#include "../partials/MethodFA2.ligo"
-#include "../partials/MethodDex.ligo"
+#include "../partials/MethodsFA2.ligo"
+#include "../partials/MethodsDex.ligo"
 #include "../partials/Dex.ligo"
 
 (* Dex - Contract for exchanges between FA12 and FA2 tokens *)

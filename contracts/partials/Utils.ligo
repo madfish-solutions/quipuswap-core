@@ -42,12 +42,12 @@ function form_pools(
   const direction       : swap_type)
                         : pair_type is
   case direction of
-    Buy -> record [
+    B_to_a -> record [
       token_a_pool      = to_pool;
       token_b_pool      = from_pool;
       total_supply      = supply;
     ]
-  | Sell -> record [
+  | A_to_b -> record [
       token_a_pool      = from_pool;
       token_b_pool      = to_pool;
       total_supply      = supply;
@@ -70,11 +70,11 @@ function form_swap_data(
         token           = swap.token_b_type;
       ];
   } with case direction of
-      Sell -> record [
+      A_to_b -> record [
         from_           = side_a;
         to_             = side_b;
       ]
-    | Buy -> record [
+    | B_to_a -> record [
         from_           = side_b;
         to_             = side_a;
       ]
