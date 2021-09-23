@@ -28,7 +28,7 @@ function call_dex(
     res.0 := Tezos.transaction(
       unit,
       0mutez,
-      get_close_entrypoint(unit)) # res.0;
+      (Tezos.self("%close") : contract(unit))) # res.0;
 } with (res.0, s)
 
 (*

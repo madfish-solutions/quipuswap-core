@@ -120,16 +120,6 @@ function get_fa12_token_contract(
   | None -> (failwith("Dex/not-token") : contract(entry_fa12_type))
   end;
 
-(* Helper function to get the reentrancy entrypoint of the current contract *)
-function get_close_entrypoint(
-  const _               : unit)
-                        : contract(unit) is
-  case (Tezos.get_entrypoint_opt("%close", Tezos.self_address)
-     : option(contract(unit))) of
-    Some(contr) -> contr
-  | None -> (failwith("Dex/no-close-entrypoint") : contract(unit))
-  end;
-
 (* Helper function to transfer the asset based on its standard *)
 function typed_transfer(
   const owner           : address;
