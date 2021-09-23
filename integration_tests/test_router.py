@@ -94,11 +94,11 @@ class TokenToTokenRouterTest(TestCase):
             "swaps" : [
                 {
                     "pair": pair_ab, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 },
                 {
                     "pair": pair_bc, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 }
             ],
             "amount_in" : amount_in,
@@ -118,7 +118,7 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap(
             swaps=[{
                 "pair": pair_ab,
-                "operation": "sell",
+                "operation": "a_to_b",
             }],
             amount_in=amount_in,
             min_amount_out=1,
@@ -130,7 +130,7 @@ class TokenToTokenRouterTest(TestCase):
         res = chain.interpret(self.dex.swap(
              swaps=[{
                 "pair": pair_bc,
-                "operation": "sell",
+                "operation": "a_to_b",
             }],
             amount_in=token_b_out["amount"],
             min_amount_out=1,
@@ -151,15 +151,15 @@ class TokenToTokenRouterTest(TestCase):
             "swaps" : [
                 {
                     "pair": pair_ab, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 },
                 {
                     "pair": pair_bc, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 },
                 {
                     "pair": pair_ac, 
-                    "operation": "buy",
+                    "operation": "b_to_a",
                 }
             ],
             "amount_in" : 10_000,
@@ -178,11 +178,11 @@ class TokenToTokenRouterTest(TestCase):
             "swaps" : [
                 {
                     "pair": pair_ab, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 },
                 {
                     "pair": pair_ab, 
-                    "operation": "buy",
+                    "operation": "b_to_a",
                 }
             ],
             "amount_in" : 10_000,
@@ -204,11 +204,11 @@ class TokenToTokenRouterTest(TestCase):
                 "swaps" : [
                     {
                         "pair": pair_ab, 
-                        "operation": "sell",
+                        "operation": "a_to_b",
                     },
                     {
                         "pair": pair_cd, 
-                        "operation": "sell",
+                        "operation": "a_to_b",
                     }
                 ],
                 "amount_in" : 334,
@@ -221,11 +221,11 @@ class TokenToTokenRouterTest(TestCase):
                 "swaps" : [
                     {
                         "pair": pair_ab, 
-                        "operation": "sell",
+                        "operation": "a_to_b",
                     },
                     {
                         "pair": pair_ab, 
-                        "operation": "sell",
+                        "operation": "a_to_b",
                     }
                 ],
                 "amount_in" : 334,
@@ -245,7 +245,7 @@ class TokenToTokenRouterTest(TestCase):
             "swaps" : [
                 {
                     "pair": pair_ab, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 }
             ],
             "amount_in" : 100_000_000_000,
@@ -262,11 +262,11 @@ class TokenToTokenRouterTest(TestCase):
             "swaps" : [
                 {
                     "pair": pair_ab, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 },
                 {
                     "pair": pair_bc, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 }
             ],
             "amount_in" : 100_000_000,
@@ -283,15 +283,15 @@ class TokenToTokenRouterTest(TestCase):
             "swaps" : [
                 {
                     "pair": pair_ab, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 },
                 {
                     "pair": pair_bc, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 },
                 {
                     "pair": pair_ac, 
-                    "operation": "buy",
+                    "operation": "b_to_a",
                 }
             ],
             "amount_in" : 10_000_000_000,
@@ -340,11 +340,11 @@ class TokenToTokenRouterTest(TestCase):
             "swaps" : [
                 {
                     "pair": pair_ab, 
-                    "operation": "buy",
+                    "operation": "b_to_a",
                 },
                 {
                     "pair": pair_bc, 
-                    "operation": "sell",
+                    "operation": "a_to_b",
                 }
             ],
             "amount_in" : amount_in,
