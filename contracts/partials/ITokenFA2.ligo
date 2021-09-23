@@ -13,8 +13,8 @@ type token_metadata_info is
   ]
 
 const default_token_id : token_id = 0n;
-(* contract storage *)
-type storage is
+(* contract storage_type *)
+type storage_type is
   record [
     total_supply              : nat;
     ledger                    : big_map (address, account);
@@ -22,7 +22,7 @@ type storage is
     metadata                  : big_map(string, bytes);
   ]
 
-type return is list (operation) * storage
+type return_type is list (operation) * storage_type
 
 type transfer_destination is
   [@layout:comb]
@@ -53,7 +53,7 @@ type balance_of_response is
     balance     : nat;
   ]
 
-type balance_params is
+type bal_fa2_type is
   [@layout:comb]
   record [
     requests    : list (balance_of_request);
@@ -72,11 +72,11 @@ type update_operator_param is
 | Add_operator    of operator_param
 | Remove_operator of operator_param
 
-type transfer_params is list (transfer_param)
-// type balance_params is michelson_pair_right_comb(balance_params_r)
-type update_operator_params is list (update_operator_param)
+type transfer_type is list (transfer_param)
+// type bal_fa2_type is michelson_pair_right_comb(balance_params_r)
+type operator_type is list (update_operator_param)
 
-type token_action is
-| Transfer                of transfer_params
-| Balance_of              of balance_params
-| Update_operators        of update_operator_params
+type token_action_type is
+| Transfer                of transfer_type
+| Balance_of              of bal_fa2_type
+| Update_operators        of operator_type

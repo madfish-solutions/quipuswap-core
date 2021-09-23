@@ -38,7 +38,7 @@ type balance_of_response is
     balance     : nat;
   ]
 
-type balance_params is
+type bal_fa2_type is
   [@layout:comb]
   record [
     requests    : list (balance_of_request);

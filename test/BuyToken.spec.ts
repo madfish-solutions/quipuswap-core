@@ -1,4 +1,4 @@
-import { TTContext } from "./helpers/ttContext";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import BigNumber from "bignumber.js";
 import accounts from "./accounts/accounts";
@@ -6,7 +6,7 @@ import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("BuyToken()", function () {
-  let context: TTContext;
+  let context: Context;
   const tokenAAmount: number = 100000;
   const tokenBAmount: number = 1000;
   const aliceAddress: string = accounts.alice.pkh;
@@ -14,7 +14,7 @@ contract("BuyToken()", function () {
   let tokenBAddress;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
     await context.createPair({
       tokenAAmount,
@@ -130,7 +130,7 @@ contract("BuyToken()", function () {
           amountOut,
           aliceAddress
         ),
-        (err) => {
+        (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         }

@@ -48,7 +48,7 @@ if (standard !== "MIXED") {
       it(decription, async function () {
         let config = await prepareProviderOptions(sender);
         tezos.setProvider(config);
-        await rejects(act(), (err) => {
+        await rejects(act(), (err: any) => {
           ok(err.message == errorMsg, "Error message mismatch");
           return true;
         });

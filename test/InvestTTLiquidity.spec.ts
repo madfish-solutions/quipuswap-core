@@ -1,11 +1,11 @@
-import { TTContext } from "./helpers/ttContext";
+import { Context } from "./helpers/context";
 import { strictEqual, ok, notStrictEqual, rejects } from "assert";
 import accounts from "./accounts/accounts";
 import { defaultAccountInfo } from "./constants";
 const standard = process.env.EXCHANGE_TOKEN_STANDARD;
 
 contract("InvestTTLiquidity()", function () {
-  let context: TTContext;
+  let context: Context;
   const tokenAAmount: number = 1000;
   const tokenBAmount: number = 100000;
   const aliceAddress: string = accounts.alice.pkh;
@@ -15,7 +15,7 @@ contract("InvestTTLiquidity()", function () {
   let tokenBAddress;
 
   before(async () => {
-    context = await TTContext.init([], false, "alice", false);
+    context = await Context.init([], false, "alice", false);
     await context.setAllDexFunctions();
     await context.createPair({
       tokenAAmount,
@@ -32,7 +32,7 @@ contract("InvestTTLiquidity()", function () {
       await context.dex.divestLiquidity("0", 1, 1, tokenAAmount);
       await rejects(
         context.dex.investLiquidity("0", tokenAAmount, tokenBAmount, 100),
-        (err) => {
+        (err: any) => {
           ok(err.message == "Dex/not-launched", "Error message mismatch");
           return true;
         }
@@ -427,7 +427,7 @@ contract("InvestTTLiquidity()", function () {
         1,
         bobAddress
       );
-      await rejects(context.dex.investLiquidity("0", 1, 1, 0), (err) => {
+      await rejects(context.dex.investLiquidity("0", 1, 1, 0), (err: any) => {
         ok(err.message == "Dex/wrong-params", "Error message mismatch");
         return true;
       });
