@@ -1,3 +1,4 @@
+#include "../partials/Errors.ligo"
 #include "../partials/IDex.ligo"
 #include "../partials/Utils.ligo"
 #include "../partials/MethodsFA2.ligo"
@@ -19,11 +20,11 @@ function main(
   | SetDexFunction(params)            ->
     ((nil:list(operation)),
       if params.index > dex_func_count
-      then (failwith("Dex/wrong-index") : full_storage_type)
+      then (failwith(err_high_func_index) : full_storage_type)
       else set_dex_function(params.index, params.func, s))
   | SetTokenFunction(params)          ->
     ((nil:list(operation)),
       if params.index > token_func_count
-      then (failwith("Dex/wrong-index") : full_storage_type)
+      then (failwith(err_high_func_index) : full_storage_type)
       else set_token_function(params.index, params.func, s))
   end
