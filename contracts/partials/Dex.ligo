@@ -25,10 +25,6 @@ function call_dex(
       | None              -> (failwith(err_unknown_func) : return_type)
       end;
     s.storage := res.1;
-    res.0 := Tezos.transaction(
-      unit,
-      0mutez,
-      (Tezos.self("%close") : contract(unit))) # res.0;
 } with (res.0, s)
 
 (*

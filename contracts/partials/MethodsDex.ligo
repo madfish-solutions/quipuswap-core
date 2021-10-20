@@ -4,7 +4,12 @@ function initialize_exchange(
   var s                 : storage_type)
                         : return_type is
   block {
-    var operations: list(operation) := list[];
+    var operations: list(operation) := list[
+      Tezos.transaction(
+        unit,
+        0mutez,
+        (Tezos.self("%close") : contract(unit)))
+    ];
     case p of
       AddPair(params) -> {
         if params.pair.token_a_type >= params.pair.token_b_type
@@ -125,7 +130,12 @@ function token_to_token_route(
   var s                 : storage_type)
                         : return_type is
   block {
-    var operations: list(operation) := list[];
+    var operations: list(operation) := list[
+      Tezos.transaction(
+        unit,
+        0mutez,
+        (Tezos.self("%close") : contract(unit)))
+    ];
     case p of
       Swap(params) -> {
         if List.size(params.swaps) < 1n
@@ -189,7 +199,12 @@ function invest_liquidity(
   var s                 : storage_type)
                         : return_type is
   block {
-    var operations: list(operation) := list[];
+    var operations: list(operation) := list[
+      Tezos.transaction(
+        unit,
+        0mutez,
+        (Tezos.self("%close") : contract(unit)))
+    ];
     case p of
       Invest(params) -> {
         var pair : pair_type := get_pair(params.pair_id, s);
@@ -227,20 +242,20 @@ function invest_liquidity(
         s.pairs[params.pair_id] := pair;
 
         const tokens : tokens_type = get_tokens(params.pair_id, s);
-        operations := list [
+        operations :=
           typed_transfer(
             Tezos.sender,
             Tezos.self_address,
             tokens_a_required,
             tokens.token_a_type
-          );
+          ) # operations;
+        operations :=
           typed_transfer(
             Tezos.sender,
             Tezos.self_address,
             tokens_b_required,
             tokens.token_b_type
-          );
-        ];
+          ) # operations;
       }
     | _                 -> skip
     end
@@ -252,7 +267,12 @@ function divest_liquidity(
   var s                 : storage_type)
                         : return_type is
   block {
-    var operations: list(operation) := list[];
+    var operations: list(operation) := list[
+      Tezos.transaction(
+        unit,
+        0mutez,
+        (Tezos.self("%close") : contract(unit)))
+    ];
     case p of
       Divest(params) -> {
         var pair : pair_type := get_pair(params.pair_id, s);
