@@ -8,7 +8,7 @@ function initialize_exchange(
       Tezos.transaction(
         unit,
         0mutez,
-        (Tezos.self("%close") : contract(unit)))
+        get_close_entrypoint(Tezos.self_address))
     ];
     case p of
       AddPair(params) -> {
@@ -134,7 +134,7 @@ function token_to_token_route(
       Tezos.transaction(
         unit,
         0mutez,
-        (Tezos.self("%close") : contract(unit)))
+        get_close_entrypoint(Tezos.self_address))
     ];
     case p of
       Swap(params) -> {
@@ -203,7 +203,7 @@ function invest_liquidity(
       Tezos.transaction(
         unit,
         0mutez,
-        (Tezos.self("%close") : contract(unit)))
+        get_close_entrypoint(Tezos.self_address))
     ];
     case p of
       Invest(params) -> {
@@ -271,7 +271,7 @@ function divest_liquidity(
       Tezos.transaction(
         unit,
         0mutez,
-        (Tezos.self("%close") : contract(unit)))
+        get_close_entrypoint(Tezos.self_address))
     ];
     case p of
       Divest(params) -> {

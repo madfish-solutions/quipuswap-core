@@ -5,9 +5,11 @@
     "noImplicitAny": false,
     "downlevelIteration": true,
     "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@types", "./types"],
-    "types": ["node", "@types/mocha", "@types/chai"]
+    "resolveJsonModule": true,
+    "baseUrl": "./",
+    "typeRoots": ["./node_modules/@types", "./test/types"],
+    "types": ["node", "@types/mocha", "@types/chai", "@types/expect", "./test/types"],
   },
-  "exclude": ["node_modules", "build", "cache", "artifacts", "scripts"],
-  "include": ["./**/*.ts"]
+  "exclude": ["node_modules", "build", "cache", "artifacts"],
+  "include": ["./*.ts", "./test/*.ts", "./test/helpers/*.ts"]
 }

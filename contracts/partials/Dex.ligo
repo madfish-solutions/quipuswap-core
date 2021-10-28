@@ -18,13 +18,19 @@ function call_dex(
     | Invest(_)           -> 2n
     | Divest(_)           -> 3n
     end;
-
+    const prev_pairs_count : nat = s.storage.pairs_count;
     var res : return_type :=
       case s.dex_lambdas[idx] of
         Some(f)           -> f(p, s.storage)
       | None              -> (failwith(err_unknown_func) : return_type)
       end;
     s.storage := res.1;
+    if prev_pairs_count =/= s.storage.pairs_count
+    then s.token_metadata[prev_pairs_count] := record[
+        token_id    = prev_pairs_count;
+        token_info  = default_pool_metadata
+      ]
+    else skip;
 } with (res.0, s)
 
 (*
@@ -84,29 +90,3 @@ function get_reserves(
       0tez,
       params.receiver)
     ], s)
-
-[@inline]
-function set_dex_function(
-  const idx             : nat;
-  const f               : dex_func_type;
-  var s                 : full_storage_type)
-                        : full_storage_type is
-  block {
-    case s.dex_lambdas[idx] of
-      Some(_) -> failwith(err_func_set)
-    | None -> s.dex_lambdas[idx] := f
-    end;
-  } with s
-
-[@inline]
-function set_token_function(
-  const idx             : nat;
-  const f               : token_func_type;
-  var s                 : full_storage_type)
-                        : full_storage_type is
-  block {
-    case s.token_lambdas[idx] of
-      Some(_) -> failwith(err_func_set)
-    | None -> s.token_lambdas[idx] := f
-    end;
-  } with s
