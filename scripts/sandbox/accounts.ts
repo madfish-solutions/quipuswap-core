@@ -1,4 +1,4 @@
-module.exports = {
+export = {
   alice: {
     pkh: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb",
     sk: "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq",
@@ -9,9 +9,13 @@ module.exports = {
     sk: "edsk3RFfvaFaxbHx8BMtEW1rKQcPtDML3LXjNqMNLCzC3wLC1bWbAt",
     pk: "edpkurPsQ8eUApnLUJ9ZPDvu98E8VNj4KtJa1aZr16Cr5ow5VHKnz4",
   },
-  eve: {
-    pkh: "tz1aSkwEot3L2kmUvcoxzjMomb9mvBNuzFK6",
+  carol: {
+    pkh: "tz1MnmtP4uAcgMpeZN6JtyziXeFqqwQG6yn6",
     sk: "edsk3Sb16jcx9KrgMDsbZDmKnuN11v4AbTtPBgBSBTqYftd8Cq3i1e",
     pk: "edpku9qEgcyfNNDK6EpMvu5SqXDqWRLuxdMxdyH12ivTUuB1KXfGP4",
+  },
+  dev: {
+    pkh: "tz1cnoQrSzqqzpfVyKBesRikg2cyNhHWfAQQ",
+    sk: "edskRsRcJz77uZZwKHCud3uBktpzcDEwzzbdbU9e7t78kG51nPh1ZZZJ7TFLwmWXkDBdFAeevmZbH2WRdMErt9zubgxLkXwnYa",
   },
 };

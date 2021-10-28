@@ -1,18 +1,17 @@
 import { MichelsonMap } from "@taquito/michelson-encoder";
+import accounts from "../scripts/sandbox/accounts";
 
-export default {
+let totalSupply = "10000000";
+export const fa2TokenStorage: any = {
   ledger: MichelsonMap.fromLiteral({
-    tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb: {
-      balance: "10000000",
-      allowances: [],
-    },
+    [accounts.alice.pkh]: { balance: totalSupply, allowances: [] },
   }),
   operators: new MichelsonMap(),
   token_metadata: MichelsonMap.fromLiteral({
     0: {
       token_id: 0,
       extras: MichelsonMap.fromLiteral({
-        0: new Buffer(
+        0: Buffer.from(
           JSON.stringify({
             name: "Quipu Token",
             authors: ["Madfish.Solutions"],
@@ -23,8 +22,8 @@ export default {
     },
   }),
   metadata: MichelsonMap.fromLiteral({
-    "": new Buffer("tezos-storage:here", "ascii").toString("hex"),
-    here: new Buffer(
+    "": Buffer.from("tezos-storage:here", "ascii").toString("hex"),
+    here: Buffer.from(
       JSON.stringify({
         version: "v0.0.1",
         description: "Quipuswap Share Pool Token",
@@ -49,5 +48,5 @@ export default {
       "ascii"
     ).toString("hex"),
   }),
-  total_supply: "10000000",
+  total_supply: totalSupply,
 };

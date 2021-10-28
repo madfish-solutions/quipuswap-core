@@ -110,6 +110,16 @@ function get_fa2_token_contract(
   | None -> (failwith(err_wrong_token_entrypoint) : contract(entry_fa2_type))
   end;
 
+(* Helper function to get fa2 token contract *)
+function get_close_entrypoint(
+  const contr_address   : address)
+                        : contract(unit) is
+  case (Tezos.get_entrypoint_opt("%close", contr_address)
+      : option(contract(unit))) of
+    Some(contr) -> contr
+  | None -> (failwith(err_wrong_close_entrypoint) : contract(unit))
+  end;
+
 (* Helper function to get fa1.2 token contract *)
 function get_fa12_token_contract(
   const token_address   : address)

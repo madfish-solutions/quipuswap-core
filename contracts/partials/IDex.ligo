@@ -32,7 +32,7 @@ type pair_type          is record [
   total_supply            : nat; (* total shares count *)
 ]
 
-type tokens_type        is record [
+type tokens_type        is [@layout:comb] record [
   token_a_type            : token_type; (* token A standard *)
   token_b_type            : token_type; (* token B standard *)
 ]
@@ -123,16 +123,6 @@ type return_type        is list (operation) * storage_type
 type dex_func_type      is (action_type * storage_type) -> return_type
 type token_func_type    is (token_action_type * storage_type) -> return_type
 
-type set_token_func_type is record [
-  func                    : token_func_type; (* code of the function *)
-  index                   : nat; (* the key in functions map *)
-]
-
-type set_dex_func_type  is record [
-  func                    : dex_func_type; (* code of the function *)
-  index                   : nat; (* the key in functions map *)
-]
-
 type full_action_type   is
 | Use                     of action_type
 | Transfer                of transfer_type (* transfer asset from one account to another *)
@@ -140,15 +130,23 @@ type full_action_type   is
 | Update_operators        of operator_type (* updates the token operators *)
 | Get_reserves            of reserves_type (* returns the underlying token reserves *)
 | Close                   of unit (* entrypoint to prevent reentrancy *)
-| SetDexFunction          of set_dex_func_type (* sets the dex specific function. Is used before the whole system is launched *)
-| SetTokenFunction        of set_token_func_type (* sets the FA function, is used before the whole system is launched *)
 
 type full_storage_type  is record [
   storage                 : storage_type; (* real dex storage_type *)
   metadata                : big_map(string, bytes); (* metadata storage_type according to TZIP-016 *)
   dex_lambdas             : big_map(nat, dex_func_type); (* map with exchange-related functions code *)
   token_lambdas           : big_map(nat, token_func_type); (* map with token-related functions code *)
+  token_metadata          : big_map(nat, token_metadata_info);
 ]
+
+const default_pool_metadata : map (string, bytes) = map [
+    "decimals" -> 0x36;
+    "description" -> 0x54686520746f6b656e207468617420726570726573656e74732074686520736861726520696e207468652051756970757377617020706f6f6c2e;
+    "name" -> 0x517569707573776170204c5020746f6b656e;
+    "shouldPreferSymbol" -> 0x74727565;
+    "symbol" -> 0x51504c50;
+    "thumbnailUri" -> 0x;
+  ];
 
 type full_return_type   is list (operation) * full_storage_type
 

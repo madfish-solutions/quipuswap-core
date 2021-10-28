@@ -5,6 +5,7 @@ const err_unknown_func              : string = "Dex/function-not-set";
 const err_not_entered               : string = "Dex/not-entered";
 const err_sender_not_self           : string = "Dex/not-self";
 const err_wrong_token_entrypoint    : string = "Dex/not-token";
+const err_wrong_close_entrypoint    : string = "Dex/not-close-entrypoint";
 const err_pair_not_listed           : string = "Dex/not-launched";
 const err_no_liquidity              : string = "Dex/no-liquidity";
 const err_zero_a_in                 : string = "Dex/no-token-a-in";
