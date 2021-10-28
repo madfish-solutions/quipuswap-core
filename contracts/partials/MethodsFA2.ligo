@@ -10,6 +10,10 @@ function iterate_transfer(
       const transfer    : transfer_destination)
                         : storage_type is
       block {
+        if s.pairs_count >= transfer.token_id then
+          failwith("FA2_TOKEN_UNDEFINED")
+        else skip;
+
         const user_key : (address * nat) =
           (user_trx_params.from_,
           transfer.token_id);
@@ -45,6 +49,9 @@ function iterate_update_operator(
       if Tezos.sender =/= param.owner
       then failwith("FA2_NOT_OWNER")
       else skip;
+      if s.pairs_count >= param.token_id then
+        failwith("FA2_TOKEN_UNDEFINED")
+      else skip;
 
       var sender_account : account_info :=
         get_account((param.owner, param.token_id), s);
@@ -56,6 +63,9 @@ function iterate_update_operator(
     | Remove_operator(param) -> {
       if Tezos.sender =/= param.owner
       then failwith("FA2_NOT_OWNER")
+      else skip;
+      if s.pairs_count >= param.token_id then
+        failwith("FA2_TOKEN_UNDEFINED")
       else skip;
 
       var sender_account : account_info :=
@@ -96,6 +106,10 @@ function get_balance_of(
         const request   : balance_of_request)
                         : list (balance_of_response) is
         block {
+          if s.pairs_count >= request.token_id then
+            failwith("FA2_TOKEN_UNDEFINED")
+          else skip;
+
           const sender_account : account_info =
             get_account((request.owner, request.token_id), s);
 

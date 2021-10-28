@@ -5,7 +5,7 @@
   "scripts": {
     "start-sandbox": "docker run --rm --name my-sandbox -e flextesa_node_cors_origin='*' -e block_time=1 --detach -p 8732:20000 tqtezos/flextesa:20210602 granabox start",
     "clean": "rm -rf ./build ./contracts/compiled",
-о    "compile": "ts-node scripts/cli.ts compile -f json",
+    "compile": "ts-node scripts/cli.ts compile -f json",
     "migrate": "yarn compile && ts-node scripts/cli.ts migrate",
     "test": "ts-mocha --paths test/*.spec.ts --bail"
   },
