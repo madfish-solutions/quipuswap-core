@@ -5,12 +5,8 @@
   "scripts": {
     "start-sandbox": "docker run --rm --name my-sandbox -e flextesa_node_cors_origin='*' -e block_time=1 --detach -p 8732:20000 tqtezos/flextesa:20210602 granabox start",
     "clean": "rm -rf ./build ./contracts/compiled",
-    "compile-lambdas": "ts-node scripts/cli.ts compile-lambda -j storage/json/DexCoreFunctions.json -c contracts/main/dex_core.ligo",
-    "compile": "ts-node scripts/cli.ts compile -f json",
-    "full-compile": "yarn clean && yarn compile && yarn compile-lambdas",
+о    "compile": "ts-node scripts/cli.ts compile -f json",
     "migrate": "yarn compile && ts-node scripts/cli.ts migrate",
-    "migrate-granadanet": "yarn compile && ts-node scripts/cli.ts migrate -n granadanet",
-    "migrate-mainnet": "yarn compile && ts-node scripts/cli.ts migrate -n mainnet",
     "test": "ts-mocha --paths test/*.spec.ts --bail"
   },
   "dependencies": {

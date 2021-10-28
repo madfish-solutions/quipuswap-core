@@ -225,7 +225,7 @@ export const runMigrations = async (
     for (let i: number = from; i < to; ++i) {
       const execMigration: any = require(`../${env.migrationsDir}/${migrations[i]}.ts`);
 
-      await execMigration(tezos);
+      await execMigration(tezos, network);
     }
   } catch (e) {
     console.error(e);

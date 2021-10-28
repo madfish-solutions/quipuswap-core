@@ -32,7 +32,7 @@ type pair_type          is record [
   total_supply            : nat; (* total shares count *)
 ]
 
-type tokens_type        is record [
+type tokens_type        is [@layout:comb] record [
   token_a_type            : token_type; (* token A standard *)
   token_b_type            : token_type; (* token B standard *)
 ]

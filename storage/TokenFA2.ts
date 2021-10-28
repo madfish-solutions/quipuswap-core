@@ -1,17 +1,17 @@
-const { MichelsonMap } = require("@taquito/michelson-encoder");
-const { alice } = require("../scripts/sandbox/accounts");
+import { MichelsonMap } from "@taquito/michelson-encoder";
+import accounts from "../scripts/sandbox/accounts";
 
 let totalSupply = "10000000";
-module.exports = {
+export const fa2TokenStorage: any = {
   ledger: MichelsonMap.fromLiteral({
-    [alice.pkh]: { balance: totalSupply, allowances: [] },
+    [accounts.alice.pkh]: { balance: totalSupply, allowances: [] },
   }),
   operators: new MichelsonMap(),
   token_metadata: MichelsonMap.fromLiteral({
     0: {
       token_id: 0,
       extras: MichelsonMap.fromLiteral({
-        0: new Buffer(
+        0: Buffer.from(
           JSON.stringify({
             name: "Quipu Token",
             authors: ["Madfish.Solutions"],
@@ -22,8 +22,8 @@ module.exports = {
     },
   }),
   metadata: MichelsonMap.fromLiteral({
-    "": Buffer("tezos-storage:here", "ascii").toString("hex"),
-    here: Buffer(
+    "": Buffer.from("tezos-storage:here", "ascii").toString("hex"),
+    here: Buffer.from(
       JSON.stringify({
         version: "v0.0.1",
         description: "Quipuswap Share Pool Token",
