@@ -191,11 +191,8 @@ def operator_add(owner, operator, token_id=0):
     }
 
 class LocalChain():
-    def __init__(self, token_to_token=False):
-        if token_to_token:
-            self.storage = make_full_storage(initial_tt_storage) 
-        else:
-            self.storage = make_full_storage(initial_storage) 
+    def __init__(self, storage):
+        self.storage = storage
 
         self.balance = 0
         self.now = 0

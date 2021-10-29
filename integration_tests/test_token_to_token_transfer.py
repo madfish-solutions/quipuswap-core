@@ -2,7 +2,7 @@ from os.path import dirname, join
 from unittest import TestCase
 from decimal import Decimal
 
-import pytest
+import json
 from helpers import *
 
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
@@ -32,8 +32,11 @@ class TokenToTokenTransferTest(TestCase):
         dex_code = open("./integration_tests/compiled/Dex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
 
+        initial_storage_michelson = json.load(open("./integration_tests/compiled/storage.json", 'r'))
+        cls.init_storage = cls.dex.storage.decode(initial_storage_michelson)
+
     def test_tt_transfer_divest(self):
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair,100_000, 10_000), sender=alice)
         transfer = self.dex.transfer(
             [{ "from_" : alice,
@@ -62,7 +65,7 @@ class TokenToTokenTransferTest(TestCase):
         self.assertEqual(token_a_out_after, 10_000)
 
     def test_tt_cant_double_transfer(self):
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair,100_000, 10_000), sender=alice)
         transfer = self.dex.transfer(
             [{ "from_" : alice,

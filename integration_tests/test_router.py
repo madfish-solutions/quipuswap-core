@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-import pytest
+import json
 from helpers import *
 
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
@@ -80,12 +80,15 @@ class TokenToTokenRouterTest(TestCase):
 
         dex_code = open("./integration_tests/compiled/Dex.tz", 'r').read()
         cls.dex = ContractInterface.from_michelson(dex_code)
+
+        initial_storage_michelson = json.load(open("./integration_tests/compiled/storage.json", 'r'))
+        cls.init_storage = cls.dex.storage.decode(initial_storage_michelson)
     
     def test_tt_token_to_token_router(self):
 
         amount_in=10_000
 
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair_ab, 100_000, 300_000))
         res = chain.execute(self.dex.addPair(pair_bc, 500_000, 700_000))
 
@@ -141,7 +144,7 @@ class TokenToTokenRouterTest(TestCase):
         self.assertEqual(routed_out["amount"], token_c_out["amount"])
  
     def test_tt_router_triangle(self):
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair_ab, 100_000_000_000, 100_000_000_000))
         res = chain.execute(self.dex.addPair(pair_bc, 100_000_000_000, 100_000_000_000))
         res = chain.execute(self.dex.addPair(pair_ac, 100_000_000_000, 100_000_000_000))
@@ -172,7 +175,7 @@ class TokenToTokenRouterTest(TestCase):
         self.assertEqual(token_c_out["amount"], 9909) # ~ 9910 by compound interest formula
 
     def test_tt_router_ab_ba(self):
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair_ab, 100_000_000_000, 100_000_000_000))
         res = chain.interpret(self.dex.swap({
             "swaps" : [
@@ -194,7 +197,7 @@ class TokenToTokenRouterTest(TestCase):
         self.assertEqual(token_out["amount"], 9939)
 
     def test_tt_router_impossible_path(self):
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair_ab, 1111, 3333))
         res = chain.execute(self.dex.addPair(pair_cd, 5555, 7777))
 
@@ -235,7 +238,7 @@ class TokenToTokenRouterTest(TestCase):
 
 
     def test_tt_router_cant_overbuy(self):
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair_ab, 100_000, 100_000))
         res = chain.execute(self.dex.addPair(pair_bc, 10_000, 10_000))
         res = chain.execute(self.dex.addPair(pair_ac, 1_000_000, 1_000_000))
@@ -331,7 +334,7 @@ class TokenToTokenRouterTest(TestCase):
 
         amount_in=10_000
 
-        chain = LocalChain(token_to_token=True)
+        chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair_ab, 100_000, 300_000))
         res = chain.execute(self.dex.addPair(pair_bc, 500_000, 700_000))
 
