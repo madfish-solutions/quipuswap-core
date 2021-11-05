@@ -59,12 +59,12 @@ function close(
   var s                 : full_storage_type)
                         : full_storage_type is
   block {
-    if not s.storage.entered
-    then failwith(err_not_entered)
-    else skip;
-    if Tezos.sender =/= Tezos.self_address
-    then failwith(err_sender_not_self)
-    else skip;
+    assert_with_error(
+      s.storage.entered,
+      err_not_entered);
+    assert_with_error(
+      Tezos.sender = Tezos.self_address,
+      err_sender_not_self);
     s.storage.entered := False;
   } with s
 
