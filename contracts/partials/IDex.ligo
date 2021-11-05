@@ -78,6 +78,7 @@ type route_type         is [@layout:comb] record [
   amount_in               : nat; (* amount of tokens to be exchanged *)
   min_amount_out          : nat; (* min amount of tokens received to accept exchange *)
   receiver                : address; (* tokens receiver *)
+  deadline                : timestamp; (* time until the operation is valid *)
 ]
 
 type initialize_params  is [@layout:comb] record [

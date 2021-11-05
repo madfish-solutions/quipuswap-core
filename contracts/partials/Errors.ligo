@@ -20,3 +20,4 @@ const err_wrong_pair_order          : string = "Dex/wrong-pair-order";
 const err_empty_route               : string = "Dex/empty-route";
 const err_low_max_a_in              : string = "Dex/low-max-token-a-in";
 const err_low_max_b_in              : string = "Dex/low-max-token-b-in";
+const err_swap_outdated             : string = "Dex/swap-outdated";
