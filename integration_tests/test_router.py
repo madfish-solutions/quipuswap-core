@@ -106,7 +106,8 @@ class TokenToTokenRouterTest(TestCase):
             ],
             "amount_in" : amount_in,
             "min_amount_out" : 1, 
-            "receiver" : julian
+            "receiver" : julian,
+            "deadline": 100_000
         }))
 
         transfers = parse_token_transfers(res)
@@ -125,7 +126,8 @@ class TokenToTokenRouterTest(TestCase):
             }],
             amount_in=amount_in,
             min_amount_out=1,
-            receiver=julian
+            receiver=julian,
+            deadline=100_000
         ))
         transfers = parse_token_transfers(res)
         token_b_out = next(v for v in transfers if v["destination"] == julian)
@@ -137,7 +139,8 @@ class TokenToTokenRouterTest(TestCase):
             }],
             amount_in=token_b_out["amount"],
             min_amount_out=1,
-            receiver=julian
+            receiver=julian,
+            deadline=100_000,
         ))
         transfers = parse_token_transfers(res)
         token_c_out = next(v for v in transfers if v["destination"] == julian)
@@ -167,7 +170,8 @@ class TokenToTokenRouterTest(TestCase):
             ],
             "amount_in" : 10_000,
             "min_amount_out" : 1, 
-            "receiver" : julian
+            "receiver" : julian,
+            "deadline": 100_000
         }))
         transfers = parse_token_transfers(res)
         
@@ -190,7 +194,8 @@ class TokenToTokenRouterTest(TestCase):
             ],
             "amount_in" : 10_000,
             "min_amount_out" : 1, 
-            "receiver" : julian
+            "receiver" : julian,
+            "deadline": 100_000
         }))
         transfers = parse_token_transfers(res)
         token_out = next(v for v in transfers if v["destination"] == julian)
@@ -216,7 +221,8 @@ class TokenToTokenRouterTest(TestCase):
                 ],
                 "amount_in" : 334,
                 "min_amount_out" : 1, 
-                "receiver" : julian
+                "receiver" : julian,
+                "deadline": 100_000
             }))
 
         with self.assertRaises(MichelsonRuntimeError):
@@ -233,7 +239,8 @@ class TokenToTokenRouterTest(TestCase):
                 ],
                 "amount_in" : 334,
                 "min_amount_out" : 1, 
-                "receiver" : julian
+                "receiver" : julian,
+                "deadline": 100_000
             }))
 
 
@@ -253,7 +260,8 @@ class TokenToTokenRouterTest(TestCase):
             ],
             "amount_in" : 100_000_000_000,
             "min_amount_out" : 1, 
-            "receiver" : julian
+            "receiver" : julian,
+            "deadline": 100_000
         }))
 
         transfers = parse_token_transfers(res)
@@ -274,7 +282,8 @@ class TokenToTokenRouterTest(TestCase):
             ],
             "amount_in" : 100_000_000,
             "min_amount_out" : 1, 
-            "receiver" : julian
+            "receiver" : julian,
+            "deadline": 100_000
         }))
         
         transfers = parse_token_transfers(res)
@@ -299,7 +308,8 @@ class TokenToTokenRouterTest(TestCase):
             ],
             "amount_in" : 10_000_000_000,
             "min_amount_out" : 1, 
-            "receiver" : julian
+            "receiver" : julian,
+            "deadline": 100_000
         }))
 
         transfers = parse_token_transfers(res)
@@ -352,7 +362,8 @@ class TokenToTokenRouterTest(TestCase):
             ],
             "amount_in" : amount_in,
             "min_amount_out" : 1, 
-            "receiver" : julian
+            "receiver" : julian,
+            "deadline": 100_000
         }))
 
         transfers = parse_token_transfers(res)

@@ -19,6 +19,7 @@ contract_self_address = 'KT1BEqzn5Wx8uJrZNvuS9DVHmLvG9td3fDLi'
 # the same as Pytezos' `contract.context.get_sender()`. The default Tezos.sender
 me = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU"
 
+deadline = 100_000
 
 def print_pool_stats(res):
     print("\n")

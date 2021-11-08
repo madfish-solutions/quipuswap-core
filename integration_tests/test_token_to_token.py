@@ -48,12 +48,12 @@ class TokenToTokenTest(TestCase):
         chain = LocalChain(storage=self.init_storage)
 
         res = chain.execute(self.dex.addPair(pair, 100_000, 100_000))
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10_000, min_amount_out=1, receiver=julian), amount=1)
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10_000, min_amount_out=1, receiver=julian, deadline=100_000), amount=1)
         ops = parse_ops(res)
         amount_bought = ops[0]["amount"]
         self.assertEqual(ops[0]["destination"], julian)
 
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=amount_bought, min_amount_out=1, receiver=julian), amount=1)
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=amount_bought, min_amount_out=1, receiver=julian, deadline=100_000), amount=1)
         ops = parse_ops(res)
 
         res = chain.execute(self.dex.divest(pair_id=0, min_token_a_out=1, min_token_b_out=1, shares=100_000), amount=0)
@@ -63,7 +63,7 @@ class TokenToTokenTest(TestCase):
         self.assertGreaterEqual(transfers[1]["amount"], 100_000)
 
         with self.assertRaises(MichelsonRuntimeError):
-            res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian), amount=1)
+            res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian, deadline=100_000), amount=1)
 
     def test_cant_init_already_init(self):
         chain = LocalChain(storage=self.init_storage)
@@ -78,7 +78,7 @@ class TokenToTokenTest(TestCase):
         init_supply_b = 10**127
         chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair, init_supply_a, init_supply_b))
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=1, receiver=julian), amount=1)
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=1, receiver=julian, deadline=100_000), amount=1)
         ops = parse_ops(res)
         amount_bought = ops[1]["amount"]
 
@@ -93,18 +93,18 @@ class TokenToTokenTest(TestCase):
         res = chain.execute(self.dex.addPair(pair, 100_000_000, 100_000))
         res = chain.execute(self.dex.addPair(second_pair, 10_000, 100_000))
 
-        res = chain.interpret(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian))
+        res = chain.interpret(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian, deadline=100_000))
         transfers = parse_token_transfers(res)
         token_a_out_before = transfers[0]["amount"]
         token_b_out_before = transfers[1]["amount"]
 
         # perform a swap on the second pair
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=1, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian))
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=1, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian, deadline=100_000))
 
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=1, operation="a_to_b")], amount_in=1, min_amount_out=1, receiver=julian))
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=1, operation="a_to_b")], amount_in=1, min_amount_out=1, receiver=julian, deadline=100_000))
 
         # ensure first token price in unscathed
-        res = chain.interpret(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian))
+        res = chain.interpret(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=100, min_amount_out=1, receiver=julian, deadline=100_000))
         transfers = parse_token_transfers(res)
         token_a_out_after = transfers[0]["amount"]
         token_b_out_after = transfers[1]["amount"]
@@ -121,10 +121,10 @@ class TokenToTokenTest(TestCase):
             res = self.dex.divest(pair_id=0, min_token_a_out=1, min_token_b_out=1, shares=100).interpret(amount=1)
 
         with self.assertRaises(MichelsonRuntimeError):
-            res = self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10, min_amount_out=10, receiver=julian).interpret(amount=1)
+            res = self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10, min_amount_out=10, receiver=julian, deadline=100_000).interpret(amount=1)
 
         with self.assertRaises(MichelsonRuntimeError):
-            res = self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=10, min_amount_out=10, receiver=julian).interpret(amount=1)
+            res = self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=10, min_amount_out=10, receiver=julian, deadline=100_000).interpret(amount=1)
 
     def test_tt_fee_is_distributed_evenly(self):
         chain = LocalChain(storage=self.init_storage)
@@ -134,10 +134,10 @@ class TokenToTokenTest(TestCase):
 
         # perform a few back and forth swaps
         for i in range(0, 5):
-            res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10_000, min_amount_out=1, receiver=julian), amount=1)
+            res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10_000, min_amount_out=1, receiver=julian, deadline=100_000), amount=1)
             ops = parse_ops(res)
             amount_bought = ops[1]["amount"]
-            res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=amount_bought, min_amount_out=1, receiver=julian), amount=1)
+            res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=amount_bought, min_amount_out=1, receiver=julian, deadline=100_000), amount=1)
 
         # divest alice's shares
         res = chain.execute(self.dex.divest(pair_id=0, min_token_a_out=1, min_token_b_out=1, shares=100_000), sender=alice)
@@ -166,7 +166,7 @@ class TokenToTokenTest(TestCase):
         chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair, 100_000, 100_000))
 
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10_000, min_amount_out=1, receiver=julian))
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=10_000, min_amount_out=1, receiver=julian, deadline=100_000))
 
         transfers = parse_token_transfers(res)
         print(transfers)
@@ -208,7 +208,7 @@ class TokenToTokenTest(TestCase):
         chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair, 10, 10))
 
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=2, min_amount_out=1, receiver=julian))
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=2, min_amount_out=1, receiver=julian, deadline=100_000))
 
         transfers = parse_token_transfers(res)
         token_out = next(v for v in transfers if v["destination"] == julian)
@@ -232,7 +232,7 @@ class TokenToTokenTest(TestCase):
         chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair, 2, pow(10, 128)))
 
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=1, receiver=julian))
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=1, receiver=julian, deadline=100_000))
 
         transfers = parse_token_transfers(res)
         token_out = next(v for v in transfers if v["destination"] == julian)
@@ -319,7 +319,7 @@ class TokenToTokenTest(TestCase):
         res = chain.execute(self.dex.addPair(pair, 3, 3), sender=alice)
         res = chain.execute(self.dex.invest(pair_id=0, token_a_in=2, token_b_in=2, shares=2))
 
-        res = chain.execute(self.dex.swap([dict(pair_id=0, operation="a_to_b")], 2, 1, julian), sender=julian)
+        res = chain.execute(self.dex.swap([dict(pair_id=0, operation="a_to_b")], 2, 1, julian, deadline), sender=julian)
         print("between pool", res.storage["storage"]["pairs"][0])
 
         res = chain.execute(self.dex.divest(0, 1, 1, 3), sender=alice)
@@ -336,7 +336,7 @@ class TokenToTokenTest(TestCase):
         res = altchain.execute(self.dex.addPair(pair, 3, 3), sender=alice)
         res = altchain.execute(self.dex.invest(pair_id=0, token_a_in=2, token_b_in=2, shares=2))
 
-        res = altchain.execute(self.dex.swap([dict(pair_id=0, operation="a_to_b")], 2, 1, julian), sender=julian)
+        res = altchain.execute(self.dex.swap([dict(pair_id=0, operation="a_to_b")], 2, 1, julian, deadline), sender=julian)
 
         res = altchain.execute(self.dex.divest(0, 1, 1, 2))
         transfers = parse_token_transfers(res)
@@ -386,7 +386,7 @@ class TokenToTokenTest(TestCase):
         with self.assertRaises(MichelsonRuntimeError):
             res = chain.interpret(self.dex.invest(pair_id=0, token_a_in=1, token_b_in=1, shares=1))
 
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=4, min_amount_out=1, receiver=alice), sender=alice)
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="b_to_a")], amount_in=4, min_amount_out=1, receiver=alice, deadline=deadline), sender=alice)
         ops = parse_ops(res)
         amount_bought = ops[0]["amount"]
 
@@ -403,10 +403,18 @@ class TokenToTokenTest(TestCase):
         chain = LocalChain(storage=self.init_storage)
         res = chain.execute(self.dex.addPair(pair, 51, 49))
 
-        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=0, receiver=me))
+        res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=0, receiver=me, deadline=deadline))
         transfers = parse_token_transfers(res)
         self.assertEqual(transfers[0]["amount"], 0)
         self.assertEqual(transfers[0]["destination"], me)
         self.assertEqual(transfers[1]["amount"], 1)
         self.assertEqual(transfers[1]["destination"], contract_self_address)
 
+    def test_cant_swap_after_deadline(self):
+        chain = LocalChain(storage=self.init_storage)
+        res = chain.execute(self.dex.addPair(pair, 51, 49))
+
+        chain.advance_blocks(2)
+
+        with self.assertRaises(MichelsonRuntimeError):
+            res = chain.execute(self.dex.swap(swaps=[dict(pair_id=0, operation="a_to_b")], amount_in=1, min_amount_out=0, receiver=me, deadline=1))
