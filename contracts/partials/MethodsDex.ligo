@@ -170,18 +170,16 @@ function token_to_token_route(
           err_high_min_out);
 
         s := tmp.s;
-        operations := list [
-          typed_transfer(
+        operations := (case tmp.operation of
+            Some(o) -> o
+          | None -> (failwith(err_empty_route) : operation)
+          end) # operations;
+        operations := typed_transfer(
             Tezos.sender,
             Tezos.self_address,
             params.amount_in,
             token
-          );
-          case tmp.operation of
-            Some(o) -> o
-          | None -> (failwith(err_empty_route) : operation)
-          end;
-        ];
+          ) # operations;
       }
     | _                 -> skip
     end
