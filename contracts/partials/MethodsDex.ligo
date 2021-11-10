@@ -170,18 +170,16 @@ function token_to_token_route(
           err_high_min_out);
 
         s := tmp.s;
-        operations := list [
-          typed_transfer(
+        operations := (case tmp.operation of
+            Some(o) -> o
+          | None -> (failwith(err_empty_route) : operation)
+          end) # operations;
+        operations := typed_transfer(
             Tezos.sender,
             Tezos.self_address,
             params.amount_in,
             token
-          );
-          case tmp.operation of
-            Some(o) -> o
-          | None -> (failwith(err_empty_route) : operation)
-          end;
-        ];
+          ) # operations;
       }
     | _                 -> skip
     end
@@ -202,6 +200,10 @@ function invest_liquidity(
     ];
     case p of
       Invest(params) -> {
+        assert_with_error(
+          params.deadline >= Tezos.now,
+          err_swap_outdated);
+
         var pair : pair_type := get_pair(params.pair_id, s);
 
         assert_with_error(
@@ -270,8 +272,11 @@ function divest_liquidity(
     ];
     case p of
       Divest(params) -> {
+        assert_with_error(
+          params.deadline >= Tezos.now,
+          err_swap_outdated);
+
         var pair : pair_type := get_pair(params.pair_id, s);
-        const tokens : tokens_type = get_tokens(params.pair_id, s);
 
         assert_with_error(
           s.pairs_count =/= params.pair_id,
@@ -319,6 +324,7 @@ function divest_liquidity(
 
         s.pairs[params.pair_id] := pair;
 
+        const tokens : tokens_type = get_tokens(params.pair_id, s);
         operations :=
           typed_transfer(
             Tezos.self_address,
