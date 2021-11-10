@@ -78,6 +78,7 @@ type route_type         is [@layout:comb] record [
   amount_in               : nat; (* amount of tokens to be exchanged *)
   min_amount_out          : nat; (* min amount of tokens received to accept exchange *)
   receiver                : address; (* tokens receiver *)
+  deadline                : timestamp; (* time until the operation is valid *)
 ]
 
 type initialize_params  is [@layout:comb] record [
@@ -91,6 +92,7 @@ type invest_type        is [@layout:comb] record [
   shares                  : nat; (* the amount of shares to receive *)
   token_a_in              : nat; (* min amount of tokens A invested  *)
   token_b_in              : nat; (* min amount of tokens B invested *)
+  deadline                : timestamp; (* time until the operation is valid *)
 ]
 
 type divest_type        is [@layout:comb] record [
@@ -98,6 +100,7 @@ type divest_type        is [@layout:comb] record [
   min_token_a_out         : nat; (* min amount of tokens A received to accept the divestment *)
   min_token_b_out         : nat; (* min amount of tokens B received to accept the divestment *)
   shares                  : nat; (* amount of shares to be burnt *)
+  deadline                : timestamp; (* time until the operation is valid *)
 ]
 
 type action_type        is
