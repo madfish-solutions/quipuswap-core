@@ -200,6 +200,10 @@ function invest_liquidity(
     ];
     case p of
       Invest(params) -> {
+        assert_with_error(
+          params.deadline >= Tezos.now,
+          err_swap_outdated);
+
         var pair : pair_type := get_pair(params.pair_id, s);
 
         assert_with_error(
@@ -268,8 +272,11 @@ function divest_liquidity(
     ];
     case p of
       Divest(params) -> {
+        assert_with_error(
+          params.deadline >= Tezos.now,
+          err_swap_outdated);
+
         var pair : pair_type := get_pair(params.pair_id, s);
-        const tokens : tokens_type = get_tokens(params.pair_id, s);
 
         assert_with_error(
           s.pairs_count =/= params.pair_id,
@@ -317,6 +324,7 @@ function divest_liquidity(
 
         s.pairs[params.pair_id] := pair;
 
+        const tokens : tokens_type = get_tokens(params.pair_id, s);
         operations :=
           typed_transfer(
             Tezos.self_address,
