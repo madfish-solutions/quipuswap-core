@@ -21,3 +21,5 @@ const err_empty_route               : string = "Dex/empty-route";
 const err_low_max_a_in              : string = "Dex/low-max-token-a-in";
 const err_low_max_b_in              : string = "Dex/low-max-token-b-in";
 const err_swap_outdated             : string = "Dex/swap-outdated";
+const err_wrong_reserves_state      : string = "Dex/wrong-reserves-state";
+const err_low_supply                : string = "Dex/low-supply";

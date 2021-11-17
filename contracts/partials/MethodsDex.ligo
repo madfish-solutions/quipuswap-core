@@ -307,20 +307,18 @@ function divest_liquidity(
           token_a_divested >= params.min_token_a_out
           and token_b_divested >= params.min_token_b_out,
           err_high_min_out);
+        assert_with_error(
+          pair.total_supply >= params.shares,
+          err_low_supply);
 
         pair.total_supply := abs(pair.total_supply - params.shares);
         pair.token_a_pool := abs(pair.token_a_pool - token_a_divested);
         pair.token_b_pool := abs(pair.token_b_pool - token_b_divested);
 
-        if pair.total_supply = 0n
-          or pair.token_a_pool = 0n
-          or pair.token_b_pool = 0n
-        then {
-          pair.token_a_pool := 0n;
-          pair.token_b_pool := 0n;
-          pair.total_supply := 0n;
-        }
-        else skip;
+        assert_with_error(
+          ((pair.total_supply or pair.token_a_pool or pair.token_b_pool) = 0n)
+          or (pair.total_supply * pair.token_a_pool * pair.token_b_pool =/= 0n),
+          err_wrong_reserves_state);
 
         s.pairs[params.pair_id] := pair;
 
