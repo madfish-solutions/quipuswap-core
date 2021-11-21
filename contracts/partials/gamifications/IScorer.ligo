@@ -17,12 +17,14 @@ type game_action is
 | Sell of sell_params
 
 (* main storage *)
-type game_storage is record [
+type level_storage is record [
     score : nat;
     streak : nat;
     current_rank : nat;
     possible_ranks : ranks;
 
 ]
+
+type return is list (operation) * level_storage
 
 

@@ -1,21 +1,20 @@
 #include "../../partials/gamifications/IScorer.ligo"
 
 
-type storage is record [
-  counter : nat;
-  name    : string
-]
+function buy (const n : buy_params; const level : level_storage) : return is
 
-type return is list (operation) * storage
+  block{
+    skip;
+  } with ((nil : list (operation)), level)
 
-function buy (const n : buy_params; const store : storage) : return is
-  ((nil : list (operation)), store with record [counter = 0n])
+function sell (const s : sell_params; const level : level_storage) : return is
 
-function sell (const s : sell_params; const store : storage) : return is
-  ((nil : list (operation)), store with record [name = "hi"])
+  block {
+    skip;
+  } with ((nil : list (operation)), level)
 
-function main (const action : game_action; const store : storage): return is
+function main (const action : game_action; const level : level_storage): return is
   case action of
-    Buy (n) -> buy (n, store)
-  | Sell (s) -> sell (s, store)
+    Buy (n) -> buy (n, level)
+  | Sell (s) -> sell (s, level)
   end
