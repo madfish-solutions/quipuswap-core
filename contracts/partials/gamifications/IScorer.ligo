@@ -18,13 +18,14 @@ type game_action is
 
 (* main storage *)
 type level_storage is record [
+    trading_pair : address;
     score : nat;
     streak : nat;
     current_rank : nat;
     possible_ranks : ranks;
-
+    multiplier : nat;
 ]
 
-type return is list (operation) * level_storage
+type return_level is list (operation) * level_storage
 
 
